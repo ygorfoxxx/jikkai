@@ -110,19 +110,40 @@ const DEFAULT_FASES = [
 ];
 
 const DEFAULT_ARMAS = [
-  { nome: "Yagura", vila: "Kirigakure", dificuldade: "Fácil", status: "Não capturada", cor: "#3B82F6" },
-  { nome: "Bastão Sagrado", vila: "Konohagakure", dificuldade: "Difícil", status: "Não capturada", cor: "#16A34A" },
-  { nome: "Leque do Vento", vila: "Sunagakure", dificuldade: "Médio", status: "Não capturada", cor: "#EAB308" },
+  { id: "yagura", nome: "Yagura", vila: "Kirigakure", dificuldade: "Fácil", status: "Não capturada", cor: "#3B82F6" },
+  { id: "bastao", nome: "Bastão Sagrado", vila: "Konohagakure", dificuldade: "Difícil", status: "Não capturada", cor: "#16A34A" },
+  { id: "leque", nome: "Leque do Vento", vila: "Sunagakure", dificuldade: "Médio", status: "Não capturada", cor: "#EAB308" },
 ];
 
-const TIMELINE = [
-  { era: "Era Antiga", evento: "Queda de Uzushiogakure", desc: "O clã Uzumaki é massacrado. Ayaka Uzumaki foge carregando um pergaminho selado de fuinjutsu." },
-  { era: "Refúgio", evento: "Chegada em Konoha", desc: "Ayaka é acolhida pelos Lamona, humildes artesãos e curandeiros. Une-se a Hiroshi Lamona e abandona o sobrenome Uzumaki." },
-  { era: "Fundação", evento: "Nascimento do Clã Lamona", desc: "Os descendentes herdam mechas vermelhas, resiliência Uzumaki e fragmentos do fuinjutsu. O clã se divide entre Soke e Bunke." },
-  { era: "Ascensão", evento: "Domínio em Kirigakure", desc: "Archie torna-se Mizukage. Fujimoshi, Garro, Akaruno e Deidara dominam os pilares de poder." },
-  { era: "Traição", evento: "A Ingratidão", desc: "Lamona entrega o cargo ao clã Abravanel buscando reconhecimento. É esquecido." },
-  { era: "Ruptura", evento: "Nascimento da F.O.X.", desc: "Akaruno, Archie, Garro, Satoru e Gurren invadem o coração de Kiri e tomam Yagura. Pacto de sangue selado." },
-  { era: "Hoje", evento: "JIKKAI em Movimento", desc: "Nas sombras, a F.O.X. cresce — mais forte, mais livre, mais letal do que nunca." },
+const DEFAULT_HISTORIA = [
+  { id: "h1", era: "Era Antiga", evento: "Queda de Uzushiogakure", desc: "O clã Uzumaki é massacrado. Ayaka Uzumaki foge carregando um pergaminho selado de fuinjutsu." },
+  { id: "h2", era: "Refúgio", evento: "Chegada em Konoha", desc: "Ayaka é acolhida pelos Lamona, humildes artesãos e curandeiros. Une-se a Hiroshi Lamona e abandona o sobrenome Uzumaki." },
+  { id: "h3", era: "Fundação", evento: "Nascimento do Clã Lamona", desc: "Os descendentes herdam mechas vermelhas, resiliência Uzumaki e fragmentos do fuinjutsu. O clã se divide entre Soke e Bunke." },
+  { id: "h4", era: "Ascensão", evento: "Domínio em Kirigakure", desc: "Archie torna-se Mizukage. Fujimoshi, Garro, Akaruno e Deidara dominam os pilares de poder." },
+  { id: "h5", era: "Traição", evento: "A Ingratidão", desc: "Lamona entrega o cargo ao clã Abravanel buscando reconhecimento. É esquecido." },
+  { id: "h6", era: "Ruptura", evento: "Nascimento da F.O.X.", desc: "Akaruno, Archie, Garro, Satoru e Gurren invadem o coração de Kiri e tomam Yagura. Pacto de sangue selado." },
+  { id: "h7", era: "Hoje", evento: "JIKKAI em Movimento", desc: "Nas sombras, a F.O.X. cresce — mais forte, mais livre, mais letal do que nunca." },
+];
+
+const DEFAULT_CLAS = [
+  {
+    id: "soke",
+    nome: "Soke Lamona",
+    tipo: "Liderança",
+    cor: "#D85A30",
+    icon: "crown",
+    descricao: "O coração estratégico. Guardiões da história e dos valores do clã, herdeiros da resiliência de Uzushio. Não governam por imposição, mas por inspiração. Vivem nos arredores de Konoha, em casas de madeira entalhada com a espiral do clã. Cultivam discrição — enquanto Uchiha e Hyuuga atraem holofotes, a Soke une o clã na sombra.",
+    figuras: [],
+  },
+  {
+    id: "bunke",
+    nome: "Bunke Lamona",
+    tipo: "Sombras",
+    cor: "#B91C1C",
+    icon: "skull",
+    descricao: "Disfarçados de artesãos e curandeiros, os verdadeiros mestres da sabotagem, espionagem e assassinatos seletivos. Inspirados em organizações como a Akatsuki, transformaram lealdade em revolução silenciosa. Usam fuinjutsu proibido, armas envenenadas e poções de controle mental. Servem ao maior pagador — mantendo a fachada de apoio à vila.",
+    figuras: [],
+  },
 ];
 
 const MANDAMENTOS = [
@@ -139,8 +160,8 @@ const FRASE_JURAMENTO = "Meu sangue pertence à F.O.X.";
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
-const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+const SUPABASE_URL = "COLE_AQUI_O_PROJECT_URL";
+const SUPABASE_KEY = "COLE_AQUI_A_ANON_KEY";
 
 const CLOUD_ENABLED = SUPABASE_URL && !SUPABASE_URL.startsWith("COLE_AQUI") && SUPABASE_KEY && !SUPABASE_KEY.startsWith("COLE_AQUI");
 const cloudClient = CLOUD_ENABLED && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -314,21 +335,77 @@ function InfoCard({ icon: I, title, desc }) {
   );
 }
 
-function HistoriaPage() {
+function HistoriaPage({ data, setData, isLider }) {
+  const [editando, setEditando] = useState(false);
+  const [draft, setDraft] = useState(data.historia);
+
+  useEffect(() => { if (!editando) setDraft(data.historia); }, [data.historia, editando]);
+
+  const salvar = () => { setData(d => ({ ...d, historia: draft.filter(e => e.evento.trim()) })); setEditando(false); };
+  const cancelar = () => { setDraft(data.historia); setEditando(false); };
+  const update = (i, field, val) => setDraft(draft.map((e, idx) => idx === i ? { ...e, [field]: val } : e));
+  const remove = (i) => setDraft(draft.filter((_, idx) => idx !== i));
+  const add = () => setDraft([...draft, { id: uid(), era: "Nova Era", evento: "Novo evento", desc: "" }]);
+  const move = (i, dir) => {
+    const ni = i + dir;
+    if (ni < 0 || ni >= draft.length) return;
+    const n = [...draft];
+    [n[i], n[ni]] = [n[ni], n[i]];
+    setDraft(n);
+  };
+
+  const action = isLider && (
+    editando ? (
+      <div className="flex gap-2">
+        <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+        <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+      </div>
+    ) : (
+      <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
+    )
+  );
+
+  const eventos = editando ? draft : data.historia;
+
   return (
     <div>
-      <SectionTitle icon={IBook} sub="Da queda de Uzushio ao nascimento da F.O.X.">História do Clã</SectionTitle>
-      <div className="relative pl-8 space-y-8 border-l-2 border-orange-900/40">
-        {TIMELINE.map((e, i) => (
-          <div key={i} className="relative">
+      <SectionTitle icon={IBook} sub="Da queda de Uzushio ao nascimento da F.O.X." action={action}>História do Clã</SectionTitle>
+      <div className="relative pl-8 space-y-6 border-l-2 border-orange-900/40">
+        {eventos.map((e, i) => (
+          <div key={e.id || i} className="relative">
             <div className="absolute -left-[42px] w-5 h-5 rounded-full bg-black border-2 border-orange-600 flex items-center justify-center">
               <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
             </div>
-            <div className="text-orange-600 text-xs uppercase tracking-widest mb-1">{e.era}</div>
-            <h3 className="text-xl font-bold text-orange-50 mb-2 serif">{e.evento}</h3>
-            <p className="text-zinc-400 leading-relaxed">{e.desc}</p>
+            {editando ? (
+              <div className="space-y-2 p-3 bg-zinc-950/60 border border-orange-900/30 rounded">
+                <div className="flex gap-2">
+                  <input value={e.era} onChange={(ev) => update(i, "era", ev.target.value)} placeholder="Era (ex: Era Antiga)" className="fox-input" />
+                  <div className="flex gap-1">
+                    <button onClick={() => move(i, -1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
+                    <button onClick={() => move(i, 1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
+                    <button onClick={() => remove(i)} className="px-2 bg-red-950/80 text-red-300 rounded"><ITrash className="w-3 h-3" /></button>
+                  </div>
+                </div>
+                <input value={e.evento} onChange={(ev) => update(i, "evento", ev.target.value)} placeholder="Título do evento" className="fox-input" />
+                <textarea value={e.desc} onChange={(ev) => update(i, "desc", ev.target.value)} rows="3" placeholder="Descrição do evento" className="fox-input" />
+              </div>
+            ) : (
+              <>
+                <div className="text-orange-600 text-xs uppercase tracking-widest mb-1">{e.era}</div>
+                <h3 className="text-xl font-bold text-orange-50 mb-2 serif">{e.evento}</h3>
+                <p className="text-zinc-400 leading-relaxed">{e.desc}</p>
+              </>
+            )}
           </div>
         ))}
+        {editando && (
+          <div className="relative">
+            <div className="absolute -left-[42px] w-5 h-5 rounded-full bg-black border-2 border-zinc-700 flex items-center justify-center">
+              <IPlus className="w-3 h-3 text-zinc-700" />
+            </div>
+            <Btn onClick={add} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Adicionar evento</Btn>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -338,9 +415,9 @@ function HistoriaPage() {
 function FigurasEditor({ figuras, onChange, isLider, cor }) {
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(figuras);
-  const corClasses = cor === "red"
-    ? { border: "border-red-900/40", text: "text-red-200", label: "text-red-500" }
-    : { border: "border-orange-900/30", text: "text-orange-200", label: "text-orange-600" };
+  // cor pode vir como hex (#D85A30) ou legado ("red"/"orange"); normaliza para hex
+  const hex = typeof cor === "string" && cor.startsWith("#") ? cor : (cor === "red" ? "#B91C1C" : "#D85A30");
+  const corStyle = { borderColor: hex + "66", background: "#000000" };
 
   useEffect(() => { if (!editando) setDraft(figuras); }, [figuras, editando]);
 
@@ -353,7 +430,7 @@ function FigurasEditor({ figuras, onChange, isLider, cor }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-        <div className={`text-xs uppercase tracking-wider ${corClasses.label}`}>Figuras de destaque</div>
+        <div className="text-xs uppercase tracking-wider font-semibold" style={{ color: hex }}>Figuras de destaque</div>
         {isLider && !editando && <Btn onClick={() => setEditando(true)} variant="ghost"><IEdit className="w-3 h-3" /> Editar</Btn>}
         {isLider && editando && (
           <div className="flex gap-2">
@@ -372,8 +449,8 @@ function FigurasEditor({ figuras, onChange, isLider, cor }) {
       {!editando && figuras.length > 0 && (
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
           {figuras.map((f, i) => (
-            <div key={i} className={`p-3 bg-black/60 border ${corClasses.border} rounded`}>
-              <div className={`font-bold ${corClasses.text}`}>{f.nome}</div>
+            <div key={i} className="p-3 bg-black/60 border rounded" style={corStyle}>
+              <div className="font-bold" style={{ color: hex }}>{f.nome}</div>
               <div className="text-zinc-500 text-xs">{f.desc}</div>
             </div>
           ))}
@@ -383,7 +460,7 @@ function FigurasEditor({ figuras, onChange, isLider, cor }) {
       {editando && (
         <div className="space-y-2">
           {draft.map((f, i) => (
-            <div key={i} className={`p-3 bg-black/60 border ${corClasses.border} rounded flex gap-2 items-start`}>
+            <div key={i} className="p-3 bg-black/60 border rounded flex gap-2 items-start" style={corStyle}>
               <div className="flex-1 space-y-2">
                 <input value={f.nome} onChange={(e) => update(i, "nome", e.target.value)} placeholder="Nome" className="fox-input" />
                 <input value={f.desc} onChange={(e) => update(i, "desc", e.target.value)} placeholder="Descrição curta" className="fox-input" />
@@ -398,40 +475,97 @@ function FigurasEditor({ figuras, onChange, isLider, cor }) {
   );
 }
 
+const CLA_ICONS = {
+  crown: ICrown,
+  skull: ISkull,
+  flame: IFlame,
+  swords: ISwords,
+  shield: IShield,
+  users: IUsers,
+  book: IBook,
+  target: ITarget,
+};
+
 function ClaPage({ data, setData, isLider }) {
-  const updateFiguras = (tipo, figuras) => setData(d => ({ ...d, [tipo]: figuras }));
+  const [editando, setEditando] = useState(false);
+  const [draft, setDraft] = useState(data.clas);
+
+  useEffect(() => { if (!editando) setDraft(data.clas); }, [data.clas, editando]);
+
+  const salvar = () => { setData(d => ({ ...d, clas: draft.filter(c => c.nome.trim()) })); setEditando(false); };
+  const cancelar = () => { setDraft(data.clas); setEditando(false); };
+  const updateCla = (i, patch) => setDraft(draft.map((c, idx) => idx === i ? { ...c, ...patch } : c));
+  const removeCla = (i) => setDraft(draft.filter((_, idx) => idx !== i));
+  const addCla = () => setDraft([...draft, { id: uid(), nome: "Novo Clã", tipo: "Ramo", cor: "#7C2D12", icon: "shield", descricao: "", figuras: [] }]);
+
+  // Figuras são persistidas direto quando NÃO está em modo edição de clã (clique no botão do FigurasEditor);
+  // quando EM modo edição de clã, mudanças de figuras iriam conflitar, então as deixamos read-only (via isLider=false no FigurasEditor).
+  const updateFigurasDireto = (i, figuras) => {
+    setData(d => ({ ...d, clas: d.clas.map((c, idx) => idx === i ? { ...c, figuras } : c) }));
+  };
+
+  const action = isLider && (
+    editando ? (
+      <div className="flex gap-2">
+        <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+        <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+      </div>
+    ) : (
+      <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar Clãs</Btn>
+    )
+  );
+
+  const clas = editando ? draft : data.clas;
 
   return (
-    <div className="space-y-10">
-      <SectionTitle icon={ICrown} sub="As duas faces do clã Lamona">Soke & Bunke</SectionTitle>
+    <div className="space-y-8">
+      <SectionTitle icon={ICrown} sub="As faces do clã Lamona" action={action}>Clãs</SectionTitle>
 
-      <div className="rounded-lg border border-orange-800/40 bg-gradient-to-br from-orange-950/20 to-black p-6">
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <ICrown className="w-7 h-7 text-orange-500" />
-          <h3 className="text-2xl font-bold text-orange-50 serif">Soke Lamona</h3>
-          <span className="text-xs px-2 py-0.5 bg-orange-900/40 border border-orange-700 rounded text-orange-300 uppercase tracking-wider">Liderança</span>
-        </div>
-        <p className="text-zinc-400 leading-relaxed mb-4">
-          O coração estratégico. Guardiões da história e dos valores do clã, herdeiros da resiliência de Uzushio.
-          Não governam por imposição, mas por inspiração. Vivem nos arredores de Konoha, em casas de madeira entalhada
-          com a espiral do clã. Cultivam discrição — enquanto Uchiha e Hyuuga atraem holofotes, a Soke une o clã na sombra.
-        </p>
-        <FigurasEditor figuras={data.sokeFiguras} onChange={(f) => updateFiguras("sokeFiguras", f)} isLider={isLider} cor="orange" />
-      </div>
+      {clas.map((c, ci) => {
+        const I = CLA_ICONS[c.icon] || IShield;
+        return (
+          <div key={c.id || ci} className="rounded-lg border p-6" style={{
+            borderColor: c.cor + "80",
+            background: `linear-gradient(135deg, ${c.cor}15, #000)`
+          }}>
+            {editando ? (
+              <div className="space-y-3 mb-4">
+                <div className="flex gap-2 flex-wrap items-start">
+                  <input value={c.nome} onChange={(e) => updateCla(ci, { nome: e.target.value })} placeholder="Nome do clã" className="fox-input flex-1 min-w-[200px]" />
+                  <input value={c.tipo} onChange={(e) => updateCla(ci, { tipo: e.target.value })} placeholder="Tipo (badge)" className="fox-input w-32" />
+                </div>
+                <div className="flex gap-2 items-center flex-wrap">
+                  <label className="fox-label mb-0">Ícone</label>
+                  <select value={c.icon} onChange={(e) => updateCla(ci, { icon: e.target.value })} className="fox-input w-auto">
+                    {Object.keys(CLA_ICONS).map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                  <label className="fox-label mb-0 ml-2">Cor</label>
+                  <input type="color" value={c.cor} onChange={(e) => updateCla(ci, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" />
+                  <button onClick={() => { if (confirm(`Remover ${c.nome}?`)) removeCla(ci); }} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button>
+                </div>
+                <textarea value={c.descricao} onChange={(e) => updateCla(ci, { descricao: e.target.value })} rows="6" placeholder="História, descrição, identidade do clã..." className="fox-input" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <I className="w-7 h-7" style={{ color: c.cor }} />
+                  <h3 className="text-2xl font-bold text-orange-50 serif">{c.nome}</h3>
+                  {c.tipo && <span className="text-xs px-2 py-0.5 rounded uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>{c.tipo}</span>}
+                </div>
+                <p className="text-zinc-400 leading-relaxed mb-4 whitespace-pre-wrap">{c.descricao}</p>
+              </>
+            )}
+            <FigurasEditor figuras={c.figuras || []} onChange={(f) => updateFigurasDireto(ci, f)} isLider={isLider && !editando} cor={c.cor} />
+          </div>
+        );
+      })}
 
-      <div className="rounded-lg border border-red-900/50 bg-gradient-to-br from-red-950/20 to-black p-6">
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <ISkull className="w-7 h-7 text-red-500" />
-          <h3 className="text-2xl font-bold text-red-50 serif">Bunke Lamona</h3>
-          <span className="text-xs px-2 py-0.5 bg-red-950/60 border border-red-800 rounded text-red-300 uppercase tracking-wider">Sombras</span>
-        </div>
-        <p className="text-zinc-400 leading-relaxed mb-4">
-          Disfarçados de artesãos e curandeiros, os verdadeiros mestres da sabotagem, espionagem e assassinatos seletivos.
-          Inspirados em organizações como a Akatsuki, transformaram lealdade em revolução silenciosa. Usam fuinjutsu proibido,
-          armas envenenadas e poções de controle mental. Servem ao maior pagador — mantendo a fachada de apoio à vila.
-        </p>
-        <FigurasEditor figuras={data.bunkeFiguras} onChange={(f) => updateFiguras("bunkeFiguras", f)} isLider={isLider} cor="red" />
-      </div>
+      {editando && (
+        <button onClick={addCla} className="w-full rounded-lg border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 py-10 flex flex-col items-center gap-2 transition-colors">
+          <IPlus className="w-8 h-8" />
+          <span className="uppercase tracking-wider text-xs font-bold">Adicionar Novo Clã</span>
+        </button>
+      )}
 
       <div>
         <h3 className="text-xl font-bold text-orange-50 mb-3 serif">Os 7 Mandamentos</h3>
@@ -677,31 +811,94 @@ function JikkaiPage({ data, setData, isLider }) {
 
 // ============ ARMAS ============
 function ArmasPage({ data, setData, isLider }) {
+  const [editando, setEditando] = useState(false);
+  const [draft, setDraft] = useState(data.armas);
+
+  useEffect(() => { if (!editando) setDraft(data.armas); }, [data.armas, editando]);
+
+  const salvar = () => { setData(d => ({ ...d, armas: draft.filter(a => a.nome.trim()) })); setEditando(false); };
+  const cancelar = () => { setDraft(data.armas); setEditando(false); };
+  const updateArma = (i, patch) => setDraft(draft.map((a, idx) => idx === i ? { ...a, ...patch } : a));
+  const removeArma = (i) => setDraft(draft.filter((_, idx) => idx !== i));
+  const addArma = () => setDraft([...draft, { id: uid(), nome: "Nova Arma", vila: "", dificuldade: "Médio", status: "Não capturada", cor: "#D85A30" }]);
+
   const toggleCap = (i) => setData(d => ({
     ...d,
     armas: d.armas.map((a, idx) => idx === i ? { ...a, status: a.status === "Capturada" ? "Não capturada" : "Capturada" } : a)
   }));
 
+  const action = isLider && (
+    editando ? (
+      <div className="flex gap-2">
+        <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+        <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+      </div>
+    ) : (
+      <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar Armas</Btn>
+    )
+  );
+
+  const armas = editando ? draft : data.armas;
+
   return (
     <div>
-      <SectionTitle icon={ISwords} sub="As três relíquias para fundar Kumogakure">Armas Lendárias</SectionTitle>
-      <div className="grid md:grid-cols-3 gap-4">
-        {data.armas.map((a, i) => {
+      <SectionTitle icon={ISwords} sub="Relíquias lendárias" action={action}>Armas Lendárias</SectionTitle>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {armas.map((a, i) => {
           const cap = a.status === "Capturada";
           return (
-            <div key={i} className={`rounded-lg border overflow-hidden ${cap ? "border-green-700 bg-green-950/10" : "border-zinc-800 bg-gradient-to-br from-zinc-950 to-black"}`}>
+            <div key={a.id || i} className={`rounded-lg border overflow-hidden ${cap ? "border-green-700 bg-green-950/10" : "border-zinc-800 bg-gradient-to-br from-zinc-950 to-black"}`}>
               <div className="p-5 border-b border-zinc-800" style={{ background: `linear-gradient(135deg, ${a.cor}22, transparent)` }}>
-                <div className="text-xs uppercase tracking-widest mb-1" style={{ color: a.cor }}>{a.vila}</div>
-                <h3 className="text-2xl font-black text-orange-50 serif">{a.nome}</h3>
+                {editando ? (
+                  <div className="space-y-2">
+                    <input value={a.nome} onChange={(e) => updateArma(i, { nome: e.target.value })} placeholder="Nome" className="fox-input" />
+                    <input value={a.vila} onChange={(e) => updateArma(i, { vila: e.target.value })} placeholder="Vila de origem" className="fox-input" />
+                    <div className="flex gap-2 items-center">
+                      <label className="fox-label mb-0">Cor</label>
+                      <input type="color" value={a.cor} onChange={(e) => updateArma(i, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" />
+                      <button onClick={() => { if (confirm(`Remover ${a.nome}?`)) removeArma(i); }} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-xs uppercase tracking-widest mb-1" style={{ color: a.cor }}>{a.vila}</div>
+                    <h3 className="text-2xl font-black text-orange-50 serif">{a.nome}</h3>
+                  </>
+                )}
               </div>
               <div className="p-5 space-y-3">
-                <div className="flex justify-between text-sm"><span className="text-zinc-500 uppercase tracking-wider text-xs">Dificuldade</span><span className="text-orange-300 font-bold">{a.dificuldade}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-zinc-500 uppercase tracking-wider text-xs">Status</span><span className={`font-bold ${cap ? "text-green-400" : "text-red-400"}`}>{a.status}</span></div>
-                {isLider && <Btn onClick={() => toggleCap(i)} variant={cap ? "danger" : "primary"} className="w-full justify-center mt-2">{cap ? "Marcar como não capturada" : "Marcar como capturada"}</Btn>}
+                {editando ? (
+                  <>
+                    <div>
+                      <label className="fox-label">Dificuldade</label>
+                      <select value={a.dificuldade} onChange={(e) => updateArma(i, { dificuldade: e.target.value })} className="fox-input">
+                        <option>Fácil</option><option>Médio</option><option>Difícil</option><option>Impossível</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="fox-label">Status</label>
+                      <select value={a.status} onChange={(e) => updateArma(i, { status: e.target.value })} className="fox-input">
+                        <option>Não capturada</option><option>Capturada</option><option>Em custódia de aliado</option><option>Perdida</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm"><span className="text-zinc-500 uppercase tracking-wider text-xs">Dificuldade</span><span className="text-orange-300 font-bold">{a.dificuldade}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-zinc-500 uppercase tracking-wider text-xs">Status</span><span className={`font-bold ${cap ? "text-green-400" : "text-red-400"}`}>{a.status}</span></div>
+                    {isLider && <Btn onClick={() => toggleCap(i)} variant={cap ? "danger" : "primary"} className="w-full justify-center mt-2">{cap ? "Marcar como não capturada" : "Marcar como capturada"}</Btn>}
+                  </>
+                )}
               </div>
             </div>
           );
         })}
+        {editando && (
+          <button onClick={addArma} className="rounded-lg border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 py-16 flex flex-col items-center gap-2 transition-colors">
+            <IPlus className="w-8 h-8" />
+            <span className="uppercase tracking-wider text-xs font-bold">Nova Arma</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1323,9 +1520,9 @@ function LoginScreen({ data, onLogin }) {
           <div className="inline-block p-4 rounded-full border-2 border-orange-700 bg-black mb-4">
             <IFlame className="w-10 h-10 text-orange-500 pulse-fire" />
           </div>
-          <div className="text-orange-600 text-xs uppercase tracking-[0.4em] mb-1">Jikkai</div>
+          <div className="text-orange-600 text-xs uppercase tracking-[0.4em] mb-1">Força Operacional de Extermínio</div>
           <h1 className="text-5xl font-black text-orange-50 serif">F.O.X.</h1>
-          <p className="text-zinc-600 text-sm italic mt-2">Portal Restrito</p>
+          <p className="text-zinc-600 text-sm italic mt-2">Portal restrito ao clã Lamona</p>
         </div>
         <form onSubmit={tentar} className="bg-zinc-950/80 border border-orange-900/40 rounded-lg p-6 backdrop-blur space-y-4">
           <div><label className="fox-label">Identificação</label><input value={user} onChange={(e) => setUser(e.target.value)} className="fox-input" placeholder="Seu username" /></div>
@@ -1335,7 +1532,7 @@ function LoginScreen({ data, onLogin }) {
             <ILock className="w-4 h-4" /> Entrar nas Sombras
           </button>
           <div className="text-center text-zinc-700 text-xs pt-2">
-            Descubra seu acesso <code className="text-orange-700">com o líder.</code>
+            Acesso inicial: <code className="text-orange-700">leader / jikkai123</code>
           </div>
         </form>
       </div>
@@ -1351,10 +1548,29 @@ const DEFAULT_DATA = {
   trios: DEFAULT_TRIOS,
   fases: DEFAULT_FASES,
   armas: DEFAULT_ARMAS,
+  clas: DEFAULT_CLAS,
+  historia: DEFAULT_HISTORIA,
   sokeFiguras: [],
   bunkeFiguras: [],
   juramentados: [],
 };
+
+// Migra dados antigos garantindo que novos campos existam
+function migrate(raw) {
+  if (!raw || !raw.users) return DEFAULT_DATA;
+  const migrated = { ...DEFAULT_DATA, ...raw };
+  // Se clas ainda não existe, cria a partir de Soke/Bunke padrão e migra as figuras antigas
+  if (!raw.clas) {
+    migrated.clas = [
+      { ...DEFAULT_CLAS[0], figuras: raw.sokeFiguras || [] },
+      { ...DEFAULT_CLAS[1], figuras: raw.bunkeFiguras || [] },
+    ];
+  }
+  if (!raw.historia) migrated.historia = DEFAULT_HISTORIA;
+  // Garante ids nas armas
+  migrated.armas = (raw.armas || DEFAULT_ARMAS).map((a, i) => a.id ? a : { ...a, id: `arma_${i}_${Date.now().toString(36)}` });
+  return migrated;
+}
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -1370,7 +1586,7 @@ function App() {
     let subscription = null;
     (async () => {
       const loaded = await loadState();
-      setData(loaded && loaded.users ? loaded : DEFAULT_DATA);
+      setData(migrate(loaded));
       setLoading(false);
 
       if (cloudClient) {
@@ -1380,9 +1596,10 @@ function App() {
             const newData = payload.new?.data;
             if (newData && Object.keys(newData).length > 0) {
               setData((current) => {
-                if (JSON.stringify(current) === JSON.stringify(newData)) return current;
+                const migrated = migrate(newData);
+                if (JSON.stringify(current) === JSON.stringify(migrated)) return current;
                 isRemoteUpdate.current = true;
-                return newData;
+                return migrated;
               });
             }
           })
@@ -1521,7 +1738,7 @@ function App() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {tab === "home" && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
-        {tab === "historia" && <HistoriaPage />}
+        {tab === "historia" && <HistoriaPage data={data} setData={setData} isLider={isLider} />}
         {tab === "cla" && <ClaPage data={data} setData={setData} isLider={isLider} />}
         {tab === "membros" && <MembrosPage data={data} />}
         {tab === "trios" && <TriosPage data={data} setData={setData} isLider={isLider} />}
