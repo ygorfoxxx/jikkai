@@ -160,8 +160,9 @@ const FRASE_JURAMENTO = "Meu sangue pertence à F.O.X.";
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
-const SUPABASE_URL = "COLE_AQUI_O_PROJECT_URL";
-const SUPABASE_KEY = "COLE_AQUI_A_ANON_KEY";
+const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+
 
 const CLOUD_ENABLED = SUPABASE_URL && !SUPABASE_URL.startsWith("COLE_AQUI") && SUPABASE_KEY && !SUPABASE_KEY.startsWith("COLE_AQUI");
 const cloudClient = CLOUD_ENABLED && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -1520,9 +1521,9 @@ function LoginScreen({ data, onLogin }) {
           <div className="inline-block p-4 rounded-full border-2 border-orange-700 bg-black mb-4">
             <IFlame className="w-10 h-10 text-orange-500 pulse-fire" />
           </div>
-          <div className="text-orange-600 text-xs uppercase tracking-[0.4em] mb-1">Força Operacional de Extermínio</div>
+          <div className="text-orange-600 text-xs uppercase tracking-[0.4em] mb-1">JIKKAI</div>
           <h1 className="text-5xl font-black text-orange-50 serif">F.O.X.</h1>
-          <p className="text-zinc-600 text-sm italic mt-2">Portal restrito ao clã Lamona</p>
+          <p className="text-zinc-600 text-sm italic mt-2">Portal Restrito</p>
         </div>
         <form onSubmit={tentar} className="bg-zinc-950/80 border border-orange-900/40 rounded-lg p-6 backdrop-blur space-y-4">
           <div><label className="fox-label">Identificação</label><input value={user} onChange={(e) => setUser(e.target.value)} className="fox-input" placeholder="Seu username" /></div>
@@ -1532,7 +1533,7 @@ function LoginScreen({ data, onLogin }) {
             <ILock className="w-4 h-4" /> Entrar nas Sombras
           </button>
           <div className="text-center text-zinc-700 text-xs pt-2">
-            Acesso inicial: <code className="text-orange-700">leader / jikkai123</code>
+            Solicite seu login ao<code className="text-orange-700">líder</code>
           </div>
         </form>
       </div>
