@@ -233,6 +233,9 @@ const IDownload = (p) => <Ico {...p} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 
 const IUpload = (p) => <Ico {...p} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />;
 const ISettings = (p) => <Ico {...p} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />;
 const IClipboard = (p) => <Ico {...p} d={<><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></>} />;
+const IImage = (p) => <Ico {...p} d={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>} />;
+const ILink = (p) => <Ico {...p} d={<><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>} />;
+const ILoader = (p) => <Ico {...p} d={<><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></>} />;
 
 // ============ UI ============
 function StatusBadge({ status }) {
@@ -336,7 +339,324 @@ function InfoCard({ icon: I, title, desc }) {
   );
 }
 
-function HistoriaPage({ data, setData, isLider }) {
+// ============ GALERIA DE SOMBRAS ============
+function GaleriaModal({ onSave, onClose, usuario }) {
+  const [modo, setModo] = useState("upload"); // "upload" | "url"
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [url, setUrl] = useState("");
+  const [arquivo, setArquivo] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [erro, setErro] = useState(null);
+  const fileInputRef = useRef();
+
+  const escolherArquivo = (e) => {
+    setErro(null);
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      setErro("O arquivo precisa ser uma imagem (PNG, JPG, GIF, WEBP).");
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      setErro("Imagem muito grande. Máximo: 5MB.");
+      return;
+    }
+    setArquivo(f);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target.result);
+    reader.readAsDataURL(f);
+  };
+
+  const enviarUpload = async () => {
+    if (!arquivo) { setErro("Selecione uma imagem primeiro."); return; }
+    if (!titulo.trim()) { setErro("Dê um título à imagem."); return; }
+    if (!cloudClient) {
+      setErro("Sincronização em nuvem não configurada — upload indisponível.");
+      return;
+    }
+    setUploading(true);
+    setErro(null);
+    try {
+      const ext = (arquivo.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${Date.now()}-${uid()}.${ext}`;
+      const { error: upErr } = await cloudClient.storage.from("galeria").upload(path, arquivo, {
+        contentType: arquivo.type,
+        upsert: false,
+      });
+      if (upErr) throw upErr;
+      const { data: pubData } = cloudClient.storage.from("galeria").getPublicUrl(path);
+      const publicUrl = pubData?.publicUrl;
+      if (!publicUrl) throw new Error("Não foi possível obter a URL pública.");
+      onSave({
+        id: uid(),
+        url: publicUrl,
+        storagePath: path,
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        autor: usuario?.username || "?",
+        autorNome: usuario?.displayName || usuario?.username || "Desconhecido",
+        data: new Date().toISOString(),
+        source: "upload",
+      });
+    } catch (err) {
+      console.error("upload error", err);
+      setErro(`Erro no upload: ${err.message || "verifique o bucket 'galeria' no Supabase."}`);
+      setUploading(false);
+    }
+  };
+
+  const enviarUrl = () => {
+    setErro(null);
+    if (!url.trim()) { setErro("Cole a URL da imagem."); return; }
+    if (!/^https?:\/\/.+/i.test(url.trim())) { setErro("URL inválida. Deve começar com http:// ou https://"); return; }
+    if (!titulo.trim()) { setErro("Dê um título à imagem."); return; }
+    onSave({
+      id: uid(),
+      url: url.trim(),
+      storagePath: null,
+      titulo: titulo.trim(),
+      descricao: descricao.trim(),
+      autor: usuario?.username || "?",
+      autorNome: usuario?.displayName || usuario?.username || "Desconhecido",
+      data: new Date().toISOString(),
+      source: "url",
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={uploading ? null : onClose}>
+      <div className="bg-zinc-950 border border-orange-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-orange-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+          <div className="flex items-center gap-3">
+            <IImage className="w-6 h-6 text-orange-500" />
+            <h3 className="text-xl font-bold text-orange-50 serif">Adicionar à Galeria</h3>
+          </div>
+          <button onClick={onClose} disabled={uploading} className="text-zinc-500 hover:text-red-400 p-1 disabled:opacity-30"><IX className="w-5 h-5" /></button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* Toggle modo */}
+          <div className="flex gap-1 bg-zinc-900/60 border border-zinc-800 rounded p-1">
+            <button
+              onClick={() => { setModo("upload"); setErro(null); }}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-xs uppercase tracking-wider font-bold transition-all ${modo === "upload" ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              disabled={uploading}
+            >
+              <IUpload className="w-3 h-3" /> Enviar Arquivo
+            </button>
+            <button
+              onClick={() => { setModo("url"); setErro(null); }}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-xs uppercase tracking-wider font-bold transition-all ${modo === "url" ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+              disabled={uploading}
+            >
+              <ILink className="w-3 h-3" /> Por URL
+            </button>
+          </div>
+
+          {modo === "upload" && (
+            <div>
+              <label className="fox-label">Imagem (max 5MB)</label>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={escolherArquivo} disabled={uploading} className="hidden" />
+              {!preview ? (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full border-2 border-dashed border-zinc-800 hover:border-orange-700 rounded-lg p-8 text-center text-zinc-500 hover:text-orange-400 transition-colors disabled:opacity-50"
+                >
+                  <IUpload className="w-10 h-10 mx-auto mb-2" />
+                  <div className="text-sm font-bold uppercase tracking-wider">Clique para escolher</div>
+                  <div className="text-xs text-zinc-600 mt-1">PNG, JPG, GIF, WEBP</div>
+                </button>
+              ) : (
+                <div className="relative">
+                  <img src={preview} alt="preview" className="w-full max-h-64 object-contain bg-black rounded border border-orange-900/40" />
+                  <button
+                    onClick={() => { setArquivo(null); setPreview(null); fileInputRef.current.value = ""; }}
+                    disabled={uploading}
+                    className="absolute top-2 right-2 bg-black/80 border border-red-700 text-red-400 hover:bg-red-950 p-1.5 rounded"
+                  >
+                    <IX className="w-4 h-4" />
+                  </button>
+                  <div className="text-xs text-zinc-500 mt-2 truncate">{arquivo?.name} · {(arquivo?.size / 1024).toFixed(0)}KB</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {modo === "url" && (
+            <div>
+              <label className="fox-label">URL da imagem</label>
+              <input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={uploading}
+                className="fox-input"
+                placeholder="https://exemplo.com/imagem.png"
+              />
+              {url && /^https?:\/\/.+/i.test(url) && (
+                <img src={url} alt="preview" className="mt-3 w-full max-h-64 object-contain bg-black rounded border border-orange-900/40" onError={(e) => e.target.style.display = "none"} />
+              )}
+            </div>
+          )}
+
+          <div>
+            <label className="fox-label">Título *</label>
+            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} disabled={uploading} className="fox-input" placeholder="Ex: Confronto na ponte de Konoha" />
+          </div>
+          <div>
+            <label className="fox-label">Descrição / contexto do RP</label>
+            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="3" disabled={uploading} className="fox-input" placeholder="Quem estava, o que aconteceu, qual o contexto..." />
+          </div>
+
+          {erro && (
+            <div className="p-3 bg-red-950/40 border border-red-800 rounded text-red-300 text-sm flex items-start gap-2">
+              <IAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{erro}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
+          <Btn onClick={onClose} variant="ghost" disabled={uploading}><IX className="w-3 h-3" /> Cancelar</Btn>
+          {modo === "upload" ? (
+            <Btn onClick={enviarUpload} variant="primary" disabled={uploading || !arquivo || !titulo.trim()}>
+              {uploading ? <><ILoader className="w-3 h-3 animate-spin" /> Enviando...</> : <><IUpload className="w-3 h-3" /> Enviar para Galeria</>}
+            </Btn>
+          ) : (
+            <Btn onClick={enviarUrl} variant="primary" disabled={!url.trim() || !titulo.trim()}>
+              <ILink className="w-3 h-3" /> Adicionar
+            </Btn>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Lightbox({ item, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black/95 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="flex items-center justify-between p-4 border-b border-orange-900/30">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-orange-50 font-bold serif text-lg truncate">{item.titulo}</h3>
+          <div className="text-zinc-500 text-xs">Por <strong className="text-orange-600">{item.autorNome}</strong> · {new Date(item.data).toLocaleDateString("pt-BR")}</div>
+        </div>
+        <button onClick={onClose} className="text-zinc-400 hover:text-red-400 p-2 ml-4"><IX className="w-6 h-6" /></button>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-4 overflow-auto" onClick={(e) => e.stopPropagation()}>
+        <img src={item.url} alt={item.titulo} className="max-w-full max-h-full object-contain" />
+      </div>
+      {item.descricao && (
+        <div className="p-4 border-t border-orange-900/30 max-h-32 overflow-y-auto">
+          <p className="text-zinc-300 text-sm whitespace-pre-wrap max-w-3xl mx-auto">{item.descricao}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GaleriaSection({ data, setData, isLider, usuario }) {
+  const [modal, setModal] = useState(false);
+  const [lightbox, setLightbox] = useState(null);
+
+  const galeria = (data.galeria || []).slice().sort((a, b) => new Date(b.data) - new Date(a.data));
+
+  const adicionar = (item) => {
+    setData(d => ({ ...d, galeria: [...(d.galeria || []), item] }));
+    setModal(false);
+  };
+
+  const deletar = async (item) => {
+    if (!confirm(`Deletar "${item.titulo}"? Esta ação não pode ser desfeita.`)) return;
+    // Se foi upload pra storage, tentar remover de lá também
+    if (item.storagePath && cloudClient) {
+      try {
+        await cloudClient.storage.from("galeria").remove([item.storagePath]);
+      } catch (e) {
+        console.error("Erro ao remover do storage (mantendo no JSON):", e);
+      }
+    }
+    setData(d => ({ ...d, galeria: (d.galeria || []).filter(g => g.id !== item.id) }));
+  };
+
+  return (
+    <div className="fadein">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div className="border-l-4 border-orange-600 pl-4">
+          <div className="flex items-center gap-3">
+            <IImage className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Galeria de Sombras</h2>
+          </div>
+          <p className="text-zinc-500 text-sm mt-1 italic">{galeria.length} {galeria.length === 1 ? "registro" : "registros"} dos RPs do clã</p>
+        </div>
+        <Btn onClick={() => setModal(true)} variant="primary"><IPlus className="w-3 h-3" /> Enviar Print</Btn>
+      </div>
+
+      {!CLOUD_ENABLED && (
+        <div className="p-4 mb-4 bg-yellow-950/30 border border-yellow-800/50 rounded text-yellow-300 text-sm flex items-start gap-2">
+          <IAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <strong>Sincronização em nuvem desativada.</strong> Upload de arquivos não funciona neste modo. Use a opção "Por URL" para adicionar imagens hospedadas externamente.
+          </div>
+        </div>
+      )}
+
+      {galeria.length === 0 && (
+        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg">
+          <IImage className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-500">Galeria vazia.</p>
+          <p className="text-zinc-700 text-xs italic mt-2">Envie o primeiro print das sombras.</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {galeria.map((g) => (
+          <div key={g.id} className="group relative bg-zinc-950 border border-orange-900/30 hover:border-orange-600 rounded-lg overflow-hidden transition-all">
+            <button onClick={() => setLightbox(g)} className="w-full aspect-square overflow-hidden bg-black block">
+              <img
+                src={g.url}
+                alt={g.titulo}
+                loading="lazy"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => { e.target.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCBmaWxsPSIjMWExYTFhIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIvPjx0ZXh0IGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiB4PSI1MCIgeT0iNTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmltYWdlbSBpbmRpc3BvbsOtdmVsPC90ZXh0Pjwvc3ZnPg=="; }}
+              />
+            </button>
+            {isLider && (
+              <button
+                onClick={() => deletar(g)}
+                className="absolute top-2 right-2 bg-black/80 border border-red-700 text-red-400 hover:bg-red-950 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Deletar"
+              >
+                <ITrash className="w-4 h-4" />
+              </button>
+            )}
+            <div className="p-3 border-t border-orange-900/20">
+              <div className="text-orange-50 font-bold text-sm truncate" title={g.titulo}>{g.titulo}</div>
+              {g.descricao && <div className="text-zinc-500 text-xs truncate mt-0.5" title={g.descricao}>{g.descricao}</div>}
+              <div className="text-zinc-700 text-[10px] mt-1 flex items-center justify-between">
+                <span className="truncate">{g.autorNome}</span>
+                <span className="flex-shrink-0 ml-2">{new Date(g.data).toLocaleDateString("pt-BR")}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {modal && <GaleriaModal onSave={adicionar} onClose={() => setModal(false)} usuario={usuario} />}
+      {lightbox && <Lightbox item={lightbox} onClose={() => setLightbox(null)} />}
+    </div>
+  );
+}
+
+function LinhaDoTempoSection({ data, setData, isLider }) {
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.historia);
 
@@ -355,22 +675,27 @@ function HistoriaPage({ data, setData, isLider }) {
     setDraft(n);
   };
 
-  const action = isLider && (
-    editando ? (
-      <div className="flex gap-2">
-        <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-        <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
-      </div>
-    ) : (
-      <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
-    )
-  );
-
   const eventos = editando ? draft : data.historia;
 
   return (
-    <div>
-      <SectionTitle icon={IBook} sub="Da queda de Uzushio ao nascimento da F.O.X." action={action}>História do Clã</SectionTitle>
+    <div className="fadein">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div className="border-l-4 border-orange-600 pl-4">
+          <div className="flex items-center gap-3">
+            <IBook className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Linha do Tempo</h2>
+          </div>
+          <p className="text-zinc-500 text-sm mt-1 italic">Da queda de Uzushio ao nascimento da F.O.X.</p>
+        </div>
+        {isLider && (editando ? (
+          <div className="flex gap-2">
+            <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+            <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+          </div>
+        ) : (
+          <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
+        ))}
+      </div>
       <div className="relative pl-8 space-y-6 border-l-2 border-orange-900/40">
         {eventos.map((e, i) => (
           <div key={e.id || i} className="relative">
@@ -408,6 +733,46 @@ function HistoriaPage({ data, setData, isLider }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function HistoriaPage({ data, setData, isLider, usuario }) {
+  const [subTab, setSubTab] = useState("timeline");
+
+  const galeriaCount = (data.galeria || []).length;
+
+  const SUB_TABS = [
+    { id: "timeline", label: "Linha do Tempo", icon: IBook, badge: null },
+    { id: "galeria", label: "Galeria de Sombras", icon: IImage, badge: galeriaCount > 0 ? galeriaCount : null },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon={IBook} sub="O legado e os registros do clã Lamona">História</SectionTitle>
+
+      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+        {SUB_TABS.map(t => {
+          const I = t.icon;
+          const active = subTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setSubTab(t.id)}
+              className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
+            >
+              <I className="w-4 h-4" />
+              <span>{t.label}</span>
+              {t.badge && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {subTab === "timeline" && <LinhaDoTempoSection data={data} setData={setData} isLider={isLider} />}
+      {subTab === "galeria" && <GaleriaSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
     </div>
   );
 }
@@ -753,7 +1118,456 @@ function FaseEditor({ fase, onSave, onCancel }) {
   );
 }
 
-function JikkaiPage({ data, setData, isLider }) {
+// ============ RELATÓRIOS DE INTELIGÊNCIA ============
+const CONFID_CFG = {
+  "Público":      { cor: "#16A34A", bg: "bg-green-950/30",   border: "border-green-800",   text: "text-green-300" },
+  "Interno":      { cor: "#EA580C", bg: "bg-orange-950/30",  border: "border-orange-800",  text: "text-orange-300" },
+  "Confidencial": { cor: "#B91C1C", bg: "bg-red-950/40",     border: "border-red-800",     text: "text-red-300" },
+};
+
+function RelatorioModal({ relatorio, onSave, onClose }) {
+  const editando = !!relatorio?.id;
+  const [titulo, setTitulo] = useState(relatorio?.titulo || "");
+  const [local, setLocal] = useState(relatorio?.local || "");
+  const [descricao, setDescricao] = useState(relatorio?.descricao || "");
+  const [confidencialidade, setConfid] = useState(relatorio?.confidencialidade || "Interno");
+
+  const valido = titulo.trim() && descricao.trim();
+
+  const salvar = () => {
+    if (!valido) return;
+    onSave({
+      titulo: titulo.trim(),
+      local: local.trim(),
+      descricao: descricao.trim(),
+      confidencialidade,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="bg-zinc-950 border border-orange-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-orange-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+          <div className="flex items-center gap-3">
+            <IFile className="w-6 h-6 text-orange-500" />
+            <h3 className="text-xl font-bold text-orange-50 serif">{editando ? "Editar Relatório" : "Novo Relatório de Inteligência"}</h3>
+          </div>
+          <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="fox-label">Título *</label>
+            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: Movimentação suspeita em Kirigakure" autoFocus />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="fox-label">Local / Vila</label>
+              <input value={local} onChange={(e) => setLocal(e.target.value)} className="fox-input" placeholder="Ex: Konohagakure, Fronteira Sul..." />
+            </div>
+            <div>
+              <label className="fox-label">Confidencialidade</label>
+              <select value={confidencialidade} onChange={(e) => setConfid(e.target.value)} className="fox-input">
+                <option>Público</option>
+                <option>Interno</option>
+                <option>Confidencial</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="fox-label">Descrição completa *</label>
+            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="8" className="fox-input" placeholder="Detalhes da observação, contexto, possíveis implicações..." />
+          </div>
+        </div>
+        <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
+          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> {editando ? "Salvar Alterações" : "Enviar Relatório"}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RelatoriosSection({ data, setData, isLider, usuario }) {
+  const [modal, setModal] = useState(null); // null | {} (criar) | {id, ...} (editar)
+
+  const relatorios = (data.relatorios || []).slice().sort((a, b) => new Date(b.data) - new Date(a.data));
+
+  const criar = (form) => {
+    const novo = {
+      id: uid(),
+      ...form,
+      autorUsername: usuario?.username || "?",
+      autorNome: usuario?.displayName || usuario?.username || "Desconhecido",
+      data: new Date().toISOString(),
+    };
+    setData(d => ({ ...d, relatorios: [...(d.relatorios || []), novo] }));
+    setModal(null);
+  };
+
+  const editar = (form) => {
+    setData(d => ({
+      ...d,
+      relatorios: (d.relatorios || []).map(r => r.id === modal.id ? { ...r, ...form, editadoEm: new Date().toISOString() } : r),
+    }));
+    setModal(null);
+  };
+
+  const deletar = (id) => {
+    if (!confirm("Deletar este relatório? Esta ação não pode ser desfeita.")) return;
+    setData(d => ({ ...d, relatorios: (d.relatorios || []).filter(r => r.id !== id) }));
+  };
+
+  return (
+    <div className="fadein">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div className="border-l-4 border-orange-600 pl-4">
+          <div className="flex items-center gap-3">
+            <IFile className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Relatórios de Inteligência</h2>
+          </div>
+          <p className="text-zinc-500 text-sm mt-1 italic">{relatorios.length} {relatorios.length === 1 ? "relatório registrado" : "relatórios registrados"}</p>
+        </div>
+        <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> Novo Relatório</Btn>
+      </div>
+
+      {relatorios.length === 0 && (
+        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg">
+          <IFile className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-500">Nenhum relatório de inteligência ainda.</p>
+          <p className="text-zinc-700 text-xs italic mt-2">Seja o primeiro a reportar.</p>
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {relatorios.map((r) => {
+          const c = CONFID_CFG[r.confidencialidade] || CONFID_CFG["Interno"];
+          return (
+            <div key={r.id} className={`rounded-lg border ${c.border} ${c.bg} p-5 fadein hover:border-orange-600 transition-colors`}>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>
+                      {r.confidencialidade}
+                    </span>
+                    {r.local && <span className="text-zinc-500 text-xs uppercase tracking-wider">{r.local}</span>}
+                  </div>
+                  <h3 className="text-orange-50 font-bold text-lg serif leading-tight">{r.titulo}</h3>
+                </div>
+                {isLider && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => setModal(r)} className="p-1.5 text-orange-400 hover:text-orange-300" title="Editar"><IEdit className="w-4 h-4" /></button>
+                    <button onClick={() => deletar(r.id)} className="p-1.5 text-red-500 hover:text-red-400" title="Deletar"><ITrash className="w-4 h-4" /></button>
+                  </div>
+                )}
+              </div>
+              <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap mt-3 mb-4">{r.descricao}</p>
+              <div className="pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-600">
+                <span>Por <strong className="text-orange-600">{r.autorNome}</strong></span>
+                <span>{new Date(r.data).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+              {r.editadoEm && <div className="text-[10px] text-zinc-700 italic mt-1">editado em {new Date(r.editadoEm).toLocaleDateString("pt-BR")}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {modal && (
+        <RelatorioModal
+          relatorio={modal.id ? modal : null}
+          onSave={modal.id ? editar : criar}
+          onClose={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============ CONTRATOS - MERCENÁRIOS ============
+const CONTRATO_STATUS_CFG = {
+  "Aberto":       { cor: "#16A34A", border: "border-green-700",  bg: "bg-green-950/20",  badge: "bg-green-900 text-green-300" },
+  "Em Andamento": { cor: "#EA580C", border: "border-orange-700", bg: "bg-orange-950/20", badge: "bg-orange-700 text-black" },
+  "Concluído":    { cor: "#71717a", border: "border-zinc-700",   bg: "bg-zinc-950/40",   badge: "bg-zinc-800 text-zinc-400" },
+};
+
+const DIFICULDADE_CFG = {
+  "Fácil":      { cor: "#16A34A" },
+  "Médio":      { cor: "#EAB308" },
+  "Difícil":    { cor: "#EA580C" },
+  "Letal":      { cor: "#B91C1C" },
+};
+
+function ContratoModal({ contrato, onSave, onClose }) {
+  const editando = !!contrato?.id;
+  const [titulo, setTitulo] = useState(contrato?.titulo || "");
+  const [descricaoCurta, setDescCurta] = useState(contrato?.descricaoCurta || "");
+  const [descricao, setDescricao] = useState(contrato?.descricao || "");
+  const [valorRecompensa, setValor] = useState(contrato?.valorRecompensa || 100);
+  const [tipoRecompensa, setTipo] = useState(contrato?.tipoRecompensa || "Pontos de Sangue");
+  const [dificuldade, setDificuldade] = useState(contrato?.dificuldade || "Médio");
+  const [status, setStatus] = useState(contrato?.status || "Aberto");
+
+  const valido = titulo.trim() && descricaoCurta.trim();
+
+  const salvar = () => {
+    if (!valido) return;
+    onSave({
+      titulo: titulo.trim(),
+      descricaoCurta: descricaoCurta.trim(),
+      descricao: descricao.trim(),
+      valorRecompensa: Number(valorRecompensa) || 0,
+      tipoRecompensa,
+      dificuldade,
+      status,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="bg-zinc-950 border border-red-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-red-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+          <div className="flex items-center gap-3">
+            <ISkull className="w-6 h-6 text-red-500" />
+            <h3 className="text-xl font-bold text-orange-50 serif">{editando ? "Editar Contrato" : "Forjar Novo Contrato"}</h3>
+          </div>
+          <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="fox-label">Título *</label>
+            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: Eliminar mercador de Konoha" autoFocus />
+          </div>
+          <div>
+            <label className="fox-label">Descrição curta * (mostrada no card)</label>
+            <input value={descricaoCurta} onChange={(e) => setDescCurta(e.target.value)} className="fox-input" placeholder="Resumo de uma linha" />
+          </div>
+          <div>
+            <label className="fox-label">Descrição completa</label>
+            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="6" className="fox-input" placeholder="Detalhes do contrato, alvo, contexto, prazo..." />
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div>
+              <label className="fox-label">Recompensa</label>
+              <input type="number" value={valorRecompensa} onChange={(e) => setValor(e.target.value)} className="fox-input" />
+            </div>
+            <div>
+              <label className="fox-label">Moeda</label>
+              <select value={tipoRecompensa} onChange={(e) => setTipo(e.target.value)} className="fox-input">
+                <option>Pontos de Sangue</option>
+                <option>Ryō</option>
+              </select>
+            </div>
+            <div>
+              <label className="fox-label">Dificuldade</label>
+              <select value={dificuldade} onChange={(e) => setDificuldade(e.target.value)} className="fox-input">
+                <option>Fácil</option><option>Médio</option><option>Difícil</option><option>Letal</option>
+              </select>
+            </div>
+          </div>
+          {editando && (
+            <div>
+              <label className="fox-label">Status</label>
+              <select value={status} onChange={(e) => setStatus(e.target.value)} className="fox-input">
+                <option>Aberto</option><option>Em Andamento</option><option>Concluído</option>
+              </select>
+            </div>
+          )}
+        </div>
+        <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
+          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> {editando ? "Salvar" : "Forjar Contrato"}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContratosSection({ data, setData, isLider, usuario }) {
+  const [modal, setModal] = useState(null);
+  const [filtro, setFiltro] = useState("Todos");
+  const [expandido, setExpandido] = useState(null);
+
+  const todos = (data.contratos || []).slice().sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+  const contratos = filtro === "Todos" ? todos : todos.filter(c => c.status === filtro);
+
+  const criar = (form) => {
+    const novo = {
+      id: uid(),
+      ...form,
+      criadoPor: usuario?.username || "?",
+      criadoPorNome: usuario?.displayName || usuario?.username || "Desconhecido",
+      criadoEm: new Date().toISOString(),
+    };
+    setData(d => ({ ...d, contratos: [...(d.contratos || []), novo] }));
+    setModal(null);
+  };
+
+  const editar = (form) => {
+    setData(d => ({
+      ...d,
+      contratos: (d.contratos || []).map(c => c.id === modal.id ? { ...c, ...form } : c),
+    }));
+    setModal(null);
+  };
+
+  const deletar = (id) => {
+    if (!confirm("Deletar este contrato? Esta ação não pode ser desfeita.")) return;
+    setData(d => ({ ...d, contratos: (d.contratos || []).filter(c => c.id !== id) }));
+  };
+
+  const aceitar = (contrato) => {
+    if (!confirm(`Aceitar o contrato "${contrato.titulo}"? Será criada uma missão atribuída a você.`)) return;
+    const missaoId = uid();
+    const novaMissao = {
+      id: missaoId,
+      titulo: `[Contrato] ${contrato.titulo}`,
+      desc: contrato.descricao || contrato.descricaoCurta,
+      assignedTo: usuario.username,
+      assignedBy: contrato.criadoPor,
+      createdAt: new Date().toISOString(),
+      objetivos: [],
+      status: "andamento",
+      contratoId: contrato.id,
+      recompensa: `${contrato.valorRecompensa} ${contrato.tipoRecompensa}`,
+    };
+    setData(d => ({
+      ...d,
+      missoes: [...d.missoes, novaMissao],
+      contratos: d.contratos.map(c => c.id === contrato.id ? {
+        ...c,
+        status: "Em Andamento",
+        aceitoPor: usuario.username,
+        aceitoPorNome: usuario.displayName || usuario.username,
+        aceitoEm: new Date().toISOString(),
+        missaoId,
+      } : c),
+    }));
+    alert("Contrato aceito! Verifique a aba Missões.");
+  };
+
+  const FILTROS = ["Todos", "Aberto", "Em Andamento", "Concluído"];
+
+  return (
+    <div className="fadein">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+        <div className="border-l-4 border-red-700 pl-4">
+          <div className="flex items-center gap-3">
+            <ISwords className="w-6 h-6 text-red-500" />
+            <h2 className="text-2xl font-bold text-red-50 tracking-wide serif">Contratos — Mercenários</h2>
+          </div>
+          <p className="text-zinc-500 text-sm mt-1 italic">{todos.length} {todos.length === 1 ? "contrato forjado" : "contratos forjados"}</p>
+        </div>
+        {isLider && <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> Forjar Contrato</Btn>}
+      </div>
+
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {FILTROS.map(f => {
+          const active = filtro === f;
+          const count = f === "Todos" ? todos.length : todos.filter(c => c.status === f).length;
+          return (
+            <button key={f} onClick={() => setFiltro(f)} className={`px-3 py-1.5 rounded text-xs uppercase tracking-wider font-bold border transition-colors ${active ? "bg-red-700 border-red-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"}`}>
+              {f} <span className="opacity-60">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {contratos.length === 0 && (
+        <div className="p-8 text-center bg-zinc-950/50 border border-red-900/30 rounded-lg">
+          <ISkull className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+          <p className="text-zinc-500">{todos.length === 0 ? "Nenhum contrato forjado ainda." : "Nenhum contrato neste filtro."}</p>
+          {todos.length === 0 && isLider && <p className="text-zinc-700 text-xs italic mt-2">Forje o primeiro contrato de sangue.</p>}
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {contratos.map((c) => {
+          const sc = CONTRATO_STATUS_CFG[c.status] || CONTRATO_STATUS_CFG["Aberto"];
+          const dc = DIFICULDADE_CFG[c.dificuldade] || DIFICULDADE_CFG["Médio"];
+          const expanded = expandido === c.id;
+          const podeAceitar = c.status === "Aberto" && usuario && !isLider;
+          const aceito = c.aceitoPor === usuario?.username;
+          return (
+            <div key={c.id} className={`relative rounded-lg border-2 ${sc.border} ${sc.bg} p-5 fadein hover:border-red-500 transition-colors`}
+                 style={{ backgroundImage: "radial-gradient(circle at top right, rgba(185,28,28,0.08), transparent 60%)" }}>
+              {/* Selo de sangue no canto */}
+              <div className="absolute top-3 right-3 opacity-20">
+                <ISkull className="w-12 h-12 text-red-700" />
+              </div>
+
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${sc.badge}`}>{c.status}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: dc.cor, borderColor: dc.cor + "80", background: dc.cor + "15" }}>
+                    {c.dificuldade}
+                  </span>
+                </div>
+
+                <h3 className="text-orange-50 font-bold text-lg serif leading-tight mb-1 pr-10">{c.titulo}</h3>
+                <p className="text-zinc-400 text-sm mb-3">{c.descricaoCurta}</p>
+
+                {/* Recompensa em destaque */}
+                <div className="flex items-center gap-2 mb-3 p-2 bg-black/60 border border-red-900/40 rounded">
+                  <div className="w-2 h-2 rounded-full bg-red-500 pulse-fire" />
+                  <div className="text-xs uppercase tracking-wider text-zinc-500">Recompensa:</div>
+                  <div className="text-orange-300 font-black text-sm">{c.valorRecompensa.toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{c.tipoRecompensa}</span></div>
+                </div>
+
+                {expanded && c.descricao && (
+                  <div className="mb-3 p-3 bg-black/40 border border-zinc-800 rounded text-sm text-zinc-300 whitespace-pre-wrap">
+                    {c.descricao}
+                  </div>
+                )}
+
+                {c.aceitoPorNome && (
+                  <div className="text-xs text-zinc-600 mb-3">
+                    Aceito por <strong className="text-orange-500">{c.aceitoPorNome}</strong>
+                    {c.aceitoEm && ` em ${new Date(c.aceitoEm).toLocaleDateString("pt-BR")}`}
+                  </div>
+                )}
+
+                <div className="flex gap-2 mt-3 pt-3 border-t border-red-900/30 flex-wrap">
+                  {c.descricao && (
+                    <Btn onClick={() => setExpandido(expanded ? null : c.id)} variant="ghost">
+                      {expanded ? "Recolher" : "Detalhes"}
+                    </Btn>
+                  )}
+                  {podeAceitar && (
+                    <Btn onClick={() => aceitar(c)} variant="primary" className="ml-auto">
+                      <ISkull className="w-3 h-3" /> Aceitar Contrato
+                    </Btn>
+                  )}
+                  {aceito && c.status === "Em Andamento" && (
+                    <span className="ml-auto text-xs uppercase tracking-wider text-orange-500 self-center font-bold">Você aceitou este</span>
+                  )}
+                  {isLider && (
+                    <div className="flex gap-1 ml-auto">
+                      <button onClick={() => setModal(c)} className="p-1.5 text-orange-400 hover:text-orange-300" title="Editar"><IEdit className="w-4 h-4" /></button>
+                      <button onClick={() => deletar(c.id)} className="p-1.5 text-red-500 hover:text-red-400" title="Deletar"><ITrash className="w-4 h-4" /></button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-[10px] text-zinc-700 italic mt-2">
+                  Forjado por {c.criadoPorNome || c.criadoPor} · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {modal && (
+        <ContratoModal
+          contrato={modal.id ? modal : null}
+          onSave={modal.id ? editar : criar}
+          onClose={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PlanoSection({ data, setData, isLider }) {
   const [editandoFase, setEditandoFase] = useState(null);
 
   const updateFase = (n, patch) => setData(d => ({ ...d, fases: d.fases.map(f => f.n === n ? { ...f, ...patch } : f) }));
@@ -763,8 +1577,14 @@ function JikkaiPage({ data, setData, isLider }) {
   };
 
   return (
-    <div>
-      <SectionTitle icon={ITarget} sub="O grande plano para fundar Kumogakure">JIKKAI</SectionTitle>
+    <div className="fadein">
+      <div className="border-l-4 border-orange-600 pl-4 mb-6">
+        <div className="flex items-center gap-3">
+          <ITarget className="w-6 h-6 text-orange-500" />
+          <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Plano JIKKAI</h2>
+        </div>
+        <p className="text-zinc-500 text-sm mt-1 italic">As fases para a fundação de Kumogakure</p>
+      </div>
       <div className="space-y-4">
         {data.fases.map((f) => {
           const c = STATUS_CFG[f.status] || STATUS_CFG.pendente;
@@ -806,6 +1626,50 @@ function JikkaiPage({ data, setData, isLider }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function JikkaiPage({ data, setData, isLider, usuario }) {
+  const [subTab, setSubTab] = useState("plano");
+
+  const contratosAbertos = (data.contratos || []).filter(c => c.status === "Aberto").length;
+  const relatoriosCount = (data.relatorios || []).length;
+
+  const SUB_TABS = [
+    { id: "plano", label: "Plano", icon: ITarget, badge: null },
+    { id: "contratos", label: "Contratos", icon: ISwords, badge: contratosAbertos > 0 ? contratosAbertos : null },
+    { id: "relatorios", label: "Relatórios", icon: IFile, badge: relatoriosCount > 0 ? relatoriosCount : null },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon={ITarget} sub="O grande plano para fundar Kumogakure">JIKKAI</SectionTitle>
+
+      {/* Sub-navegação */}
+      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+        {SUB_TABS.map(t => {
+          const I = t.icon;
+          const active = subTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setSubTab(t.id)}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
+            >
+              <I className="w-4 h-4" />
+              <span>{t.label}</span>
+              {t.badge && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} />}
+      {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
+      {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
     </div>
   );
 }
@@ -1554,6 +2418,9 @@ const DEFAULT_DATA = {
   sokeFiguras: [],
   bunkeFiguras: [],
   juramentados: [],
+  relatorios: [],
+  contratos: [],
+  galeria: [],
 };
 
 // Migra dados antigos garantindo que novos campos existam
@@ -1568,6 +2435,9 @@ function migrate(raw) {
     ];
   }
   if (!raw.historia) migrated.historia = DEFAULT_HISTORIA;
+  if (!raw.relatorios) migrated.relatorios = [];
+  if (!raw.contratos) migrated.contratos = [];
+  if (!raw.galeria) migrated.galeria = [];
   // Garante ids nas armas
   migrated.armas = (raw.armas || DEFAULT_ARMAS).map((a, i) => a.id ? a : { ...a, id: `arma_${i}_${Date.now().toString(36)}` });
   return migrated;
@@ -1739,11 +2609,11 @@ function App() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {tab === "home" && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
-        {tab === "historia" && <HistoriaPage data={data} setData={setData} isLider={isLider} />}
+        {tab === "historia" && <HistoriaPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} />}
         {tab === "cla" && <ClaPage data={data} setData={setData} isLider={isLider} />}
         {tab === "membros" && <MembrosPage data={data} />}
         {tab === "trios" && <TriosPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} />}
+        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} />}
         {tab === "armas" && <ArmasPage data={data} setData={setData} isLider={isLider} />}
         {tab === "missoes" && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} />}
         {tab === "juramento" && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} />}
