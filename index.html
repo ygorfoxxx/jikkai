@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F.O.X. Portal · Clã Lamona</title>
+<title>F.O.X. Portal· JIKKAI </title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -53,15 +53,21 @@ function getCodinome(u) {
   if (!u) return "?";
   return u.codinome || u.displayName || u.username || "Membro";
 }
+// Versão MASCARADA: nunca expõe displayName, usada quando viewer é contratante
+function getCodinomeMascarado(u) {
+  if (!u) return "Operador F.O.X.";
+  if (u.role === "contratante") return u.codinome || u.displayName || u.username || "Contratante";
+  return u.codinome || "Operador F.O.X.";
+}
 function nomeParaExibir(targetUser, viewerIsContratante) {
   if (!targetUser) return "?";
-  if (viewerIsContratante) return getCodinome(targetUser);
+  if (viewerIsContratante) return getCodinomeMascarado(targetUser);
   return targetUser.displayName || targetUser.codinome || targetUser.username || "Membro";
 }
 // Procura usuário pelo username e aplica máscara
 function nomeUsernamePara(username, users, viewerIsContratante) {
   const u = users?.find(x => x.username === username);
-  if (!u) return username || "?";
+  if (!u) return viewerIsContratante ? "Operador F.O.X." : (username || "?");
   return nomeParaExibir(u, viewerIsContratante);
 }
 
@@ -1279,9 +1285,11 @@ function RelatoriosSection({ data, setData, isLider, usuario }) {
 
 // ============ CONTRATOS - MERCENÁRIOS ============
 const CONTRATO_STATUS_CFG = {
+  "Proposta":     { cor: "#A855F7", border: "border-purple-700", bg: "bg-purple-950/20", badge: "bg-purple-900 text-purple-300" },
   "Aberto":       { cor: "#16A34A", border: "border-green-700",  bg: "bg-green-950/20",  badge: "bg-green-900 text-green-300" },
   "Em Andamento": { cor: "#EA580C", border: "border-orange-700", bg: "bg-orange-950/20", badge: "bg-orange-700 text-black" },
   "Concluído":    { cor: "#71717a", border: "border-zinc-700",   bg: "bg-zinc-950/40",   badge: "bg-zinc-800 text-zinc-400" },
+  "Recusado":     { cor: "#7F1D1D", border: "border-red-900",    bg: "bg-red-950/30",    badge: "bg-red-950 text-red-400" },
 };
 
 const DIFICULDADE_CFG = {
@@ -1291,7 +1299,7 @@ const DIFICULDADE_CFG = {
   "Letal":      { cor: "#B91C1C" },
 };
 
-function ContratoModal({ contrato, onSave, onClose }) {
+function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   const editando = !!contrato?.id;
   const [titulo, setTitulo] = useState(contrato?.titulo || "");
   const [descricaoCurta, setDescCurta] = useState(contrato?.descricaoCurta || "");
@@ -1299,7 +1307,10 @@ function ContratoModal({ contrato, onSave, onClose }) {
   const [valorRecompensa, setValor] = useState(contrato?.valorRecompensa || 100);
   const [tipoRecompensa, setTipo] = useState(contrato?.tipoRecompensa || "Pontos de Sangue");
   const [dificuldade, setDificuldade] = useState(contrato?.dificuldade || "Médio");
-  const [status, setStatus] = useState(contrato?.status || "Aberto");
+  const [status, setStatus] = useState(contrato?.status || (viewerIsContratante ? "Proposta" : "Aberto"));
+  const [limites, setLimites] = useState(contrato?.limites || "");
+  const [prazo, setPrazo] = useState(contrato?.prazo || "");
+  const [observacoes, setObservacoes] = useState(contrato?.observacoes || "");
 
   const valido = titulo.trim() && descricaoCurta.trim();
 
@@ -1313,35 +1324,48 @@ function ContratoModal({ contrato, onSave, onClose }) {
       tipoRecompensa,
       dificuldade,
       status,
+      limites: limites.trim(),
+      prazo: prazo.trim(),
+      observacoes: observacoes.trim(),
     });
   };
+
+  const tituloModal = editando
+    ? "Editar Contrato"
+    : (viewerIsContratante ? "Solicitar Contrato à F.O.X." : "Forjar Novo Contrato");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
       <div className="bg-zinc-950 border border-red-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="p-5 border-b border-red-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
           <div className="flex items-center gap-3">
-            <ISkull className="w-6 h-6 text-red-500" />
-            <h3 className="text-xl font-bold text-orange-50 serif">{editando ? "Editar Contrato" : "Forjar Novo Contrato"}</h3>
+            {viewerIsContratante ? <IBriefcase className="w-6 h-6 text-orange-500" /> : <ISkull className="w-6 h-6 text-red-500" />}
+            <h3 className="text-xl font-bold text-orange-50 serif">{tituloModal}</h3>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
         </div>
         <div className="p-5 space-y-4">
+          {viewerIsContratante && !editando && (
+            <div className="p-3 bg-orange-950/30 border border-orange-900/50 rounded text-xs text-orange-300 leading-relaxed">
+              Sua solicitação ficará marcada como <strong>Proposta</strong> e será analisada pela liderança da F.O.X.
+              Você poderá negociar os termos através das mensagens dentro do contrato.
+            </div>
+          )}
           <div>
             <label className="fox-label">Título *</label>
-            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: Eliminar mercador de Konoha" autoFocus />
+            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder={viewerIsContratante ? "Ex: Eliminação de rival comercial" : "Ex: Eliminar mercador de Konoha"} autoFocus />
           </div>
           <div>
-            <label className="fox-label">Descrição curta * (mostrada no card)</label>
-            <input value={descricaoCurta} onChange={(e) => setDescCurta(e.target.value)} className="fox-input" placeholder="Resumo de uma linha" />
+            <label className="fox-label">Resumo *</label>
+            <input value={descricaoCurta} onChange={(e) => setDescCurta(e.target.value)} className="fox-input" placeholder="Uma linha que aparece no card" />
           </div>
           <div>
             <label className="fox-label">Descrição completa</label>
-            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="6" className="fox-input" placeholder="Detalhes do contrato, alvo, contexto, prazo..." />
+            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="5" className="fox-input" placeholder={viewerIsContratante ? "Contexto do serviço, alvo, motivação..." : "Detalhes do contrato, alvo, contexto..."} />
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
             <div>
-              <label className="fox-label">Recompensa</label>
+              <label className="fox-label">{viewerIsContratante ? "Valor oferecido" : "Recompensa"}</label>
               <input type="number" value={valorRecompensa} onChange={(e) => setValor(e.target.value)} className="fox-input" />
             </div>
             <div>
@@ -1352,24 +1376,44 @@ function ContratoModal({ contrato, onSave, onClose }) {
               </select>
             </div>
             <div>
-              <label className="fox-label">Dificuldade</label>
+              <label className="fox-label">Dificuldade estimada</label>
               <select value={dificuldade} onChange={(e) => setDificuldade(e.target.value)} className="fox-input">
                 <option>Fácil</option><option>Médio</option><option>Difícil</option><option>Letal</option>
               </select>
             </div>
           </div>
-          {editando && (
+          <div>
+            <label className="fox-label">Limites e restrições</label>
+            <textarea value={limites} onChange={(e) => setLimites(e.target.value)} rows="3" className="fox-input" placeholder="Ex: Sem baixas civis. Sem testemunhas. Não usar fuinjutsu proibido..." />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="fox-label">Prazo</label>
+              <input value={prazo} onChange={(e) => setPrazo(e.target.value)} className="fox-input" placeholder="Ex: 7 dias, até o próximo plenilúnio..." />
+            </div>
+            <div>
+              <label className="fox-label">Observações extras</label>
+              <input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} className="fox-input" placeholder="Notas adicionais" />
+            </div>
+          </div>
+          {editando && !viewerIsContratante && (
             <div>
               <label className="fox-label">Status</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)} className="fox-input">
-                <option>Aberto</option><option>Em Andamento</option><option>Concluído</option>
+                <option>Proposta</option>
+                <option>Aberto</option>
+                <option>Em Andamento</option>
+                <option>Concluído</option>
+                <option>Recusado</option>
               </select>
             </div>
           )}
         </div>
         <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
           <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-          <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> {editando ? "Salvar" : "Forjar Contrato"}</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={!valido}>
+            <ISave className="w-3 h-3" /> {editando ? "Salvar" : (viewerIsContratante ? "Enviar Solicitação" : "Forjar Contrato")}
+          </Btn>
         </div>
       </div>
     </div>
@@ -1380,27 +1424,43 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
   const [modal, setModal] = useState(null);
   const [filtro, setFiltro] = useState("Todos");
   const [expandido, setExpandido] = useState(null);
+  const [novaMsgPorContrato, setNovaMsgPorContrato] = useState({});
 
   // Helper local: nome a exibir respeitando o viewer
   const exibirNome = (username, nomeArmazenado) => {
     if (!username && !nomeArmazenado) return "?";
     const u = data.users?.find(x => x.username === username);
-    if (u) return nomeParaExibir(u, viewerIsContratante);
-    // fallback: usar nome armazenado mas se for contratante, mascara
-    if (viewerIsContratante) return "Operador F.O.X.";
+    if (viewerIsContratante) {
+      // Se eu sou contratante e o username é o meu, mostro meu nome
+      if (username === usuario?.username) return u?.displayName || u?.codinome || "Você";
+      // Se quem criou é outro contratante, mostro o codinome dele
+      if (u?.role === "contratante") return u.codinome || u.displayName || "Contratante";
+      // Senão (operador da F.O.X.), mascaro completamente
+      return "F.O.X. — Liderança";
+    }
+    if (u) return nomeParaExibir(u, false);
     return nomeArmazenado || username || "?";
   };
 
-  const todos = (data.contratos || []).slice().sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+  // Filtragem: contratante só vê seus próprios contratos + os "Aberto" (vitrine)
+  const todosBruto = (data.contratos || []).slice().sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+  const todos = viewerIsContratante
+    ? todosBruto.filter(c => c.criadoPor === usuario?.username || c.status === "Aberto")
+    : todosBruto;
   const contratos = filtro === "Todos" ? todos : todos.filter(c => c.status === filtro);
 
   const criar = (form) => {
+    const tipo = viewerIsContratante ? "externo" : "interno";
+    const statusInicial = viewerIsContratante ? "Proposta" : (form.status || "Aberto");
     const novo = {
       id: uid(),
       ...form,
+      status: statusInicial,
+      tipo,
       criadoPor: usuario?.username || "?",
       criadoPorNome: usuario?.displayName || usuario?.username || "Desconhecido",
       criadoEm: new Date().toISOString(),
+      negociacoes: [],
     };
     setData(d => ({ ...d, contratos: [...(d.contratos || []), novo] }));
     setModal(null);
@@ -1417,6 +1477,38 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
   const deletar = (id) => {
     if (!confirm("Deletar este contrato? Esta ação não pode ser desfeita.")) return;
     setData(d => ({ ...d, contratos: (d.contratos || []).filter(c => c.id !== id) }));
+  };
+
+  const aprovarProposta = (id) => {
+    if (!confirm("Aprovar esta proposta? Ela ficará aberta para os operadores aceitarem.")) return;
+    setData(d => ({
+      ...d,
+      contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Aberto", aprovadoEm: new Date().toISOString(), aprovadoPor: usuario?.username } : c),
+    }));
+  };
+
+  const recusarProposta = (id) => {
+    if (!confirm("Recusar esta proposta?")) return;
+    setData(d => ({
+      ...d,
+      contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Recusado", recusadoEm: new Date().toISOString() } : c),
+    }));
+  };
+
+  const adicionarNegociacao = (contratoId) => {
+    const msg = (novaMsgPorContrato[contratoId] || "").trim();
+    if (!msg) return;
+    const nova = {
+      autor: usuario?.username,
+      autorRole: usuario?.role,
+      mensagem: msg,
+      data: new Date().toISOString(),
+    };
+    setData(d => ({
+      ...d,
+      contratos: d.contratos.map(c => c.id === contratoId ? { ...c, negociacoes: [...(c.negociacoes || []), nova] } : c),
+    }));
+    setNovaMsgPorContrato(s => ({ ...s, [contratoId]: "" }));
   };
 
   const aceitar = (contrato) => {
@@ -1449,7 +1541,14 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
     alert("Contrato aceito! Verifique a aba Missões.");
   };
 
-  const FILTROS = ["Todos", "Aberto", "Em Andamento", "Concluído"];
+  // Filtros disponíveis (contratante não vê "Recusado")
+  const FILTROS = viewerIsContratante
+    ? ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído"]
+    : ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído", "Recusado"];
+
+  const podeCriar = isLider || viewerIsContratante;
+  const tituloHeader = viewerIsContratante ? "Contratos & Propostas" : "Contratos — Mercenários";
+  const labelBotaoCriar = viewerIsContratante ? "Solicitar Contrato" : "Forjar Contrato";
 
   return (
     <div className="fadein">
@@ -1457,11 +1556,11 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
         <div className="border-l-4 border-red-700 pl-4">
           <div className="flex items-center gap-3">
             <ISwords className="w-6 h-6 text-red-500" />
-            <h2 className="text-2xl font-bold text-red-50 tracking-wide serif">Contratos — Mercenários</h2>
+            <h2 className="text-2xl font-bold text-red-50 tracking-wide serif">{tituloHeader}</h2>
           </div>
-          <p className="text-zinc-500 text-sm mt-1 italic">{todos.length} {todos.length === 1 ? "contrato forjado" : "contratos forjados"}</p>
+          <p className="text-zinc-500 text-sm mt-1 italic">{todos.length} {todos.length === 1 ? "contrato" : "contratos"}</p>
         </div>
-        {isLider && <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> Forjar Contrato</Btn>}
+        {podeCriar && <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> {labelBotaoCriar}</Btn>}
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -1479,8 +1578,8 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
       {contratos.length === 0 && (
         <div className="p-8 text-center bg-zinc-950/50 border border-red-900/30 rounded-lg">
           <ISkull className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">{todos.length === 0 ? "Nenhum contrato forjado ainda." : "Nenhum contrato neste filtro."}</p>
-          {todos.length === 0 && isLider && <p className="text-zinc-700 text-xs italic mt-2">Forje o primeiro contrato de sangue.</p>}
+          <p className="text-zinc-500">{todos.length === 0 ? "Nenhum contrato ainda." : "Nenhum contrato neste filtro."}</p>
+          {todos.length === 0 && podeCriar && <p className="text-zinc-700 text-xs italic mt-2">{viewerIsContratante ? "Solicite seu primeiro contrato à F.O.X." : "Forje o primeiro contrato de sangue."}</p>}
         </div>
       )}
 
@@ -1491,12 +1590,23 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
           const expanded = expandido === c.id;
           const podeAceitar = c.status === "Aberto" && usuario && !isLider && !viewerIsContratante;
           const aceito = c.aceitoPor === usuario?.username;
+          const ehMinhaProposta = viewerIsContratante && c.criadoPor === usuario?.username;
+          const ehProposta = c.status === "Proposta";
+          const podeAprovar = isLider && ehProposta;
+          // Pode adicionar negociação: criador da proposta, líder, ou membro interno em propostas/abertos
+          const podeNegociar = (
+            (ehMinhaProposta) ||
+            (isLider && (ehProposta || c.status === "Aberto")) ||
+            (!viewerIsContratante && !isLider && c.tipo === "externo" && (ehProposta || c.status === "Aberto"))
+          );
+          const negociacoes = c.negociacoes || [];
+
           return (
             <div key={c.id} className={`relative rounded-lg border-2 ${sc.border} ${sc.bg} p-5 fadein hover:border-red-500 transition-colors`}
                  style={{ backgroundImage: "radial-gradient(circle at top right, rgba(185,28,28,0.08), transparent 60%)" }}>
               {/* Selo de sangue no canto */}
               <div className="absolute top-3 right-3 opacity-20">
-                <ISkull className="w-12 h-12 text-red-700" />
+                {c.tipo === "externo" ? <IBriefcase className="w-12 h-12 text-orange-700" /> : <ISkull className="w-12 h-12 text-red-700" />}
               </div>
 
               <div className="relative">
@@ -1505,6 +1615,16 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                   <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: dc.cor, borderColor: dc.cor + "80", background: dc.cor + "15" }}>
                     {c.dificuldade}
                   </span>
+                  {c.tipo === "externo" && (
+                    <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-orange-700 text-orange-300 bg-orange-950/40">
+                      Solicitação Externa
+                    </span>
+                  )}
+                  {negociacoes.length > 0 && (
+                    <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-zinc-800 text-zinc-400">
+                      💬 {negociacoes.length}
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-orange-50 font-bold text-lg serif leading-tight mb-1 pr-10">{c.titulo}</h3>
@@ -1513,13 +1633,71 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                 {/* Recompensa em destaque */}
                 <div className="flex items-center gap-2 mb-3 p-2 bg-black/60 border border-red-900/40 rounded">
                   <div className="w-2 h-2 rounded-full bg-red-500 pulse-fire" />
-                  <div className="text-xs uppercase tracking-wider text-zinc-500">Recompensa:</div>
-                  <div className="text-orange-300 font-black text-sm">{c.valorRecompensa.toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{c.tipoRecompensa}</span></div>
+                  <div className="text-xs uppercase tracking-wider text-zinc-500">{c.tipo === "externo" ? "Oferta:" : "Recompensa:"}</div>
+                  <div className="text-orange-300 font-black text-sm">{Number(c.valorRecompensa || 0).toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{c.tipoRecompensa}</span></div>
                 </div>
 
-                {expanded && c.descricao && (
-                  <div className="mb-3 p-3 bg-black/40 border border-zinc-800 rounded text-sm text-zinc-300 whitespace-pre-wrap">
-                    {c.descricao}
+                {expanded && (
+                  <div className="space-y-2 mb-3">
+                    {c.descricao && (
+                      <div className="p-3 bg-black/40 border border-zinc-800 rounded">
+                        <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-1">Descrição completa</div>
+                        <div className="text-sm text-zinc-300 whitespace-pre-wrap">{c.descricao}</div>
+                      </div>
+                    )}
+                    {c.limites && (
+                      <div className="p-3 bg-black/40 border border-red-900/40 rounded">
+                        <div className="text-[10px] uppercase tracking-wider text-red-500 mb-1">Limites & Restrições</div>
+                        <div className="text-sm text-zinc-300 whitespace-pre-wrap">{c.limites}</div>
+                      </div>
+                    )}
+                    {c.prazo && (
+                      <div className="p-3 bg-black/40 border border-zinc-800 rounded">
+                        <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-1">Prazo</div>
+                        <div className="text-sm text-zinc-300">{c.prazo}</div>
+                      </div>
+                    )}
+                    {c.observacoes && (
+                      <div className="p-3 bg-black/40 border border-zinc-800 rounded">
+                        <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-1">Observações</div>
+                        <div className="text-sm text-zinc-300 whitespace-pre-wrap">{c.observacoes}</div>
+                      </div>
+                    )}
+
+                    {/* Negociações */}
+                    {(negociacoes.length > 0 || podeNegociar) && (
+                      <div className="p-3 bg-black/40 border border-zinc-800 rounded">
+                        <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-2">Negociação ({negociacoes.length})</div>
+                        <div className="space-y-2 mb-2 max-h-60 overflow-y-auto">
+                          {negociacoes.map((n, ni) => {
+                            const ehContratanteAutor = n.autorRole === "contratante";
+                            const nomeAutor = exibirNome(n.autor, null);
+                            return (
+                              <div key={ni} className={`p-2 rounded text-sm border ${ehContratanteAutor ? "bg-orange-950/20 border-orange-900/40" : "bg-red-950/20 border-red-900/40"}`}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <strong className={ehContratanteAutor ? "text-orange-400 text-xs" : "text-red-400 text-xs"}>{nomeAutor}</strong>
+                                  <span className="text-[10px] text-zinc-600">{new Date(n.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
+                                <div className="text-zinc-300 whitespace-pre-wrap">{n.mensagem}</div>
+                              </div>
+                            );
+                          })}
+                          {negociacoes.length === 0 && <div className="text-zinc-700 text-xs italic">Nenhuma mensagem ainda.</div>}
+                        </div>
+                        {podeNegociar && (
+                          <div className="flex gap-2">
+                            <input
+                              value={novaMsgPorContrato[c.id] || ""}
+                              onChange={(e) => setNovaMsgPorContrato(s => ({ ...s, [c.id]: e.target.value }))}
+                              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), adicionarNegociacao(c.id))}
+                              placeholder="Adicionar contraproposta ou mensagem..."
+                              className="fox-input"
+                            />
+                            <Btn onClick={() => adicionarNegociacao(c.id)} variant="primary"><IPlus className="w-3 h-3" /></Btn>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1531,10 +1709,14 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                 )}
 
                 <div className="flex gap-2 mt-3 pt-3 border-t border-red-900/30 flex-wrap">
-                  {c.descricao && (
-                    <Btn onClick={() => setExpandido(expanded ? null : c.id)} variant="ghost">
-                      {expanded ? "Recolher" : "Detalhes"}
-                    </Btn>
+                  <Btn onClick={() => setExpandido(expanded ? null : c.id)} variant="ghost">
+                    {expanded ? "Recolher" : "Detalhes"}
+                  </Btn>
+                  {podeAprovar && (
+                    <>
+                      <Btn onClick={() => aprovarProposta(c.id)} variant="primary"><ICheck className="w-3 h-3" /> Aprovar</Btn>
+                      <Btn onClick={() => recusarProposta(c.id)} variant="danger"><IX className="w-3 h-3" /> Recusar</Btn>
+                    </>
                   )}
                   {podeAceitar && (
                     <Btn onClick={() => aceitar(c)} variant="primary" className="ml-auto">
@@ -1544,16 +1726,18 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                   {aceito && c.status === "Em Andamento" && (
                     <span className="ml-auto text-xs uppercase tracking-wider text-orange-500 self-center font-bold">Você aceitou este</span>
                   )}
-                  {isLider && (
+                  {(isLider || (viewerIsContratante && ehMinhaProposta && ehProposta)) && (
                     <div className="flex gap-1 ml-auto">
                       <button onClick={() => setModal(c)} className="p-1.5 text-orange-400 hover:text-orange-300" title="Editar"><IEdit className="w-4 h-4" /></button>
-                      <button onClick={() => deletar(c.id)} className="p-1.5 text-red-500 hover:text-red-400" title="Deletar"><ITrash className="w-4 h-4" /></button>
+                      {(isLider || ehMinhaProposta) && (
+                        <button onClick={() => deletar(c.id)} className="p-1.5 text-red-500 hover:text-red-400" title="Deletar"><ITrash className="w-4 h-4" /></button>
+                      )}
                     </div>
                   )}
                 </div>
 
                 <div className="text-[10px] text-zinc-700 italic mt-2">
-                  Forjado por {exibirNome(c.criadoPor, c.criadoPorNome)} · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
+                  {c.tipo === "externo" ? "Solicitado" : "Forjado"} por {exibirNome(c.criadoPor, c.criadoPorNome)} · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
                 </div>
               </div>
             </div>
@@ -1566,6 +1750,7 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
           contrato={modal.id ? modal : null}
           onSave={modal.id ? editar : criar}
           onClose={() => setModal(null)}
+          viewerIsContratante={viewerIsContratante}
         />
       )}
     </div>
@@ -2570,8 +2755,8 @@ function VisaoGeralContratantes({ data, setData, isLider }) {
         <ISkull className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
         <div className="text-xs text-zinc-400 leading-relaxed">
           <strong className="text-red-300 uppercase tracking-wider">Discrição absoluta.</strong>{" "}
-          Operamos sob sigilo. A identidade dos operadores são protegidas por codinomes — nenhum nome real é compartilhado com contratantes.
-          Para discutir um contrato, navegue até a aba <strong className="text-orange-400">Contratos</strong>.
+          Operamos sob sigilo. A identidade dos operadores é protegida por codinomes — nenhum nome real é compartilhado com contratantes.
+          Para discutir um contrato, navegue até a aba <strong className="text-orange-400">Contratos F.O.X.</strong>.
         </div>
       </div>
     </div>
