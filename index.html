@@ -37,15 +37,51 @@
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
+// Permissões granulares — leader sempre tem todas via hasLeaderPerms
+const PERMISSIONS_LIST = [
+  { id: "manage_users",        label: "Gerenciar usuários", desc: "Criar, editar e remover logins" },
+  { id: "manage_missions",     label: "Gerenciar missões", desc: "Criar, editar e atribuir missões" },
+  { id: "manage_roles",        label: "Gerenciar cargos", desc: "Criar/editar cargos e permissões" },
+  { id: "edit_history",        label: "Editar História", desc: "Editar linha do tempo" },
+  { id: "edit_clans",          label: "Editar Clãs & Mandamentos", desc: "Criar/editar clãs e os 7 mandamentos" },
+  { id: "edit_trios",          label: "Editar Trios", desc: "Editar composição dos trios" },
+  { id: "edit_arms",           label: "Editar Armas", desc: "Editar armas lendárias" },
+  { id: "edit_jikkai",         label: "Editar JIKKAI", desc: "Editar fases e objetivos do plano" },
+  { id: "edit_contracts",      label: "Editar Contratos", desc: "Forjar/editar/aprovar contratos" },
+  { id: "edit_showcase",       label: "Editar Vitrine", desc: "Editar Visão Geral pública" },
+  { id: "edit_gallery",        label: "Editar Galeria", desc: "Adicionar/remover imagens" },
+  { id: "edit_reports",        label: "Editar Relatórios", desc: "Editar/deletar relatórios de outros" },
+  { id: "manage_juramentados", label: "Gerenciar Juramentados", desc: "Remover juramentos" },
+];
+const ALL_PERMISSIONS = PERMISSIONS_LIST.map(p => p.id);
+
+function hasPerm(role, permId) {
+  if (!role) return false;
+  if (role.hasLeaderPerms === true) return true;
+  return Array.isArray(role.permissions) && role.permissions.includes(permId);
+}
+
 const DEFAULT_ROLES = [
-  { id: "leader", nome: "Líder", hasLeaderPerms: true, protected: true, cor: "#D85A30" },
-  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: true, protected: true, cor: "#B91C1C" },
-  { id: "member", nome: "Membro", hasLeaderPerms: false, protected: true, cor: "#7C2D12" },
-  { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E" },
+  { id: "leader", nome: "Líder", hasLeaderPerms: true, protected: true, cor: "#D85A30", permissions: [] },
+  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C",
+    permissions: ["manage_users", "manage_missions"] },
+  { id: "member", nome: "Membro", hasLeaderPerms: false, protected: true, cor: "#7C2D12", permissions: [] },
+  { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E", permissions: [] },
 ];
 
 const DEFAULT_USERS = [
-  { username: "leader", password: "jikkai123", role: "leader", displayName: "Líder Supremo", codinome: "Alpha", status: "Líder", trio: "", level: 50 },
+  { username: "leader", password: "jikkai123", role: "leader", displayName: "Líder Supremo", codinome: "Alpha", status: "Líder", trio: "", level: 50, cla: "soke" },
+];
+
+// Mandamentos default — agora editáveis e armazenados em data.mandamentos
+const DEFAULT_MANDAMENTOS = [
+  "O sangue Lamona vem antes de qualquer vila.",
+  "Nenhum juramentado é abandonado em campo.",
+  "A força só é usada em defesa — até a ordem do líder.",
+  "O JIKKAI é absoluto. Quem trai o plano, trai o clã.",
+  "O pacto de sangue é irrevogável.",
+  "Discrição acima de glória. Sombras acima de holofotes.",
+  "A palavra do líder é lei até que o conselho a conteste.",
 ];
 
 // Helpers para exibição de nomes respeitando o cargo do viewer
@@ -141,16 +177,6 @@ const DEFAULT_CLAS = [
     descricao: "Disfarçados de artesãos e curandeiros, os verdadeiros mestres da sabotagem, espionagem e assassinatos seletivos. Inspirados em organizações como a Akatsuki, transformaram lealdade em revolução silenciosa. Usam fuinjutsu proibido, armas envenenadas e poções de controle mental. Servem ao maior pagador — mantendo a fachada de apoio à vila.",
     figuras: [],
   },
-];
-
-const MANDAMENTOS = [
-  "O sangue Lamona vem antes de qualquer vila.",
-  "Nenhum juramentado é abandonado em campo.",
-  "A força só é usada em defesa — até a ordem do líder.",
-  "O JIKKAI é absoluto. Quem trai o plano, trai o clã.",
-  "O pacto de sangue é irrevogável.",
-  "Discrição acima de glória. Sombras acima de holofotes.",
-  "A palavra do líder é lei até que o conselho a conteste.",
 ];
 
 const FRASE_JURAMENTO = "Meu sangue pertence à F.O.X.";
@@ -654,7 +680,7 @@ function GaleriaSection({ data, setData, isLider, usuario }) {
   );
 }
 
-function LinhaDoTempoSection({ data, setData, isLider }) {
+function LinhaDoTempoSection({ data, setData, podeEditar }) {
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.historia);
 
@@ -685,7 +711,7 @@ function LinhaDoTempoSection({ data, setData, isLider }) {
           </div>
           <p className="text-zinc-500 text-sm mt-1 italic">Da queda de Uzushio ao nascimento da F.O.X.</p>
         </div>
-        {isLider && (editando ? (
+        {podeEditar && (editando ? (
           <div className="flex gap-2">
             <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
             <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
@@ -735,7 +761,7 @@ function LinhaDoTempoSection({ data, setData, isLider }) {
   );
 }
 
-function HistoriaPage({ data, setData, isLider, usuario }) {
+function HistoriaPage({ data, setData, role, usuario }) {
   const [subTab, setSubTab] = useState("timeline");
 
   const galeriaCount = (data.galeria || []).length;
@@ -769,8 +795,8 @@ function HistoriaPage({ data, setData, isLider, usuario }) {
         })}
       </div>
 
-      {subTab === "timeline" && <LinhaDoTempoSection data={data} setData={setData} isLider={isLider} />}
-      {subTab === "galeria" && <GaleriaSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
+      {subTab === "timeline" && <LinhaDoTempoSection data={data} setData={setData} podeEditar={hasPerm(role,"edit_history")} />}
+      {subTab === "galeria" && <GaleriaSection data={data} setData={setData} isLider={hasPerm(role,"edit_gallery")} usuario={usuario} />}
     </div>
   );
 }
@@ -850,25 +876,44 @@ const CLA_ICONS = {
   target: ITarget,
 };
 
-function ClaPage({ data, setData, isLider }) {
+function ClaPage({ data, setData, role }) {
+  const podeEditar = hasPerm(role, "edit_clans");
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.clas);
+  const [editMandamentos, setEditMandamentos] = useState(false);
+  const [draftMandamentos, setDraftMandamentos] = useState(data.mandamentos || []);
 
   useEffect(() => { if (!editando) setDraft(data.clas); }, [data.clas, editando]);
+  useEffect(() => { if (!editMandamentos) setDraftMandamentos(data.mandamentos || []); }, [data.mandamentos, editMandamentos]);
 
   const salvar = () => { setData(d => ({ ...d, clas: draft.filter(c => c.nome.trim()) })); setEditando(false); };
   const cancelar = () => { setDraft(data.clas); setEditando(false); };
   const updateCla = (i, patch) => setDraft(draft.map((c, idx) => idx === i ? { ...c, ...patch } : c));
   const removeCla = (i) => setDraft(draft.filter((_, idx) => idx !== i));
-  const addCla = () => setDraft([...draft, { id: uid(), nome: "Novo Clã", tipo: "Ramo", cor: "#7C2D12", icon: "shield", descricao: "", figuras: [] }]);
+  const addCla = () => setDraft([...draft, { id: "cla_" + uid().slice(0, 6), nome: "Novo Clã", tipo: "Ramo", cor: "#7C2D12", icon: "shield", descricao: "", figuras: [] }]);
 
-  // Figuras são persistidas direto quando NÃO está em modo edição de clã (clique no botão do FigurasEditor);
-  // quando EM modo edição de clã, mudanças de figuras iriam conflitar, então as deixamos read-only (via isLider=false no FigurasEditor).
   const updateFigurasDireto = (i, figuras) => {
     setData(d => ({ ...d, clas: d.clas.map((c, idx) => idx === i ? { ...c, figuras } : c) }));
   };
 
-  const action = isLider && (
+  // Editor de Mandamentos
+  const salvarMandamentos = () => {
+    setData(d => ({ ...d, mandamentos: draftMandamentos.filter(m => m.trim()) }));
+    setEditMandamentos(false);
+  };
+  const cancelarMandamentos = () => { setDraftMandamentos(data.mandamentos || []); setEditMandamentos(false); };
+  const updateMandamento = (i, val) => setDraftMandamentos(draftMandamentos.map((m, idx) => idx === i ? val : m));
+  const removeMandamento = (i) => setDraftMandamentos(draftMandamentos.filter((_, idx) => idx !== i));
+  const addMandamento = () => setDraftMandamentos([...draftMandamentos, "Novo mandamento"]);
+  const moveMandamento = (i, dir) => {
+    const ni = i + dir;
+    if (ni < 0 || ni >= draftMandamentos.length) return;
+    const n = [...draftMandamentos];
+    [n[i], n[ni]] = [n[ni], n[i]];
+    setDraftMandamentos(n);
+  };
+
+  const action = podeEditar && (
     editando ? (
       <div className="flex gap-2">
         <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
@@ -880,6 +925,11 @@ function ClaPage({ data, setData, isLider }) {
   );
 
   const clas = editando ? draft : data.clas;
+  const mandamentos = editMandamentos ? draftMandamentos : (data.mandamentos || []);
+
+  // Lista membros não-contratantes filtrados por clã
+  const membrosDoCla = (claId) => (data.users || []).filter(u => u.role !== "contratante" && u.cla === claId);
+  const semCla = (data.users || []).filter(u => u.role !== "contratante" && !u.cla);
 
   return (
     <div className="space-y-8">
@@ -887,6 +937,7 @@ function ClaPage({ data, setData, isLider }) {
 
       {clas.map((c, ci) => {
         const I = CLA_ICONS[c.icon] || IShield;
+        const membros = membrosDoCla(c.id);
         return (
           <div key={c.id || ci} className="rounded-lg border p-6" style={{
             borderColor: c.cor + "80",
@@ -899,7 +950,9 @@ function ClaPage({ data, setData, isLider }) {
                   <input value={c.tipo} onChange={(e) => updateCla(ci, { tipo: e.target.value })} placeholder="Tipo (badge)" className="fox-input w-32" />
                 </div>
                 <div className="flex gap-2 items-center flex-wrap">
-                  <label className="fox-label mb-0">Ícone</label>
+                  <label className="fox-label mb-0">ID (interno)</label>
+                  <input value={c.id} onChange={(e) => updateCla(ci, { id: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} className="fox-input w-32" />
+                  <label className="fox-label mb-0 ml-2">Ícone</label>
                   <select value={c.icon} onChange={(e) => updateCla(ci, { icon: e.target.value })} className="fox-input w-auto">
                     {Object.keys(CLA_ICONS).map(k => <option key={k} value={k}>{k}</option>)}
                   </select>
@@ -915,11 +968,33 @@ function ClaPage({ data, setData, isLider }) {
                   <I className="w-7 h-7" style={{ color: c.cor }} />
                   <h3 className="text-2xl font-bold text-orange-50 serif">{c.nome}</h3>
                   {c.tipo && <span className="text-xs px-2 py-0.5 rounded uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>{c.tipo}</span>}
+                  <span className="ml-auto text-xs text-zinc-500">{membros.length} {membros.length === 1 ? "membro" : "membros"}</span>
                 </div>
                 <p className="text-zinc-400 leading-relaxed mb-4 whitespace-pre-wrap">{c.descricao}</p>
+
+                {/* Membros do clã */}
+                {membros.length > 0 && (
+                  <div className="mb-4 p-4 bg-black/40 border border-zinc-800 rounded">
+                    <div className="text-xs uppercase tracking-wider mb-3" style={{ color: c.cor }}>Membros</div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {membros.map(u => {
+                        const ur = data.roles.find(r => r.id === u.role);
+                        return (
+                          <div key={u.username} className="flex items-center gap-2 p-2 bg-zinc-950/60 border border-zinc-800 rounded">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ur?.cor || "#71717a" }} />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-orange-50 text-sm font-bold truncate">{getCodinome(u)}</div>
+                              <div className="text-zinc-600 text-[10px] truncate">{ur?.nome || u.role}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </>
             )}
-            <FigurasEditor figuras={c.figuras || []} onChange={(f) => updateFigurasDireto(ci, f)} isLider={isLider && !editando} cor={c.cor} />
+            <FigurasEditor figuras={c.figuras || []} onChange={(f) => updateFigurasDireto(ci, f)} isLider={podeEditar && !editando} cor={c.cor} />
           </div>
         );
       })}
@@ -931,29 +1006,77 @@ function ClaPage({ data, setData, isLider }) {
         </button>
       )}
 
+      {/* Membros sem clã (aviso pro líder) */}
+      {!editando && semCla.length > 0 && podeEditar && (
+        <div className="rounded-lg border border-yellow-800/50 bg-yellow-950/20 p-4">
+          <div className="flex items-center gap-2 text-yellow-400 text-sm font-bold uppercase tracking-wider mb-2">
+            <IAlert className="w-4 h-4" /> {semCla.length} {semCla.length === 1 ? "membro sem clã" : "membros sem clã"}
+          </div>
+          <div className="text-zinc-400 text-xs mb-2">Atribua um clã a cada membro em <strong>Gerenciar → Usuários</strong>:</div>
+          <div className="flex flex-wrap gap-2">
+            {semCla.map(u => (
+              <span key={u.username} className="text-xs px-2 py-1 bg-zinc-950/60 border border-zinc-800 rounded text-zinc-300">{getCodinome(u)}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mandamentos */}
       <div>
-        <h3 className="text-xl font-bold text-orange-50 mb-3 serif">Os 7 Mandamentos</h3>
-        <div className="space-y-2">
-          {MANDAMENTOS.map((m, i) => (
-            <div key={i} className="flex gap-3 p-3 bg-zinc-950/50 border border-zinc-800 rounded">
-              <span className="text-orange-600 font-bold">{String(i + 1).padStart(2, "0")}</span>
-              <span className="text-zinc-300">{m}</span>
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <h3 className="text-xl font-bold text-orange-50 serif">Os {mandamentos.length} Mandamentos</h3>
+          {podeEditar && (editMandamentos ? (
+            <div className="flex gap-2">
+              <Btn onClick={cancelarMandamentos} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+              <Btn onClick={salvarMandamentos} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
             </div>
+          ) : (
+            <Btn onClick={() => setEditMandamentos(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
           ))}
         </div>
+        <div className="space-y-2">
+          {mandamentos.map((m, i) => (
+            <div key={i} className="flex gap-3 p-3 bg-zinc-950/50 border border-zinc-800 rounded items-start">
+              <span className="text-orange-600 font-bold flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
+              {editMandamentos ? (
+                <>
+                  <input value={m} onChange={(e) => updateMandamento(i, e.target.value)} className="fox-input flex-1" />
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button onClick={() => moveMandamento(i, -1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
+                    <button onClick={() => moveMandamento(i, 1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
+                    <button onClick={() => removeMandamento(i)} className="px-2 bg-red-950/80 text-red-300 rounded"><ITrash className="w-3 h-3" /></button>
+                  </div>
+                </>
+              ) : (
+                <span className="text-zinc-300">{m}</span>
+              )}
+            </div>
+          ))}
+          {editMandamentos && (
+            <Btn onClick={addMandamento} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Adicionar mandamento</Btn>
+          )}
+        </div>
+        {editMandamentos && (
+          <div className="mt-3 text-xs text-yellow-500/80 italic">
+            ⚠ Mudanças nos mandamentos são sincronizadas automaticamente com o ritual de Juramento.
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ============ MEMBROS (agora usa users) ============
-function MembrosPage({ data, viewerIsContratante }) {
+// ============ MEMBROS (lista de usuários, sem contratantes) ============
+function MembrosListSection({ data, viewerIsContratante }) {
+  // Esconde contratantes
+  const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
   return (
-    <div>
-      <SectionTitle icon={IUsers} sub={`${data.users.length} membros registrados`}>Membros</SectionTitle>
+    <div className="fadein">
+      <p className="text-zinc-500 text-sm mb-4 italic">{usuariosVisiveis.length} {usuariosVisiveis.length === 1 ? "membro registrado" : "membros registrados"}</p>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {data.users.map((u) => {
+        {usuariosVisiveis.map((u) => {
           const role = data.roles.find(r => r.id === u.role);
+          const cla = data.clas.find(c => c.id === u.cla);
           const codinome = getCodinome(u);
           const mostrarNomeReal = !viewerIsContratante && u.displayName && u.displayName !== codinome;
           return (
@@ -967,8 +1090,9 @@ function MembrosPage({ data, viewerIsContratante }) {
                 </div>
                 <StatusBadge status={u.status || "Ativo"} />
               </div>
-              <div className="border-t border-zinc-800 pt-2 mt-2 flex justify-between text-xs text-zinc-400">
+              <div className="border-t border-zinc-800 pt-2 mt-2 flex justify-between items-center text-xs text-zinc-400 gap-2">
                 <span style={{ color: role?.cor }}>{role?.nome || u.role}</span>
+                {cla && <span className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider" style={{ color: cla.cor, background: cla.cor + "20", border: `1px solid ${cla.cor}80` }}>{cla.nome}</span>}
                 {u.level != null && <span>Lvl <strong className="text-orange-500">{u.level}</strong></span>}
               </div>
             </div>
@@ -979,8 +1103,46 @@ function MembrosPage({ data, viewerIsContratante }) {
   );
 }
 
+function MembrosPage({ data, setData, role, viewerIsContratante }) {
+  const [subTab, setSubTab] = useState("lista");
+  const podeEditarTrios = hasPerm(role, "edit_trios");
+
+  const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
+  const SUB_TABS = [
+    { id: "lista", label: "Membros", icon: IUsers, badge: usuariosVisiveis.length || null },
+    { id: "trios", label: "Trios", icon: ISwords, badge: (data.trios || []).length || null },
+  ];
+
+  return (
+    <div>
+      <SectionTitle icon={IUsers} sub="Operadores e formações da F.O.X.">Membros</SectionTitle>
+
+      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+        {SUB_TABS.map(t => {
+          const I = t.icon;
+          const active = subTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setSubTab(t.id)}
+              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
+            >
+              <I className="w-4 h-4" />
+              <span>{t.label}</span>
+              {t.badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {subTab === "lista" && <MembrosListSection data={data} viewerIsContratante={viewerIsContratante} />}
+      {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} />}
+    </div>
+  );
+}
+
 // ============ TRIOS ============
-function TriosPage({ data, setData, isLider }) {
+function TriosSection({ data, setData, podeEditar }) {
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.trios);
 
@@ -995,22 +1157,21 @@ function TriosPage({ data, setData, isLider }) {
   const removeMembro = (ti, mi) => updateTrio(ti, { membros: draft[ti].membros.filter((_, idx) => idx !== mi) });
   const addMembro = (ti) => updateTrio(ti, { membros: [...draft[ti].membros, { nome: "", elemento: "", papel: "" }] });
 
-  const action = isLider && (
-    editando ? (
-      <div className="flex gap-2">
-        <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-        <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
-      </div>
-    ) : (
-      <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
-    )
-  );
-
   const trios = editando ? draft : data.trios;
 
   return (
-    <div>
-      <SectionTitle icon={ISwords} sub="Composição operacional de combate" action={action}>Trios</SectionTitle>
+    <div className="fadein">
+      <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
+        <p className="text-zinc-500 text-sm italic">Composição operacional de combate</p>
+        {podeEditar && (editando ? (
+          <div className="flex gap-2">
+            <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+            <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+          </div>
+        ) : (
+          <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
+        ))}
+      </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {trios.map((t, ti) => (
           <div key={ti} className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950/60">
@@ -2022,12 +2183,16 @@ function JuramentadoView({ juramentado, juramentados, isLider, removerJuramento 
   );
 }
 
-function JuramentoPage({ usuario, juramentado, juramentar, juramentados, removerJuramento, isLider }) {
+function JuramentoPage({ usuario, juramentado, juramentar, juramentados, removerJuramento, isLider, data }) {
+  const mandamentos = data?.mandamentos || DEFAULT_MANDAMENTOS;
   const [step, setStep] = useState(0);
-  const [aceitos, setAceitos] = useState(new Array(MANDAMENTOS.length).fill(false));
+  const [aceitos, setAceitos] = useState(() => new Array(mandamentos.length).fill(false));
   const [form, setForm] = useState({ nome: usuario?.displayName || "", linhagem: "", elemento: "Katon", idade: "", motivacao: "" });
   const [fraseTypo, setFraseTypo] = useState("");
   const [selando, setSelando] = useState(false);
+
+  // Se mandamentos mudarem (líder editou), reseta os checkboxes
+  useEffect(() => { setAceitos(new Array(mandamentos.length).fill(false)); }, [mandamentos.length]);
 
   if (juramentado) return <JuramentadoView juramentado={juramentado} juramentados={juramentados} isLider={isLider} removerJuramento={removerJuramento} />;
 
@@ -2080,13 +2245,13 @@ function JuramentoPage({ usuario, juramentado, juramentar, juramentados, remover
       {step === 1 && (
         <div className="fadein space-y-4">
           <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded">
-            <h3 className="text-orange-50 font-bold mb-1">Os 7 Mandamentos</h3>
+            <h3 className="text-orange-50 font-bold mb-1">Os {mandamentos.length} Mandamentos</h3>
             <p className="text-zinc-500 text-sm">Leia e aceite cada mandamento individualmente.</p>
           </div>
           <div className="space-y-2">
-            {MANDAMENTOS.map((m, i) => (
+            {mandamentos.map((m, i) => (
               <label key={i} className={`flex items-start gap-3 p-4 rounded border cursor-pointer transition-all ${aceitos[i] ? "bg-orange-950/20 border-orange-700" : "bg-zinc-950/50 border-zinc-800 hover:border-zinc-700"}`}>
-                <input type="checkbox" checked={aceitos[i]} onChange={(e) => { const n = [...aceitos]; n[i] = e.target.checked; setAceitos(n); }} className="mt-1 w-4 h-4 accent-orange-600" />
+                <input type="checkbox" checked={aceitos[i] || false} onChange={(e) => { const n = [...aceitos]; n[i] = e.target.checked; setAceitos(n); }} className="mt-1 w-4 h-4 accent-orange-600" />
                 <div>
                   <div className="text-orange-600 font-bold text-xs uppercase tracking-wider mb-1">Mandamento {i + 1}</div>
                   <div className="text-zinc-200">{m}</div>
@@ -2097,7 +2262,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, juramentados, remover
           <div className="flex gap-2 pt-2">
             <Btn onClick={() => setStep(0)} variant="ghost">Voltar</Btn>
             <Btn onClick={() => setStep(2)} variant="primary" disabled={!todosAceitos} className="flex-1 justify-center">
-              {todosAceitos ? "Aceito os 7 Mandamentos" : `Aceite todos (${aceitos.filter(Boolean).length}/7)`}
+              {todosAceitos ? `Aceito os ${mandamentos.length} Mandamentos` : `Aceite todos (${aceitos.filter(Boolean).length}/${mandamentos.length})`}
             </Btn>
           </div>
         </div>
@@ -2235,8 +2400,14 @@ function MinhasMissoesPage({ data, setData, usuario }) {
 }
 
 // ============ GERENCIAR (Admin) ============
-function GerenciarPage({ data, setData, usuario, exportar, importar }) {
-  const [aba, setAba] = useState("usuarios");
+function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
+  const isLider = role?.hasLeaderPerms === true;
+  const podeUsuarios = isLider || hasPerm(role,"manage_users");
+  const podeMissoes = isLider || hasPerm(role,"manage_missions");
+  const podeCargos = isLider || hasPerm(role,"manage_roles");
+  const podeBackup = isLider;
+  const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
+  const [aba, setAba] = useState(primeiraAba);
 
   return (
     <div>
@@ -2244,11 +2415,11 @@ function GerenciarPage({ data, setData, usuario, exportar, importar }) {
 
       <div className="flex gap-2 mb-6 border-b border-zinc-800 overflow-x-auto">
         {[
-          { id: "usuarios", label: "Usuários", icon: IUsers },
-          { id: "cargos", label: "Cargos", icon: ICrown },
-          { id: "missoes", label: "Missões", icon: IClipboard },
-          { id: "backup", label: "Backup", icon: IDownload },
-        ].map(t => {
+          podeUsuarios && { id: "usuarios", label: "Usuários", icon: IUsers },
+          podeCargos && { id: "cargos", label: "Cargos", icon: ICrown },
+          podeMissoes && { id: "missoes", label: "Missões", icon: IClipboard },
+          podeBackup && { id: "backup", label: "Backup", icon: IDownload },
+        ].filter(Boolean).map(t => {
           const I = t.icon;
           return (
             <button key={t.id} onClick={() => setAba(t.id)} className={`flex items-center gap-2 px-4 py-2 text-xs uppercase tracking-wider whitespace-nowrap border-b-2 ${aba === t.id ? "border-orange-600 text-orange-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}>
@@ -2268,7 +2439,7 @@ function GerenciarPage({ data, setData, usuario, exportar, importar }) {
 
 function UsuariosManager({ data, setData }) {
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0 });
+  const [form, setForm] = useState({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0, cla: "" });
   const [erro, setErro] = useState("");
 
   const iniciarEdit = (u) => {
@@ -2278,7 +2449,7 @@ function UsuariosManager({ data, setData }) {
   };
   const iniciarNovo = () => {
     setEditando("__novo__");
-    setForm({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0 });
+    setForm({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0, cla: "" });
     setErro("");
   };
   const cancelar = () => { setEditando(null); setErro(""); };
@@ -2329,6 +2500,12 @@ function UsuariosManager({ data, setData }) {
               </select>
             </div>
             <div><label className="fox-label">Trio</label><input value={form.trio} onChange={(e) => setForm({...form, trio: e.target.value})} className="fox-input" /></div>
+            <div><label className="fox-label">Clã</label>
+              <select value={form.cla || ""} onChange={(e) => setForm({...form, cla: e.target.value})} className="fox-input">
+                <option value="">— Sem clã —</option>
+                {(data.clas || []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+            </div>
             <div><label className="fox-label">Level</label><input type="number" value={form.level} onChange={(e) => setForm({...form, level: e.target.value})} className="fox-input" /></div>
           </div>
           {erro && <div className="text-red-500 text-xs">{erro}</div>}
@@ -2415,14 +2592,33 @@ function CargosManager({ data, setData }) {
       <div className="space-y-2">
         {data.roles.map((r) => {
           const count = data.users.filter(u => u.role === r.id).length;
+          const isLeader = r.hasLeaderPerms === true;
+          const togglePerm = (pid) => {
+            setData(d => ({
+              ...d,
+              roles: d.roles.map(x => x.id === r.id ? { ...x, permissions: (x.permissions || []).includes(pid) ? x.permissions.filter(p => p !== pid) : [...(x.permissions || []), pid] } : x),
+            }));
+          };
           return (
-            <div key={r.id} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg flex items-center gap-3">
-              <div className="w-3 h-12 rounded" style={{ background: r.cor }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-orange-50 font-bold">{r.nome} {r.protected && <span className="text-xs text-zinc-600">(protegido)</span>}</div>
-                <div className="text-zinc-500 text-xs">{count} usuário(s) · {r.hasLeaderPerms ? <span className="text-orange-500">Permissões de líder</span> : "Membro comum"}</div>
+            <div key={r.id} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-3 h-12 rounded" style={{ background: r.cor }} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-orange-50 font-bold">{r.nome} {r.protected && <span className="text-xs text-zinc-600">(protegido)</span>}</div>
+                  <div className="text-zinc-500 text-xs">{count} usuário(s) · {isLeader ? <span className="text-orange-500">Permissões totais de líder</span> : `${(r.permissions || []).length} permissões`}</div>
+                </div>
+                {!r.protected && <button onClick={() => remover(r.id)} className="text-red-500 hover:text-red-400 p-2"><ITrash className="w-4 h-4" /></button>}
               </div>
-              {!r.protected && <button onClick={() => remover(r.id)} className="text-red-500 hover:text-red-400 p-2"><ITrash className="w-4 h-4" /></button>}
+              {!isLeader && r.id !== "contratante" && (
+                <div className="mt-3 pt-3 border-t border-zinc-800 grid sm:grid-cols-2 gap-1">
+                  {PERMISSIONS_LIST.map(p => (
+                    <label key={p.id} className="flex items-start gap-2 text-xs text-zinc-300 cursor-pointer hover:text-orange-300 p-1">
+                      <input type="checkbox" checked={(r.permissions || []).includes(p.id)} onChange={() => togglePerm(p.id)} className="w-3.5 h-3.5 accent-orange-600 mt-0.5" />
+                      <span><strong>{p.label}</strong><br/><span className="text-zinc-600 text-[10px]">{p.desc}</span></span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -2631,6 +2827,7 @@ const DEFAULT_DATA = {
   armas: DEFAULT_ARMAS,
   clas: DEFAULT_CLAS,
   historia: DEFAULT_HISTORIA,
+  mandamentos: DEFAULT_MANDAMENTOS,
   sokeFiguras: [],
   bunkeFiguras: [],
   juramentados: [],
@@ -2648,7 +2845,6 @@ const DEFAULT_DATA = {
 function migrate(raw) {
   if (!raw || !raw.users) return DEFAULT_DATA;
   const migrated = { ...DEFAULT_DATA, ...raw };
-  // Se clas ainda não existe, cria a partir de Soke/Bunke padrão e migra as figuras antigas
   if (!raw.clas) {
     migrated.clas = [
       { ...DEFAULT_CLAS[0], figuras: raw.sokeFiguras || [] },
@@ -2656,18 +2852,35 @@ function migrate(raw) {
     ];
   }
   if (!raw.historia) migrated.historia = DEFAULT_HISTORIA;
+  if (!raw.mandamentos || !Array.isArray(raw.mandamentos) || raw.mandamentos.length === 0) {
+    migrated.mandamentos = DEFAULT_MANDAMENTOS;
+  }
   if (!raw.relatorios) migrated.relatorios = [];
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
   if (!raw.visaoGeralContratantes) migrated.visaoGeralContratantes = DEFAULT_DATA.visaoGeralContratantes;
-  // Garante codinome em todos os usuários
-  migrated.users = (raw.users || DEFAULT_USERS).map(u => ({ ...u, codinome: u.codinome != null ? u.codinome : "" }));
-  // Garante que o cargo "contratante" exista
-  const rolesIn = raw.roles || DEFAULT_ROLES;
-  migrated.roles = rolesIn.find(r => r.id === "contratante")
-    ? rolesIn
-    : [...rolesIn, { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E" }];
-  // Garante ids nas armas
+  // Garante codinome e cla em todos os usuários
+  migrated.users = (raw.users || DEFAULT_USERS).map(u => ({
+    ...u,
+    codinome: u.codinome != null ? u.codinome : "",
+    cla: u.cla != null ? u.cla : "",
+  }));
+  // Garante cargos protegidos + permissions[]
+  let rolesOut = (raw.roles || DEFAULT_ROLES).map(r => ({
+    ...r,
+    permissions: Array.isArray(r.permissions) ? r.permissions : [],
+  }));
+  if (!rolesOut.find(r => r.id === "contratante")) {
+    rolesOut.push({ id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E", permissions: [] });
+  }
+  // Rebaixa conselheiro: agora usa permissões granulares
+  rolesOut = rolesOut.map(r => {
+    if (r.id === "conselheiro" && r.hasLeaderPerms === true) {
+      return { ...r, hasLeaderPerms: false, permissions: r.permissions.length > 0 ? r.permissions : ["manage_users", "manage_missions"] };
+    }
+    return r;
+  });
+  migrated.roles = rolesOut;
   migrated.armas = (raw.armas || DEFAULT_ARMAS).map((a, i) => a.id ? a : { ...a, id: `arma_${i}_${Date.now().toString(36)}` });
   return migrated;
 }
@@ -2764,6 +2977,77 @@ function VisaoGeralContratantes({ data, setData, isLider }) {
 }
 
 
+function MusicPlayer() {
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const unmutedOnce = useRef(false);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.volume = 0.35;
+    a.muted = true;
+    a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+
+    // Desmuta no PRIMEIRO clique/toque/tecla em qualquer lugar da página
+    const ativarSom = () => {
+      if (unmutedOnce.current) return;
+      unmutedOnce.current = true;
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.muted = false;
+      setMuted(false);
+      audio.play().then(() => setPlaying(true)).catch((err) => {
+        console.warn("autoplay falhou:", err);
+      });
+    };
+    window.addEventListener("click", ativarSom, { once: true });
+    window.addEventListener("touchstart", ativarSom, { once: true });
+    window.addEventListener("keydown", ativarSom, { once: true });
+    return () => {
+      window.removeEventListener("click", ativarSom);
+      window.removeEventListener("touchstart", ativarSom);
+      window.removeEventListener("keydown", ativarSom);
+    };
+  }, []);
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) { a.pause(); setPlaying(false); }
+    else { a.play().then(() => setPlaying(true)).catch(() => {}); }
+  };
+  const toggleMute = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.muted = !a.muted;
+    setMuted(a.muted);
+    unmutedOnce.current = true;
+    if (!a.muted && !playing) { a.play().then(() => setPlaying(true)).catch(() => {}); }
+  };
+
+  return (
+    <div className="fixed bottom-4 right-4 z-40 bg-black/90 backdrop-blur border border-orange-700/60 rounded-full shadow-2xl flex items-center gap-2 px-3 py-2">
+      <audio
+        ref={audioRef}
+        src="https://jikkai.vercel.app/themesong.mp3"
+        loop
+        preload="auto"
+        crossOrigin="anonymous"
+        onError={(e) => console.error("erro audio:", e)}
+      />
+      <button onClick={toggle} className="text-orange-400 hover:text-orange-300 p-1 text-sm" title={playing ? "Pausar" : "Tocar"}>
+        {playing ? "⏸" : "▶"}
+      </button>
+      <button onClick={toggleMute} className="text-orange-400 hover:text-orange-300 p-1 text-sm" title={muted ? "Ativar som" : "Mudo"}>
+        {muted ? "🔇" : "🔊"}
+      </button>
+      <span className="text-[9px] uppercase tracking-wider text-orange-600 pr-1 hidden sm:inline">F.O.X. Theme</span>
+    </div>
+  );
+}
+
 function App() {
   const [usuario, setUsuario] = useState(null);
   const [tab, setTab] = useState("home");
@@ -2816,6 +3100,7 @@ function App() {
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
   const role = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
   const isLider = role?.hasLeaderPerms === true;
+  const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = usuarioAtual?.role === "contratante";
   const meuJuramento = data?.juramentados.find((j) => j.username === usuarioAtual?.username || j.nome.toLowerCase() === (usuarioAtual?.displayName || "").toLowerCase());
   const minhasMissoesCount = usuarioAtual && data ? data.missoes.filter(m => m.assignedTo === usuarioAtual.username && m.status !== "concluida").length : 0;
@@ -2880,13 +3165,14 @@ function App() {
     { id: "historia", label: "História", icon: IBook },
     { id: "cla", label: "Clã Lamona", icon: ICrown },
     { id: "membros", label: "Membros", icon: IUsers },
-    { id: "trios", label: "Trios", icon: ISwords },
     { id: "jikkai", label: "JIKKAI", icon: ITarget },
     { id: "armas", label: "Armas", icon: IShield },
     { id: "missoes", label: `Missões${minhasMissoesCount > 0 ? ` (${minhasMissoesCount})` : ""}`, icon: IClipboard },
     { id: "juramento", label: "Juramento", icon: ISkull },
     ...(isLider ? [
       { id: "visaogeral", label: "Vitrine", icon: IBriefcase },
+    ] : []),
+    ...(podeGerenciar ? [
       { id: "gerenciar", label: "Gerenciar", icon: ISettings },
     ] : []),
   ];
@@ -2947,22 +3233,22 @@ function App() {
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
-        {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} />}
-        {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "membros" && !isContratante && <MembrosPage data={data} viewerIsContratante={isContratante} />}
-        {tab === "trios" && !isContratante && <TriosPage data={data} setData={setData} isLider={isLider} />}
+        {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} />}
+        {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} role={role} />}
+        {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} viewerIsContratante={isContratante} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} viewerIsContratante={isContratante} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
         {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} />}
-        {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} />}
+        {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
         {tab === "visaogeral" && <VisaoGeralContratantes data={data} setData={setData} isLider={isLider} />}
-        {tab === "gerenciar" && isLider && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} exportar={exportar} importar={importar} />}
+        {tab === "gerenciar" && podeGerenciar && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} role={role} exportar={exportar} importar={importar} />}
       </main>
 
       <footer className="border-t border-zinc-900 mt-16 py-6 text-center text-zinc-700 text-xs">
         <p className="uppercase tracking-widest">F.O.X. · Clã Lamona · {new Date().getFullYear()}</p>
         <p className="italic mt-1">"Mais forte, mais livre, mais letal do que nunca."</p>
       </footer>
+      <MusicPlayer />
     </div>
   );
 }
