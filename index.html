@@ -2783,8 +2783,11 @@ function LoginScreen({ data, onLogin }) {
   const tentar = (e) => {
     e.preventDefault();
     const u = data.users.find(x => x.username.toLowerCase() === user.trim().toLowerCase() && x.password === pass);
-    if (u) onLogin(u);
-    else setErro("Credenciais inválidas. Contate o líder para obter acesso.");
+    if (u) {
+      // Dispara música com som imediatamente (estamos dentro de um clique do usuário)
+      if (typeof window.foxStartMusic === "function") window.foxStartMusic();
+      onLogin(u);
+    } else setErro("Credenciais inválidas. Contate o líder para obter acesso.");
   };
 
   return (
@@ -2986,21 +2989,26 @@ function MusicPlayer() {
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    a.volume = 0.35;
+    a.volume = 0.5;
     a.muted = true;
     a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
 
-    // Desmuta no PRIMEIRO clique/toque/tecla em qualquer lugar da página
-    const ativarSom = () => {
+    // Função global que o LoginScreen chama no clique de "Entrar nas Sombras"
+    window.foxStartMusic = () => {
       if (unmutedOnce.current) return;
       unmutedOnce.current = true;
       const audio = audioRef.current;
       if (!audio) return;
       audio.muted = false;
+      audio.volume = 0.5;
       setMuted(false);
-      audio.play().then(() => setPlaying(true)).catch((err) => {
-        console.warn("autoplay falhou:", err);
-      });
+      audio.play().then(() => setPlaying(true)).catch((err) => console.warn("autoplay falhou:", err));
+    };
+
+    // Fallback: desmuta no PRIMEIRO clique/toque/tecla em qualquer lugar (caso usuário já esteja logado e recarregue)
+    const ativarSom = () => {
+      if (unmutedOnce.current) return;
+      window.foxStartMusic();
     };
     window.addEventListener("click", ativarSom, { once: true });
     window.addEventListener("touchstart", ativarSom, { once: true });
@@ -3009,6 +3017,7 @@ function MusicPlayer() {
       window.removeEventListener("click", ativarSom);
       window.removeEventListener("touchstart", ativarSom);
       window.removeEventListener("keydown", ativarSom);
+      delete window.foxStartMusic;
     };
   }, []);
 
