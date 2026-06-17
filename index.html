@@ -1232,6 +1232,98 @@ const STATUS_CFG = {
   concluida: { label: "Concluída", border: "border-green-700", bg: "bg-green-950/20", circle: "bg-green-700 text-black", badge: "bg-green-700 text-black" },
 };
 
+// Fluxo operacional completo das missões. STATUS_CFG acima continua sendo usado pelas fases do JIKKAI.
+const MISSAO_STATUS_CFG = {
+  pendente:   { label: "Atribuída", border: "border-zinc-700", bg: "bg-zinc-950/50", circle: "bg-zinc-900 text-zinc-400 border border-zinc-700", badge: "bg-zinc-800 text-zinc-300" },
+  atribuida:  { label: "Atribuída", border: "border-zinc-700", bg: "bg-zinc-950/50", circle: "bg-zinc-900 text-zinc-400 border border-zinc-700", badge: "bg-zinc-800 text-zinc-300" },
+  aceita:     { label: "Aceita", border: "border-blue-700", bg: "bg-blue-950/20", circle: "bg-blue-800 text-blue-100", badge: "bg-blue-900 text-blue-200" },
+  andamento:  { label: "Em andamento", border: "border-orange-600", bg: "bg-orange-950/20", circle: "bg-orange-600 text-black", badge: "bg-orange-600 text-black" },
+  revisao:    { label: "Aguardando aprovação", border: "border-purple-700", bg: "bg-purple-950/20", circle: "bg-purple-800 text-purple-100", badge: "bg-purple-900 text-purple-200" },
+  devolvida:  { label: "Ajustes solicitados", border: "border-yellow-700", bg: "bg-yellow-950/20", circle: "bg-yellow-800 text-yellow-100", badge: "bg-yellow-900 text-yellow-200" },
+  concluida:  { label: "Concluída", border: "border-green-700", bg: "bg-green-950/20", circle: "bg-green-700 text-black", badge: "bg-green-700 text-black" },
+  falhou:     { label: "Falhou", border: "border-red-800", bg: "bg-red-950/30", circle: "bg-red-900 text-red-200", badge: "bg-red-950 text-red-300" },
+  recusada:   { label: "Recusada", border: "border-red-900", bg: "bg-red-950/20", circle: "bg-red-950 text-red-400", badge: "bg-red-950 text-red-400" },
+  arquivada:  { label: "Arquivada", border: "border-zinc-800", bg: "bg-black/40", circle: "bg-zinc-950 text-zinc-600 border border-zinc-800", badge: "bg-zinc-900 text-zinc-500" },
+};
+
+const MISSAO_STATUS_TERMINAIS = ["concluida", "falhou", "recusada", "arquivada"];
+
+function participantesDaMissao(missao) {
+  return Array.from(new Set([...(Array.isArray(missao?.participants) ? missao.participants : []), missao?.assignedTo].filter(Boolean)));
+}
+
+function usuarioParticipaMissao(missao, username) {
+  return !!username && participantesDaMissao(missao).includes(username);
+}
+
+function statusMissaoConfig(status) {
+  return MISSAO_STATUS_CFG[status] || MISSAO_STATUS_CFG.atribuida;
+}
+
+function RelatorioMissaoModal({ missao, onSave, onClose }) {
+  const [resultado, setResultado] = useState("Sucesso");
+  const [resumo, setResumo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [evidencias, setEvidencias] = useState("");
+  const valido = resumo.trim() && descricao.trim();
+
+  const salvar = () => {
+    if (!valido) return;
+    onSave({
+      resultado,
+      resumo: resumo.trim(),
+      descricao: descricao.trim(),
+      evidencias: evidencias.trim(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="bg-zinc-950 border border-purple-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-purple-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+          <div className="flex items-center gap-3">
+            <IFile className="w-6 h-6 text-purple-400" />
+            <div>
+              <h3 className="text-xl font-bold text-orange-50 serif">Relatório Final da Operação</h3>
+              <p className="text-zinc-600 text-xs truncate max-w-[70vw]">{missao.titulo}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="p-3 bg-purple-950/20 border border-purple-900/50 rounded text-sm text-purple-200">
+            O envio coloca a missão em <strong>aguardando aprovação</strong>. A liderança poderá aprovar ou solicitar ajustes.
+          </div>
+          <div>
+            <label className="fox-label">Resultado da operação</label>
+            <select value={resultado} onChange={(e) => setResultado(e.target.value)} className="fox-input">
+              <option>Sucesso</option>
+              <option>Parcial</option>
+              <option>Falha</option>
+            </select>
+          </div>
+          <div>
+            <label className="fox-label">Resumo executivo *</label>
+            <input value={resumo} onChange={(e) => setResumo(e.target.value)} className="fox-input" placeholder="Ex: Alvo localizado e artefato recuperado sem baixas." autoFocus />
+          </div>
+          <div>
+            <label className="fox-label">Relato completo *</label>
+            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="8" className="fox-input" placeholder="O que aconteceu, decisões tomadas, obstáculos, consequências e situação final..." />
+          </div>
+          <div>
+            <label className="fox-label">Evidências / links</label>
+            <textarea value={evidencias} onChange={(e) => setEvidencias(e.target.value)} rows="3" className="fox-input" placeholder="Links de prints, vídeos ou referências do RP — um por linha." />
+          </div>
+        </div>
+        <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
+          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={!valido}><IUpload className="w-3 h-3" /> Enviar para aprovação</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FaseEditor({ fase, onSave, onCancel }) {
   const [titulo, setTitulo] = useState(fase.titulo);
   const [desc, setDesc] = useState(fase.desc);
@@ -1411,9 +1503,15 @@ function RelatoriosSection({ data, setData, isLider, usuario }) {
                     <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>
                       {r.confidencialidade}
                     </span>
+                    {r.tipo === "Operacional" && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-950 text-purple-300 border border-purple-800">Operacional</span>}
+                    {r.statusAprovacao && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-zinc-800">{r.statusAprovacao}</span>}
                     {r.local && <span className="text-zinc-500 text-xs uppercase tracking-wider">{r.local}</span>}
                   </div>
                   <h3 className="text-orange-50 font-bold text-lg serif leading-tight">{r.titulo}</h3>
+                  {r.missaoId && (() => {
+                    const missao = (data.missoes || []).find(m => m.id === r.missaoId);
+                    return missao ? <div className="text-purple-400 text-xs mt-1">Missão vinculada: {missao.titulo}</div> : null;
+                  })()}
                 </div>
                 {isLider && (
                   <div className="flex gap-1 flex-shrink-0">
@@ -1449,7 +1547,8 @@ const CONTRATO_STATUS_CFG = {
   "Proposta":     { cor: "#A855F7", border: "border-purple-700", bg: "bg-purple-950/20", badge: "bg-purple-900 text-purple-300" },
   "Aberto":       { cor: "#16A34A", border: "border-green-700",  bg: "bg-green-950/20",  badge: "bg-green-900 text-green-300" },
   "Em Andamento": { cor: "#EA580C", border: "border-orange-700", bg: "bg-orange-950/20", badge: "bg-orange-700 text-black" },
-  "Concluído":    { cor: "#71717a", border: "border-zinc-700",   bg: "bg-zinc-950/40",   badge: "bg-zinc-800 text-zinc-400" },
+  "Concluído":    { cor: "#16A34A", border: "border-green-800",  bg: "bg-green-950/20",  badge: "bg-green-900 text-green-300" },
+  "Falhou":       { cor: "#B91C1C", border: "border-red-800",    bg: "bg-red-950/30",    badge: "bg-red-950 text-red-300" },
   "Recusado":     { cor: "#7F1D1D", border: "border-red-900",    bg: "bg-red-950/30",    badge: "bg-red-950 text-red-400" },
 };
 
@@ -1565,6 +1664,7 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
                 <option>Aberto</option>
                 <option>Em Andamento</option>
                 <option>Concluído</option>
+                <option>Falhou</option>
                 <option>Recusado</option>
               </select>
             </div>
@@ -1680,10 +1780,13 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
       titulo: `[Contrato] ${contrato.titulo}`,
       desc: contrato.descricao || contrato.descricaoCurta,
       assignedTo: usuario.username,
+      participants: [usuario.username],
+      aceites: [],
       assignedBy: contrato.criadoPor,
       createdAt: new Date().toISOString(),
       objetivos: [],
-      status: "andamento",
+      status: "atribuida",
+      source: "contrato",
       contratoId: contrato.id,
       recompensa: `${contrato.valorRecompensa} ${contrato.tipoRecompensa}`,
     };
@@ -1699,13 +1802,13 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
         missaoId,
       } : c),
     }));
-    alert("Contrato aceito! Verifique a aba Missões.");
+    alert("Contrato convertido em missão. Confirme sua participação na aba Missões.");
   };
 
   // Filtros disponíveis (contratante não vê "Recusado")
   const FILTROS = viewerIsContratante
-    ? ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído"]
-    : ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído", "Recusado"];
+    ? ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído", "Falhou"]
+    : ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído", "Falhou", "Recusado"];
 
   const podeCriar = isLider || viewerIsContratante;
   const tituloHeader = viewerIsContratante ? "Contratos & Propostas" : "Contratos — Mercenários";
@@ -1761,6 +1864,8 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
             (!viewerIsContratante && !isLider && c.tipo === "externo" && (ehProposta || c.status === "Aberto"))
           );
           const negociacoes = c.negociacoes || [];
+          const missaoVinculada = c.missaoId ? data.missoes?.find(m => m.id === c.missaoId) : null;
+          const missaoCfg = missaoVinculada ? statusMissaoConfig(missaoVinculada.status) : null;
 
           return (
             <div key={c.id} className={`relative rounded-lg border-2 ${sc.border} ${sc.bg} p-5 fadein hover:border-red-500 transition-colors`}
@@ -1859,6 +1964,17 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                         )}
                       </div>
                     )}
+                  </div>
+                )}
+
+
+                {missaoVinculada && (
+                  <div className={`mb-3 p-2 rounded border ${missaoCfg.border} ${missaoCfg.bg} flex items-center justify-between gap-2`}>
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-wider text-zinc-600">Fluxo operacional</div>
+                      <div className="text-xs text-zinc-300 truncate">{missaoVinculada.titulo}</div>
+                    </div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider whitespace-nowrap ${missaoCfg.badge}`}>{missaoCfg.label}</span>
                   </div>
                 )}
 
@@ -2318,15 +2434,91 @@ function JuramentoPage({ usuario, juramentado, juramentar, juramentados, remover
 
 // ============ MINHAS MISSÕES ============
 function MinhasMissoesPage({ data, setData, usuario }) {
-  const minhas = data.missoes.filter(m => m.assignedTo === usuario.username);
+  const [filtro, setFiltro] = useState("Ativas");
+  const [relatorioMissao, setRelatorioMissao] = useState(null);
 
-  const updateMissao = (id, patch) => setData(d => ({ ...d, missoes: d.missoes.map(m => m.id === id ? { ...m, ...patch } : m) }));
+  const todasMinhas = (data.missoes || [])
+    .filter(m => usuarioParticipaMissao(m, usuario.username))
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const ativas = todasMinhas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const encerradas = todasMinhas.filter(m => MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const minhas = filtro === "Ativas" ? ativas : filtro === "Encerradas" ? encerradas : todasMinhas;
+
+  const updateMissao = (id, patch) => setData(d => ({
+    ...d,
+    missoes: d.missoes.map(m => m.id === id ? { ...m, ...patch, updatedAt: new Date().toISOString() } : m),
+  }));
+
   const toggleObj = (id, oi) => {
     const m = data.missoes.find(x => x.id === id);
-    updateMissao(id, { objetivos: m.objetivos.map((o, idx) => idx === oi ? { ...o, done: !o.done } : o) });
+    const objetivos = m.objetivos || [];
+    updateMissao(id, { objetivos: objetivos.map((o, idx) => idx === oi ? { ...o, done: !o.done } : o) });
   };
 
-  if (minhas.length === 0) {
+  const confirmarParticipacao = (m) => {
+    const participantes = participantesDaMissao(m);
+    const aceites = Array.from(new Set([...(m.aceites || []), usuario.username]));
+    const todosAceitaram = participantes.every(p => aceites.includes(p));
+    updateMissao(m.id, {
+      aceites,
+      status: todosAceitaram ? "aceita" : "atribuida",
+      acceptedAt: todosAceitaram ? new Date().toISOString() : m.acceptedAt,
+    });
+  };
+
+  const recusarParticipacao = (m) => {
+    if (!confirm(`Recusar a missão "${m.titulo}"? A liderança será informada pelo status da operação.`)) return;
+    updateMissao(m.id, {
+      status: "recusada",
+      recusadaPor: usuario.username,
+      recusadaEm: new Date().toISOString(),
+    });
+  };
+
+  const iniciarMissao = (m) => updateMissao(m.id, {
+    status: "andamento",
+    startedAt: m.startedAt || new Date().toISOString(),
+    feedbackRevisao: "",
+  });
+
+  const enviarRelatorio = (form) => {
+    const m = relatorioMissao;
+    if (!m) return;
+    const relatorioId = uid();
+    const novoRelatorio = {
+      id: relatorioId,
+      titulo: `[Operação] ${m.titulo}`,
+      local: m.local || "",
+      descricao: form.descricao,
+      resumo: form.resumo,
+      resultado: form.resultado,
+      evidencias: form.evidencias,
+      confidencialidade: "Interno",
+      tipo: "Operacional",
+      statusAprovacao: "Pendente",
+      missaoId: m.id,
+      contratoId: m.contratoId || null,
+      autorUsername: usuario.username,
+      autorNome: usuario.displayName || usuario.codinome || usuario.username,
+      data: new Date().toISOString(),
+    };
+    setData(d => ({
+      ...d,
+      relatorios: [...(d.relatorios || []), novoRelatorio],
+      missoes: d.missoes.map(x => x.id === m.id ? {
+        ...x,
+        status: "revisao",
+        relatorioFinalId: relatorioId,
+        enviadoRevisaoEm: new Date().toISOString(),
+        feedbackRevisao: "",
+        updatedAt: new Date().toISOString(),
+      } : x),
+    }));
+    setRelatorioMissao(null);
+  };
+
+  if (todasMinhas.length === 0) {
     return (
       <div>
         <SectionTitle icon={IClipboard} sub="Missões atribuídas a você">Minhas Missões</SectionTitle>
@@ -2341,27 +2533,73 @@ function MinhasMissoesPage({ data, setData, usuario }) {
 
   return (
     <div>
-      <SectionTitle icon={IClipboard} sub={`${minhas.length} ${minhas.length === 1 ? "missão ativa" : "missões ativas"}`}>Minhas Missões</SectionTitle>
+      <SectionTitle icon={IClipboard} sub={`${ativas.length} ${ativas.length === 1 ? "operação ativa" : "operações ativas"}`}>Minhas Missões</SectionTitle>
+
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {["Ativas", "Encerradas", "Todas"].map(f => {
+          const count = f === "Ativas" ? ativas.length : f === "Encerradas" ? encerradas.length : todasMinhas.length;
+          return (
+            <button key={f} onClick={() => setFiltro(f)} className={`px-3 py-1.5 rounded text-xs uppercase tracking-wider font-bold border ${filtro === f ? "bg-orange-700 border-orange-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500"}`}>
+              {f} <span className="opacity-60">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {minhas.length === 0 && (
+        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">Nenhuma missão neste filtro.</div>
+      )}
+
       <div className="space-y-4">
         {minhas.map((m) => {
-          const c = STATUS_CFG[m.status] || STATUS_CFG.pendente;
-          const prog = m.objetivos.length > 0 ? Math.round(m.objetivos.filter(o => o.done).length / m.objetivos.length * 100) : 0;
+          const c = statusMissaoConfig(m.status);
+          const objetivos = m.objetivos || [];
+          const prog = objetivos.length > 0 ? Math.round(objetivos.filter(o => o.done).length / objetivos.length * 100) : 0;
           const atribuidor = data.users.find(u => u.username === m.assignedBy);
+          const participantes = participantesDaMissao(m);
+          const aceites = m.aceites || [];
+          const euAceitei = aceites.includes(usuario.username);
+          const podeEditarObjetivos = ["aceita", "andamento", "devolvida"].includes(m.status);
+          const relatorio = m.relatorioFinalId ? (data.relatorios || []).find(r => r.id === m.relatorioFinalId) : null;
+          const contrato = m.contratoId ? (data.contratos || []).find(x => x.id === m.contratoId) : null;
+
           return (
             <div key={m.id} className={`p-5 rounded-lg border ${c.border} ${c.bg} fadein`}>
               <div className="flex items-start gap-4">
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${c.circle}`}>
-                  {m.status === "concluida" ? <ICheck className="w-5 h-5" /> : <IClipboard className="w-5 h-5" />}
+                  {m.status === "concluida" ? <ICheck className="w-5 h-5" /> : m.status === "falhou" ? <IAlert className="w-5 h-5" /> : <IClipboard className="w-5 h-5" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="text-orange-50 font-bold text-lg">{m.titulo}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                    {m.contratoId && <span className="text-[10px] px-2 py-0.5 rounded border border-red-800 text-red-300 uppercase tracking-wider">Contrato</span>}
                   </div>
                   <p className="text-zinc-400 text-sm leading-relaxed mb-2">{m.desc}</p>
-                  <div className="text-zinc-600 text-xs mb-3">Atribuída por <strong className="text-orange-600">{atribuidor?.displayName || m.assignedBy}</strong> em {new Date(m.createdAt).toLocaleDateString("pt-BR")}</div>
+                  <div className="text-zinc-600 text-xs mb-2">
+                    Atribuída por <strong className="text-orange-600">{atribuidor?.displayName || atribuidor?.codinome || m.assignedBy}</strong> em {new Date(m.createdAt).toLocaleDateString("pt-BR")}
+                  </div>
+                  <div className="text-zinc-500 text-xs mb-3">
+                    Equipe: {participantes.map(p => data.users.find(u => u.username === p)?.codinome || data.users.find(u => u.username === p)?.displayName || p).join(", ")}
+                    {participantes.length > 1 && <span className="text-zinc-700"> · {aceites.length}/{participantes.length} confirmações</span>}
+                  </div>
 
-                  {m.objetivos.length > 0 && (
+                  {contrato && (
+                    <div className="mb-3 p-3 bg-black/40 border border-red-900/40 rounded text-xs">
+                      <div className="uppercase tracking-wider text-red-500 mb-1">Contrato vinculado</div>
+                      <div className="text-zinc-300">{contrato.titulo}</div>
+                      {m.recompensa && <div className="text-orange-400 mt-1">Recompensa: {m.recompensa}</div>}
+                    </div>
+                  )}
+
+                  {m.feedbackRevisao && (
+                    <div className="mb-3 p-3 bg-yellow-950/30 border border-yellow-800 rounded">
+                      <div className="text-[10px] uppercase tracking-wider text-yellow-500 mb-1">Ajustes solicitados pela liderança</div>
+                      <div className="text-yellow-100 text-sm whitespace-pre-wrap">{m.feedbackRevisao}</div>
+                    </div>
+                  )}
+
+                  {objetivos.length > 0 && (
                     <>
                       <div className="mb-2">
                         <div className="flex justify-between text-xs text-zinc-500 mb-1">
@@ -2373,9 +2611,9 @@ function MinhasMissoesPage({ data, setData, usuario }) {
                         </div>
                       </div>
                       <div className="space-y-1.5 mt-3">
-                        {m.objetivos.map((o, oi) => (
-                          <label key={oi} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <input type="checkbox" checked={o.done} onChange={() => toggleObj(m.id, oi)} className="w-4 h-4 accent-orange-600" />
+                        {objetivos.map((o, oi) => (
+                          <label key={oi} className={`flex items-center gap-2 text-sm ${podeEditarObjetivos ? "cursor-pointer" : "cursor-default"}`}>
+                            <input type="checkbox" checked={o.done} onChange={() => podeEditarObjetivos && toggleObj(m.id, oi)} disabled={!podeEditarObjetivos} className="w-4 h-4 accent-orange-600 disabled:opacity-40" />
                             <span className={o.done ? "line-through text-zinc-600" : "text-zinc-300"}>{o.text}</span>
                           </label>
                         ))}
@@ -2383,11 +2621,38 @@ function MinhasMissoesPage({ data, setData, usuario }) {
                     </>
                   )}
 
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-zinc-800">
-                    <span className="text-xs text-zinc-600 uppercase tracking-wider mr-auto self-center">Marcar como:</span>
-                    <Btn onClick={() => updateMissao(m.id, { status: "pendente" })} variant={m.status === "pendente" ? "default" : "ghost"}>Pendente</Btn>
-                    <Btn onClick={() => updateMissao(m.id, { status: "andamento" })} variant={m.status === "andamento" ? "primary" : "ghost"}>Em andamento</Btn>
-                    <Btn onClick={() => updateMissao(m.id, { status: "concluida" })} variant={m.status === "concluida" ? "success" : "ghost"}>Concluída</Btn>
+                  {relatorio && (
+                    <div className="mt-4 p-3 bg-black/40 border border-purple-900/50 rounded">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-[10px] uppercase tracking-wider text-purple-400">Relatório final · {relatorio.resultado || "Sem resultado"}</span>
+                        <span className="text-[10px] text-zinc-600">{relatorio.statusAprovacao || "Pendente"}</span>
+                      </div>
+                      {relatorio.resumo && <div className="text-zinc-300 text-sm">{relatorio.resumo}</div>}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-zinc-800 flex-wrap">
+                    {(m.status === "atribuida" || m.status === "pendente") && !euAceitei && (
+                      <>
+                        <Btn onClick={() => confirmarParticipacao(m)} variant="primary"><ICheck className="w-3 h-3" /> Confirmar participação</Btn>
+                        <Btn onClick={() => recusarParticipacao(m)} variant="danger"><IX className="w-3 h-3" /> Recusar</Btn>
+                      </>
+                    )}
+                    {m.status === "atribuida" && euAceitei && (
+                      <span className="text-xs text-zinc-500 self-center">Aguardando confirmação dos demais operadores.</span>
+                    )}
+                    {m.status === "aceita" && (
+                      <Btn onClick={() => iniciarMissao(m)} variant="primary"><ISwords className="w-3 h-3" /> Iniciar operação</Btn>
+                    )}
+                    {m.status === "devolvida" && (
+                      <Btn onClick={() => iniciarMissao(m)} variant="primary"><IEdit className="w-3 h-3" /> Retomar ajustes</Btn>
+                    )}
+                    {m.status === "andamento" && (
+                      <Btn onClick={() => setRelatorioMissao(m)} variant="primary" className="ml-auto"><IFile className="w-3 h-3" /> Enviar relatório final</Btn>
+                    )}
+                    {m.status === "revisao" && (
+                      <span className="text-xs uppercase tracking-wider text-purple-400 self-center">Relatório enviado. Aguardando decisão da liderança.</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2395,6 +2660,8 @@ function MinhasMissoesPage({ data, setData, usuario }) {
           );
         })}
       </div>
+
+      {relatorioMissao && <RelatorioMissaoModal missao={relatorioMissao} onSave={enviarRelatorio} onClose={() => setRelatorioMissao(null)} />}
     </div>
   );
 }
@@ -2629,84 +2896,240 @@ function CargosManager({ data, setData }) {
 
 function MissoesManager({ data, setData, usuario }) {
   const [criando, setCriando] = useState(false);
-  const [form, setForm] = useState({ titulo: "", desc: "", assignedTo: "", objetivosText: "" });
+  const [filtro, setFiltro] = useState("Ativas");
+  const [expandida, setExpandida] = useState(null);
+  const [form, setForm] = useState({ titulo: "", desc: "", participants: [], objetivosText: "" });
+
+  const toggleParticipante = (username) => {
+    setForm(f => ({
+      ...f,
+      participants: f.participants.includes(username)
+        ? f.participants.filter(x => x !== username)
+        : [...f.participants, username],
+    }));
+  };
 
   const criar = () => {
-    if (!form.titulo.trim() || !form.assignedTo) return;
+    if (!form.titulo.trim() || form.participants.length === 0) return;
     const objetivos = form.objetivosText.split("\n").map(s => s.trim()).filter(Boolean).map(text => ({ text, done: false }));
     const nova = {
       id: uid(),
       titulo: form.titulo.trim(),
       desc: form.desc.trim(),
-      assignedTo: form.assignedTo,
+      assignedTo: form.participants[0],
+      participants: form.participants,
+      aceites: [],
       assignedBy: usuario.username,
       createdAt: new Date().toISOString(),
       objetivos,
-      status: "pendente",
+      status: "atribuida",
+      source: "manual",
     };
     setData(d => ({ ...d, missoes: [...d.missoes, nova] }));
-    setForm({ titulo: "", desc: "", assignedTo: "", objetivosText: "" });
+    setForm({ titulo: "", desc: "", participants: [], objetivosText: "" });
     setCriando(false);
   };
+
   const remover = (id) => {
-    if (confirm("Remover esta missão?")) setData(d => ({ ...d, missoes: d.missoes.filter(m => m.id !== id) }));
+    if (confirm("Remover esta missão? O contrato e os relatórios vinculados não serão apagados.")) {
+      setData(d => ({ ...d, missoes: d.missoes.filter(m => m.id !== id) }));
+    }
   };
+
+  const atualizar = (id, patch) => setData(d => ({
+    ...d,
+    missoes: d.missoes.map(m => m.id === id ? { ...m, ...patch, updatedAt: new Date().toISOString() } : m),
+  }));
+
+  const iniciarPelaLideranca = (m) => {
+    if (!confirm(`Iniciar "${m.titulo}" mesmo sem todas as confirmações?`)) return;
+    atualizar(m.id, { status: "andamento", startedAt: m.startedAt || new Date().toISOString() });
+  };
+
+  const devolverParaAjustes = (m) => {
+    const feedback = prompt("Explique quais ajustes o operador deve fazer no relatório:", m.feedbackRevisao || "");
+    if (feedback == null || !feedback.trim()) return;
+    setData(d => ({
+      ...d,
+      missoes: d.missoes.map(x => x.id === m.id ? {
+        ...x,
+        status: "devolvida",
+        feedbackRevisao: feedback.trim(),
+        devolvidaEm: new Date().toISOString(),
+        devolvidaPor: usuario.username,
+      } : x),
+      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+        ...r,
+        statusAprovacao: "Ajustes solicitados",
+        feedbackAprovacao: feedback.trim(),
+        revisadoPor: usuario.username,
+        revisadoEm: new Date().toISOString(),
+      } : r),
+    }));
+  };
+
+  const aprovarResultado = (m) => {
+    const relatorio = (data.relatorios || []).find(r => r.id === m.relatorioFinalId);
+    if (!relatorio) { alert("Relatório final não encontrado."); return; }
+    const falhou = relatorio.resultado === "Falha";
+    const statusFinal = falhou ? "falhou" : "concluida";
+    const statusContrato = falhou ? "Falhou" : "Concluído";
+    const texto = falhou ? "confirmar a falha da operação" : "aprovar a conclusão da operação";
+    if (!confirm(`Deseja ${texto}? O contrato vinculado também será atualizado.`)) return;
+
+    setData(d => ({
+      ...d,
+      missoes: d.missoes.map(x => x.id === m.id ? {
+        ...x,
+        status: statusFinal,
+        concluidaEm: new Date().toISOString(),
+        aprovadaPor: usuario.username,
+        feedbackRevisao: "",
+      } : x),
+      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+        ...r,
+        statusAprovacao: "Aprovado",
+        aprovadoPor: usuario.username,
+        aprovadoEm: new Date().toISOString(),
+      } : r),
+      contratos: (d.contratos || []).map(c => c.id === m.contratoId ? {
+        ...c,
+        status: statusContrato,
+        finalizadoEm: new Date().toISOString(),
+        resultadoMissao: relatorio.resultado,
+        relatorioFinalId: relatorio.id,
+      } : c),
+    }));
+  };
+
+  const arquivar = (m) => {
+    if (!confirm(`Arquivar a missão "${m.titulo}"?`)) return;
+    atualizar(m.id, { status: "arquivada", arquivadaEm: new Date().toISOString() });
+  };
+
+  const todas = (data.missoes || []).slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const ativas = todas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const encerradas = todas.filter(m => MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const missoes = filtro === "Ativas" ? ativas : filtro === "Encerradas" ? encerradas : todas;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-orange-50 font-bold text-lg serif">Missões Atribuídas ({data.missoes.length})</h3>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="text-orange-50 font-bold text-lg serif">Centro de Operações ({todas.length})</h3>
+          <p className="text-zinc-600 text-xs">Atribuição → aceite → execução → relatório → aprovação → encerramento.</p>
+        </div>
         {!criando && <Btn onClick={() => setCriando(true)} variant="primary"><IPlus className="w-3 h-3" /> Nova Missão</Btn>}
       </div>
 
       {criando && (
         <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-3 fadein">
           <h4 className="text-orange-50 font-bold">Nova Missão</h4>
-          <div><label className="fox-label">Atribuir a *</label>
-            <select value={form.assignedTo} onChange={(e) => setForm({...form, assignedTo: e.target.value})} className="fox-input">
-              <option value="">-- Selecione --</option>
-              {data.users.map(u => <option key={u.username} value={u.username}>{u.displayName} (@{u.username})</option>)}
-            </select>
+          <div>
+            <label className="fox-label">Escalar operadores *</label>
+            <div className="grid sm:grid-cols-2 gap-2 p-3 bg-black border border-zinc-800 rounded max-h-56 overflow-y-auto">
+              {data.users.filter(u => u.role !== "contratante").map(u => (
+                <label key={u.username} className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer p-1 hover:text-orange-300">
+                  <input type="checkbox" checked={form.participants.includes(u.username)} onChange={() => toggleParticipante(u.username)} className="w-4 h-4 accent-orange-600" />
+                  <span>{u.codinome || u.displayName || u.username} <span className="text-zinc-700">(@{u.username})</span></span>
+                </label>
+              ))}
+            </div>
+            <div className="text-zinc-600 text-[10px] mt-1">O primeiro operador selecionado será registrado como responsável principal.</div>
           </div>
           <div><label className="fox-label">Título *</label><input value={form.titulo} onChange={(e) => setForm({...form, titulo: e.target.value})} className="fox-input" placeholder="Ex: Infiltração em Kirigakure" /></div>
-          <div><label className="fox-label">Descrição</label><textarea value={form.desc} onChange={(e) => setForm({...form, desc: e.target.value})} rows="3" className="fox-input" placeholder="Contexto, objetivo geral..." /></div>
+          <div><label className="fox-label">Descrição</label><textarea value={form.desc} onChange={(e) => setForm({...form, desc: e.target.value})} rows="3" className="fox-input" placeholder="Contexto, objetivo geral, riscos e limites..." /></div>
           <div><label className="fox-label">Objetivos (um por linha)</label>
             <textarea value={form.objetivosText} onChange={(e) => setForm({...form, objetivosText: e.target.value})} rows="5" className="fox-input" placeholder="Mapear o perímetro&#10;Identificar o alvo&#10;Relatar em 48h" />
           </div>
           <div className="flex gap-2 pt-2 border-t border-zinc-800">
             <Btn onClick={() => setCriando(false)} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-            <Btn onClick={criar} variant="primary" disabled={!form.titulo.trim() || !form.assignedTo}><ISave className="w-3 h-3" /> Enviar Missão</Btn>
+            <Btn onClick={criar} variant="primary" disabled={!form.titulo.trim() || form.participants.length === 0}><ISave className="w-3 h-3" /> Atribuir Missão</Btn>
           </div>
         </div>
       )}
 
-      {data.missoes.length === 0 && !criando && (
-        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">
-          Nenhuma missão atribuída ainda.
-        </div>
+      <div className="flex gap-2 flex-wrap">
+        {["Ativas", "Encerradas", "Todas"].map(f => {
+          const count = f === "Ativas" ? ativas.length : f === "Encerradas" ? encerradas.length : todas.length;
+          return <button key={f} onClick={() => setFiltro(f)} className={`px-3 py-1.5 rounded text-xs uppercase tracking-wider font-bold border ${filtro === f ? "bg-orange-700 border-orange-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500"}`}>{f} ({count})</button>;
+        })}
+      </div>
+
+      {missoes.length === 0 && !criando && (
+        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">Nenhuma missão neste filtro.</div>
       )}
 
       <div className="space-y-3">
-        {data.missoes.map((m) => {
-          const c = STATUS_CFG[m.status];
-          const target = data.users.find(u => u.username === m.assignedTo);
-          const prog = m.objetivos.length > 0 ? Math.round(m.objetivos.filter(o => o.done).length / m.objetivos.length * 100) : 0;
+        {missoes.map((m) => {
+          const c = statusMissaoConfig(m.status);
+          const participantes = participantesDaMissao(m);
+          const objetivos = m.objetivos || [];
+          const prog = objetivos.length > 0 ? Math.round(objetivos.filter(o => o.done).length / objetivos.length * 100) : 0;
+          const relatorio = m.relatorioFinalId ? (data.relatorios || []).find(r => r.id === m.relatorioFinalId) : null;
+          const contrato = m.contratoId ? (data.contratos || []).find(x => x.id === m.contratoId) : null;
+          const expanded = expandida === m.id;
           return (
             <div key={m.id} className={`p-4 rounded-lg border ${c.border} ${c.bg}`}>
-              <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h4 className="text-orange-50 font-bold">{m.titulo}</h4>
                     <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                    {m.contratoId && <span className="text-[10px] px-2 py-0.5 rounded border border-red-800 text-red-300 uppercase tracking-wider">Contrato</span>}
                   </div>
-                  <div className="text-zinc-500 text-xs">→ {target?.displayName || m.assignedTo}</div>
+                  <div className="text-zinc-500 text-xs">
+                    → {participantes.map(p => data.users.find(u => u.username === p)?.codinome || data.users.find(u => u.username === p)?.displayName || p).join(", ")}
+                    {participantes.length > 0 && <span className="text-zinc-700"> · {(m.aceites || []).length}/{participantes.length} aceitaram</span>}
+                  </div>
                 </div>
-                <button onClick={() => remover(m.id)} className="text-red-500 p-1"><ITrash className="w-4 h-4" /></button>
+                <div className="flex gap-1">
+                  <button onClick={() => setExpandida(expanded ? null : m.id)} className="text-orange-400 p-1" title="Detalhes">{expanded ? "−" : "+"}</button>
+                  <button onClick={() => remover(m.id)} className="text-red-500 p-1" title="Remover"><ITrash className="w-4 h-4" /></button>
+                </div>
               </div>
-              {m.desc && <p className="text-zinc-400 text-sm mb-2">{m.desc}</p>}
-              {m.objetivos.length > 0 && (
-                <div className="text-xs text-zinc-500">
-                  {m.objetivos.filter(o => o.done).length}/{m.objetivos.length} objetivos · {prog}%
+
+              {m.desc && <p className="text-zinc-400 text-sm mt-2">{m.desc}</p>}
+              {objetivos.length > 0 && <div className="text-xs text-zinc-500 mt-2">{objetivos.filter(o => o.done).length}/{objetivos.length} objetivos · {prog}%</div>}
+
+              {expanded && (
+                <div className="mt-4 pt-4 border-t border-zinc-800 space-y-3 fadein">
+                  {contrato && (
+                    <div className="p-3 bg-black/40 border border-red-900/40 rounded text-sm">
+                      <div className="text-[10px] uppercase tracking-wider text-red-500">Contrato vinculado</div>
+                      <div className="text-zinc-300">{contrato.titulo}</div>
+                    </div>
+                  )}
+                  {m.feedbackRevisao && (
+                    <div className="p-3 bg-yellow-950/20 border border-yellow-800 rounded text-sm text-yellow-100 whitespace-pre-wrap">Feedback atual: {m.feedbackRevisao}</div>
+                  )}
+                  {relatorio && (
+                    <div className="p-3 bg-purple-950/20 border border-purple-800 rounded">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="text-purple-200 text-xs uppercase tracking-wider">Relatório final · {relatorio.resultado}</div>
+                        <div className="text-zinc-600 text-[10px]">{relatorio.statusAprovacao || "Pendente"}</div>
+                      </div>
+                      {relatorio.resumo && <div className="text-orange-50 font-bold text-sm mb-1">{relatorio.resumo}</div>}
+                      <div className="text-zinc-300 text-sm whitespace-pre-wrap">{relatorio.descricao}</div>
+                      {relatorio.evidencias && <div className="text-zinc-500 text-xs whitespace-pre-wrap mt-2 pt-2 border-t border-purple-900/40">Evidências:
+{relatorio.evidencias}</div>}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 flex-wrap">
+                    {["atribuida", "pendente", "aceita"].includes(m.status) && (
+                      <Btn onClick={() => iniciarPelaLideranca(m)} variant="primary"><ISwords className="w-3 h-3" /> Iniciar pela liderança</Btn>
+                    )}
+                    {m.status === "revisao" && (
+                      <>
+                        <Btn onClick={() => aprovarResultado(m)} variant="success"><ICheck className="w-3 h-3" /> Aprovar resultado</Btn>
+                        <Btn onClick={() => devolverParaAjustes(m)} variant="default"><IEdit className="w-3 h-3" /> Solicitar ajustes</Btn>
+                      </>
+                    )}
+                    {["concluida", "falhou", "recusada"].includes(m.status) && (
+                      <Btn onClick={() => arquivar(m)} variant="ghost"><IFile className="w-3 h-3" /> Arquivar</Btn>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -2861,6 +3284,20 @@ function migrate(raw) {
   if (!raw.relatorios) migrated.relatorios = [];
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
+  if (!raw.missoes) migrated.missoes = [];
+  migrated.missoes = (raw.missoes || []).map(m => {
+    const participants = Array.from(new Set([...(Array.isArray(m.participants) ? m.participants : []), m.assignedTo].filter(Boolean)));
+    const status = m.status === "pendente" ? "atribuida" : (m.status || "atribuida");
+    const jaEstavaEmExecucao = ["aceita", "andamento", "revisao", "devolvida", "concluida", "falhou", "arquivada"].includes(status);
+    return {
+      ...m,
+      participants,
+      aceites: Array.isArray(m.aceites) ? m.aceites : (jaEstavaEmExecucao ? participants : []),
+      objetivos: Array.isArray(m.objetivos) ? m.objetivos : [],
+      status,
+      source: m.source || (m.contratoId ? "contrato" : "manual"),
+    };
+  });
   if (!raw.visaoGeralContratantes) migrated.visaoGeralContratantes = DEFAULT_DATA.visaoGeralContratantes;
   // Garante codinome e cla em todos os usuários
   migrated.users = (raw.users || DEFAULT_USERS).map(u => ({
@@ -3112,7 +3549,7 @@ function App() {
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = usuarioAtual?.role === "contratante";
   const meuJuramento = data?.juramentados.find((j) => j.username === usuarioAtual?.username || j.nome.toLowerCase() === (usuarioAtual?.displayName || "").toLowerCase());
-  const minhasMissoesCount = usuarioAtual && data ? data.missoes.filter(m => m.assignedTo === usuarioAtual.username && m.status !== "concluida").length : 0;
+  const minhasMissoesCount = usuarioAtual && data ? data.missoes.filter(m => usuarioParticipaMissao(m, usuarioAtual.username) && !MISSAO_STATUS_TERMINAIS.includes(m.status)).length : 0;
 
   // Se contratante e tab não permitida, força "visaogeral"
   useEffect(() => {
