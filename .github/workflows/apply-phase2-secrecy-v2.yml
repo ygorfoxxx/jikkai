@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/apply-phase2-secrecy-v2.yml'
+      - '.phase2/trigger-v2.txt'
 
 permissions:
   contents: write
