@@ -1,0 +1,41 @@
+name: Aplicar fase 1 - fluxo de missoes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-phase1-mission-flow.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-phase1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Reconstruir e aplicar atualizacao
+        shell: bash
+        run: |
+          cat .phase1gz/part*.b64 | base64 --decode | gzip --decompress > /tmp/phase1.diff
+          git apply --check /tmp/phase1.diff
+          git apply /tmp/phase1.diff
+
+          grep -q 'const MISSAO_STATUS_CFG' index.html
+          grep -q 'function RelatorioMissaoModal' index.html
+          grep -q 'function MinhasMissoesPage' index.html
+          grep -q 'function MissoesManager' index.html
+
+      - name: Publicar fase 1 e remover arquivos temporarios
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm -r .phase1 .phase1gz
+          git rm .github/workflows/apply-phase1-mission-flow.yml
+          git commit -m "Fase 1: implementar fluxo completo de missoes"
+          git push origin main
