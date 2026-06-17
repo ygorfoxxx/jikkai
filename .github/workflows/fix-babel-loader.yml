@@ -1,0 +1,51 @@
+name: Corrigir carregamento do Babel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/fix-babel-loader.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-babel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Corrigir index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_babel = '<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>'
+          new_babel = '<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>'
+          old_script = '<script type="text/babel">'
+          new_script = '<script type="text/babel" data-presets="env,react">'
+
+          if old_babel not in text:
+              raise SystemExit('A referência original do Babel não foi encontrada.')
+          if old_script not in text:
+              raise SystemExit('A tag text/babel original não foi encontrada.')
+
+          text = text.replace(old_babel, new_babel, 1)
+          text = text.replace(old_script, new_script, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Salvar correção
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Corrigir carregamento do Babel no portal"
+          git push origin main
