@@ -1,0 +1,52 @@
+name: Aplicar fase 2 - niveis de sigilo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/apply-phase2-secrecy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-phase2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Aplicar sistema de sigilo
+        shell: bash
+        run: |
+          cat .phase2/part*.b64 | base64 --decode | gzip --decompress > /tmp/apply_phase2.py
+          python3 /tmp/apply_phase2.py
+
+      - name: Validar estrutura e sintaxe JSX
+        shell: bash
+        run: |
+          grep -q 'const SIGILO_NIVEIS' index.html
+          grep -q 'function ConteudoCensurado' index.html
+          grep -q 'function ArquivoPublicoPage' index.html
+          grep -q 'Olhos do Líder' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('index.html').read_text(encoding='utf-8')
+          start = text.index('<script type="text/babel" data-presets="env,react">')
+          start = text.index('>', start) + 1
+          end = text.rindex('</script>')
+          Path('/tmp/portal.jsx').write_text(text[start:end], encoding='utf-8')
+          PY
+          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
+
+      - name: Publicar fase 2 e limpar arquivos temporarios
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm -r .phase2
+          git rm .github/workflows/apply-phase2-secrecy.yml
+          git commit -m "Fase 2: implementar niveis de sigilo"
+          git push origin main
