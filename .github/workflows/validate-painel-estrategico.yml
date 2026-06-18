@@ -1,0 +1,26 @@
+name: Validar Painel Estratégico JIKKAI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Gerar portal completo e validar integrações
+        run: node scripts/build-etapa2.cjs
+
+      - name: Confirmar fontes estratégicas
+        run: |
+          grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html
+          grep -q 'function coletarSinaisEstrategicos' index.html
+          grep -q 'Gerar alerta no Painel JIKKAI' index.html
+          grep -q 'Painel Estratégico JIKKAI' index.html
+          grep -q 'Integração com o Painel JIKKAI' mapa.html
+          grep -q 'Comprometido' mapa.html
