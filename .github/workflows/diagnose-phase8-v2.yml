@@ -1,0 +1,35 @@
+name: Diagnosticar Fase 8 v2
+
+on:
+  push:
+    branches:
+      - fase8-mapa-estrategico
+    paths:
+      - '.github/workflows/diagnose-phase8-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gerar diagnostico
+        shell: bash
+        run: |
+          mkdir -p phase8-diagnostics
+          set +e
+          base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py 2> phase8-diagnostics/decode.log
+          echo $? > phase8-diagnostics/decode-status.txt
+          python3 -m py_compile /tmp/apply_phase8.py > phase8-diagnostics/compile.log 2>&1
+          echo $? > phase8-diagnostics/compile-status.txt
+          python3 /tmp/apply_phase8.py > phase8-diagnostics/apply.log 2>&1
+          echo $? > phase8-diagnostics/apply-status.txt
+          cp /tmp/apply_phase8.py phase8-diagnostics/apply_phase8.py
+          exit 0
+      - name: Enviar diagnostico
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase8-diagnostico-detalhado-v2
+          path: phase8-diagnostics
