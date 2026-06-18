@@ -34,6 +34,7 @@
 <div id="root"></div>
 
 <script type="text/babel" data-presets="env,react">
+// ETAPA 1 — FUNDAÇÃO DOS MEMBROS v1 (dossiês, avatares, estrutura e vínculos)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -70,7 +71,15 @@ const DEFAULT_ROLES = [
 ];
 
 const DEFAULT_USERS = [
-  { username: "leader", password: "jikkai123", role: "leader", displayName: "Líder Supremo", codinome: "Alpha", status: "Líder", trio: "", level: 50, cla: "soke" },
+  {
+    username: "leader", password: "jikkai123", role: "leader",
+    displayName: "Líder Supremo", nomeRP: "Líder Supremo", codinome: "Alpha",
+    status: "Líder", level: 50, cla: "soke", elemento: "", linhagem: "",
+    vilaOrigem: "", patente: "Líder Supremo", especialidade: "Comando estratégico",
+    bio: "", avatarUrl: "", avatarStoragePath: "", estruturaNivel: "lideranca",
+    respondeA: "", nivelAcesso: 5, iniciacaoStatus: "concluida", perfilCompleto: false,
+    criadoEm: new Date().toISOString(), criadoPor: "sistema"
+  },
 ];
 
 // Mandamentos default — agora editáveis e armazenados em data.mandamentos
@@ -105,6 +114,70 @@ function nomeUsernamePara(username, users, viewerIsContratante) {
   const u = users?.find(x => x.username === username);
   if (!u) return viewerIsContratante ? "Operador F.O.X." : (username || "?");
   return nomeParaExibir(u, viewerIsContratante);
+}
+
+
+const MEMBER_PROFILE_FIELDS = ["nomeRP", "elemento", "linhagem", "vilaOrigem", "especialidade"];
+
+function perfilCompletoUsuario(u) {
+  if (!u) return false;
+  return Boolean(u.avatarUrl && MEMBER_PROFILE_FIELDS.filter(c => c !== "especialidade").every(c => String(u[c] || "").trim()));
+}
+
+function normalizarMembro(u, existente = true) {
+  const base = {
+    avatarUrl: "", avatarStoragePath: "", nomeRP: "", elemento: "", linhagem: "",
+    vilaOrigem: "", patente: "", especialidade: "", bio: "", estruturaNivel: "operador",
+    respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
+    criadoEm: "", criadoPor: "", perfilCompleto: false,
+  };
+  const out = { ...base, ...u };
+  out.nomeRP = out.nomeRP || out.displayName || "";
+  out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
+  out.perfilCompleto = perfilCompletoUsuario(out);
+  return out;
+}
+
+function slugEstrutura(valor) {
+  return String(valor || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function usuarioPorIdentidade(users, identidade) {
+  const alvo = slugEstrutura(identidade);
+  if (!alvo) return null;
+  return (users || []).find(u => [u.username, u.codinome, u.displayName, u.nomeRP].some(v => slugEstrutura(v) === alvo)) || null;
+}
+
+function trioDoUsuario(data, username) {
+  return (data?.trios || []).find(t => (t.membros || []).some(m => m.username === username)) || null;
+}
+
+function atividade(tipo, ator, alvo, descricao) {
+  return {
+    id: uid(), tipo, ator: ator || "sistema", alvo: alvo || "", descricao: descricao || "",
+    data: new Date().toISOString(),
+  };
+}
+
+function iniciaisMembro(u) {
+  const nome = getCodinome(u);
+  return nome.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0]).join("").toUpperCase() || "FX";
+}
+
+function MemberAvatar({ user, size = "md", className = "" }) {
+  const sizes = { xs: "w-8 h-8 text-[10px]", sm: "w-10 h-10 text-xs", md: "w-14 h-14 text-sm", lg: "w-24 h-24 text-xl", xl: "w-32 h-32 text-2xl" };
+  const classes = sizes[size] || sizes.md;
+  return (
+    <div className={`${classes} ${className} rounded-full overflow-hidden border border-orange-800/70 bg-gradient-to-br from-red-950 to-black flex items-center justify-center flex-shrink-0 shadow-lg`}>
+      {user?.avatarUrl ? (
+        <img src={user.avatarUrl} alt={getCodinome(user)} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+      ) : (
+        <span className="font-black tracking-wider text-orange-300">{iniciaisMembro(user)}</span>
+      )}
+    </div>
+  );
 }
 
 const DEFAULT_TRIOS = [
@@ -1066,160 +1139,381 @@ function ClaPage({ data, setData, role }) {
   );
 }
 
-// ============ MEMBROS (lista de usuários, sem contratantes) ============
-function MembrosListSection({ data, viewerIsContratante }) {
-  // Esconde contratantes
+// ============ MEMBROS — ETAPA 1: DOSSIÊS, ESTRUTURA E TRIOS ============
+function DossieModal({ membro, data, onClose }) {
+  if (!membro) return null;
+  const role = data.roles.find(r => r.id === membro.role);
+  const cla = data.clas.find(c => c.id === membro.cla);
+  const trio = trioDoUsuario(data, membro.username);
+  const superior = data.users.find(u => u.username === membro.respondeA);
+  const campos = [
+    ["Nome de RP", membro.nomeRP || membro.displayName],
+    ["Ramo", cla?.nome || "Não definido"],
+    ["Patente", membro.patente || role?.nome || "Não definida"],
+    ["Elemento", membro.elemento || "Não definido"],
+    ["Linhagem", membro.linhagem || "Não definida"],
+    ["Vila de origem", membro.vilaOrigem || "Não definida"],
+    ["Especialidade", membro.especialidade || "Não definida"],
+    ["Trio", trio?.nome || membro.trio || "Sem designação"],
+    ["Responde a", superior ? getCodinome(superior) : "Comando da Jikkai"],
+    ["Nível de acesso", `Nível ${membro.nivelAcesso || 1}`],
+  ];
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p4 bg-black/90 backdrop-blur p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="relative p-6 border-b border-orange-900/40 bg-gradient-to-br from-red-950/50 via-black to-orange-950/20">
+          <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            <MemberAvatar user={membro} size="xl" />
+            <div className="text-center sm:text-left min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-1">Dossiê de Operador</div>
+              <h3 className="text-3xl font-black text-orange-50 serif break-words">{getCodinome(membro)}</h3>
+              <div className="text-zinc-500 italic">{membro.nomeRP || membro.displayName}</div>
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap mt-3">
+                <span className="text-xs px-2 py-1 rounded border" style={{ color: role?.cor, borderColor: (role?.cor || "#7c2d12") + "80" }}>{role?.nome || membro.role}</span>
+                <StatusBadge status={membro.status || "Ativo"} />
+                <span className={`text-[10px] px-2 py-1 rounded border ${perfilCompletoUsuario(membro) ? "border-green-800 text-green-400" : "border-yellow-800 text-yellow-500"}`}>{perfilCompletoUsuario(membro) ? "Dossiê completo" : "Dossiê incompleto"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {campos.map(([label, value]) => (
+              <div key={label} className="p-3 rounded bg-black/50 border border-zinc-800">
+                <div className="text-[9px] uppercase tracking-widest text-orange-700 mb-1">{label}</div>
+                <div className="text-zinc-200 text-sm">{value}</div>
+              </div>
+            ))}
+          </div>
+          {membro.bio && (
+            <div className="mt-4 p-4 rounded bg-black/50 border border-orange-900/30">
+              <div className="text-[9px] uppercase tracking-widest text-orange-700 mb-2">Registro pessoal</div>
+              <p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">{membro.bio}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MeuDossieModal({ membro, data, setData, onClose }) {
+  const [form, setForm] = useState({
+    nomeRP: membro.nomeRP || membro.displayName || "",
+    elemento: membro.elemento || "",
+    linhagem: membro.linhagem || "",
+    vilaOrigem: membro.vilaOrigem || "",
+    especialidade: membro.especialidade || "",
+    bio: membro.bio || "",
+  });
+  const [arquivo, setArquivo] = useState(null);
+  const [preview, setPreview] = useState(membro.avatarUrl || "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const inputRef = useRef();
+
+  const escolherFoto = (e) => {
+    setErro("");
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setErro("Escolha uma imagem JPG, PNG ou WEBP."); return; }
+    if (file.size > 3 * 1024 * 1024) { setErro("A foto deve ter no máximo 3 MB."); return; }
+    setArquivo(file);
+    const reader = new FileReader();
+    reader.onload = ev => setPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const salvar = async () => {
+    setErro("");
+    setSalvando(true);
+    let avatarUrl = membro.avatarUrl || "";
+    let avatarStoragePath = membro.avatarStoragePath || "";
+    try {
+      if (arquivo) {
+        if (!cloudClient) throw new Error("O upload de foto depende da sincronização em nuvem.");
+        const ext = (arquivo.name.split(".").pop() || "webp").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const storagePath = `avatars/${membro.username}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await cloudClient.storage.from("galeria").upload(storagePath, arquivo, { contentType: arquivo.type, upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: publicData } = cloudClient.storage.from("galeria").getPublicUrl(storagePath);
+        if (!publicData?.publicUrl) throw new Error("Não foi possível obter a URL pública da foto.");
+        avatarUrl = publicData.publicUrl;
+        avatarStoragePath = storagePath;
+        if (membro.avatarStoragePath && membro.avatarStoragePath !== storagePath) {
+          try { await cloudClient.storage.from("galeria").remove([membro.avatarStoragePath]); } catch {}
+        }
+      }
+      setData(d => {
+        const atualizado = normalizarMembro({ ...membro, ...form, avatarUrl, avatarStoragePath });
+        return {
+          ...d,
+          users: d.users.map(u => u.username === membro.username ? atualizado : u),
+          activityLog: [...(d.activityLog || []), atividade("perfil_atualizado", membro.username, membro.username, arquivo ? "Atualizou o dossiê e a foto de perfil" : "Atualizou o próprio dossiê")],
+        };
+      });
+      onClose();
+    } catch (e) {
+      setErro(e.message || "Não foi possível salvar o dossiê.");
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm fadein" onClick={salvando ? null : onClose}>
+      <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-orange-900/40 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600">Arquivo pessoal</div>
+            <h3 className="text-xl font-black text-orange-50 serif">Meu Dossiê</h3>
+          </div>
+          <button onClick={onClose} disabled={salvando} className="text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-5">
+          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-lg bg-black/60 border border-zinc-800">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-orange-700 bg-black flex items-center justify-center">
+              {preview ? <img src={preview} alt="Prévia" className="w-full h-full object-cover" /> : <span className="text-2xl font-black text-orange-400">{iniciaisMembro(membro)}</span>}
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="text-orange-50 font-bold mb-1">Foto de perfil</div>
+              <p className="text-zinc-500 text-xs mb-3">JPG, PNG ou WEBP, até 3 MB. Use uma imagem quadrada para melhor enquadramento.</p>
+              <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
+              <Btn onClick={() => inputRef.current?.click()} variant="default" disabled={salvando}><IUpload className="w-3 h-3" /> Escolher foto</Btn>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><label className="fox-label">Nome de RP</label><input value={form.nomeRP} onChange={e => setForm({ ...form, nomeRP: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Elemento</label><input value={form.elemento} onChange={e => setForm({ ...form, elemento: e.target.value })} className="fox-input" placeholder="Ex: Raiton" /></div>
+            <div><label className="fox-label">Linhagem</label><input value={form.linhagem} onChange={e => setForm({ ...form, linhagem: e.target.value })} className="fox-input" placeholder="Ex: Hyuuga" /></div>
+            <div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" /></div>
+            <div className="sm:col-span-2"><label className="fox-label">Especialidade</label><input value={form.especialidade} onChange={e => setForm({ ...form, especialidade: e.target.value })} className="fox-input" placeholder="Ex: Inteligência, ataque, suporte..." /></div>
+            <div className="sm:col-span-2"><label className="fox-label">Descrição pessoal</label><textarea rows="4" value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} className="fox-input" placeholder="Registro breve do personagem dentro da Jikkai" /></div>
+          </div>
+          <div className="p-3 rounded border border-yellow-900/40 bg-yellow-950/10 text-yellow-600 text-xs">Codinome, patente, ramo, nível de acesso e posição hierárquica são definidos pela liderança.</div>
+          {erro && <div className="p-3 rounded border border-red-800 bg-red-950/30 text-red-300 text-sm">{erro}</div>}
+        </div>
+        <div className="p-5 border-t border-zinc-800 flex justify-end gap-2 sticky bottom-0 bg-zinc-950">
+          <Btn onClick={onClose} variant="ghost" disabled={salvando}>Cancelar</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={salvando}>{salvando ? "Salvando..." : <><ISave className="w-3 h-3" /> Salvar dossiê</>}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MembrosListSection({ data, viewerIsContratante, onOpen }) {
   const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
   return (
     <div className="fadein">
       <p className="text-zinc-500 text-sm mb-4 italic">{usuariosVisiveis.length} {usuariosVisiveis.length === 1 ? "membro registrado" : "membros registrados"}</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {usuariosVisiveis.map((u) => {
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {usuariosVisiveis.map(u => {
           const role = data.roles.find(r => r.id === u.role);
           const cla = data.clas.find(c => c.id === u.cla);
-          const codinome = getCodinome(u);
-          const mostrarNomeReal = !viewerIsContratante && u.displayName && u.displayName !== codinome;
+          const trio = trioDoUsuario(data, u.username);
           return (
-            <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 hover:border-orange-800 transition-colors rounded-lg">
-              <div className="flex justify-between items-start mb-2 gap-2">
-                <div className="min-w-0">
-                  <div className="text-orange-50 font-bold text-lg truncate">{codinome}</div>
-                  {mostrarNomeReal && <div className="text-zinc-500 text-xs italic truncate">{u.displayName}</div>}
-                  {!viewerIsContratante && <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-0.5">@{u.username}</div>}
-                  {u.trio && <div className="text-zinc-600 text-xs mt-1">{u.trio}</div>}
+            <button key={u.username} onClick={() => onOpen(u)} className="text-left p-4 bg-zinc-950/60 border border-zinc-800 hover:border-orange-700 hover:-translate-y-0.5 transition-all rounded-xl group">
+              <div className="flex items-start gap-3">
+                <MemberAvatar user={u} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-orange-50 font-black text-lg truncate group-hover:text-orange-300">{getCodinome(u)}</div>
+                      <div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div>
+                    </div>
+                    <StatusBadge status={u.status || "Ativo"} />
+                  </div>
+                  <div className="text-xs mt-2" style={{ color: role?.cor }}>{u.patente || role?.nome || u.role}</div>
+                  <div className="text-zinc-600 text-xs mt-1 truncate">{u.elemento || "Elemento não definido"}{u.linhagem ? ` · ${u.linhagem}` : ""}</div>
                 </div>
-                <StatusBadge status={u.status || "Ativo"} />
               </div>
-              <div className="border-t border-zinc-800 pt-2 mt-2 flex justify-between items-center text-xs text-zinc-400 gap-2">
-                <span style={{ color: role?.cor }}>{role?.nome || u.role}</span>
-                {cla && <span className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider" style={{ color: cla.cor, background: cla.cor + "20", border: `1px solid ${cla.cor}80` }}>{cla.nome}</span>}
-                {u.level != null && <span>Lvl <strong className="text-orange-500">{u.level}</strong></span>}
+              <div className="border-t border-zinc-800 mt-3 pt-3 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
+                <span style={{ color: cla?.cor || "#71717a" }}>{cla?.nome || "Sem ramo"}</span>
+                <span className="text-zinc-600 truncate">{trio?.nome || "Sem trio"}</span>
+                <span className={perfilCompletoUsuario(u) ? "text-green-600" : "text-yellow-700"}>{perfilCompletoUsuario(u) ? "Completo" : "Pendente"}</span>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MembrosPage({ data, setData, role, viewerIsContratante }) {
-  const [subTab, setSubTab] = useState("lista");
-  const podeEditarTrios = hasPerm(role, "edit_trios");
-
-  const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
-  const SUB_TABS = [
-    { id: "lista", label: "Membros", icon: IUsers, badge: usuariosVisiveis.length || null },
-    { id: "trios", label: "Trios", icon: ISwords, badge: (data.trios || []).length || null },
-  ];
-
-  return (
-    <div>
-      <SectionTitle icon={IUsers} sub="Operadores e formações da F.O.X.">Membros</SectionTitle>
-
-      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
-        {SUB_TABS.map(t => {
-          const I = t.icon;
-          const active = subTab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setSubTab(t.id)}
-              className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
-            >
-              <I className="w-4 h-4" />
-              <span>{t.label}</span>
-              {t.badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>}
             </button>
           );
         })}
       </div>
-
-      {subTab === "lista" && <MembrosListSection data={data} viewerIsContratante={viewerIsContratante} />}
-      {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} />}
     </div>
   );
 }
 
-// ============ TRIOS ============
+function OrganogramaCard({ membro, data, onOpen, destaque = false }) {
+  const role = data.roles.find(r => r.id === membro.role);
+  const cla = data.clas.find(c => c.id === membro.cla);
+  return (
+    <button onClick={() => onOpen(membro)} className={`w-44 p-3 rounded-xl border bg-gradient-to-b from-zinc-950 to-black text-center transition-all hover:-translate-y-1 hover:border-orange-500 ${destaque ? "border-orange-500 shadow-[0_0_24px_rgba(234,88,12,.22)]" : "border-zinc-800"}`}>
+      <MemberAvatar user={membro} size="lg" className="mx-auto mb-2" />
+      <div className="text-orange-50 font-black text-sm truncate">{getCodinome(membro)}</div>
+      <div className="text-[10px] uppercase tracking-wider mt-1 truncate" style={{ color: role?.cor }}>{membro.patente || role?.nome || "Operador"}</div>
+      <div className="text-[9px] text-zinc-600 truncate mt-1">{cla?.nome || membro.estruturaNivel || "Jikkai"}</div>
+    </button>
+  );
+}
+
+function EstruturaSection({ data, onOpen }) {
+  const membros = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
+  const lideranca = membros.filter(u => data.roles.find(r => r.id === u.role)?.hasLeaderPerms === true || u.estruturaNivel === "lideranca");
+  const conselho = membros.filter(u => !lideranca.includes(u) && (u.role === "conselheiro" || u.estruturaNivel === "conselho" || /conselh/i.test(data.roles.find(r => r.id === u.role)?.nome || "")));
+  const alocados = new Set([...lideranca, ...conselho].map(u => u.username));
+  const divisoes = (data.clas || []).map(c => ({ ...c, membros: membros.filter(u => !alocados.has(u.username) && u.cla === c.id) })).filter(c => c.membros.length);
+  const semDivisao = membros.filter(u => !alocados.has(u.username) && !u.cla);
+
+  const Linha = ({ children }) => <div className="h-8 w-px bg-gradient-to-b from-orange-700 to-zinc-800 mx-auto" aria-hidden="true" />;
+  return (
+    <div className="fadein space-y-10">
+      <div className="text-center">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-orange-600">Estrutura de comando</div>
+        <h3 className="text-2xl font-black text-orange-50 serif mt-1">Hierarquia da Jikkai</h3>
+        <p className="text-zinc-600 text-sm mt-2">A árvore é formada automaticamente pelos cargos, ramos e designações dos dossiês.</p>
+      </div>
+
+      <section>
+        <div className="text-center text-[10px] uppercase tracking-[0.3em] text-orange-500 mb-4">Liderança</div>
+        <div className="flex flex-wrap justify-center gap-4">{lideranca.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} destaque />)}</div>
+        {(conselho.length > 0 || divisoes.length > 0 || semDivisao.length > 0) && <Linha />}
+      </section>
+
+      {conselho.length > 0 && (
+        <section>
+          <div className="text-center text-[10px] uppercase tracking-[0.3em] text-red-500 mb-4">Conselho</div>
+          <div className="flex flex-wrap justify-center gap-4">{conselho.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />)}</div>
+          {(divisoes.length > 0 || semDivisao.length > 0) && <Linha />}
+        </section>
+      )}
+
+      <section>
+        <div className="text-center text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-5">Ramos e divisões</div>
+        <div className="grid md:grid-cols-2 gap-5">
+          {divisoes.map(div => (
+            <div key={div.id} className="rounded-xl border p-5" style={{ borderColor: div.cor + "70", background: `linear-gradient(145deg, ${div.cor}14, #050505)` }}>
+              <div className="text-center mb-4">
+                <div className="font-black text-lg serif" style={{ color: div.cor }}>{div.nome}</div>
+                <div className="text-[10px] uppercase tracking-widest text-zinc-600">{div.tipo || "Divisão"}</div>
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">{div.membros.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />)}</div>
+            </div>
+          ))}
+          {semDivisao.length > 0 && (
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-5">
+              <div className="text-center mb-4"><div className="font-black text-lg text-zinc-300 serif">Núcleo Independente</div><div className="text-[10px] uppercase tracking-widest text-zinc-600">Aguardando alocação</div></div>
+              <div className="flex flex-wrap justify-center gap-3">{semDivisao.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />)}</div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="pt-8 border-t border-orange-900/30">
+        <div className="text-center mb-6">
+          <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Células operacionais</div>
+          <h3 className="text-xl font-black text-orange-50 serif mt-1">Trios da Jikkai</h3>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(data.trios || []).map(t => (
+            <div key={t.id || t.nome} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950/60">
+              <div className="p-4" style={{ background: `linear-gradient(135deg, ${t.cor || "#7c2d12"}, #000)` }}>
+                <div className="font-black text-white">{t.nome}</div><div className="text-white/60 text-[10px] uppercase tracking-wider">{t.desc}</div>
+              </div>
+              <div className="p-4 flex flex-wrap gap-3">
+                {(t.membros || []).map((m, i) => {
+                  const u = data.users.find(x => x.username === m.username) || usuarioPorIdentidade(data.users, m.nome);
+                  return u ? (
+                    <button key={m.username || i} onClick={() => onOpen(u)} className="flex items-center gap-2 min-w-0 text-left">
+                      <MemberAvatar user={u} size="sm" />
+                      <div className="min-w-0"><div className="text-orange-50 text-xs font-bold truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider" style={{ color: t.cor }}>{m.papel || "Operador"}</div></div>
+                    </button>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MembrosPage({ data, setData, role, usuario, viewerIsContratante }) {
+  const [subTab, setSubTab] = useState("lista");
+  const [dossieAberto, setDossieAberto] = useState(null);
+  const [editandoMeuDossie, setEditandoMeuDossie] = useState(false);
+  const podeEditarTrios = hasPerm(role, "edit_trios");
+  const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
+  const membroAtual = data.users.find(u => u.username === usuario?.username) || usuario;
+  const SUB_TABS = [
+    { id: "lista", label: "Dossiês", icon: IUsers, badge: usuariosVisiveis.length || null },
+    { id: "estrutura", label: "Estrutura", icon: ICrown, badge: null },
+    { id: "trios", label: "Trios", icon: ISwords, badge: (data.trios || []).length || null },
+  ];
+  return (
+    <div>
+      <SectionTitle icon={IUsers} sub="Dossiês, hierarquia e formações da F.O.X." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
+      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+        {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
+          <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
+            <I className="w-4 h-4" /><span>{t.label}</span>{t.badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>}
+          </button>
+        ); })}
+      </div>
+      {subTab === "lista" && <MembrosListSection data={data} viewerIsContratante={viewerIsContratante} onOpen={setDossieAberto} />}
+      {subTab === "estrutura" && <EstruturaSection data={data} onOpen={setDossieAberto} />}
+      {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} />}
+      {dossieAberto && <DossieModal membro={data.users.find(u => u.username === dossieAberto.username) || dossieAberto} data={data} onClose={() => setDossieAberto(null)} />}
+      {editandoMeuDossie && membroAtual && <MeuDossieModal membro={membroAtual} data={data} setData={setData} onClose={() => setEditandoMeuDossie(false)} />}
+    </div>
+  );
+}
+
 function TriosSection({ data, setData, podeEditar }) {
   const [editando, setEditando] = useState(false);
-  const [draft, setDraft] = useState(data.trios);
-
-  useEffect(() => { if (!editando) setDraft(data.trios); }, [data.trios, editando]);
-
-  const salvar = () => { setData(d => ({ ...d, trios: draft.filter(t => t.nome.trim()) })); setEditando(false); };
-  const cancelar = () => { setDraft(data.trios); setEditando(false); };
+  const [draft, setDraft] = useState(data.trios || []);
+  useEffect(() => { if (!editando) setDraft(data.trios || []); }, [data.trios, editando]);
+  const usuarios = (data.users || []).filter(u => u.role !== "contratante");
+  const salvar = () => {
+    const limpos = draft.filter(t => t.nome.trim()).map(t => ({ ...t, id: t.id || `trio_${slugEstrutura(t.nome) || uid()}`, membros: (t.membros || []).filter(m => m.username || m.nome) }));
+    setData(d => ({ ...d, trios: limpos, activityLog: [...(d.activityLog || []), atividade("trios_atualizados", "lideranca", "trios", "Atualizou a composição das células operacionais")] }));
+    setEditando(false);
+  };
+  const cancelar = () => { setDraft(data.trios || []); setEditando(false); };
   const updateTrio = (i, patch) => setDraft(draft.map((t, idx) => idx === i ? { ...t, ...patch } : t));
-  const removeTrio = (i) => setDraft(draft.filter((_, idx) => idx !== i));
-  const addTrio = () => setDraft([...draft, { nome: "NOVO TRIO", desc: "Descrição", cor: "#D85A30", membros: [] }]);
-  const updateMembro = (ti, mi, patch) => updateTrio(ti, { membros: draft[ti].membros.map((m, idx) => idx === mi ? { ...m, ...patch } : m) });
-  const removeMembro = (ti, mi) => updateTrio(ti, { membros: draft[ti].membros.filter((_, idx) => idx !== mi) });
-  const addMembro = (ti) => updateTrio(ti, { membros: [...draft[ti].membros, { nome: "", elemento: "", papel: "" }] });
-
-  const trios = editando ? draft : data.trios;
-
+  const removeTrio = i => setDraft(draft.filter((_, idx) => idx !== i));
+  const addTrio = () => setDraft([...draft, { id: `trio_${uid()}`, nome: "NOVO TRIO", desc: "Descrição", cor: "#D85A30", membros: [] }]);
+  const updateMembro = (ti, mi, patch) => updateTrio(ti, { membros: (draft[ti].membros || []).map((m, idx) => idx === mi ? { ...m, ...patch } : m) });
+  const removeMembro = (ti, mi) => updateTrio(ti, { membros: (draft[ti].membros || []).filter((_, idx) => idx !== mi) });
+  const addMembro = ti => updateTrio(ti, { membros: [...(draft[ti].membros || []), { username: "", papel: "Operador" }] });
+  const trios = editando ? draft : (data.trios || []);
   return (
     <div className="fadein">
       <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
-        <p className="text-zinc-500 text-sm italic">Composição operacional de combate</p>
-        {podeEditar && (editando ? (
-          <div className="flex gap-2">
-            <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-            <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
-          </div>
-        ) : (
-          <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>
-        ))}
+        <p className="text-zinc-500 text-sm italic">Integrantes ligados aos dossiês por identificação única.</p>
+        {podeEditar && (editando ? <div className="flex gap-2"><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></div> : <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>)}
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {trios.map((t, ti) => (
-          <div key={ti} className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950/60">
+          <div key={t.id || ti} className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950/60">
             <div className="p-4" style={{ background: `linear-gradient(135deg, ${t.cor}, #000)` }}>
-              {editando ? (
-                <div className="space-y-2">
-                  <input value={t.nome} onChange={(e) => updateTrio(ti, { nome: e.target.value })} className="fox-input" placeholder="Nome" />
-                  <input value={t.desc} onChange={(e) => updateTrio(ti, { desc: e.target.value })} className="fox-input" placeholder="Descrição" />
-                  <div className="flex items-center gap-2">
-                    <label className="fox-label mb-0">Cor</label>
-                    <input type="color" value={t.cor} onChange={(e) => updateTrio(ti, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" />
-                    <button onClick={() => removeTrio(ti)} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <h3 className="text-white font-bold text-lg">{t.nome}</h3>
-                  <p className="text-white/70 text-xs uppercase tracking-wider">{t.desc}</p>
-                </>
-              )}
+              {editando ? <div className="space-y-2"><input value={t.nome} onChange={e => updateTrio(ti, { nome: e.target.value })} className="fox-input" placeholder="Nome" /><input value={t.desc} onChange={e => updateTrio(ti, { desc: e.target.value })} className="fox-input" placeholder="Descrição" /><div className="flex items-center gap-2"><label className="fox-label mb-0">Cor</label><input type="color" value={t.cor} onChange={e => updateTrio(ti, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" /><button onClick={() => removeTrio(ti)} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button></div></div> : <><h3 className="text-white font-bold text-lg">{t.nome}</h3><p className="text-white/70 text-xs uppercase tracking-wider">{t.desc}</p></>}
             </div>
-            <div className="p-4 space-y-2">
-              {t.membros.map((m, mi) => editando ? (
-                <div key={mi} className="border-l-2 pl-3 py-2 space-y-1" style={{ borderColor: t.cor }}>
-                  <input value={m.nome} onChange={(e) => updateMembro(ti, mi, { nome: e.target.value })} placeholder="Nome" className="fox-input" />
-                  <input value={m.elemento} onChange={(e) => updateMembro(ti, mi, { elemento: e.target.value })} placeholder="Elemento" className="fox-input" />
-                  <div className="flex gap-1">
-                    <input value={m.papel} onChange={(e) => updateMembro(ti, mi, { papel: e.target.value })} placeholder="Papel" className="fox-input" />
-                    <button onClick={() => removeMembro(ti, mi)} className="text-red-500 bg-red-950/50 px-2 rounded"><ITrash className="w-3 h-3" /></button>
+            <div className="p-4 space-y-3">
+              {(t.membros || []).map((m, mi) => {
+                const u = data.users.find(x => x.username === m.username) || usuarioPorIdentidade(data.users, m.nome);
+                return editando ? (
+                  <div key={mi} className="border-l-2 pl-3 py-2 space-y-2" style={{ borderColor: t.cor }}>
+                    <select value={m.username || ""} onChange={e => updateMembro(ti, mi, { username: e.target.value, nome: "", elemento: "" })} className="fox-input"><option value="">— Selecionar membro —</option>{usuarios.map(user => <option key={user.username} value={user.username}>{getCodinome(user)} · @{user.username}</option>)}</select>
+                    <div className="flex gap-1"><input value={m.papel || ""} onChange={e => updateMembro(ti, mi, { papel: e.target.value })} placeholder="Papel no trio" className="fox-input" /><button onClick={() => removeMembro(ti, mi)} className="text-red-500 bg-red-950/50 px-2 rounded"><ITrash className="w-3 h-3" /></button></div>
                   </div>
-                </div>
-              ) : (
-                <div key={mi} className="border-l-2 pl-3 py-1" style={{ borderColor: t.cor }}>
-                  <div className="text-orange-50 font-bold text-sm">{m.nome}</div>
-                  <div className="text-zinc-500 text-xs">{m.elemento}</div>
-                  <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.cor }}>{m.papel}</div>
-                </div>
-              ))}
+                ) : u ? (
+                  <div key={m.username || mi} className="flex items-center gap-3 border-l-2 pl-3 py-1" style={{ borderColor: t.cor }}><MemberAvatar user={u} size="sm" /><div className="min-w-0"><div className="text-orange-50 font-bold text-sm truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs truncate">{u.elemento || "Elemento não definido"}{u.linhagem ? ` · ${u.linhagem}` : ""}</div><div className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.cor }}>{m.papel || "Operador"}</div></div></div>
+                ) : <div key={mi} className="text-zinc-600 text-xs border-l-2 pl-3" style={{ borderColor: t.cor }}>{m.nome || "Membro não vinculado"}</div>;
+              })}
               {editando && <Btn onClick={() => addMembro(ti)} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Membro</Btn>}
             </div>
           </div>
         ))}
-        {editando && (
-          <button onClick={addTrio} className="rounded-lg border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 py-16 flex flex-col items-center gap-2 transition-colors">
-            <IPlus className="w-8 h-8" />
-            <span className="uppercase tracking-wider text-xs font-bold">Novo Trio</span>
-          </button>
-        )}
+        {editando && <button onClick={addTrio} className="rounded-lg border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 py-16 flex flex-col items-center gap-2 transition-colors"><IPlus className="w-8 h-8" /><span className="uppercase tracking-wider text-xs font-bold">Novo Trio</span></button>}
       </div>
     </div>
   );
@@ -2896,7 +3190,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
         })}
       </div>
 
-      {aba === "usuarios" && <UsuariosManager data={data} setData={setData} />}
+      {aba === "usuarios" && <UsuariosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "cargos" && <CargosManager data={data} setData={setData} />}
       {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
@@ -2904,107 +3198,85 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
   );
 }
 
-function UsuariosManager({ data, setData }) {
+function UsuariosManager({ data, setData, usuario }) {
+  const vazio = () => ({
+    username: "", password: "", displayName: "", nomeRP: "", codinome: "", role: "member",
+    status: "Novo", level: 0, cla: "", elemento: "", linhagem: "", vilaOrigem: "",
+    patente: "", especialidade: "", bio: "", estruturaNivel: "operador", respondeA: "",
+    nivelAcesso: 1, iniciacaoStatus: "pendente", avatarUrl: "", avatarStoragePath: "",
+  });
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0, cla: "" });
+  const [form, setForm] = useState(vazio());
   const [erro, setErro] = useState("");
-
-  const iniciarEdit = (u) => {
-    setEditando(u.username);
-    setForm({ ...u, password: "", codinome: u.codinome || "" });
-    setErro("");
-  };
-  const iniciarNovo = () => {
-    setEditando("__novo__");
-    setForm({ username: "", password: "", displayName: "", codinome: "", role: "member", status: "Ativo", trio: "", level: 0, cla: "" });
-    setErro("");
-  };
+  const iniciarEdit = u => { setEditando(u.username); setForm({ ...normalizarMembro(u), password: "" }); setErro(""); };
+  const iniciarNovo = () => { setEditando("__novo__"); setForm(vazio()); setErro(""); };
   const cancelar = () => { setEditando(null); setErro(""); };
   const salvar = () => {
     if (!form.username.trim() || !form.displayName.trim()) { setErro("Username e nome são obrigatórios."); return; }
-    if (editando === "__novo__") {
-      if (data.users.find(u => u.username === form.username)) { setErro("Username já existe."); return; }
-      if (!form.password) { setErro("Senha obrigatória para novo usuário."); return; }
-      setData(d => ({ ...d, users: [...d.users, { ...form, level: Number(form.level) || 0 }] }));
-    } else {
-      setData(d => ({
-        ...d,
-        users: d.users.map(u => u.username === editando ? { ...u, ...form, password: form.password || u.password, level: Number(form.level) || 0 } : u)
-      }));
-    }
+    if (editando === "__novo__" && data.users.some(u => u.username.toLowerCase() === form.username.trim().toLowerCase())) { setErro("Username já existe."); return; }
+    if (editando === "__novo__" && !form.password) { setErro("Senha obrigatória para novo usuário."); return; }
+    const username = form.username.trim();
+    setData(d => {
+      if (editando === "__novo__") {
+        const novo = normalizarMembro({ ...form, username, nomeRP: form.nomeRP || form.displayName, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, criadoEm: new Date().toISOString(), criadoPor: usuario?.username || "lideranca", iniciacaoStatus: "pendente" }, false);
+        return { ...d, users: [...d.users, novo], activityLog: [...(d.activityLog || []), atividade("membro_criado", usuario?.username, username, `Criou o registro de ${getCodinome(novo)}`)] };
+      }
+      const anterior = d.users.find(u => u.username === editando);
+      const atualizado = normalizarMembro({ ...anterior, ...form, username: editando, password: form.password || anterior.password, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1 });
+      return { ...d, users: d.users.map(u => u.username === editando ? atualizado : u), activityLog: [...(d.activityLog || []), atividade("membro_editado", usuario?.username, editando, `Atualizou o dossiê administrativo de ${getCodinome(atualizado)}`)] };
+    });
     setEditando(null);
   };
-  const remover = (username) => {
+  const remover = username => {
     if (username === "leader") { alert("O líder principal não pode ser removido."); return; }
-    if (confirm(`Remover ${username}?`)) {
-      setData(d => ({ ...d, users: d.users.filter(u => u.username !== username), missoes: d.missoes.filter(m => m.assignedTo !== username) }));
-    }
+    if (!confirm(`Remover ${username}?`)) return;
+    setData(d => ({
+      ...d,
+      users: d.users.filter(u => u.username !== username),
+      missoes: (d.missoes || []).map(m => ({ ...m, assignedTo: m.assignedTo === username ? "" : m.assignedTo, participants: (m.participants || []).filter(p => p !== username), aceites: (m.aceites || []).filter(p => p !== username) })),
+      trios: (d.trios || []).map(t => ({ ...t, membros: (t.membros || []).filter(m => m.username !== username) })),
+      activityLog: [...(d.activityLog || []), atividade("membro_removido", usuario?.username, username, `Removeu @${username} da organização`)],
+    }));
   };
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-orange-50 font-bold text-lg serif">Usuários ({data.users.length})</h3>
-        {editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Usuário</Btn>}
-      </div>
-
+      <div className="flex items-center justify-between"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, acesso e posição hierárquica.</p></div>{editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro</Btn>}</div>
       {editando !== null && (
-        <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-3 fadein">
-          <h4 className="text-orange-50 font-bold">{editando === "__novo__" ? "Novo Usuário" : `Editando ${editando}`}</h4>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div><label className="fox-label">Username (login)</label><input value={form.username} onChange={(e) => setForm({...form, username: e.target.value})} disabled={editando !== "__novo__"} className="fox-input" /></div>
-            <div><label className="fox-label">Nome de exibição</label><input value={form.displayName} onChange={(e) => setForm({...form, displayName: e.target.value})} className="fox-input" /></div>
-            <div><label className="fox-label">Codinome</label><input value={form.codinome} onChange={(e) => setForm({...form, codinome: e.target.value})} className="fox-input" placeholder="Ex: Viper-01, Ghostblade, Specter" /></div>
-            <div><label className="fox-label">Senha {editando !== "__novo__" && "(deixe vazio p/ manter)"}</label><input type="text" value={form.password} onChange={(e) => setForm({...form, password: e.target.value})} className="fox-input" /></div>
-            <div><label className="fox-label">Cargo</label>
-              <select value={form.role} onChange={(e) => setForm({...form, role: e.target.value})} className="fox-input">
-                {data.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
-              </select>
-            </div>
-            <div><label className="fox-label">Status</label>
-              <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})} className="fox-input">
-                <option>Ativo</option><option>Oculto</option><option>Renegado</option><option>Procurado</option><option>Novo</option><option>Líder</option>
-              </select>
-            </div>
-            <div><label className="fox-label">Trio</label><input value={form.trio} onChange={(e) => setForm({...form, trio: e.target.value})} className="fox-input" /></div>
-            <div><label className="fox-label">Clã</label>
-              <select value={form.cla || ""} onChange={(e) => setForm({...form, cla: e.target.value})} className="fox-input">
-                <option value="">— Sem clã —</option>
-                {(data.clas || []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
-            </div>
-            <div><label className="fox-label">Level</label><input type="number" value={form.level} onChange={(e) => setForm({...form, level: e.target.value})} className="fox-input" /></div>
+        <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-4 fadein">
+          <h4 className="text-orange-50 font-bold">{editando === "__novo__" ? "Novo membro da Jikkai" : `Editando ${editando}`}</h4>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div><label className="fox-label">Username (login)</label><input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} disabled={editando !== "__novo__"} className="fox-input" /></div>
+            <div><label className="fox-label">Nome de exibição</label><input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Nome de RP</label><input value={form.nomeRP || ""} onChange={e => setForm({ ...form, nomeRP: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Codinome oficial</label><input value={form.codinome || ""} onChange={e => setForm({ ...form, codinome: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Senha {editando !== "__novo__" && "(vazio mantém)"}</label><input type="text" value={form.password || ""} onChange={e => setForm({ ...form, password: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Cargo</label><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="fox-input">{data.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
+            <div><label className="fox-label">Patente</label><input value={form.patente || ""} onChange={e => setForm({ ...form, patente: e.target.value })} className="fox-input" placeholder="Ex: Executor, Capitão..." /></div>
+            <div><label className="fox-label">Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="fox-input"><option>Ativo</option><option>Oculto</option><option>Renegado</option><option>Procurado</option><option>Novo</option><option>Líder</option></select></div>
+            <div><label className="fox-label">Ramo</label><select value={form.cla || ""} onChange={e => setForm({ ...form, cla: e.target.value })} className="fox-input"><option value="">— Sem ramo —</option>{(data.clas || []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
+            <div><label className="fox-label">Posição na estrutura</label><select value={form.estruturaNivel || "operador"} onChange={e => setForm({ ...form, estruturaNivel: e.target.value })} className="fox-input"><option value="lideranca">Liderança</option><option value="conselho">Conselho</option><option value="comandante">Comandante de divisão</option><option value="operador">Operador</option></select></div>
+            <div><label className="fox-label">Responde a</label><select value={form.respondeA || ""} onChange={e => setForm({ ...form, respondeA: e.target.value })} className="fox-input"><option value="">— Comando geral —</option>{data.users.filter(u => u.username !== editando && u.role !== "contratante").map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
+            <div><label className="fox-label">Nível de acesso</label><select value={form.nivelAcesso || 1} onChange={e => setForm({ ...form, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
+            <div><label className="fox-label">Elemento</label><input value={form.elemento || ""} onChange={e => setForm({ ...form, elemento: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Linhagem</label><input value={form.linhagem || ""} onChange={e => setForm({ ...form, linhagem: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem || ""} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Especialidade</label><input value={form.especialidade || ""} onChange={e => setForm({ ...form, especialidade: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Level</label><input type="number" value={form.level || 0} onChange={e => setForm({ ...form, level: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Iniciação</label><select value={form.iniciacaoStatus || "pendente"} onChange={e => setForm({ ...form, iniciacaoStatus: e.target.value })} className="fox-input"><option value="pendente">Pendente</option><option value="concluida">Concluída</option></select></div>
+            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Descrição / observação de dossiê</label><textarea rows="3" value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} className="fox-input" /></div>
           </div>
           {erro && <div className="text-red-500 text-xs">{erro}</div>}
-          <div className="flex gap-2 pt-2 border-t border-zinc-800">
-            <Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-            <Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
-          </div>
+          <div className="flex gap-2 pt-2 border-t border-zinc-800"><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></div>
         </div>
       )}
-
       <div className="grid sm:grid-cols-2 gap-3">
-        {data.users.map((u) => {
-          const role = data.roles.find(r => r.id === u.role);
-          return (
-            <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg">
-              <div className="flex justify-between items-start mb-2 gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="text-orange-50 font-bold">{getCodinome(u)}</div>
-                  {u.displayName && u.displayName !== getCodinome(u) && (
-                    <div className="text-zinc-500 text-xs italic">{u.displayName}</div>
-                  )}
-                  <div className="text-zinc-600 text-[10px]">@{u.username}</div>
-                  <div className="text-xs mt-1" style={{ color: role?.cor }}>{role?.nome}</div>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => iniciarEdit(u)} className="p-1.5 text-orange-400 hover:text-orange-300"><IEdit className="w-3.5 h-3.5" /></button>
-                  {u.username !== "leader" && <button onClick={() => remover(u.username)} className="p-1.5 text-red-500 hover:text-red-400"><ITrash className="w-3.5 h-3.5" /></button>}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {data.users.map(u => { const role = data.roles.find(r => r.id === u.role); const cla = data.clas.find(c => c.id === u.cla); return (
+          <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg flex gap-3">
+            <MemberAvatar user={u} size="md" />
+            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div></div>
+            <div className="flex gap-1"><button onClick={() => iniciarEdit(u)} className="p-1.5 text-orange-400 hover:text-orange-300"><IEdit className="w-3.5 h-3.5" /></button>{u.username !== "leader" && <button onClick={() => remover(u.username)} className="p-1.5 text-red-500 hover:text-red-400"><ITrash className="w-3.5 h-3.5" /></button>}</div>
+          </div>
+        ); })}
       </div>
     </div>
   );
@@ -3492,6 +3764,7 @@ const DEFAULT_DATA = {
   relatorios: [],
   contratos: [],
   galeria: [],
+  activityLog: [],
   visaoGeralContratantes: {
     titulo: "F.O.X. — Mercenários das Sombras",
     subtitulo: "Discrição. Letalidade. Resultado.",
@@ -3501,7 +3774,7 @@ const DEFAULT_DATA = {
 
 // Migra dados antigos garantindo que novos campos existam
 function migrate(raw) {
-  if (!raw || !raw.users) return DEFAULT_DATA;
+  if (!raw || !raw.users) raw = DEFAULT_DATA;
   const migrated = { ...DEFAULT_DATA, ...raw };
   if (!raw.clas) {
     migrated.clas = [
@@ -3520,6 +3793,7 @@ function migrate(raw) {
   }));
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
+  if (!raw.activityLog) migrated.activityLog = [];
   if (!raw.missoes) migrated.missoes = [];
   migrated.missoes = (raw.missoes || []).map(m => {
     const participants = Array.from(new Set([...(Array.isArray(m.participants) ? m.participants : []), m.assignedTo].filter(Boolean)));
@@ -3536,11 +3810,20 @@ function migrate(raw) {
     };
   });
   if (!raw.visaoGeralContratantes) migrated.visaoGeralContratantes = DEFAULT_DATA.visaoGeralContratantes;
-  // Garante codinome e cla em todos os usuários
-  migrated.users = (raw.users || DEFAULT_USERS).map(u => ({
+  // Garante o formato completo do dossiê sem apagar campos antigos.
+  migrated.users = (raw.users || DEFAULT_USERS).map(u => normalizarMembro({
     ...u,
     codinome: u.codinome != null ? u.codinome : "",
     cla: u.cla != null ? u.cla : "",
+  }, true));
+  // Liga integrantes antigos dos trios a usernames reais e cria IDs estáveis.
+  migrated.trios = (raw.trios || DEFAULT_TRIOS).map((t, i) => ({
+    ...t,
+    id: t.id || `trio_${slugEstrutura(t.nome) || i}`,
+    membros: (t.membros || []).map(m => {
+      const encontrado = m.username ? migrated.users.find(u => u.username === m.username) : usuarioPorIdentidade(migrated.users, m.nome);
+      return { ...m, username: m.username || encontrado?.username || "" };
+    }),
   }));
   // Garante cargos protegidos + permissions[]
   let rolesOut = (raw.roles || DEFAULT_ROLES).map(r => ({
@@ -3905,6 +4188,7 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
+            <MemberAvatar user={usuarioAtual} size="sm" className="hidden sm:flex" />
             <div className="text-right hidden sm:block">
               <div className="text-orange-300 text-xs font-bold uppercase tracking-wider truncate max-w-[160px]">{getCodinome(usuarioAtual)}</div>
               {!isContratante && usuarioAtual.displayName && (
@@ -3939,7 +4223,7 @@ function App() {
         {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
         {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} />}
         {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} role={role} />}
-        {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} viewerIsContratante={isContratante} />}
+        {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
         {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} />}
