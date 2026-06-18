@@ -120,7 +120,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <span class="rolebadge" id="roleBadge">Somente leitura</span>
-          <button class="auth-mini" id="authBtn">Ativar edição</button>
+          <button class="auth-mini" id="authBtn" hidden>Ativar edição</button>
         </div>
       </div>
     </div>
@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button id="newPoint">+ Novo local</button>
       <button id="newRoute">+ Nova rota</button>
     </div>
-    <div class="readonly-note" id="readonlyNote">Entre no portal como Líder ou Conselheiro para criar e editar locais e rotas.</div>
+    <div class="readonly-note" id="readonlyNote">Mapa disponível em modo somente leitura.</div>
     <div class="filters" id="filters"></div>
     <div class="list" id="list"></div>
     <div class="footer">
@@ -284,6 +284,7 @@ const SUPABASE_URL="https://mhbbqtjsxruuuiqixlvc.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
 const STORAGE_KEY="fox-portal-v3";
 const SESSION_KEY="fox-map-session";
+const VIEWER_KEY="fox-map-viewer";
 const cloudClient=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
@@ -330,17 +331,23 @@ function setSync(text,state=""){
 function parseSession(){
   try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null")}catch{return null}
 }
+function parseViewer(){
+  try{return JSON.parse(localStorage.getItem(VIEWER_KEY)||"null")}catch{return null}
+}
 function resolveAccess(state){
+  const viewer=parseViewer();
   const session=parseSession();
-  const user=session&&state?.users?.find(u=>u.username===session.username);
+  const user=viewer&&state?.users?.find(u=>u.username===viewer.username);
   const role=user&&state?.roles?.find(r=>r.id===user.role);
-  const canEdit=roleCanEdit(role);
-  return{user,role,canEdit};
+  const eligible=roleCanEdit(role);
+  const canEdit=!!(eligible&&session?.username===user?.username);
+  return{user,role,eligible,canEdit};
 }
 function roleCanEdit(role){
   return !!(role&&(role.hasLeaderPerms===true||role.id==="conselheiro"||(Array.isArray(role.permissions)&&role.permissions.includes("edit_map"))));
 }
 function openAuth(){
+  if(!access.eligible)return;
   if(access.canEdit){
     sessionStorage.removeItem(SESSION_KEY);
     applyState(portalState);
@@ -385,8 +392,9 @@ function applyState(state){
   el("roleBadge").textContent=access.role?.nome||"Somente leitura";
   el("roleBadge").className="rolebadge"+(access.canEdit?" admin":"");
   el("adminTools").hidden=!access.canEdit;
-  el("readonlyNote").hidden=access.canEdit;
+  el("readonlyNote").hidden=!!access.eligible;
   el("detailActions").hidden=!access.canEdit;
+  el("authBtn").hidden=!access.eligible;
   el("authBtn").textContent=access.canEdit?"Encerrar edição":"Ativar edição";
   render();
 }
@@ -620,6 +628,12 @@ window.addEventListener("resize",center);
 
 (async()=>{
   renderFilters();center();await loadState();
+  window.addEventListener("storage",e=>{
+    if(e.key===VIEWER_KEY){
+      sessionStorage.removeItem(SESSION_KEY);
+      applyState(portalState);
+    }
+  });
   if(cloudClient){
     cloudClient.channel("fox_map_changes").on("postgres_changes",{event:"*",schema:"public",table:"fox_state"},payload=>{
       if(saving)return;const state=payload.new?.data;if(state)applyState(state);

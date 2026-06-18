@@ -3782,6 +3782,23 @@ function App() {
 
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
   const role = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
+
+
+  // Compartilha a identidade e o cargo da sessão atual com o mapa estratégico.
+  // A senha ainda é exigida antes de qualquer alteração cartográfica.
+  useEffect(() => {
+    try {
+      if (usuarioAtual && role) {
+        localStorage.setItem("fox-map-viewer", JSON.stringify({
+          username: usuarioAtual.username,
+          roleId: role.id,
+          updatedAt: new Date().toISOString(),
+        }));
+      } else {
+        localStorage.removeItem("fox-map-viewer");
+      }
+    } catch {}
+  }, [usuarioAtual?.username, role?.id]);
   const isLider = role?.hasLeaderPerms === true;
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = usuarioAtual?.role === "contratante";
@@ -3943,5 +3960,5 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-<script data-jikkai-map-link>(function(){function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:10px;padding:11px 14px;font:800 11px/1 system-ui;letter-spacing:.09em;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.55)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
+<script data-jikkai-map-link>(function(){function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:10px;padding:11px 14px;font:800 11px/1 system-ui;letter-spacing:.09em;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.55)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
 </html>
