@@ -25,6 +25,7 @@ jobs:
         shell: bash
         run: |
           cat .phase2/part*.b64 | base64 --decode | gzip --decompress > /tmp/apply_phase2.py
+          python3 .phase2/hotfix.py /tmp/apply_phase2.py
           set +e
           python3 /tmp/apply_phase2.py > .phase2-result-v2.log 2>&1
           STATUS=$?
@@ -62,7 +63,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -f .phase2-result.log || true
-          rm -f .phase2-result-v2.log
+          git rm -f .phase2-result-v2.log || true
           git add index.html
           git rm -r .phase2
           git rm -f .github/workflows/apply-phase2-secrecy.yml || true
