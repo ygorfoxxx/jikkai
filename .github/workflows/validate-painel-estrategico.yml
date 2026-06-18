@@ -2,57 +2,14 @@ name: Validar Painel Estratégico JIKKAI
 
 on:
   pull_request:
-    branches: [main]
-
-permissions:
-  contents: write
+    branches:
+      - main
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feature/painel-estrategico-jikkai
-
-      - name: Gerar arquivos consolidados
-        shell: bash
-        run: |
-          if grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html; then
-            echo 0 > materialize.status
-            echo 'Arquivos já consolidados.' > materialize.log
-            exit 0
-          fi
-          set +e
-          node scripts/materialize-portal.cjs > materialize.log 2>&1
-          echo $? > materialize.status
-          exit 0
-
-      - name: Publicar diagnóstico
-        uses: actions/upload-artifact@v4
-        with:
-          name: diagnostico-materializacao
-          path: |
-            materialize.log
-            materialize.status
-          retention-days: 2
-
-      - name: Confirmar e salvar consolidação
-        shell: bash
-        run: |
-          cat materialize.log
-          test "$(cat materialize.status)" = "0"
-          rm -f materialize.log materialize.status
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo 'Nenhuma alteração nova para consolidar.'
-            exit 0
-          fi
-          git commit -m "Consolidar Painel Estratégico nos arquivos públicos"
-          git push origin HEAD:feature/painel-estrategico-jikkai
-
       - name: Validar portal consolidado
         run: node scripts/validate-portal-v3.cjs
