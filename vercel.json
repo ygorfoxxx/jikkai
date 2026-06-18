@@ -1,4 +1,3 @@
 {
-  "buildCommand": "node scripts/build-etapa2.cjs",
   "outputDirectory": "."
 }

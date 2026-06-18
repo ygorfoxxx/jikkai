@@ -35,9 +35,6 @@
 
 <script type="text/babel" data-presets="env,react">
 // ETAPA 1 — FUNDAÇÃO DOS MEMBROS v1 (dossiês, avatares, estrutura e vínculos)
-// ETAPA 2 — REPUTAÇÃO E LEALDADE v1 (ramos dinâmicos e progressão narrativa)
-// PROTOCOLO DE INICIAÇÃO v1 (primeiro acesso e juramento integrado)
-// ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1 (fases, riscos e fontes integradas)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -81,8 +78,7 @@ const DEFAULT_USERS = [
     vilaOrigem: "", patente: "Líder Supremo", especialidade: "Comando estratégico",
     bio: "", avatarUrl: "", avatarStoragePath: "", estruturaNivel: "lideranca",
     respondeA: "", nivelAcesso: 5, iniciacaoStatus: "concluida", perfilCompleto: false,
-    criadoEm: new Date().toISOString(), criadoPor: "sistema",
-    reputacao: "Sussurros", lealdade: "Pilar da F.O.X.", reputacaoNota: "", lealdadeNota: ""
+    criadoEm: new Date().toISOString(), criadoPor: "sistema"
   },
 ];
 
@@ -121,45 +117,6 @@ function nomeUsernamePara(username, users, viewerIsContratante) {
 }
 
 
-const REPUTACAO_NIVEIS = ["Desconhecido", "Sussurros", "Temido", "Procurado", "Lenda das Sombras"];
-const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
-
-const REPUTACAO_CFG = {
-  "Desconhecido": { indice: 0, badge: "border-zinc-700 bg-zinc-950 text-zinc-400", desc: "O mundo exterior ainda não reconhece este nome." },
-  "Sussurros": { indice: 1, badge: "border-slate-700 bg-slate-950 text-slate-300", desc: "Rumores começaram a circular entre vilas e informantes." },
-  "Temido": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "A presença deste operador já altera decisões e rotas." },
-  "Procurado": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "Vilas, rivais ou autoridades procuram ativamente este nome." },
-  "Lenda das Sombras": { indice: 4, badge: "border-purple-700 bg-purple-950/50 text-purple-300", desc: "O nome ultrapassou os fatos e tornou-se parte da história." },
-};
-
-const LEALDADE_CFG = {
-  "Observado": { indice: 0, badge: "border-zinc-700 bg-zinc-950 text-zinc-400", desc: "Ainda está sob avaliação da liderança." },
-  "Recruta": { indice: 1, badge: "border-blue-800 bg-blue-950/40 text-blue-300", desc: "Foi admitido, mas ainda está construindo confiança interna." },
-  "Juramentado": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "Assumiu formalmente o pacto e os princípios da organização." },
-  "Veterano": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "Possui histórico comprovado de serviço, presença e confiança." },
-  "Pilar da F.O.X.": { indice: 4, badge: "border-yellow-700 bg-yellow-950/40 text-yellow-300", desc: "Sustenta a organização, o legado e suas decisões mais importantes." },
-};
-
-function reputacaoConfig(valor) {
-  return REPUTACAO_CFG[valor] || REPUTACAO_CFG.Desconhecido;
-}
-
-function lealdadeConfig(valor) {
-  return LEALDADE_CFG[valor] || LEALDADE_CFG.Observado;
-}
-
-function ReputacaoBadge({ tipo, valor, compacto = false }) {
-  const interno = tipo === "lealdade";
-  const config = interno ? lealdadeConfig(valor) : reputacaoConfig(valor);
-  const Icone = interno ? IShield : ITarget;
-  return (
-    <span className={`inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider ${config.badge} ${compacto ? "text-[8px] px-1.5 py-0.5" : "text-[10px] px-2 py-1"}`} title={config.desc}>
-      <Icone className={compacto ? "w-2.5 h-2.5" : "w-3 h-3"} />
-      {valor || (interno ? "Observado" : "Desconhecido")}
-    </span>
-  );
-}
-
 const MEMBER_PROFILE_FIELDS = ["nomeRP", "elemento", "linhagem", "vilaOrigem", "especialidade"];
 
 function perfilCompletoUsuario(u) {
@@ -173,16 +130,10 @@ function normalizarMembro(u, existente = true) {
     vilaOrigem: "", patente: "", especialidade: "", bio: "", estruturaNivel: "operador",
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
-    iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
-    reputacao: "Desconhecido", lealdade: "", reputacaoNota: "", lealdadeNota: "",
-    reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "",
   };
   const out = { ...base, ...u };
   out.nomeRP = out.nomeRP || out.displayName || "";
   out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
-  if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Desconhecido";
-  if (!u?.lealdade) out.lealdade = out.role === "leader" ? "Pilar da F.O.X." : (existente ? "Recruta" : "Observado");
-  if (!LEALDADE_NIVEIS.includes(out.lealdade)) out.lealdade = existente ? "Recruta" : "Observado";
   out.perfilCompleto = perfilCompletoUsuario(out);
   return out;
 }
@@ -1226,18 +1177,6 @@ function DossieModal({ membro, data, onClose }) {
           </div>
         </div>
         <div className="p-6">
-          <div className="grid sm:grid-cols-2 gap-3 mb-4">
-            <div className="p-4 rounded-lg border border-red-900/40 bg-red-950/10">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-red-600 mb-2">Reputação externa</div>
-              <ReputacaoBadge tipo="reputacao" valor={membro.reputacao} />
-              <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.reputacaoNota || reputacaoConfig(membro.reputacao).desc}</p>
-            </div>
-            <div className="p-4 rounded-lg border border-orange-900/40 bg-orange-950/10">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-orange-600 mb-2">Lealdade interna</div>
-              <ReputacaoBadge tipo="lealdade" valor={membro.lealdade} />
-              <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.lealdadeNota || lealdadeConfig(membro.lealdade).desc}</p>
-            </div>
-          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {campos.map(([label, value]) => (
               <div key={label} className="p-3 rounded bg-black/50 border border-zinc-800">
@@ -1279,27 +1218,9 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     if (!file) return;
     if (!file.type.startsWith("image/")) { setErro("Escolha uma imagem JPG, PNG ou WEBP."); return; }
     if (file.size > 3 * 1024 * 1024) { setErro("A foto deve ter no máximo 3 MB."); return; }
+    setArquivo(file);
     const reader = new FileReader();
-    reader.onerror = () => setErro("Não foi possível ler a imagem escolhida.");
-    reader.onload = () => {
-      const imagem = new Image();
-      imagem.onerror = () => setErro("A imagem escolhida não pôde ser processada.");
-      imagem.onload = () => {
-        const tamanho = 384;
-        const recorte = Math.min(imagem.naturalWidth, imagem.naturalHeight);
-        const origemX = Math.max(0, (imagem.naturalWidth - recorte) / 2);
-        const origemY = Math.max(0, (imagem.naturalHeight - recorte) / 2);
-        const canvas = document.createElement("canvas");
-        canvas.width = tamanho;
-        canvas.height = tamanho;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { setErro("Seu navegador não conseguiu preparar a foto."); return; }
-        ctx.drawImage(imagem, origemX, origemY, recorte, recorte, 0, 0, tamanho, tamanho);
-        setPreview(canvas.toDataURL("image/jpeg", 0.82));
-        setArquivo(file);
-      };
-      imagem.src = reader.result;
-    };
+    reader.onload = ev => setPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -1310,8 +1231,18 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     let avatarStoragePath = membro.avatarStoragePath || "";
     try {
       if (arquivo) {
-        avatarUrl = preview;
-        avatarStoragePath = "";
+        if (!cloudClient) throw new Error("O upload de foto depende da sincronização em nuvem.");
+        const ext = (arquivo.name.split(".").pop() || "webp").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const storagePath = `avatars/${membro.username}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await cloudClient.storage.from("galeria").upload(storagePath, arquivo, { contentType: arquivo.type, upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: publicData } = cloudClient.storage.from("galeria").getPublicUrl(storagePath);
+        if (!publicData?.publicUrl) throw new Error("Não foi possível obter a URL pública da foto.");
+        avatarUrl = publicData.publicUrl;
+        avatarStoragePath = storagePath;
+        if (membro.avatarStoragePath && membro.avatarStoragePath !== storagePath) {
+          try { await cloudClient.storage.from("galeria").remove([membro.avatarStoragePath]); } catch {}
+        }
       }
       setData(d => {
         const atualizado = normalizarMembro({ ...membro, ...form, avatarUrl, avatarStoragePath });
@@ -1345,7 +1276,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
             </div>
             <div className="flex-1 text-center sm:text-left">
               <div className="text-orange-50 font-bold mb-1">Foto de perfil</div>
-              <p className="text-zinc-500 text-xs mb-3">JPG, PNG ou WEBP, até 3 MB. A foto será recortada e otimizada automaticamente.</p>
+              <p className="text-zinc-500 text-xs mb-3">JPG, PNG ou WEBP, até 3 MB. Use uma imagem quadrada para melhor enquadramento.</p>
               <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
               <Btn onClick={() => inputRef.current?.click()} variant="default" disabled={salvando}><IUpload className="w-3 h-3" /> Escolher foto</Btn>
             </div>
@@ -1394,10 +1325,6 @@ function MembrosListSection({ data, viewerIsContratante, onOpen }) {
                   </div>
                   <div className="text-xs mt-2" style={{ color: role?.cor }}>{u.patente || role?.nome || u.role}</div>
                   <div className="text-zinc-600 text-xs mt-1 truncate">{u.elemento || "Elemento não definido"}{u.linhagem ? ` · ${u.linhagem}` : ""}</div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto />
-                    <ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto />
-                  </div>
                 </div>
               </div>
               <div className="border-t border-zinc-800 mt-3 pt-3 flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
@@ -1508,97 +1435,6 @@ function EstruturaSection({ data, onOpen }) {
   );
 }
 
-function ReputacaoSection({ data, onOpen }) {
-  const [filtroReputacao, setFiltroReputacao] = useState("Todos");
-  const [filtroLealdade, setFiltroLealdade] = useState("Todos");
-  const [busca, setBusca] = useState("");
-
-  const membros = (data.users || [])
-    .filter(u => u.role !== "contratante")
-    .filter(u => filtroReputacao === "Todos" || u.reputacao === filtroReputacao)
-    .filter(u => filtroLealdade === "Todos" || u.lealdade === filtroLealdade)
-    .filter(u => {
-      const termo = busca.trim().toLowerCase();
-      if (!termo) return true;
-      return [u.codinome, u.displayName, u.nomeRP, u.username].some(v => String(v || "").toLowerCase().includes(termo));
-    })
-    .slice()
-    .sort((a, b) => {
-      const lealdade = lealdadeConfig(b.lealdade).indice - lealdadeConfig(a.lealdade).indice;
-      if (lealdade !== 0) return lealdade;
-      return reputacaoConfig(b.reputacao).indice - reputacaoConfig(a.reputacao).indice;
-    });
-
-  return (
-    <div className="fadein space-y-6">
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-red-900/40 bg-gradient-to-br from-red-950/20 to-black p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-red-600 mb-1">Visão do mundo</div>
-          <h3 className="text-xl font-black text-orange-50 serif">Reputação externa</h3>
-          <p className="text-zinc-500 text-sm mt-2">Representa como vilas, rivais, contratantes e rumores enxergam cada operador.</p>
-          <div className="flex flex-wrap gap-2 mt-4">{REPUTACAO_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="reputacao" valor={n} compacto />)}</div>
-        </div>
-        <div className="rounded-xl border border-orange-900/40 bg-gradient-to-br from-orange-950/20 to-black p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600 mb-1">Confiança da organização</div>
-          <h3 className="text-xl font-black text-orange-50 serif">Lealdade interna</h3>
-          <p className="text-zinc-500 text-sm mt-2">Representa confiança, compromisso, histórico e importância dentro da Jikkai.</p>
-          <div className="flex flex-wrap gap-2 mt-4">{LEALDADE_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="lealdade" valor={n} compacto />)}</div>
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-        <div>
-          <label className="fox-label">Buscar membro</label>
-          <input value={busca} onChange={e => setBusca(e.target.value)} className="fox-input" placeholder="Codinome, nome ou usuário" />
-        </div>
-        <div>
-          <label className="fox-label">Reputação externa</label>
-          <select value={filtroReputacao} onChange={e => setFiltroReputacao(e.target.value)} className="fox-input">
-            <option>Todos</option>
-            {REPUTACAO_NIVEIS.map(n => <option key={n}>{n}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="fox-label">Lealdade interna</label>
-          <select value={filtroLealdade} onChange={e => setFiltroLealdade(e.target.value)} className="fox-input">
-            <option>Todos</option>
-            {LEALDADE_NIVEIS.map(n => <option key={n}>{n}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-zinc-500 text-sm italic">{membros.length} {membros.length === 1 ? "registro encontrado" : "registros encontrados"}</div>
-        <div className="text-[10px] uppercase tracking-wider text-zinc-700">Alterações oficiais: somente liderança</div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {membros.map(u => {
-          const ramo = (data.clas || []).find(c => c.id === u.cla);
-          return (
-            <button key={u.username} onClick={() => onOpen(u)} className="text-left rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-orange-700 transition-all p-4">
-              <div className="flex items-center gap-3">
-                <MemberAvatar user={u} size="md" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-orange-50 font-black truncate">{getCodinome(u)}</div>
-                  <div className="text-zinc-600 text-xs truncate">{ramo?.nome || "Sem ramo"} · {u.patente || "Sem patente"}</div>
-                </div>
-              </div>
-              <div className="grid gap-2 mt-4">
-                <div className="flex items-center justify-between gap-2"><span className="text-[9px] uppercase tracking-wider text-red-700">Externa</span><ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto /></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-[9px] uppercase tracking-wider text-orange-700">Interna</span><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div>
-              </div>
-              {(u.reputacaoNota || u.lealdadeNota) && <div className="mt-3 pt-3 border-t border-zinc-800 text-zinc-600 text-xs line-clamp-2">{u.lealdadeNota || u.reputacaoNota}</div>}
-            </button>
-          );
-        })}
-      </div>
-
-      {membros.length === 0 && <div className="p-10 text-center rounded-xl border border-zinc-800 bg-zinc-950/40 text-zinc-600 italic">Nenhum membro corresponde aos filtros.</div>}
-    </div>
-  );
-}
-
 function MembrosPage({ data, setData, role, usuario, viewerIsContratante }) {
   const [subTab, setSubTab] = useState("lista");
   const [dossieAberto, setDossieAberto] = useState(null);
@@ -1609,12 +1445,11 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante }) {
   const SUB_TABS = [
     { id: "lista", label: "Dossiês", icon: IUsers, badge: usuariosVisiveis.length || null },
     { id: "estrutura", label: "Estrutura", icon: ICrown, badge: null },
-    { id: "reputacao", label: "Reputação", icon: ITarget, badge: null },
     { id: "trios", label: "Trios", icon: ISwords, badge: (data.trios || []).length || null },
   ];
   return (
     <div>
-      <SectionTitle icon={IUsers} sub="Dossiês, hierarquia, reputação e formações da F.O.X." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
+      <SectionTitle icon={IUsers} sub="Dossiês, hierarquia e formações da F.O.X." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
       <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
@@ -1624,7 +1459,6 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante }) {
       </div>
       {subTab === "lista" && <MembrosListSection data={data} viewerIsContratante={viewerIsContratante} onOpen={setDossieAberto} />}
       {subTab === "estrutura" && <EstruturaSection data={data} onOpen={setDossieAberto} />}
-      {subTab === "reputacao" && <ReputacaoSection data={data} onOpen={setDossieAberto} />}
       {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} />}
       {dossieAberto && <DossieModal membro={data.users.find(u => u.username === dossieAberto.username) || dossieAberto} data={data} onClose={() => setDossieAberto(null)} />}
       {editandoMeuDossie && membroAtual && <MeuDossieModal membro={membroAtual} data={data} setData={setData} onClose={() => setEditandoMeuDossie(false)} />}
@@ -1685,259 +1519,6 @@ function TriosSection({ data, setData, podeEditar }) {
 }
 
 // ============ JIKKAI ============
-const OBJETIVO_STATUS_CFG = {
-  nao_iniciado: { label: "Não iniciado", cor: "#71717A", badge: "bg-zinc-900 text-zinc-400 border-zinc-700" },
-  preparacao: { label: "Em preparação", cor: "#2563EB", badge: "bg-blue-950 text-blue-300 border-blue-800" },
-  andamento: { label: "Em andamento", cor: "#EA580C", badge: "bg-orange-950 text-orange-300 border-orange-800" },
-  parcial: { label: "Parcial", cor: "#CA8A04", badge: "bg-yellow-950 text-yellow-300 border-yellow-800" },
-  bloqueado: { label: "Bloqueado", cor: "#DC2626", badge: "bg-red-950 text-red-300 border-red-800" },
-  concluido: { label: "Concluído", cor: "#16A34A", badge: "bg-green-950 text-green-300 border-green-800" },
-  fracassado: { label: "Fracassado", cor: "#7F1D1D", badge: "bg-red-950 text-red-400 border-red-900" },
-  cancelado: { label: "Cancelado", cor: "#52525B", badge: "bg-zinc-950 text-zinc-600 border-zinc-800" },
-};
-
-const FASE_STATUS_CFG = {
-  planejada: { label: "Planejada", cor: "#71717A", badge: "bg-zinc-900 text-zinc-400 border-zinc-700" },
-  bloqueada: { label: "Bloqueada", cor: "#B91C1C", badge: "bg-red-950 text-red-300 border-red-800" },
-  andamento: { label: "Em operação", cor: "#EA580C", badge: "bg-orange-950 text-orange-300 border-orange-800" },
-  concluida: { label: "Concluída", cor: "#16A34A", badge: "bg-green-950 text-green-300 border-green-800" },
-  suspensa: { label: "Suspensa", cor: "#CA8A04", badge: "bg-yellow-950 text-yellow-300 border-yellow-800" },
-};
-
-const RISCO_CFG = {
-  Baixo: { indice: 1, cor: "#16A34A", badge: "bg-green-950 text-green-300 border-green-800" },
-  Moderado: { indice: 2, cor: "#CA8A04", badge: "bg-yellow-950 text-yellow-300 border-yellow-800" },
-  Elevado: { indice: 3, cor: "#EA580C", badge: "bg-orange-950 text-orange-300 border-orange-800" },
-  Crítico: { indice: 4, cor: "#DC2626", badge: "bg-red-950 text-red-300 border-red-800" },
-};
-
-const PRIORIDADE_PESO = { Secundária: 1, Normal: 2, Importante: 3, Crítica: 5 };
-const FONTE_ESTRATEGICA_CFG = {
-  relatorio: { label: "Relatório", cor: "#A855F7" },
-  mapa: { label: "Mapa", cor: "#38BDF8" },
-  missao: { label: "Missão", cor: "#EA580C" },
-  contrato: { label: "Contrato", cor: "#EF4444" },
-  objetivo: { label: "Objetivo", cor: "#F59E0B" },
-  comando: { label: "Comando", cor: "#F97316" },
-};
-
-function normalizarRisco(valor) {
-  const v = String(valor || "").toLowerCase();
-  if (v.includes("crít") || v.includes("letal")) return "Crítico";
-  if (v.includes("alta") || v.includes("elev")) return "Elevado";
-  if (v.includes("méd") || v.includes("moder")) return "Moderado";
-  return RISCO_CFG[valor] ? valor : "Baixo";
-}
-
-function normalizarStatusObjetivo(status, done = false) {
-  if (done) return "concluido";
-  const mapa = { pendente: "nao_iniciado", andamento: "andamento", concluida: "concluido", concluido: "concluido" };
-  return OBJETIVO_STATUS_CFG[status] ? status : (mapa[status] || "nao_iniciado");
-}
-
-function normalizarObjetivoEstrategico(obj, fase, index) {
-  const status = normalizarStatusObjetivo(obj.status, obj.done);
-  const progressoPadrao = status === "concluido" ? 100 : status === "parcial" ? 50 : status === "andamento" ? 25 : 0;
-  const prioridade = PRIORIDADE_PESO[obj.prioridade] ? obj.prioridade : "Normal";
-  return {
-    id: obj.id || "obj_" + (fase.id || fase.n) + "_" + (index + 1),
-    titulo: obj.titulo || obj.text || "Objetivo " + (index + 1),
-    descricao: obj.descricao || "",
-    status,
-    progresso: Math.max(0, Math.min(100, Number(obj.progresso ?? progressoPadrao))),
-    prioridade,
-    peso: Number(obj.peso) || PRIORIDADE_PESO[prioridade],
-    responsavel: obj.responsavel || "",
-    apoioTipo: obj.apoioTipo || "",
-    apoioId: obj.apoioId || "",
-    prazo: obj.prazo || "",
-    prazoTipo: obj.prazoTipo || "sem_prazo",
-    risco: normalizarRisco(obj.risco || "Baixo"),
-    bloqueio: obj.bloqueio || "",
-    recursos: Array.isArray(obj.recursos) ? obj.recursos : (obj.recursosTexto ? String(obj.recursosTexto).split("\n").filter(Boolean) : []),
-    missaoId: obj.missaoId || "",
-    relatorioId: obj.relatorioId || "",
-    contratoId: obj.contratoId || "",
-    mapaId: obj.mapaId || "",
-    observacoes: obj.observacoes || "",
-    atualizadaEm: obj.atualizadaEm || "",
-  };
-}
-
-function normalizarFaseEstrategica(fase, index) {
-  const id = fase.id || "fase_" + (fase.n || index + 1);
-  const base = { ...fase, id };
-  const objetivos = (fase.objetivos || []).map((o, i) => normalizarObjetivoEstrategico(o, base, i));
-  const statusLegado = { pendente: index === 0 ? "andamento" : "planejada", andamento: "andamento", concluida: "concluida" };
-  return {
-    ...fase,
-    id,
-    n: Number(fase.n) || index + 1,
-    titulo: fase.titulo || "Fase " + (index + 1),
-    desc: fase.desc || fase.descricao || "",
-    status: FASE_STATUS_CFG[fase.status] ? fase.status : (statusLegado[fase.status] || "planejada"),
-    objetivos,
-    responsavelGeral: fase.responsavelGeral || "",
-    prazo: fase.prazo || "",
-    prazoTipo: fase.prazoTipo || "sem_prazo",
-    riscoGeral: normalizarRisco(fase.riscoGeral || "Baixo"),
-    progressoManualAtivo: Boolean(fase.progressoManualAtivo),
-    progressoManual: Math.max(0, Math.min(100, Number(fase.progressoManual) || 0)),
-    requisitos: Array.isArray(fase.requisitos) ? fase.requisitos.map((r, i) => typeof r === "string" ? { id: "req_" + id + "_" + i, texto: r, atendido: false } : { id: r.id || "req_" + id + "_" + i, texto: r.texto || r.text || "Requisito", atendido: Boolean(r.atendido) }) : [],
-    atualizadaEm: fase.atualizadaEm || "",
-  };
-}
-
-function progressoObjetivo(obj) {
-  if (obj.status === "concluido") return 100;
-  if (obj.status === "cancelado") return 0;
-  return Math.max(0, Math.min(100, Number(obj.progresso) || 0));
-}
-
-function progressoFase(fase) {
-  if (fase.progressoManualAtivo) return Math.max(0, Math.min(100, Number(fase.progressoManual) || 0));
-  const objetivos = fase.objetivos || [];
-  if (!objetivos.length) return fase.status === "concluida" ? 100 : 0;
-  const pesoTotal = objetivos.reduce((s, o) => s + Math.max(1, Number(o.peso) || 1), 0);
-  return Math.round(objetivos.reduce((s, o) => s + progressoObjetivo(o) * Math.max(1, Number(o.peso) || 1), 0) / pesoTotal);
-}
-
-function progressoGeralJikkai(fases) {
-  const validas = fases || [];
-  if (!validas.length) return 0;
-  return Math.round(validas.reduce((s, f) => s + progressoFase(f), 0) / validas.length);
-}
-
-function prazoAtrasado(prazo, status) {
-  if (!prazo || ["concluido", "concluida", "cancelado"].includes(status)) return false;
-  const data = new Date(prazo + (String(prazo).length === 10 ? "T23:59:59" : ""));
-  return !Number.isNaN(data.getTime()) && data.getTime() < Date.now();
-}
-
-function fonteLabel(tipo) {
-  return FONTE_ESTRATEGICA_CFG[tipo] || FONTE_ESTRATEGICA_CFG.comando;
-}
-
-function coletarSinaisEstrategicos(data) {
-  const sinais = [];
-  const add = sinal => {
-    if (!sinal?.titulo) return;
-    sinais.push({
-      id: sinal.id || "sinal_" + sinal.fonteTipo + "_" + (sinal.fonteId || uid()),
-      titulo: sinal.titulo,
-      descricao: sinal.descricao || "",
-      risco: normalizarRisco(sinal.risco || "Moderado"),
-      categoria: sinal.categoria || "Operacional",
-      fonteTipo: sinal.fonteTipo || "comando",
-      fonteId: sinal.fonteId || "",
-      fonteNome: sinal.fonteNome || "",
-      faseId: sinal.faseId || "",
-      objetivoId: sinal.objetivoId || "",
-      status: sinal.status || "ativo",
-      criadoEm: sinal.criadoEm || sinal.data || "",
-    });
-  };
-
-  (data.sinaisEstrategicos || []).filter(s => s.status !== "resolvido").forEach(s => add(s));
-  (data.relatorios || []).filter(r => r.alertaJikkai && r.statusAlerta !== "resolvido").forEach(r => add({
-    id: "relatorio_" + r.id,
-    titulo: r.titulo,
-    descricao: r.resumoEstrategico || r.descricao,
-    risco: r.riscoJikkai || "Moderado",
-    categoria: r.categoriaJikkai || "Inteligência",
-    fonteTipo: "relatorio",
-    fonteId: r.id,
-    fonteNome: r.titulo,
-    faseId: r.faseId,
-    objetivoId: r.objetivoId,
-    criadoEm: r.data,
-  }));
-
-  [...(data.mapaPontos || []), ...(data.mapaRotas || [])].forEach(item => {
-    const texto = ((item.status || "") + " " + (item.desc || "")).toLowerCase();
-    const automatico = item.alertaJikkai || item.type === "risco" || ["Alta", "Crítica"].includes(item.threat) || /compromet|hostil|bloquead|ameaça|perdido/.test(texto);
-    if (!automatico || item.statusAlerta === "resolvido") return;
-    add({
-      id: "mapa_" + (item.kind || "point") + "_" + item.id,
-      titulo: item.alertaTitulo || item.name,
-      descricao: item.desc || "Situação: " + (item.status || "não informada") + ".",
-      risco: item.riscoJikkai || item.threat,
-      categoria: item.categoriaJikkai || "Territorial",
-      fonteTipo: "mapa",
-      fonteId: item.id,
-      fonteNome: item.name,
-      faseId: item.faseId,
-      objetivoId: item.objetivoId,
-      criadoEm: item.updatedAt || item.createdAt || data.mapaAtualizadoEm,
-    });
-  });
-
-  (data.missoes || []).filter(m => m.status === "falhou").forEach(m => add({
-    id: "missao_" + m.id,
-    titulo: "Operação fracassada: " + m.titulo,
-    descricao: m.relatorio?.resumo || m.desc,
-    risco: "Elevado",
-    categoria: "Operacional",
-    fonteTipo: "missao",
-    fonteId: m.id,
-    fonteNome: m.titulo,
-    faseId: m.faseId,
-    objetivoId: m.objetivoId,
-    criadoEm: m.updatedAt || m.createdAt,
-  }));
-
-  (data.contratos || []).filter(c => c.status === "Falhou" && (c.faseId || c.objetivoId)).forEach(c => add({
-    id: "contrato_" + c.id,
-    titulo: "Contrato fracassado: " + c.titulo,
-    descricao: c.descricaoCurta || c.descricao,
-    risco: "Elevado",
-    categoria: "Operacional",
-    fonteTipo: "contrato",
-    fonteId: c.id,
-    fonteNome: c.titulo,
-    faseId: c.faseId,
-    objetivoId: c.objetivoId,
-    criadoEm: c.criadoEm,
-  }));
-
-  (data.fases || []).forEach(f => (f.objetivos || []).forEach(o => {
-    if (o.status === "bloqueado" || prazoAtrasado(o.prazo, o.status) || RISCO_CFG[normalizarRisco(o.risco)].indice >= 3) {
-      add({
-        id: "objetivo_" + o.id,
-        titulo: o.status === "bloqueado" ? "Objetivo bloqueado: " + o.titulo : prazoAtrasado(o.prazo, o.status) ? "Objetivo atrasado: " + o.titulo : "Risco em objetivo: " + o.titulo,
-        descricao: o.bloqueio || o.observacoes || o.descricao,
-        risco: o.risco || (o.status === "bloqueado" ? "Elevado" : "Moderado"),
-        categoria: "Planejamento",
-        fonteTipo: "objetivo",
-        fonteId: o.id,
-        fonteNome: o.titulo,
-        faseId: f.id,
-        objetivoId: o.id,
-        criadoEm: o.atualizadaEm,
-      });
-    }
-  }));
-
-  const ordem = { Crítico: 4, Elevado: 3, Moderado: 2, Baixo: 1 };
-  return sinais.sort((a, b) => (ordem[b.risco] || 0) - (ordem[a.risco] || 0) || new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0));
-}
-
-function RiscoBadge({ risco, compacto = false }) {
-  const valor = normalizarRisco(risco);
-  const cfg = RISCO_CFG[valor];
-  return <span className={"inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider " + cfg.badge + " " + (compacto ? "text-[8px] px-1.5 py-0.5" : "text-[10px] px-2 py-1")}><IAlert className={compacto ? "w-2.5 h-2.5" : "w-3 h-3"} />{valor}</span>;
-}
-
-function ObjetivoStatusBadge({ status }) {
-  const cfg = OBJETIVO_STATUS_CFG[status] || OBJETIVO_STATUS_CFG.nao_iniciado;
-  return <span className={"text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-wider " + cfg.badge}>{cfg.label}</span>;
-}
-
-function FonteEstrategicaBadge({ tipo }) {
-  const cfg = fonteLabel(tipo);
-  return <span className="text-[8px] px-1.5 py-0.5 rounded border uppercase tracking-wider font-black" style={{ color: cfg.cor, borderColor: cfg.cor + "80", background: cfg.cor + "18" }}>{cfg.label}</span>;
-}
-
 const STATUS_CFG = {
   pendente: { label: "Pendente", border: "border-zinc-800", bg: "bg-zinc-950/40", circle: "bg-zinc-900 text-zinc-600 border border-zinc-800", badge: "bg-zinc-800 text-zinc-500" },
   andamento: { label: "Em andamento", border: "border-orange-600", bg: "bg-orange-950/20", circle: "bg-orange-600 text-black", badge: "bg-orange-600 text-black" },
@@ -2156,130 +1737,63 @@ function RelatorioMissaoModal({ missao, onSave, onClose }) {
   );
 }
 
-function FaseEditor({ fase, data, onSave, onCancel }) {
-  const [draft, setDraft] = useState(() => ({
-    ...fase,
-    objetivos: (fase.objetivos || []).map(o => ({ ...o, recursosTexto: (o.recursos || []).join("\n") })),
-    requisitos: (fase.requisitos || []).map(r => ({ ...r })),
-  }));
-  const users = (data.users || []).filter(u => u.role !== "contratante");
-  const update = patch => setDraft(d => ({ ...d, ...patch }));
-  const updateObj = (i, patch) => setDraft(d => ({ ...d, objetivos: d.objetivos.map((o, index) => index === i ? { ...o, ...patch } : o) }));
-  const addObj = () => setDraft(d => ({ ...d, objetivos: [...d.objetivos, normalizarObjetivoEstrategico({ id: "obj_" + uid(), titulo: "Novo objetivo", status: "nao_iniciado", progresso: 0 }, d, d.objetivos.length)] }));
-  const removeObj = i => setDraft(d => ({ ...d, objetivos: d.objetivos.filter((_, index) => index !== i) }));
-  const addReq = () => setDraft(d => ({ ...d, requisitos: [...d.requisitos, { id: "req_" + uid(), texto: "Novo requisito", atendido: false }] }));
-  const salvar = () => onSave({
-    ...draft,
-    objetivos: draft.objetivos.map((o, i) => normalizarObjetivoEstrategico({ ...o, recursos: String(o.recursosTexto || "").split("\n").map(v => v.trim()).filter(Boolean), atualizadaEm: new Date().toISOString() }, draft, i)),
-    atualizadaEm: new Date().toISOString(),
-  });
+function FaseEditor({ fase, onSave, onCancel }) {
+  const [titulo, setTitulo] = useState(fase.titulo);
+  const [desc, setDesc] = useState(fase.desc);
+  const [status, setStatus] = useState(fase.status);
+  const [objetivos, setObjetivos] = useState(fase.objetivos);
+  const [novoObj, setNovoObj] = useState("");
 
-  return <div className="space-y-5">
-    <div className="flex items-center justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Planejamento militar</div><h3 className="text-2xl font-black text-orange-50 serif">Editar Fase {draft.n}</h3></div><button onClick={onCancel} className="text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button></div>
-    <div className="grid sm:grid-cols-2 gap-3">
-      <div><label className="fox-label">Título</label><input value={draft.titulo} onChange={e => update({ titulo: e.target.value })} className="fox-input" /></div>
-      <div><label className="fox-label">Status</label><select value={draft.status} onChange={e => update({ status: e.target.value })} className="fox-input">{Object.entries(FASE_STATUS_CFG).map(([id, c]) => <option key={id} value={id}>{c.label}</option>)}</select></div>
-      <div className="sm:col-span-2"><label className="fox-label">Descrição</label><textarea rows="3" value={draft.desc || ""} onChange={e => update({ desc: e.target.value })} className="fox-input" /></div>
-      <div><label className="fox-label">Responsável geral</label><select value={draft.responsavelGeral || ""} onChange={e => update({ responsavelGeral: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
-      <div><label className="fox-label">Risco geral</label><select value={draft.riscoGeral} onChange={e => update({ riscoGeral: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
-      <div><label className="fox-label">Prazo</label><input type="date" value={draft.prazo || ""} onChange={e => update({ prazo: e.target.value, prazoTipo: e.target.value ? "data_exata" : "sem_prazo" })} className="fox-input" /></div>
-      <label className="flex items-center gap-3 p-3 rounded border border-zinc-800 bg-black/40"><input type="checkbox" checked={draft.progressoManualAtivo} onChange={e => update({ progressoManualAtivo: e.target.checked })} className="accent-orange-600" /><span className="text-zinc-300 text-sm">Usar progresso manual</span>{draft.progressoManualAtivo && <input type="number" min="0" max="100" value={draft.progressoManual} onChange={e => update({ progressoManual: Number(e.target.value) })} className="fox-input w-24" />}</label>
-    </div>
+  const addObj = () => {
+    if (!novoObj.trim()) return;
+    setObjetivos([...objetivos, { text: novoObj.trim(), done: false }]);
+    setNovoObj("");
+  };
+  const removeObj = (i) => setObjetivos(objetivos.filter((_, idx) => idx !== i));
+  const toggleObj = (i) => setObjetivos(objetivos.map((o, idx) => idx === i ? { ...o, done: !o.done } : o));
 
-    <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-      <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Desbloqueio</div><div className="text-zinc-600 text-xs">Condições exigidas para avançar no plano.</div></div><Btn onClick={addReq} variant="ghost"><IPlus className="w-3 h-3" /> Requisito</Btn></div>
-      <div className="space-y-2">{draft.requisitos.map((r, i) => <div key={r.id || i} className="flex items-center gap-2"><input type="checkbox" checked={r.atendido} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, atendido: e.target.checked } : x) }))} className="accent-green-600" /><input value={r.texto} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, texto: e.target.value } : x) }))} className="fox-input flex-1" /><button onClick={() => setDraft(d => ({ ...d, requisitos: d.requisitos.filter((_, index) => index !== i) }))} className="text-red-500"><ITrash className="w-4 h-4" /></button></div>)}</div>
-    </div>
-
+  return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Objetivos estratégicos</div><div className="text-zinc-600 text-xs">O peso e o progresso definem a porcentagem automática da fase.</div></div><Btn onClick={addObj} variant="primary"><IPlus className="w-3 h-3" /> Objetivo</Btn></div>
-      {draft.objetivos.map((o, i) => <div key={o.id || i} className="p-4 rounded-xl border border-zinc-800 bg-black/40 space-y-3">
-        <div className="flex gap-2"><input value={o.titulo} onChange={e => updateObj(i, { titulo: e.target.value })} className="fox-input flex-1 font-bold" /><button onClick={() => removeObj(i)} className="text-red-500"><ITrash className="w-4 h-4" /></button></div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div><label className="fox-label">Status</label><select value={o.status} onChange={e => updateObj(i, { status: e.target.value, progresso: e.target.value === "concluido" ? 100 : o.progresso })} className="fox-input">{Object.entries(OBJETIVO_STATUS_CFG).map(([id, c]) => <option key={id} value={id}>{c.label}</option>)}</select></div>
-          <div><label className="fox-label">Progresso %</label><input type="number" min="0" max="100" value={o.progresso} onChange={e => updateObj(i, { progresso: Number(e.target.value) })} className="fox-input" /></div>
-          <div><label className="fox-label">Prioridade</label><select value={o.prioridade} onChange={e => updateObj(i, { prioridade: e.target.value, peso: PRIORIDADE_PESO[e.target.value] })} className="fox-input">{Object.keys(PRIORIDADE_PESO).map(p => <option key={p}>{p}</option>)}</select></div>
-          <div><label className="fox-label">Risco</label><select value={o.risco} onChange={e => updateObj(i, { risco: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
+      <div><label className="fox-label">Título</label><input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" /></div>
+      <div><label className="fox-label">Descrição</label><textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows="2" className="fox-input" /></div>
+      <div><label className="fox-label">Status</label>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="fox-input">
+          <option value="pendente">Pendente</option><option value="andamento">Em andamento</option><option value="concluida">Concluída</option>
+        </select>
+      </div>
+      <div>
+        <label className="fox-label">Objetivos ({objetivos.length})</label>
+        <div className="space-y-1 mb-2">
+          {objetivos.map((o, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 bg-black/60 border border-zinc-800 rounded">
+              <input type="checkbox" checked={o.done} onChange={() => toggleObj(i)} className="w-4 h-4 accent-orange-600" />
+              <span className={`flex-1 text-sm ${o.done ? "line-through text-zinc-600" : "text-zinc-300"}`}>{o.text}</span>
+              <button onClick={() => removeObj(i)} className="text-red-500"><ITrash className="w-3 h-3" /></button>
+            </div>
+          ))}
         </div>
-        <div className="grid sm:grid-cols-2 gap-2">
-          <div><label className="fox-label">Responsável</label><select value={o.responsavel || ""} onChange={e => updateObj(i, { responsavel: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
-          <div><label className="fox-label">Prazo</label><input type="date" value={o.prazo || ""} onChange={e => updateObj(i, { prazo: e.target.value })} className="fox-input" /></div>
+        <div className="flex gap-2">
+          <input value={novoObj} onChange={(e) => setNovoObj(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addObj())} placeholder="Novo objetivo..." className="fox-input" />
+          <Btn onClick={addObj} variant="default"><IPlus className="w-3 h-3" /></Btn>
         </div>
-        <div><label className="fox-label">Descrição</label><textarea rows="2" value={o.descricao || ""} onChange={e => updateObj(i, { descricao: e.target.value })} className="fox-input" /></div>
-        <div><label className="fox-label">Bloqueio atual</label><input value={o.bloqueio || ""} onChange={e => updateObj(i, { bloqueio: e.target.value })} className="fox-input" placeholder="Ex.: Informante perdeu contato com a operação" /></div>
-        <div><label className="fox-label">Recursos necessários — um por linha</label><textarea rows="2" value={o.recursosTexto || ""} onChange={e => updateObj(i, { recursosTexto: e.target.value })} className="fox-input" /></div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div><label className="fox-label">Missão</label><select value={o.missaoId || ""} onChange={e => updateObj(i, { missaoId: e.target.value })} className="fox-input"><option value="">Nenhuma</option>{(data.missoes || []).map(m => <option key={m.id} value={m.id}>{m.titulo}</option>)}</select></div>
-          <div><label className="fox-label">Relatório</label><select value={o.relatorioId || ""} onChange={e => updateObj(i, { relatorioId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{(data.relatorios || []).map(r => <option key={r.id} value={r.id}>{r.titulo}</option>)}</select></div>
-          <div><label className="fox-label">Contrato</label><select value={o.contratoId || ""} onChange={e => updateObj(i, { contratoId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{(data.contratos || []).map(c => <option key={c.id} value={c.id}>{c.titulo}</option>)}</select></div>
-          <div><label className="fox-label">Mapa</label><select value={o.mapaId || ""} onChange={e => updateObj(i, { mapaId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{[...(data.mapaPontos || []), ...(data.mapaRotas || [])].map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div>
-        </div>
-      </div>)}
+      </div>
+      <div className="flex gap-2 pt-2 border-t border-zinc-800">
+        <Btn onClick={onCancel} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+        <Btn onClick={() => onSave({ titulo, desc, status, objetivos })} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+      </div>
     </div>
-    <div className="flex gap-2 pt-4 border-t border-zinc-800"><Btn onClick={onCancel} variant="ghost">Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar fase</Btn></div>
-  </div>;
+  );
 }
-
-function OperacaoRelacionada({ tipo, id, data }) {
-  if (!id) return null;
-  const colecao = tipo === "missao" ? data.missoes : tipo === "relatorio" ? data.relatorios : tipo === "contrato" ? data.contratos : [...(data.mapaPontos || []), ...(data.mapaRotas || [])];
-  const item = (colecao || []).find(x => x.id === id);
-  if (!item) return null;
-  return <div className="flex items-center gap-2 p-2 rounded border border-zinc-800 bg-black/40"><FonteEstrategicaBadge tipo={tipo} /><span className="text-zinc-400 text-xs truncate">{item.titulo || item.name}</span></div>;
-}
-
-function ObjetivoEstrategicoCard({ objetivo, data, isLider, onEdit }) {
-  const responsavel = data.users.find(u => u.username === objetivo.responsavel);
-  const progresso = progressoObjetivo(objetivo);
-  const atrasado = prazoAtrasado(objetivo.prazo, objetivo.status);
-  return <div className={"p-4 rounded-xl border " + (objetivo.status === "bloqueado" ? "border-red-800 bg-red-950/10" : "border-zinc-800 bg-zinc-950/50")}>
-    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><ObjetivoStatusBadge status={objetivo.status} /><RiscoBadge risco={objetivo.risco} compacto />{atrasado && <span className="text-[9px] text-red-400 uppercase font-black">Atrasado</span>}</div><h3 className="text-orange-50 font-bold mt-2">{objetivo.titulo}</h3><p className="text-zinc-500 text-sm mt-1">{objetivo.descricao}</p></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div>
-    <div className="flex items-center justify-between text-[10px] uppercase tracking-wider mt-3"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-1.5 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-orange-700 to-red-600" style={{ width: progresso + "%" }} /></div>
-    <div className="grid sm:grid-cols-2 gap-2 text-xs mt-3"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><div className="text-zinc-600">Prazo: <span className={atrasado ? "text-red-400" : "text-zinc-300"}>{objetivo.prazo ? new Date(objetivo.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</span></div></div>
-    {objetivo.bloqueio && <div className="mt-3 p-3 rounded border border-red-900/50 bg-red-950/20 text-red-300 text-xs"><strong>Bloqueio:</strong> {objetivo.bloqueio}</div>}
-    {objetivo.recursos?.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{objetivo.recursos.map((r, i) => <span key={i} className="text-[10px] px-2 py-1 rounded border border-zinc-800 bg-black/50 text-zinc-400">{r}</span>)}</div>}
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-1 mt-3"><OperacaoRelacionada tipo="missao" id={objetivo.missaoId} data={data} /><OperacaoRelacionada tipo="relatorio" id={objetivo.relatorioId} data={data} /><OperacaoRelacionada tipo="contrato" id={objetivo.contratoId} data={data} /><OperacaoRelacionada tipo="mapa" id={objetivo.mapaId} data={data} /></div>
-  </div>;
-}
-
-function FaseEstrategicaCard({ fase, data, isLider, onOpen, onEdit }) {
-  const progresso = progressoFase(fase);
-  const cfg = FASE_STATUS_CFG[fase.status] || FASE_STATUS_CFG.planejada;
-  const objetivos = fase.objetivos || [];
-  const concluidos = objetivos.filter(o => o.status === "concluido").length;
-  const bloqueados = objetivos.filter(o => o.status === "bloqueado").length;
-  const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
-  return <div className="rounded-2xl border bg-gradient-to-br from-zinc-950 to-black overflow-hidden" style={{ borderColor: cfg.cor + "70" }}>
-    <div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.3em]" style={{ color: cfg.cor }}>Fase {String(fase.n).padStart(2, "0")}</div><h3 className="text-xl font-black text-orange-50 serif mt-1">{fase.titulo}</h3><div className="flex flex-wrap gap-2 mt-2"><span className={"text-[9px] px-2 py-0.5 rounded border uppercase font-black " + cfg.badge}>{cfg.label}</span><RiscoBadge risco={fase.riscoGeral} compacto /></div></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div><p className="text-zinc-500 text-sm mt-3">{fase.desc}</p>
-      <div className="flex justify-between text-[10px] uppercase tracking-wider mt-4"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-2 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progresso + "%" }} /></div>
-    </div>
-    <div className="grid grid-cols-3 divide-x divide-zinc-800 text-center border-y border-zinc-800"><div className="p-3"><div className="text-xl font-black text-green-400">{concluidos}</div><div className="text-[9px] uppercase text-zinc-600">Concluídos</div></div><div className="p-3"><div className="text-xl font-black text-red-400">{bloqueados}</div><div className="text-[9px] uppercase text-zinc-600">Bloqueados</div></div><div className="p-3"><div className="text-xl font-black text-orange-300">{objetivos.length}</div><div className="text-[9px] uppercase text-zinc-600">Total</div></div></div>
-    <div className="p-4 text-xs"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><button onClick={onOpen} className="w-full mt-3 py-2.5 rounded bg-orange-700 hover:bg-orange-600 text-white uppercase tracking-wider text-[10px] font-black">Abrir sala estratégica</button></div>
-  </div>;
-}
-
-function SinalEstrategicoCard({ sinal, data, onOpenPhase, onOpenMap }) {
-  const fase = data.fases.find(f => f.id === sinal.faseId);
-  return <div className={"p-4 rounded-xl border " + (sinal.risco === "Crítico" ? "border-red-700 bg-red-950/20" : sinal.risco === "Elevado" ? "border-orange-700 bg-orange-950/10" : "border-zinc-800 bg-zinc-950/50")}><div className="flex items-start justify-between gap-3"><div><div className="flex flex-wrap gap-2"><RiscoBadge risco={sinal.risco} /><FonteEstrategicaBadge tipo={sinal.fonteTipo} /><span className="text-[9px] uppercase tracking-wider text-zinc-600">{sinal.categoria}</span></div><div className="text-orange-50 font-bold mt-2">{sinal.titulo}</div><p className="text-zinc-500 text-xs mt-1">{sinal.descricao}</p>{fase && <div className="text-[10px] text-zinc-600 mt-2">Afeta: Fase {fase.n} · {fase.titulo}</div>}</div><div>{sinal.fonteTipo === "mapa" ? <button onClick={onOpenMap} className="text-sky-400 text-[10px] uppercase">Mapa</button> : sinal.faseId && <button onClick={() => onOpenPhase(sinal.faseId)} className="text-orange-400 text-[10px] uppercase">Fase</button>}</div></div></div>;
-}
-
 
 // ============ RELATÓRIOS DE INTELIGÊNCIA ============
 const CONFID_CFG = SIGILO_CFG;
 
-function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_NIVEIS, data }) {
+function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_NIVEIS }) {
   const editando = !!relatorio?.id;
   const [titulo, setTitulo] = useState(relatorio?.titulo || "");
   const [local, setLocal] = useState(relatorio?.local || "");
   const [descricao, setDescricao] = useState(relatorio?.descricao || "");
   const [confidencialidade, setConfid] = useState(normalizarSigilo(relatorio?.confidencialidade || niveisPermitidos[Math.min(1, niveisPermitidos.length - 1)] || "Público"));
-  const [alertaJikkai, setAlertaJikkai] = useState(Boolean(relatorio?.alertaJikkai));
-  const [riscoJikkai, setRiscoJikkai] = useState(relatorio?.riscoJikkai || "Moderado");
-  const [categoriaJikkai, setCategoriaJikkai] = useState(relatorio?.categoriaJikkai || "Inteligência");
-  const [faseId, setFaseId] = useState(relatorio?.faseId || "");
-  const [objetivoId, setObjetivoId] = useState(relatorio?.objetivoId || "");
-  const [resumoEstrategico, setResumoEstrategico] = useState(relatorio?.resumoEstrategico || "");
-  const faseSelecionada = (data?.fases || []).find(f => f.id === faseId);
 
   const valido = titulo.trim() && descricao.trim();
 
@@ -2290,13 +1804,6 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
       local: local.trim(),
       descricao: descricao.trim(),
       confidencialidade,
-      alertaJikkai,
-      riscoJikkai: alertaJikkai ? riscoJikkai : "",
-      categoriaJikkai: alertaJikkai ? categoriaJikkai : "",
-      faseId: alertaJikkai ? faseId : "",
-      objetivoId: alertaJikkai ? objetivoId : "",
-      resumoEstrategico: alertaJikkai ? resumoEstrategico.trim() : "",
-      statusAlerta: alertaJikkai ? (relatorio?.statusAlerta || "ativo") : "",
     });
   };
 
@@ -2333,22 +1840,6 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
           <div>
             <label className="fox-label">Descrição completa *</label>
             <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="8" className="fox-input" placeholder="Detalhes da observação, contexto, possíveis implicações..." />
-          </div>
-
-          <div className={`rounded-lg border p-4 transition-colors ${alertaJikkai ? "border-red-800 bg-red-950/20" : "border-zinc-800 bg-black/30"}`}>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={alertaJikkai} onChange={e => setAlertaJikkai(e.target.checked)} className="mt-1 w-4 h-4 accent-red-600" />
-              <div><div className="text-orange-50 font-bold text-sm">Gerar alerta no Painel JIKKAI</div><div className="text-zinc-600 text-xs mt-1">O painel exibirá este relatório como uma fonte rastreável de risco. Não marque relatórios comuns.</div></div>
-            </label>
-            {alertaJikkai && (
-              <div className="grid sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-red-900/40 fadein">
-                <div><label className="fox-label">Nível de risco</label><select value={riscoJikkai} onChange={e => setRiscoJikkai(e.target.value)} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
-                <div><label className="fox-label">Categoria</label><select value={categoriaJikkai} onChange={e => setCategoriaJikkai(e.target.value)} className="fox-input"><option>Inteligência</option><option>Operacional</option><option>Político</option><option>Diplomático</option><option>Exposição</option><option>Financeiro</option><option>Pessoal</option><option>Desconhecido</option></select></div>
-                <div><label className="fox-label">Fase afetada</label><select value={faseId} onChange={e => { setFaseId(e.target.value); setObjetivoId(""); }} className="fox-input"><option value="">— Plano geral —</option>{(data?.fases || []).map(f => <option key={f.id} value={f.id}>Fase {f.n} · {f.titulo}</option>)}</select></div>
-                <div><label className="fox-label">Objetivo afetado</label><select value={objetivoId} onChange={e => setObjetivoId(e.target.value)} className="fox-input" disabled={!faseSelecionada}><option value="">— Toda a fase —</option>{(faseSelecionada?.objetivos || []).map(o => <option key={o.id} value={o.id}>{o.titulo}</option>)}</select></div>
-                <div className="sm:col-span-2"><label className="fox-label">Resumo para a central de comando</label><textarea rows="3" value={resumoEstrategico} onChange={e => setResumoEstrategico(e.target.value)} className="fox-input" placeholder="Ex: Informante em Suna comprometido; interromper contato e revisar a rota de infiltração." /></div>
-              </div>
-            )}
           </div>
         </div>
         <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
@@ -2429,7 +1920,6 @@ function RelatoriosSection({ data, setData, isLider, usuario, role }) {
                     </span>
                     {r.tipo === "Operacional" && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-950 text-purple-300 border border-purple-800">Operacional</span>}
                     {r.statusAprovacao && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-zinc-800">{r.statusAprovacao}</span>}
-                    {r.alertaJikkai && <><FonteEstrategicaBadge tipo="relatorio" /><RiscoBadge risco={r.riscoJikkai} compacto /></>}
                     {r.local && <span className="text-zinc-500 text-xs uppercase tracking-wider">{r.local}</span>}
                   </div>
                   <h3 className="text-orange-50 font-bold text-lg serif leading-tight">{r.titulo}</h3>
@@ -2462,7 +1952,6 @@ function RelatoriosSection({ data, setData, isLider, usuario, role }) {
           onSave={modal.id ? editar : criar}
           onClose={() => setModal(null)}
           niveisPermitidos={niveisPermitidos}
-          data={data}
         />
       )}
     </div>
@@ -2962,128 +2451,67 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
   );
 }
 
-function PlanoSection({ data, setData, isLider, usuario = null }) {
-  const [aba, setAba] = useState("visao");
-  const [faseAberta, setFaseAberta] = useState(null);
+function PlanoSection({ data, setData, isLider }) {
   const [editandoFase, setEditandoFase] = useState(null);
 
-  const fases = data.fases || [];
-  const sinais = coletarSinaisEstrategicos(data);
-  const progressoGeral = progressoGeralJikkai(fases);
-  const faseAtual = fases.find(f => f.status === "andamento") || fases.find(f => f.status !== "concluida") || fases[fases.length - 1];
-  const objetivos = fases.flatMap(f => (f.objetivos || []).map(o => ({ ...o, faseId: f.id })));
-  const concluidos = objetivos.filter(o => o.status === "concluido").length;
-  const bloqueados = objetivos.filter(o => o.status === "bloqueado").length;
-  const criticos = sinais.filter(s => s.risco === "Crítico").length;
-  const operacoesAtivas = (data.missoes || []).filter(m => ["atribuida", "aceita", "andamento", "revisao", "devolvida"].includes(m.status)).length;
-
-  const salvarFase = (faseId, patch) => {
-    setData(d => ({
-      ...d,
-      fases: (d.fases || []).map(f => f.id === faseId ? { ...f, ...patch } : f),
-      activityLog: [...(d.activityLog || []), atividade("fase_atualizada", usuario?.username || "lideranca", faseId, "Atualizou a fase " + patch.titulo + " do plano Jikkai")],
-    }));
-    setEditandoFase(null);
+  const updateFase = (n, patch) => setData(d => ({ ...d, fases: d.fases.map(f => f.n === n ? { ...f, ...patch } : f) }));
+  const toggleObjetivo = (n, oi) => {
+    const fase = data.fases.find(f => f.n === n);
+    updateFase(n, { objetivos: fase.objetivos.map((o, idx) => idx === oi ? { ...o, done: !o.done } : o) });
   };
 
-  const criarAlertaManual = () => {
-    const titulo = window.prompt("Título do alerta estratégico:", "");
-    if (!titulo?.trim()) return;
-    const descricao = window.prompt("Descreva a situação, consequência e resposta recomendada:", "") || "";
-    const riscoInformado = window.prompt("Nível de risco: Baixo, Moderado, Elevado ou Crítico", "Moderado") || "Moderado";
-    const risco = normalizarRisco(riscoInformado);
-    const faseId = faseAtual?.id || "";
-    setData(d => ({
-      ...d,
-      sinaisEstrategicos: [...(d.sinaisEstrategicos || []), {
-        id: "sinal_" + uid(),
-        titulo: titulo.trim(),
-        descricao: descricao.trim(),
-        risco,
-        categoria: "Comando",
-        fonteTipo: "comando",
-        fonteId: "",
-        fonteNome: "Decisão do comando",
-        faseId,
-        objetivoId: "",
-        status: "ativo",
-        criadoEm: new Date().toISOString(),
-        criadoPor: usuario?.username || "lideranca",
-      }],
-      activityLog: [...(d.activityLog || []), atividade("alerta_estrategico_criado", usuario?.username || "lideranca", faseId || "jikkai", "Criou o alerta estratégico: " + titulo.trim())],
-    }));
-  };
-
-  const resolverAlertaManual = sinal => {
-    if (sinal.fonteTipo !== "comando") return;
-    setData(d => ({
-      ...d,
-      sinaisEstrategicos: (d.sinaisEstrategicos || []).map(s => s.id === sinal.id ? { ...s, status: "resolvido", resolvidoEm: new Date().toISOString() } : s),
-      activityLog: [...(d.activityLog || []), atividade("alerta_estrategico_resolvido", usuario?.username || "lideranca", sinal.id, "Resolveu o alerta estratégico: " + sinal.titulo)],
-    }));
-  };
-
-  const abrirMapa = () => window.open("./mapa.html", "_blank", "noopener");
-  const tabs = [
-    { id: "visao", label: "Visão Geral", icon: ITarget },
-    { id: "fases", label: "Fases", icon: IClipboard },
-    { id: "riscos", label: "Riscos", icon: IAlert },
-    { id: "historico", label: "Histórico", icon: IBook },
-  ];
-
-  if (faseAberta) {
-    const fase = fases.find(f => f.id === faseAberta);
-    if (fase) {
-      const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
-      const requisitosAtendidos = (fase.requisitos || []).filter(r => r.atendido).length;
-      const sinaisDaFase = sinais.filter(s => s.faseId === fase.id);
-      return <div className="fadein space-y-6">
-        <button onClick={() => setFaseAberta(null)} className="text-zinc-500 hover:text-orange-400 text-xs uppercase tracking-wider">← Voltar à central de comando</button>
-        <div className="p-6 rounded-2xl border border-orange-800/50 bg-gradient-to-br from-red-950/20 to-black">
-          <div className="flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Fase {String(fase.n).padStart(2, "0")}</div><h1 className="text-3xl font-black text-orange-50 serif mt-1">{fase.titulo}</h1><p className="text-zinc-400 mt-2 max-w-3xl">{fase.desc}</p></div>{isLider && <Btn onClick={() => setEditandoFase(fase.id)} variant="primary"><IEdit className="w-3 h-3" /> Editar fase</Btn>}</div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Progresso</div><div className="text-2xl font-black text-orange-300 mt-1">{progressoFase(fase)}%</div></div>
-            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Risco</div><div className="mt-2"><RiscoBadge risco={fase.riscoGeral} /></div></div>
-            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Responsável</div><div className="text-orange-100 font-bold mt-1">{responsavel ? getCodinome(responsavel) : "Não designado"}</div></div>
-            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Prazo</div><div className="text-orange-100 font-bold mt-1">{fase.prazo ? new Date(fase.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</div></div>
-          </div>
+  return (
+    <div className="fadein">
+      <div className="border-l-4 border-orange-600 pl-4 mb-6">
+        <div className="flex items-center gap-3">
+          <ITarget className="w-6 h-6 text-orange-500" />
+          <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Plano JIKKAI</h2>
         </div>
-
-        {sinaisDaFase.length > 0 && <section><div className="text-[9px] uppercase tracking-[0.25em] text-red-500 mb-3">Alertas que afetam esta fase</div><div className="grid lg:grid-cols-2 gap-3">{sinaisDaFase.map(s => <SinalEstrategicoCard key={s.id} sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />)}</div></section>}
-
-        <section><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600 mb-3">Objetivos estratégicos</div><div className="space-y-3">{(fase.objetivos || []).map(o => <ObjetivoEstrategicoCard key={o.id} objetivo={o} data={data} isLider={isLider} onEdit={() => setEditandoFase(fase.id)} />)}</div></section>
-
-        {(fase.requisitos || []).length > 0 && <section className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60"><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Requisitos de desbloqueio</div><div className="text-zinc-600 text-xs mt-1">{requisitosAtendidos} de {fase.requisitos.length} atendidos</div></div><div className="text-orange-300 font-black">{fase.requisitos.length ? Math.round(requisitosAtendidos / fase.requisitos.length * 100) : 0}%</div></div><div className="space-y-2">{fase.requisitos.map(r => <div key={r.id} className="flex items-center gap-2 text-sm">{r.atendido ? <ICheck className="w-4 h-4 text-green-500" /> : <ILock className="w-4 h-4 text-zinc-700" />}<span className={r.atendido ? "text-zinc-300" : "text-zinc-600"}>{r.texto}</span></div>)}</div></section>}
-
-        {editandoFase === fase.id && <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div>}
-      </div>;
-    }
-  }
-
-  return <div className="fadein">
-    <SectionTitle icon={ITarget} sub="Sala de guerra digital integrada aos registros do portal" action={isLider && <Btn onClick={criarAlertaManual} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn>}>Painel Estratégico JIKKAI</SectionTitle>
-
-    <div className="p-5 rounded-2xl border border-orange-900/40 bg-gradient-to-br from-red-950/20 via-black to-black mb-6">
-      <div className="flex flex-col lg:flex-row lg:items-end gap-6"><div className="flex-1"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Plano geral</div><div className="flex items-end gap-3 mt-1"><div className="text-5xl sm:text-6xl font-black text-orange-50 serif leading-none">{progressoGeral}<span className="text-2xl text-orange-600">%</span></div><div className="flex-1 mb-2"><div className="h-3 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progressoGeral + "%" }} /></div></div></div><div className="text-zinc-500 text-sm mt-2">Fase atual: <strong className="text-orange-200">{faseAtual ? "FASE " + faseAtual.n + " — " + faseAtual.titulo : "Nenhuma fase ativa"}</strong></div></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:w-[520px]">{[[concluidos, "Concluídos", "text-green-400"], [bloqueados, "Bloqueados", "text-red-400"], [criticos, "Riscos críticos", "text-red-300"], [operacoesAtivas, "Operações ativas", "text-orange-300"]].map(([valor, label, cor]) => <div key={label} className="p-3 rounded border border-zinc-800 bg-black/50 text-center"><div className={"text-2xl font-black " + cor}>{valor}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 mt-1">{label}</div></div>)}</div>
+        <p className="text-zinc-500 text-sm mt-1 italic">As fases para a fundação de Kumogakure</p>
+      </div>
+      <div className="space-y-4">
+        {data.fases.map((f) => {
+          const c = STATUS_CFG[f.status] || STATUS_CFG.pendente;
+          const editando = editandoFase === f.n;
+          return (
+            <div key={f.n} className={`p-5 rounded-lg border ${c.border} ${c.bg} fadein`}>
+              <div className="flex items-start gap-4">
+                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-black text-xl ${c.circle}`}>
+                  {f.status === "concluida" ? <ICheck className="w-5 h-5" /> : f.n}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {!editando ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="text-orange-50 font-bold text-lg">{f.titulo}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                        {isLider && <button onClick={() => setEditandoFase(f.n)} className="ml-auto text-zinc-500 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}
+                      </div>
+                      <p className="text-zinc-400 text-sm leading-relaxed mb-3">{f.desc}</p>
+                      {f.objetivos.length > 0 && (
+                        <div className="space-y-1.5 mt-3">
+                          <div className="text-xs uppercase tracking-wider text-orange-600 mb-1">Objetivos</div>
+                          {f.objetivos.map((o, oi) => (
+                            <label key={oi} className={`flex items-center gap-2 text-sm ${isLider ? "cursor-pointer" : ""}`}>
+                              <input type="checkbox" checked={o.done} disabled={!isLider} onChange={() => toggleObjetivo(f.n, oi)} className="w-4 h-4 accent-orange-600" />
+                              <span className={o.done ? "line-through text-zinc-600" : "text-zinc-300"}>{o.text}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      {f.objetivos.length === 0 && isLider && <div className="text-zinc-600 text-xs italic mt-2">Sem objetivos. Edite a fase para adicionar.</div>}
+                    </>
+                  ) : (
+                    <FaseEditor fase={f} onSave={(patch) => { updateFase(f.n, patch); setEditandoFase(null); }} onCancel={() => setEditandoFase(null)} />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
-
-    <div className="mb-6 p-1 rounded-xl border border-zinc-800 bg-zinc-950/60 flex gap-1 overflow-x-auto">{tabs.map(t => { const Icon = t.icon; return <button key={t.id} onClick={() => setAba(t.id)} className={"flex-1 min-w-[120px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-xs uppercase tracking-wider font-bold " + (aba === t.id ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900")}><Icon className="w-4 h-4" />{t.label}</button>; })}</div>
-
-    {aba === "visao" && <div className="space-y-7">
-      {sinais.length > 0 && <section><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-red-500">Alertas ativos</div><div className="text-zinc-600 text-xs">Consolidados de relatórios, mapa, missões, contratos, objetivos e decisões do comando.</div></div><button onClick={() => setAba("riscos")} className="text-orange-400 text-[10px] uppercase tracking-wider">Ver todos</button></div><div className="grid lg:grid-cols-2 gap-3">{sinais.slice(0, 4).map(s => <SinalEstrategicoCard key={s.id} sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />)}</div></section>}
-      <section><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600 mb-3">Fases do plano</div><div className="grid lg:grid-cols-2 gap-4">{fases.map(f => <FaseEstrategicaCard key={f.id} fase={f} data={data} isLider={isLider} onOpen={() => setFaseAberta(f.id)} onEdit={() => setEditandoFase(f.id)} />)}</div></section>
-    </div>}
-
-    {aba === "fases" && <div className="grid lg:grid-cols-2 gap-4">{fases.map(f => <FaseEstrategicaCard key={f.id} fase={f} data={data} isLider={isLider} onOpen={() => setFaseAberta(f.id)} onEdit={() => setEditandoFase(f.id)} />)}</div>}
-
-    {aba === "riscos" && <div className="space-y-4">{sinais.length ? sinais.map(s => <div key={s.id} className="relative"><SinalEstrategicoCard sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />{isLider && s.fonteTipo === "comando" && <button onClick={() => resolverAlertaManual(s)} className="absolute bottom-3 right-3 text-[9px] uppercase tracking-wider text-green-500">Marcar resolvido</button>}</div>) : <div className="p-12 text-center rounded-xl border border-zinc-800 bg-zinc-950/40"><IShield className="w-12 h-12 text-green-700 mx-auto mb-3" /><div className="text-green-400 font-bold">Nenhum alerta ativo</div><div className="text-zinc-600 text-sm mt-1">As fontes integradas não indicam riscos no momento.</div></div>}</div>}
-
-    {aba === "historico" && <div className="space-y-2">{(data.activityLog || []).filter(a => ["fase_atualizada", "alerta_estrategico_criado", "alerta_estrategico_resolvido"].includes(a.tipo)).slice().reverse().map(a => <div key={a.id} className="p-3 rounded border border-zinc-800 bg-zinc-950/50 flex items-start gap-3"><IBook className="w-4 h-4 text-orange-600 mt-0.5" /><div><div className="text-zinc-300 text-sm">{a.descricao}</div><div className="text-[10px] text-zinc-700 mt-1">{a.ator} · {new Date(a.data).toLocaleString("pt-BR")}</div></div></div>)}</div>}
-
-    {editandoFase && (() => { const fase = fases.find(f => f.id === editandoFase); return fase ? <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div> : null; })()}
-  </div>;
+  );
 }
 
 
@@ -3321,102 +2749,59 @@ function ArmasPage({ data, setData, isLider }) {
   );
 }
 
-// ============ JURAMENTO E PRIMEIRO ACESSO ============
-function juramentoDoUsuario(juramentados, usuario) {
-  if (!usuario) return null;
-  const identidades = [usuario.username, usuario.displayName, usuario.nomeRP, usuario.codinome]
-    .map(v => slugEstrutura(v))
-    .filter(Boolean);
-  return (juramentados || []).find(j => {
-    if (j.username && j.username === usuario.username) return true;
-    const identidadeJuramento = slugEstrutura(j.nome || j.codinome || "");
-    return identidadeJuramento && identidades.includes(identidadeJuramento);
-  }) || null;
-}
-
-function JuramentadoView({ juramentado, modoIniciacao = false }) {
+// ============ JURAMENTO ============
+function JuramentadoView({ juramentado, juramentados, isLider, removerJuramento }) {
   return (
     <div>
-      {!modoIniciacao && <SectionTitle icon={ISkull} sub="Pacto de sangue selado">Seu Juramento</SectionTitle>}
-      <div className="rounded-xl border-2 border-orange-700 bg-gradient-to-br from-red-950/40 via-black to-orange-950/30 overflow-hidden fadein">
-        {juramentado.fotoUrl && (
-          <div className="relative border-b border-orange-900/40 bg-black">
-            <img src={juramentado.fotoUrl} alt="Registro do juramento no RP" className="w-full max-h-[430px] object-contain" />
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black to-transparent" />
-            <div className="absolute left-4 bottom-3 text-[9px] uppercase tracking-[0.3em] text-orange-400">Registro visual do ritual</div>
+      <SectionTitle icon={ISkull} sub="Pacto de sangue selado">Você é Juramentado</SectionTitle>
+      <div className="rounded-lg border-2 border-orange-700 bg-gradient-to-br from-red-950/40 via-black to-orange-950/30 p-8 text-center fadein">
+        <ISkull className="w-20 h-20 text-orange-500 mx-auto mb-4 pulse-fire" />
+        <div className="text-orange-600 uppercase tracking-[0.3em] text-xs mb-2">Pacto Selado</div>
+        <h3 className="text-3xl font-black text-orange-50 mb-2 serif">{juramentado.nome}</h3>
+        <div className="text-zinc-400 mb-1">{juramentado.linhagem || "Sem linhagem"} · {juramentado.elemento}{juramentado.idade && ` · ${juramentado.idade}`}</div>
+        <div className="text-zinc-600 text-xs mb-6">Selado em {new Date(juramentado.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</div>
+        {juramentado.motivacao && (
+          <div className="max-w-xl mx-auto bg-black/60 border border-orange-900/40 rounded p-4 mb-6">
+            <div className="text-orange-600 text-xs uppercase tracking-wider mb-2">Motivação declarada</div>
+            <p className="text-zinc-300 italic text-sm leading-relaxed">"{juramentado.motivacao}"</p>
           </div>
         )}
-        <div className="p-8 text-center">
-          <ISkull className="w-20 h-20 text-orange-500 mx-auto mb-4 pulse-fire" />
-          <div className="text-orange-600 uppercase tracking-[0.3em] text-xs mb-2">Pacto Selado</div>
-          <h3 className="text-3xl font-black text-orange-50 mb-2 serif">{juramentado.nome}</h3>
-          <div className="text-zinc-400 mb-1">{juramentado.linhagem || "Sem linhagem"} · {juramentado.elemento || "Elemento não registrado"}{juramentado.idade && " · " + juramentado.idade}</div>
-          <div className="text-zinc-600 text-xs mb-6">Selado em {new Date(juramentado.data).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</div>
-          {juramentado.motivacao && (
-            <div className="max-w-xl mx-auto bg-black/60 border border-orange-900/40 rounded p-4 mb-6">
-              <div className="text-orange-600 text-xs uppercase tracking-wider mb-2">Motivação declarada</div>
-              <p className="text-zinc-300 italic text-sm leading-relaxed">“{juramentado.motivacao}”</p>
+        <div className="pt-6 border-t border-orange-900/40 text-zinc-400 italic max-w-lg mx-auto text-sm">
+          "Que meu sangue se misture ao sangue Lamona. Que minha lâmina sirva à sombra. Que eu seja esquecido pelo mundo, mas lembrado pela F.O.X."
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h3 className="text-xl font-bold text-orange-50 mb-4 serif">Juramentados ({juramentados.length})</h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {juramentados.map((j, i) => (
+            <div key={i} className="p-4 bg-zinc-950/60 border border-orange-900/30 rounded flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-orange-50 font-bold">{j.nome}</div>
+                <div className="text-zinc-500 text-xs">{j.linhagem || "—"} · {j.elemento}</div>
+                <div className="text-zinc-700 text-xs">{new Date(j.data).toLocaleDateString("pt-BR")}</div>
+              </div>
+              {isLider && <button onClick={() => { if (confirm(`Remover juramento de ${j.nome}?`)) removerJuramento(i); }} className="text-red-600 hover:text-red-400 p-1"><ITrash className="w-4 h-4" /></button>}
             </div>
-          )}
-          <div className="pt-6 border-t border-orange-900/40 text-zinc-400 italic max-w-lg mx-auto text-sm">
-            “Que meu sangue se misture ao sangue Lamona. Que minha lâmina sirva à sombra. Que eu seja esquecido pelo mundo, mas lembrado pela F.O.X.”
-          </div>
-          {!modoIniciacao && <div className="mt-6 text-[10px] uppercase tracking-wider text-zinc-700">Este registro é pessoal. O arquivo completo é visível somente à liderança.</div>}
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao = false, onConcluido = null }) {
+function JuramentoPage({ usuario, juramentado, juramentar, juramentados, removerJuramento, isLider, data }) {
   const mandamentos = data?.mandamentos || DEFAULT_MANDAMENTOS;
   const [step, setStep] = useState(0);
   const [aceitos, setAceitos] = useState(() => new Array(mandamentos.length).fill(false));
-  const [form, setForm] = useState({
-    nome: usuario?.nomeRP || usuario?.displayName || "",
-    linhagem: usuario?.linhagem || "",
-    elemento: usuario?.elemento || "Katon",
-    idade: "",
-    motivacao: "",
-  });
+  const [form, setForm] = useState({ nome: usuario?.displayName || "", linhagem: "", elemento: "Katon", idade: "", motivacao: "" });
   const [fraseTypo, setFraseTypo] = useState("");
   const [selando, setSelando] = useState(false);
-  const [fotoUrl, setFotoUrl] = useState("");
-  const [fotoErro, setFotoErro] = useState("");
-  const fotoRef = useRef();
 
+  // Se mandamentos mudarem (líder editou), reseta os checkboxes
   useEffect(() => { setAceitos(new Array(mandamentos.length).fill(false)); }, [mandamentos.length]);
 
-  const escolherFoto = (e) => {
-    const file = e.target.files?.[0];
-    setFotoErro("");
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { setFotoErro("Escolha uma imagem JPG, PNG ou WEBP."); return; }
-    if (file.size > 6 * 1024 * 1024) { setFotoErro("A imagem deve ter no máximo 6 MB."); return; }
-    const reader = new FileReader();
-    reader.onerror = () => setFotoErro("Não foi possível ler a imagem.");
-    reader.onload = () => {
-      const imagem = new Image();
-      imagem.onerror = () => setFotoErro("A imagem não pôde ser processada.");
-      imagem.onload = () => {
-        const limite = 960;
-        const escala = Math.min(1, limite / Math.max(imagem.naturalWidth, imagem.naturalHeight));
-        const largura = Math.max(1, Math.round(imagem.naturalWidth * escala));
-        const altura = Math.max(1, Math.round(imagem.naturalHeight * escala));
-        const canvas = document.createElement("canvas");
-        canvas.width = largura;
-        canvas.height = altura;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { setFotoErro("Seu navegador não conseguiu preparar a imagem."); return; }
-        ctx.drawImage(imagem, 0, 0, largura, altura);
-        setFotoUrl(canvas.toDataURL("image/jpeg", 0.78));
-      };
-      imagem.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  if (juramentado) return <JuramentadoView juramentado={juramentado} modoIniciacao={modoIniciacao} />;
+  if (juramentado) return <JuramentadoView juramentado={juramentado} juramentados={juramentados} isLider={isLider} removerJuramento={removerJuramento} />;
 
   const todosAceitos = aceitos.every(Boolean);
   const formValido = form.nome.trim() && form.motivacao.trim();
@@ -3424,19 +2809,9 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
 
   const iniciarSelo = async () => {
     setSelando(true);
-    await new Promise(r => setTimeout(r, 2600));
-    juramentar({
-      id: "juramento_" + uid(),
-      ...form,
-      nome: form.nome.trim(),
-      data: new Date().toISOString(),
-      username: usuario.username,
-      fotoUrl,
-      versao: 2,
-      origem: modoIniciacao ? "primeiro_acesso" : "portal",
-    });
+    await new Promise(r => setTimeout(r, 4000));
+    juramentar({ ...form, nome: form.nome.trim(), data: new Date().toISOString(), username: usuario.username });
     setSelando(false);
-    if (onConcluido) onConcluido();
   };
 
   if (selando) return (
@@ -3444,23 +2819,30 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
       <ISkull className="w-24 h-24 text-orange-600 mb-6 pulse-fire" />
       <div className="text-orange-600 uppercase tracking-[0.4em] text-xs mb-3">Selando o Pacto</div>
       <h2 className="text-3xl font-black text-orange-50 serif mb-6">Seu sangue pertence à F.O.X.</h2>
-      <div className="w-full max-w-md h-2 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-600 blood-fill" /></div>
-      <div className="text-zinc-600 text-xs mt-4 italic">Registrando o juramento nos arquivos da Jikkai...</div>
+      <div className="w-full max-w-md h-2 bg-zinc-900 rounded overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-red-700 to-orange-600 blood-fill" />
+      </div>
+      <div className="text-zinc-600 text-xs mt-4 italic">Não há caminho de volta...</div>
     </div>
   );
 
   return (
     <div>
-      {!modoIniciacao && <SectionTitle icon={IDrop} sub={"Etapa " + (step + 1) + " de 4"}>Ritual de Juramento</SectionTitle>}
-      <div className="mb-6"><div className="flex gap-1">{[0,1,2,3].map(i => <div key={i} className={"flex-1 h-1 rounded " + (i <= step ? "bg-orange-600" : "bg-zinc-900")} />)}</div></div>
+      <SectionTitle icon={IDrop} sub={`Etapa ${step + 1} de 4`}>Ritual de Juramento</SectionTitle>
+      <div className="mb-6"><div className="flex gap-1">{[0,1,2,3].map(i => <div key={i} className={`flex-1 h-1 rounded ${i <= step ? "bg-orange-600" : "bg-zinc-900"}`} />)}</div></div>
 
       {step === 0 && (
         <div className="fadein">
           <div className="rounded-lg border-2 border-red-900/60 bg-gradient-to-br from-red-950/30 to-black p-8 text-center">
             <IAlert className="w-16 h-16 text-red-500 mx-auto mb-4 pulse-fire" />
             <h3 className="text-2xl font-black text-red-50 serif mb-3">ADVERTÊNCIA FINAL</h3>
-            <p className="text-zinc-300 leading-relaxed max-w-xl mx-auto mb-4">O juramento que você está prestes a fazer é <strong className="text-red-400">irrevogável dentro do RP</strong>. Uma vez selado, seu destino ficará atrelado à Jikkai e à F.O.X.</p>
-            <p className="text-zinc-400 leading-relaxed max-w-xl mx-auto mb-6 text-sm italic">Realize o ritual no jogo antes ou durante esta etapa. A imagem do acontecimento poderá ser anexada ao registro, mas não é obrigatória.</p>
+            <p className="text-zinc-300 leading-relaxed max-w-xl mx-auto mb-4">
+              O juramento que você está prestes a fazer é <strong className="text-red-400">irrevogável</strong>.
+              Uma vez selado, seu destino ficará atrelado ao clã Lamona e à F.O.X. para sempre.
+            </p>
+            <p className="text-zinc-400 leading-relaxed max-w-xl mx-auto mb-6 text-sm italic">
+              Quem trai o pacto, trai o clã. Quem trai o clã, é caçado até o fim dos tempos. Não há perdão.
+            </p>
             <div className="text-red-500 uppercase tracking-widest text-xs mb-4">Se prosseguires, não haverá retorno</div>
             <Btn onClick={() => setStep(1)} variant="primary" size="lg">Tenho coragem — Prosseguir</Btn>
           </div>
@@ -3469,40 +2851,53 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
 
       {step === 1 && (
         <div className="fadein space-y-4">
-          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Os {mandamentos.length} Mandamentos</h3><p className="text-zinc-500 text-sm">Leia e aceite cada princípio individualmente.</p></div>
+          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded">
+            <h3 className="text-orange-50 font-bold mb-1">Os {mandamentos.length} Mandamentos</h3>
+            <p className="text-zinc-500 text-sm">Leia e aceite cada mandamento individualmente.</p>
+          </div>
           <div className="space-y-2">
             {mandamentos.map((m, i) => (
-              <label key={i} className={"flex items-start gap-3 p-4 rounded border cursor-pointer transition-all " + (aceitos[i] ? "bg-orange-950/20 border-orange-700" : "bg-zinc-950/50 border-zinc-800 hover:border-zinc-700")}>
+              <label key={i} className={`flex items-start gap-3 p-4 rounded border cursor-pointer transition-all ${aceitos[i] ? "bg-orange-950/20 border-orange-700" : "bg-zinc-950/50 border-zinc-800 hover:border-zinc-700"}`}>
                 <input type="checkbox" checked={aceitos[i] || false} onChange={(e) => { const n = [...aceitos]; n[i] = e.target.checked; setAceitos(n); }} className="mt-1 w-4 h-4 accent-orange-600" />
-                <div><div className="text-orange-600 font-bold text-xs uppercase tracking-wider mb-1">Mandamento {i + 1}</div><div className="text-zinc-200">{m}</div></div>
+                <div>
+                  <div className="text-orange-600 font-bold text-xs uppercase tracking-wider mb-1">Mandamento {i + 1}</div>
+                  <div className="text-zinc-200">{m}</div>
+                </div>
               </label>
             ))}
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(0)} variant="ghost">Voltar</Btn><Btn onClick={() => setStep(2)} variant="primary" disabled={!todosAceitos} className="flex-1 justify-center">{todosAceitos ? "Aceito os Mandamentos" : "Aceite todos (" + aceitos.filter(Boolean).length + "/" + mandamentos.length + ")"}</Btn></div>
+          <div className="flex gap-2 pt-2">
+            <Btn onClick={() => setStep(0)} variant="ghost">Voltar</Btn>
+            <Btn onClick={() => setStep(2)} variant="primary" disabled={!todosAceitos} className="flex-1 justify-center">
+              {todosAceitos ? `Aceito os ${mandamentos.length} Mandamentos` : `Aceite todos (${aceitos.filter(Boolean).length}/${mandamentos.length})`}
+            </Btn>
+          </div>
         </div>
       )}
 
       {step === 2 && (
         <div className="fadein space-y-4">
-          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Identificação do Juramentado</h3><p className="text-zinc-500 text-sm">Declare quem você é, por que busca pertencer e, opcionalmente, anexe a imagem do RP.</p></div>
+          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded">
+            <h3 className="text-orange-50 font-bold mb-1">Identificação do Juramentado</h3>
+            <p className="text-zinc-500 text-sm">Declare quem você é, e por que busca pertencer à F.O.X.</p>
+          </div>
           <div className="space-y-4 p-6 bg-zinc-950/50 border border-zinc-800 rounded">
             <div><label className="fox-label">Nome no jogo *</label><input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} className="fox-input" /></div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div><label className="fox-label">Linhagem</label><input value={form.linhagem} onChange={(e) => setForm({ ...form, linhagem: e.target.value })} className="fox-input" placeholder="Uchiha, Hyuuga..." /></div>
               <div><label className="fox-label">Idade RP</label><input value={form.idade} onChange={(e) => setForm({ ...form, idade: e.target.value })} className="fox-input" /></div>
             </div>
-            <div><label className="fox-label">Elemento</label><select value={form.elemento} onChange={(e) => setForm({ ...form, elemento: e.target.value })} className="fox-input"><option>Katon</option><option>Suiton</option><option>Doton</option><option>Raiton</option><option>Fuuton</option></select></div>
-            <div><label className="fox-label">Motivação * — Por que quer entrar?</label><textarea value={form.motivacao} onChange={(e) => setForm({ ...form, motivacao: e.target.value })} rows="4" className="fox-input" placeholder="Sua história, seu motivo..." /></div>
-
-            <div className="p-4 rounded-lg border border-zinc-800 bg-black/40">
-              <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-orange-50 text-sm font-bold">Imagem do juramento no RP</div><div className="text-zinc-600 text-xs">Opcional · JPG, PNG ou WEBP · até 6 MB</div></div><Btn onClick={() => fotoRef.current?.click()} variant="default"><IUpload className="w-3 h-3" /> Escolher imagem</Btn></div>
-              <input ref={fotoRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
-              {fotoUrl && <div className="relative rounded-lg overflow-hidden border border-orange-900/50 bg-black"><img src={fotoUrl} alt="Prévia do juramento" className="w-full max-h-80 object-contain" /><button onClick={() => { setFotoUrl(""); if (fotoRef.current) fotoRef.current.value = ""; }} className="absolute top-2 right-2 p-2 rounded bg-black/80 text-red-400"><ITrash className="w-4 h-4" /></button></div>}
-              {!fotoUrl && <div className="py-8 text-center text-zinc-700 text-xs italic border border-dashed border-zinc-800 rounded">Você poderá concluir o juramento sem anexar uma imagem.</div>}
-              {fotoErro && <div className="text-red-400 text-xs mt-2">{fotoErro}</div>}
+            <div><label className="fox-label">Elemento</label>
+              <select value={form.elemento} onChange={(e) => setForm({ ...form, elemento: e.target.value })} className="fox-input">
+                <option>Katon</option><option>Suiton</option><option>Doton</option><option>Raiton</option><option>Fuuton</option>
+              </select>
             </div>
+            <div><label className="fox-label">Motivação * — Por que quer entrar?</label><textarea value={form.motivacao} onChange={(e) => setForm({ ...form, motivacao: e.target.value })} rows="4" className="fox-input" placeholder="Sua história, seu motivo..." /></div>
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(1)} variant="ghost">Voltar</Btn><Btn onClick={() => setStep(3)} variant="primary" disabled={!formValido} className="flex-1 justify-center">Prosseguir</Btn></div>
+          <div className="flex gap-2 pt-2">
+            <Btn onClick={() => setStep(1)} variant="ghost">Voltar</Btn>
+            <Btn onClick={() => setStep(3)} variant="primary" disabled={!formValido} className="flex-1 justify-center">Prosseguir</Btn>
+          </div>
         </div>
       )}
 
@@ -3512,101 +2907,18 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
             <ISkull className="w-12 h-12 text-orange-500 mx-auto mb-3" />
             <h3 className="text-orange-50 font-bold text-xl serif mb-2">O Juramento Final</h3>
             <p className="text-zinc-400 text-sm mb-6">Digite exatamente a frase abaixo:</p>
-            <div className="bg-black/60 border border-orange-700 rounded py-4 px-6 mb-6 inline-block"><code className="text-orange-400 text-lg serif italic">“{FRASE_JURAMENTO}”</code></div>
+            <div className="bg-black/60 border border-orange-700 rounded py-4 px-6 mb-6 inline-block">
+              <code className="text-orange-400 text-lg serif italic">"{FRASE_JURAMENTO}"</code>
+            </div>
             <input value={fraseTypo} onChange={(e) => setFraseTypo(e.target.value)} className="fox-input text-center text-lg" placeholder="Digite a frase..." autoFocus />
             {fraseTypo && !fraseOk && <div className="text-red-500 text-xs mt-2">A frase não coincide exatamente.</div>}
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
+          <div className="flex gap-2 pt-2">
+            <Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn>
+            <Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn>
+          </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function IntroducaoEstruturaAtual({ data, usuario }) {
-  const membros = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
-  const lideranca = membros.filter(u => data.roles.find(r => r.id === u.role)?.hasLeaderPerms || u.estruturaNivel === "lideranca");
-  const conselho = membros.filter(u => !lideranca.includes(u) && (u.estruturaNivel === "conselho" || u.role === "conselheiro"));
-  return (
-    <div className="space-y-7">
-      <div className="text-center"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Estrutura atual</div><h3 className="text-2xl font-black text-orange-50 serif mt-1">A hierarquia que recebe você</h3><p className="text-zinc-500 text-sm mt-2">Os registros abaixo são carregados diretamente dos membros atuais da Jikkai.</p></div>
-      <div>
-        <div className="text-center text-[9px] uppercase tracking-[0.3em] text-red-600 mb-3">Liderança</div>
-        <div className="flex flex-wrap justify-center gap-3">{lideranca.map(u => <div key={u.username} className="w-40 p-3 rounded-xl border border-orange-600 bg-gradient-to-b from-red-950/40 to-black text-center"><MemberAvatar user={u} size="lg" className="mx-auto mb-2" /><div className="text-orange-50 font-black truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider text-orange-600">{u.patente || data.roles.find(r => r.id === u.role)?.nome}</div></div>)}</div>
-      </div>
-      {conselho.length > 0 && <div><div className="h-7 w-px bg-orange-900 mx-auto" /><div className="text-center text-[9px] uppercase tracking-[0.3em] text-orange-700 mb-3">Conselho</div><div className="flex flex-wrap justify-center gap-3">{conselho.map(u => <div key={u.username} className="w-36 p-3 rounded-xl border border-zinc-800 bg-zinc-950/70 text-center"><MemberAvatar user={u} size="md" className="mx-auto mb-2" /><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">{u.patente || "Conselho"}</div></div>)}</div></div>}
-      <div className="grid md:grid-cols-2 gap-4">
-        {(data.clas || []).map(ramo => {
-          const integrantes = membros.filter(u => u.cla === ramo.id);
-          if (!integrantes.length) return null;
-          return <div key={ramo.id} className="rounded-xl border p-4" style={{ borderColor: (ramo.cor || "#7C2D12") + "80", background: "linear-gradient(145deg," + (ramo.cor || "#7C2D12") + "14,#050505)" }}><div className="text-[9px] uppercase tracking-wider text-zinc-600">{ramo.tipo || "Ramo"}</div><div className="font-black text-lg serif mb-3" style={{ color: ramo.cor || "#D85A30" }}>{ramo.nome}</div><div className="flex flex-wrap gap-2">{integrantes.map(u => <div key={u.username} className={"flex items-center gap-2 rounded-full border pr-3 " + (u.username === usuario.username ? "border-orange-500 bg-orange-950/30" : "border-zinc-800 bg-black/40")}><MemberAvatar user={u} size="xs" /><span className={"text-[10px] " + (u.username === usuario.username ? "text-orange-300 font-black" : "text-zinc-400")}>{getCodinome(u)}{u.username === usuario.username ? " · VOCÊ" : ""}</span></div>)}</div></div>;
-        })}
-      </div>
-      {(data.trios || []).length > 0 && <div className="pt-5 border-t border-zinc-800"><div className="text-center text-[9px] uppercase tracking-[0.3em] text-orange-700 mb-4">Células operacionais</div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{data.trios.map(t => <div key={t.id || t.nome} className="p-3 rounded-lg border border-zinc-800 bg-zinc-950/60"><div className="font-bold text-orange-50 text-sm">{t.nome}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 mb-2">{t.desc}</div><div className="flex -space-x-2">{(t.membros || []).map((m, i) => { const u = data.users.find(x => x.username === m.username); return u ? <MemberAvatar key={m.username || i} user={u} size="sm" className="border-black" /> : null; })}</div></div>)}</div></div>}
-    </div>
-  );
-}
-
-function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onConcluir, onLogout }) {
-  const [etapa, setEtapa] = useState(0);
-  const ramo = (data.clas || []).find(c => c.id === usuario.cla);
-  const cargo = (data.roles || []).find(r => r.id === usuario.role);
-  const recrutador = (data.users || []).find(u => u.username === usuario.criadoPor);
-  const total = 6;
-  const avancar = () => setEtapa(v => Math.min(total - 1, v + 1));
-  const voltar = () => setEtapa(v => Math.max(0, v - 1));
-
-  return (
-    <div className="min-h-screen bg-black text-zinc-200 relative overflow-hidden">
-      <div className="fixed inset-0 opacity-25 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 20% 15%, #7C2D12 0%, transparent 38%), radial-gradient(circle at 80% 80%, #C2410C 0%, transparent 36%)" }} />
-      <div className="relative max-w-5xl mx-auto px-4 py-6 sm:py-10">
-        <div className="flex items-center justify-between gap-3 mb-6"><div><div className="text-[9px] uppercase tracking-[0.4em] text-orange-600">Protocolo de iniciação</div><div className="text-orange-50 font-black serif text-xl">JIKKAI · F.O.X.</div></div><button onClick={onLogout} className="flex items-center gap-2 text-zinc-600 hover:text-red-400 text-xs uppercase tracking-wider"><ILogout className="w-4 h-4" /> Sair</button></div>
-        <div className="flex gap-1 mb-6">{Array.from({ length: total }).map((_, i) => <div key={i} className={"h-1 flex-1 rounded " + (i <= etapa ? "bg-gradient-to-r from-red-700 to-orange-600" : "bg-zinc-900")} />)}</div>
-
-        <div className="rounded-2xl border border-orange-900/50 bg-zinc-950/85 backdrop-blur p-5 sm:p-8 shadow-2xl">
-          {etapa === 0 && <div className="fadein text-center"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-3">Identidade reconhecida</div><MemberAvatar user={usuario} size="xl" className="mx-auto mb-4" /><h1 className="text-4xl font-black text-orange-50 serif">{getCodinome(usuario)}</h1><div className="text-zinc-500 italic mt-1">{usuario.nomeRP || usuario.displayName}</div><div className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto mt-7 text-left">{[["Ramo", ramo?.nome || "Aguardando designação"],["Patente", usuario.patente || cargo?.nome || "Recruta"],["Nível de acesso", "Nível " + (usuario.nivelAcesso || 1)],["Responsável pelo ingresso", recrutador ? getCodinome(recrutador) : "Comando da Jikkai"]].map(([l,v]) => <div key={l} className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-orange-700">{l}</div><div className="text-zinc-200 text-sm mt-1">{v}</div></div>)}</div><p className="text-zinc-500 text-sm max-w-xl mx-auto mt-6">Seu acesso foi autorizado. Antes de entrar no portal, você conhecerá a organização, sua estrutura e as responsabilidades que assumirá.</p><div className="mt-7"><Btn onClick={avancar} variant="primary" size="lg">Confirmar identidade</Btn></div></div>}
-
-          {etapa === 1 && <div className="fadein"><div className="text-center mb-7"><IFlame className="w-16 h-16 text-orange-500 mx-auto mb-3 pulse-fire" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Introdução</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O que é a Jikkai</h2></div><div className="max-w-3xl mx-auto space-y-4 text-zinc-300 leading-relaxed"><p>A <strong className="text-orange-400">Jikkai</strong> é a estrutura estratégica responsável por preservar a ordem, conduzir operações e manter vivo o legado da F.O.X.</p><p>Ela reúne liderança, conselho, ramos, divisões e células operacionais. Cada integrante possui uma função, um nível de acesso e responsabilidade sobre aquilo que conhece e executa.</p><div className="p-5 border-l-4 border-orange-600 bg-orange-950/10 italic text-orange-100">À espreita nas trevas, manter a ordem. Nós somos sombras, entretanto mostramos o caminho.</div><p>Entrar não significa apenas receber uma conta. Significa ocupar uma posição registrada dentro da organização.</p></div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Conhecer a estrutura</Btn></div></div>}
-
-          {etapa === 2 && <div className="fadein"><IntroducaoEstruturaAtual data={data} usuario={usuario} /><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Entendi meu lugar</Btn></div></div>}
-
-          {etapa === 3 && <div className="fadein"><div className="text-center mb-7"><IShield className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Conduta</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O peso do seu acesso</h2></div><div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">{[["Respeitar a hierarquia","Ordens, decisões e conflitos seguem a cadeia de comando registrada."],["Preservar informações","Dados internos não devem ser levados para fora da organização sem autorização."],["Responder pelos próprios atos","Toda ação realizada em nome da Jikkai possui consequências no RP."],["Registrar acontecimentos","Missões, relatórios e fatos relevantes mantêm a história oficial viva."],["Não usar o nome sem autorização","A reputação da F.O.X. não pode ser empenhada em decisões pessoais."],["Honrar o pacto","O juramento formaliza sua entrada e sua lealdade interna."]].map(([t,d]) => <div key={t} className="p-4 rounded-lg border border-zinc-800 bg-black/40"><div className="text-orange-300 font-bold text-sm">{t}</div><p className="text-zinc-500 text-xs leading-relaxed mt-2">{d}</p></div>)}</div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir ao juramento</Btn></div></div>}
-
-          {etapa === 4 && <div className="fadein">{juramentado ? <div className="space-y-5"><div className="p-4 rounded-lg border border-green-900/50 bg-green-950/10 flex items-start gap-3"><ICheck className="w-5 h-5 text-green-500 mt-0.5" /><div><div className="text-green-300 font-bold">Juramento anterior localizado</div><p className="text-zinc-500 text-sm mt-1">Seu registro foi preservado. Não será necessário repetir o pacto.</p></div></div><JuramentadoView juramentado={juramentado} modoIniciacao /><div className="flex gap-2"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={() => setEtapa(5)} variant="primary" className="flex-1 justify-center">Validar registro e continuar</Btn></div></div> : <JuramentoPage usuario={usuario} juramentado={null} juramentar={juramentar} data={data} modoIniciacao onConcluido={() => setEtapa(5)} />}</div>}
-
-          {etapa === 5 && <div className="fadein text-center py-5"><ICheck className="w-20 h-20 text-green-500 mx-auto mb-5" /><div className="text-[10px] uppercase tracking-[0.4em] text-green-600">Iniciação concluída</div><h2 className="text-4xl font-black text-orange-50 serif mt-2">Seu registro está ativo</h2><p className="text-zinc-400 max-w-xl mx-auto mt-4 leading-relaxed">Você conhece a Jikkai, reconhece sua estrutura e possui um juramento registrado. Apresente-se ao responsável pelo seu ingresso e aguarde sua primeira designação.</p><div className="mt-7 p-4 rounded-lg border border-orange-900/40 bg-orange-950/10 max-w-md mx-auto"><div className="text-[9px] uppercase tracking-wider text-orange-700">Status</div><div className="text-orange-300 font-black mt-1">MEMBRO INICIADO · ACESSO NÍVEL {usuario.nivelAcesso || 1}</div></div><div className="mt-8"><Btn onClick={onConcluir} variant="primary" size="lg"><ILock className="w-4 h-4" /> Acessar o portal</Btn></div></div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RegistroJuramentosManager({ data, setData, usuario }) {
-  const [busca, setBusca] = useState("");
-  const registros = (data.juramentados || []).map((j, index) => ({ j, index })).filter(({ j }) => {
-    const termo = busca.trim().toLowerCase();
-    return !termo || [j.nome, j.username, j.linhagem, j.elemento].some(v => String(v || "").toLowerCase().includes(termo));
-  }).sort((a, b) => new Date(b.j.data || 0) - new Date(a.j.data || 0));
-  const remover = (registro) => {
-    if (!confirm("Remover o juramento de " + registro.nome + "? O membro continuará existindo no portal.")) return;
-    setData(d => ({ ...d, juramentados: (d.juramentados || []).filter((_, i) => i !== registro.__index), activityLog: [...(d.activityLog || []), atividade("juramento_removido", usuario?.username, registro.username, "Removeu o registro de juramento de " + registro.nome)] }));
-  };
-  const reabrir = username => {
-    if (!username || !confirm("Reabrir a introdução de primeiro acesso para este membro? O juramento atual será preservado.")) return;
-    setData(d => ({ ...d, users: d.users.map(u => u.username === username ? { ...u, iniciacaoStatus: "pendente", iniciacaoReabertaEm: new Date().toISOString() } : u), activityLog: [...(d.activityLog || []), atividade("iniciacao_reaberta", usuario?.username, username, "Reabriu o protocolo de iniciação")]}));
-  };
-  return (
-    <div className="space-y-5">
-      <div><h3 className="text-orange-50 font-bold text-lg serif">Arquivo de Juramentos ({(data.juramentados || []).length})</h3><p className="text-zinc-600 text-xs mt-1">Visão exclusiva da liderança. Os membros continuam vendo apenas o próprio registro.</p></div>
-      <input value={busca} onChange={e => setBusca(e.target.value)} className="fox-input" placeholder="Buscar por nome, usuário, linhagem ou elemento" />
-      <div className="grid md:grid-cols-2 gap-4">
-        {registros.map(({ j, index }) => {
-          const membro = data.users.find(u => u.username === j.username) || usuarioPorIdentidade(data.users, j.nome);
-          const registro = { ...j, __index: index };
-          return <div key={j.id || index} className="rounded-xl overflow-hidden border border-orange-900/40 bg-zinc-950/70">{j.fotoUrl && <img src={j.fotoUrl} alt="Registro visual" className="w-full h-44 object-cover border-b border-orange-900/30" />}<div className="p-4"><div className="flex items-start justify-between gap-3"><div><div className="text-orange-50 font-black">{j.nome}</div><div className="text-zinc-600 text-xs">@{j.username || membro?.username || "registro-legado"} · {new Date(j.data).toLocaleDateString("pt-BR")}</div></div><span className="text-[9px] uppercase tracking-wider px-2 py-1 rounded border border-orange-900 text-orange-500">v{j.versao || 1}</span></div><div className="text-zinc-500 text-xs mt-3">{j.linhagem || "Sem linhagem"} · {j.elemento || "Sem elemento"}</div>{j.motivacao && <p className="text-zinc-400 italic text-sm mt-3 line-clamp-3">“{j.motivacao}”</p>}<div className="flex gap-2 mt-4 pt-3 border-t border-zinc-800">{membro && <Btn onClick={() => reabrir(membro.username)} variant="ghost" className="text-[10px]">Refazer introdução</Btn>}<Btn onClick={() => remover(registro)} variant="danger" className="ml-auto"><ITrash className="w-3 h-3" /> Remover</Btn></div></div></div>;
-        })}
-      </div>
-      {registros.length === 0 && <div className="p-8 text-center rounded-lg border border-zinc-800 text-zinc-600 italic">Nenhum juramento encontrado.</div>}
     </div>
   );
 }
@@ -3853,8 +3165,6 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
   const podeUsuarios = isLider || hasPerm(role,"manage_users");
   const podeMissoes = isLider || hasPerm(role,"manage_missions");
   const podeCargos = isLider || hasPerm(role,"manage_roles");
-  const podeRamos = isLider;
-  const podeJuramentos = isLider;
   const podeBackup = isLider;
   const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
   const [aba, setAba] = useState(primeiraAba);
@@ -3867,8 +3177,6 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
         {[
           podeUsuarios && { id: "usuarios", label: "Usuários", icon: IUsers },
           podeCargos && { id: "cargos", label: "Cargos", icon: ICrown },
-          podeRamos && { id: "ramos", label: "Ramos", icon: IShield },
-          podeJuramentos && { id: "juramentos", label: "Juramentos", icon: ISkull },
           podeMissoes && { id: "missoes", label: "Missões", icon: IClipboard },
           podeBackup && { id: "backup", label: "Backup", icon: IDownload },
         ].filter(Boolean).map(t => {
@@ -3883,8 +3191,6 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
 
       {aba === "usuarios" && <UsuariosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "cargos" && <CargosManager data={data} setData={setData} />}
-      {aba === "ramos" && <RamosManager data={data} setData={setData} usuario={usuario} />}
-      {aba === "juramentos" && <RegistroJuramentosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
     </div>
@@ -3897,7 +3203,6 @@ function UsuariosManager({ data, setData, usuario }) {
     status: "Novo", level: 0, cla: "", elemento: "", linhagem: "", vilaOrigem: "",
     patente: "", especialidade: "", bio: "", estruturaNivel: "operador", respondeA: "",
     nivelAcesso: 1, iniciacaoStatus: "pendente", avatarUrl: "", avatarStoragePath: "",
-    reputacao: "Desconhecido", lealdade: "Observado", reputacaoNota: "", lealdadeNota: "",
   });
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(vazio());
@@ -3948,8 +3253,6 @@ function UsuariosManager({ data, setData, usuario }) {
             <div><label className="fox-label">Patente</label><input value={form.patente || ""} onChange={e => setForm({ ...form, patente: e.target.value })} className="fox-input" placeholder="Ex: Executor, Capitão..." /></div>
             <div><label className="fox-label">Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="fox-input"><option>Ativo</option><option>Oculto</option><option>Renegado</option><option>Procurado</option><option>Novo</option><option>Líder</option></select></div>
             <div><label className="fox-label">Ramo</label><select value={form.cla || ""} onChange={e => setForm({ ...form, cla: e.target.value })} className="fox-input"><option value="">— Sem ramo —</option>{(data.clas || []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
-            <div><label className="fox-label">Reputação externa</label><select value={form.reputacao || "Desconhecido"} onChange={e => setForm({ ...form, reputacao: e.target.value, reputacaoAtualizadaEm: new Date().toISOString() })} className="fox-input">{REPUTACAO_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
-            <div><label className="fox-label">Lealdade interna</label><select value={form.lealdade || "Observado"} onChange={e => setForm({ ...form, lealdade: e.target.value, lealdadeAtualizadaEm: new Date().toISOString() })} className="fox-input">{LEALDADE_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
             <div><label className="fox-label">Posição na estrutura</label><select value={form.estruturaNivel || "operador"} onChange={e => setForm({ ...form, estruturaNivel: e.target.value })} className="fox-input"><option value="lideranca">Liderança</option><option value="conselho">Conselho</option><option value="comandante">Comandante de divisão</option><option value="operador">Operador</option></select></div>
             <div><label className="fox-label">Responde a</label><select value={form.respondeA || ""} onChange={e => setForm({ ...form, respondeA: e.target.value })} className="fox-input"><option value="">— Comando geral —</option>{data.users.filter(u => u.username !== editando && u.role !== "contratante").map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
             <div><label className="fox-label">Nível de acesso</label><select value={form.nivelAcesso || 1} onChange={e => setForm({ ...form, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
@@ -3959,8 +3262,6 @@ function UsuariosManager({ data, setData, usuario }) {
             <div><label className="fox-label">Especialidade</label><input value={form.especialidade || ""} onChange={e => setForm({ ...form, especialidade: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Level</label><input type="number" value={form.level || 0} onChange={e => setForm({ ...form, level: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Iniciação</label><select value={form.iniciacaoStatus || "pendente"} onChange={e => setForm({ ...form, iniciacaoStatus: e.target.value })} className="fox-input"><option value="pendente">Pendente</option><option value="concluida">Concluída</option></select></div>
-            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Justificativa da reputação</label><textarea rows="2" value={form.reputacaoNota || ""} onChange={e => setForm({ ...form, reputacaoNota: e.target.value })} className="fox-input" placeholder="Motivo da classificação externa" /></div>
-            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Justificativa da lealdade</label><textarea rows="2" value={form.lealdadeNota || ""} onChange={e => setForm({ ...form, lealdadeNota: e.target.value })} className="fox-input" placeholder="Motivo da classificação interna" /></div>
             <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Descrição / observação de dossiê</label><textarea rows="3" value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} className="fox-input" /></div>
           </div>
           {erro && <div className="text-red-500 text-xs">{erro}</div>}
@@ -3971,68 +3272,10 @@ function UsuariosManager({ data, setData, usuario }) {
         {data.users.map(u => { const role = data.roles.find(r => r.id === u.role); const cla = data.clas.find(c => c.id === u.cla); return (
           <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg flex gap-3">
             <MemberAvatar user={u} size="md" />
-            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto /><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div></div>
+            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div></div>
             <div className="flex gap-1"><button onClick={() => iniciarEdit(u)} className="p-1.5 text-orange-400 hover:text-orange-300"><IEdit className="w-3.5 h-3.5" /></button>{u.username !== "leader" && <button onClick={() => remover(u.username)} className="p-1.5 text-red-500 hover:text-red-400"><ITrash className="w-3.5 h-3.5" /></button>}</div>
           </div>
         ); })}
-      </div>
-    </div>
-  );
-}
-
-function RamosManager({ data, setData, usuario }) {
-  const [criando, setCriando] = useState(false);
-  const [form, setForm] = useState({ nome: "", tipo: "Divisão", cor: "#7C2D12", descricao: "" });
-  const [erro, setErro] = useState("");
-  const criar = () => {
-    const nome = form.nome.trim();
-    if (!nome) { setErro("O nome do ramo é obrigatório."); return; }
-    setData(d => {
-      const base = slugEstrutura(nome) || "ramo";
-      let id = base;
-      let n = 2;
-      while ((d.clas || []).some(c => c.id === id)) id = base + "-" + n++;
-      const ramo = { id, nome, tipo: form.tipo.trim() || "Divisão", cor: form.cor || "#7C2D12", icon: "shield", descricao: form.descricao.trim(), figuras: [], protected: false };
-      return { ...d, clas: [...(d.clas || []), ramo], activityLog: [...(d.activityLog || []), atividade("ramo_criado", usuario?.username, id, "Criou o ramo " + nome)] };
-    });
-    setForm({ nome: "", tipo: "Divisão", cor: "#7C2D12", descricao: "" });
-    setErro("");
-    setCriando(false);
-  };
-  const remover = ramo => {
-    if (["soke", "bunke"].includes(ramo.id) || ramo.protected) { alert("Soke e Bunke são ramos protegidos."); return; }
-    const quantidade = (data.users || []).filter(u => u.cla === ramo.id).length;
-    if (quantidade) { alert("Transfira os membros deste ramo antes de removê-lo."); return; }
-    if (!confirm("Remover o ramo " + ramo.nome + "?")) return;
-    setData(d => ({ ...d, clas: (d.clas || []).filter(c => c.id !== ramo.id), activityLog: [...(d.activityLog || []), atividade("ramo_removido", usuario?.username, ramo.id, "Removeu o ramo " + ramo.nome)] }));
-  };
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div><h3 className="text-orange-50 font-bold text-lg serif">Ramos da Jikkai ({(data.clas || []).length})</h3><p className="text-zinc-600 text-xs">Crie divisões além de Soke e Bunke. Depois, aloque os membros em Usuários.</p></div>
-        {!criando && <Btn onClick={() => setCriando(true)} variant="primary"><IPlus className="w-3 h-3" /> Novo Ramo</Btn>}
-      </div>
-      {criando && (
-        <div className="p-4 border border-orange-700 rounded-lg bg-zinc-950/80 space-y-3 fadein">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div><label className="fox-label">Nome *</label><input value={form.nome} onChange={e => setForm({...form, nome:e.target.value})} className="fox-input" /></div>
-            <div><label className="fox-label">Tipo</label><input value={form.tipo} onChange={e => setForm({...form, tipo:e.target.value})} className="fox-input" placeholder="Divisão, família, inteligência..." /></div>
-            <div><label className="fox-label">Cor</label><input type="color" value={form.cor} onChange={e => setForm({...form, cor:e.target.value})} className="h-10 w-full bg-black border border-zinc-700 rounded" /></div>
-            <div><label className="fox-label">Descrição</label><input value={form.descricao} onChange={e => setForm({...form, descricao:e.target.value})} className="fox-input" /></div>
-          </div>
-          {erro && <div className="text-red-400 text-sm">{erro}</div>}
-          <div className="flex gap-2"><Btn onClick={() => setCriando(false)} variant="ghost">Cancelar</Btn><Btn onClick={criar} variant="primary"><ISave className="w-3 h-3" /> Criar ramo</Btn></div>
-        </div>
-      )}
-      <div className="grid md:grid-cols-2 gap-3">
-        {(data.clas || []).map(ramo => {
-          const quantidade = (data.users || []).filter(u => u.cla === ramo.id && u.role !== "contratante").length;
-          const protegido = ["soke", "bunke"].includes(ramo.id) || ramo.protected;
-          return <div key={ramo.id} className="p-4 rounded-lg border bg-zinc-950/60" style={{borderColor:(ramo.cor || "#7C2D12")+"80"}}>
-            <div className="flex justify-between gap-3"><div><div className="text-[9px] uppercase tracking-wider text-zinc-600">{ramo.tipo || "Divisão"} · {quantidade} membros</div><div className="font-black text-lg serif" style={{color:ramo.cor}}>{ramo.nome}</div><p className="text-zinc-500 text-xs mt-2">{ramo.descricao || "Sem descrição."}</p></div>
-            {!protegido && <button onClick={() => remover(ramo)} className="text-red-500"><ITrash className="w-4 h-4" /></button>}</div>
-          </div>;
-        })}
       </div>
     </div>
   );
@@ -4572,28 +3815,6 @@ function migrate(raw) {
     codinome: u.codinome != null ? u.codinome : "",
     cla: u.cla != null ? u.cla : "",
   }, true));
-  // Preserva juramentos antigos, normaliza os registros e reconhece quem já realizou o pacto.
-  migrated.juramentados = (Array.isArray(raw.juramentados) ? raw.juramentados : []).map((j, index) => ({
-    ...j,
-    id: j.id || "juramento_legado_" + (j.username || slugEstrutura(j.nome) || index),
-    fotoUrl: j.fotoUrl || "",
-    versao: Number(j.versao) || 1,
-    origem: j.origem || "legado",
-  }));
-  migrated.users = migrated.users.map(u => {
-    const juramentoExistente = juramentoDoUsuario(migrated.juramentados, u);
-    if (!juramentoExistente) return u;
-    const nivelAtual = lealdadeConfig(u.lealdade).indice;
-    const nivelJuramentado = lealdadeConfig("Juramentado").indice;
-    return {
-      ...u,
-      iniciacaoStatus: "concluida",
-      iniciacaoConcluidaEm: u.iniciacaoConcluidaEm || juramentoExistente.data || new Date().toISOString(),
-      iniciacaoVersao: Number(u.iniciacaoVersao) || 1,
-      lealdade: nivelAtual < nivelJuramentado ? "Juramentado" : u.lealdade,
-      lealdadeNota: u.lealdadeNota || "Juramento anterior reconhecido e preservado pelo Protocolo de Iniciação.",
-    };
-  });
   // Liga integrantes antigos dos trios a usernames reais e cria IDs estáveis.
   migrated.trios = (raw.trios || DEFAULT_TRIOS).map((t, i) => ({
     ...t,
@@ -4620,8 +3841,6 @@ function migrate(raw) {
   });
   migrated.roles = rolesOut;
   migrated.armas = (raw.armas || DEFAULT_ARMAS).map((a, i) => a.id ? a : { ...a, id: `arma_${i}_${Date.now().toString(36)}` });
-  migrated.fases = (migrated.fases || DEFAULT_FASES).map((fase, index) => normalizarFaseEstrategica(fase, index));
-  migrated.sinaisEstrategicos = Array.isArray(migrated.sinaisEstrategicos) ? migrated.sinaisEstrategicos : [];
   return migrated;
 }
 
@@ -4865,7 +4084,7 @@ function App() {
   const isLider = role?.hasLeaderPerms === true;
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = usuarioAtual?.role === "contratante";
-  const meuJuramento = juramentoDoUsuario(data?.juramentados, usuarioAtual);
+  const meuJuramento = data?.juramentados.find((j) => j.username === usuarioAtual?.username || j.nome.toLowerCase() === (usuarioAtual?.displayName || "").toLowerCase());
   const nivelAcesso = nivelAcessoUsuario(data, usuarioAtual, role);
   const minhaAutorizacao = SIGILO_NIVEIS[Math.max(0, nivelAcesso - 1)] || "Público";
   const minhasMissoesCount = usuarioAtual && data ? data.missoes.filter(m => usuarioParticipaMissao(m, usuarioAtual.username) && !MISSAO_STATUS_TERMINAIS.includes(m.status)).length : 0;
@@ -4906,51 +4125,8 @@ function App() {
     e.target.value = "";
   };
 
-  const juramentar = (dados) => setData(d => {
-    const registros = Array.isArray(d.juramentados) ? d.juramentados : [];
-    const existente = juramentoDoUsuario(registros, { username: dados.username, displayName: dados.nome, nomeRP: dados.nome, codinome: dados.nome });
-    const registro = {
-      ...existente,
-      ...dados,
-      id: dados.id || existente?.id || "juramento_" + uid(),
-      fotoUrl: dados.fotoUrl || existente?.fotoUrl || "",
-      versao: Number(dados.versao) || Number(existente?.versao) || 2,
-      origem: dados.origem || existente?.origem || "portal",
-    };
-    const juramentados = existente
-      ? registros.map(j => j === existente ? registro : j)
-      : [...registros, registro];
-    return {
-      ...d,
-      juramentados,
-      users: d.users.map(u => {
-        if (u.username !== dados.username) return u;
-        const atual = lealdadeConfig(u.lealdade).indice;
-        const juramentado = lealdadeConfig("Juramentado").indice;
-        return {
-          ...u,
-          nomeRP: u.nomeRP || dados.nome || u.displayName,
-          linhagem: u.linhagem || dados.linhagem || "",
-          elemento: u.elemento || dados.elemento || "",
-          lealdade: atual < juramentado ? "Juramentado" : u.lealdade,
-          lealdadeAtualizadaEm: new Date().toISOString(),
-          lealdadeNota: u.lealdadeNota || "Juramento formal registrado pelo portal.",
-        };
-      }),
-      activityLog: [...(d.activityLog || []), atividade(existente ? "juramento_atualizado" : "juramento_registrado", dados.username, dados.username, existente ? "Atualizou o próprio registro de juramento" : "Concluiu o juramento e alcançou a lealdade Juramentado")],
-    };
-  });
+  const juramentar = (dados) => setData(d => ({ ...d, juramentados: [...d.juramentados, dados] }));
   const removerJuramento = (idx) => setData(d => ({ ...d, juramentados: d.juramentados.filter((_, i) => i !== idx) }));
-  const concluirIniciacao = (username) => setData(d => ({
-    ...d,
-    users: d.users.map(u => u.username === username ? {
-      ...u,
-      iniciacaoStatus: "concluida",
-      iniciacaoConcluidaEm: new Date().toISOString(),
-      iniciacaoVersao: 1,
-    } : u),
-    activityLog: [...(d.activityLog || []), atividade("iniciacao_concluida", username, username, "Concluiu o Protocolo de Iniciação da Jikkai")],
-  }));
 
   if (loading || !data) {
     return (
@@ -4964,17 +4140,6 @@ function App() {
   }
 
   if (!usuarioAtual) return <LoginScreen data={data} onLogin={setUsuario} />;
-
-  if (!isContratante && !isLider && usuarioAtual.iniciacaoStatus === "pendente") {
-    return <IntroducaoPrimeiroAcesso
-      data={data}
-      usuario={usuarioAtual}
-      juramentado={meuJuramento}
-      juramentar={juramentar}
-      onConcluir={() => concluirIniciacao(usuarioAtual.username)}
-      onLogout={() => setUsuario(null)}
-    />;
-  }
 
   const TABS = isContratante ? [
     { id: "visaogeral", label: "Visão Geral", icon: IBriefcase },

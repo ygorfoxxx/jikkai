@@ -1,3 +1,6 @@
+const fs = require("fs");
+fs.copyFileSync("source/index.base.html", "index.html");
+fs.copyFileSync("source/mapa.base.html", "mapa.html");
 const etapas = [
   "./fix-avatar.cjs",
   "./etapa2-core.cjs",
@@ -14,12 +17,7 @@ const etapas = [
   "./painel-estrategico-relatorios.cjs",
   "./painel-estrategico-ui.cjs",
   "./painel-estrategico-mapa.cjs",
-  "./validate-portal-v3.cjs",
+  "./validate-portal-v3.cjs"
 ];
-
-for (const arquivo of etapas) {
-  console.log("Executando", arquivo);
-  require(arquivo);
-}
-
-console.log("Build integrado da Jikkai concluído.");
+for (const arquivo of etapas) { console.log("Executando", arquivo); require(arquivo); }
+console.log("Portal regenerado a partir dos fontes-base.");
