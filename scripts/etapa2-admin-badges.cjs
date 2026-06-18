@@ -1,0 +1,12 @@
+const fs = require("fs");
+let html = fs.readFileSync("index.html", "utf8");
+const start = html.indexOf("function UsuariosManager");
+const end = html.indexOf("function CargosManager", start);
+if (start < 0 || end < 0) throw new Error("Editor de membros não encontrado");
+const oldText = `<div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div></div>`;
+const newText = `<div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto /><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div></div>`;
+const section = html.slice(start, end);
+if ((section.split(oldText).length - 1) !== 1) throw new Error("Marcador dos badges não encontrado");
+html = html.slice(0, start) + section.replace(oldText, newText) + html.slice(end);
+fs.writeFileSync("index.html", html, "utf8");
+console.log("Badges administrativos aplicados.");
