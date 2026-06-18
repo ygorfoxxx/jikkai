@@ -22,20 +22,41 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Aplicar cartografia no arquivo isolado
+        id: apply
         shell: bash
         run: |
+          mkdir -p phase8-diagnostics
           base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
-          python3 -m py_compile /tmp/apply_phase8.py
-          python3 /tmp/apply_phase8.py
+          python3 -m py_compile /tmp/apply_phase8.py > phase8-diagnostics/compile.log 2>&1
+          COMPILE_STATUS=$?
+          if [ "$COMPILE_STATUS" -ne 0 ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "$COMPILE_STATUS" > phase8-diagnostics/status.txt
+            exit 0
+          fi
+          python3 /tmp/apply_phase8.py > phase8-diagnostics/apply.log 2>&1
+          APPLY_STATUS=$?
+          echo "$APPLY_STATUS" > phase8-diagnostics/status.txt
+          if [ "$APPLY_STATUS" -eq 0 ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Validar estrutura e sintaxe
+        id: syntax
+        if: steps.apply.outputs.status == 'success'
         shell: bash
         run: |
-          grep -q 'function MapaEstrategicoPage' index.html
-          grep -q 'function MapaPontoModal' index.html
-          grep -q 'function MapaRotaModal' index.html
-          grep -q 'https://slpforge.xyz/images/map/map_base_low.webp' index.html
-          grep -q 'id: "edit_map"' index.html
+          set +e
+          {
+            grep -q 'function MapaEstrategicoPage' index.html &&
+            grep -q 'function MapaPontoModal' index.html &&
+            grep -q 'function MapaRotaModal' index.html &&
+            grep -q 'https://slpforge.xyz/images/map/map_base_low.webp' index.html &&
+            grep -q 'id: "edit_map"' index.html
+          } > phase8-diagnostics/structure.log 2>&1
+          STRUCTURE_STATUS=$?
           python3 - <<'PY'
           from pathlib import Path
           text = Path('index.html').read_text(encoding='utf-8')
@@ -44,17 +65,42 @@ jobs:
           end = text.rindex('</script>')
           Path('/tmp/portal.jsx').write_text(text[start:end], encoding='utf-8')
           PY
-          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
+          EXTRACT_STATUS=$?
+          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js > phase8-diagnostics/esbuild.log 2>&1
+          ESBUILD_STATUS=$?
+          printf 'structure=%s\nextract=%s\nesbuild=%s\n' "$STRUCTURE_STATUS" "$EXTRACT_STATUS" "$ESBUILD_STATUS" > phase8-diagnostics/validation-status.txt
+          if [ "$STRUCTURE_STATUS" -eq 0 ] && [ "$EXTRACT_STATUS" -eq 0 ] && [ "$ESBUILD_STATUS" -eq 0 ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
 
-      - name: Gerar pacote validado
+      - name: Preparar pacote validado
+        if: steps.apply.outputs.status == 'success' && steps.syntax.outputs.status == 'success'
         shell: bash
         run: |
           mkdir -p validated-phase8
           cp index.html validated-phase8/index.html
           printf '%s\n' 'Fase 8 validada com esbuild.' > validated-phase8/validation.txt
 
+      - name: Enviar diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase8-diagnostico
+          path: phase8-diagnostics
+
       - name: Enviar resultado validado
+        if: steps.apply.outputs.status == 'success' && steps.syntax.outputs.status == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: fase8-index-validado
           path: validated-phase8
+
+      - name: Finalizar validação
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.apply.outputs.status }}" = "success"
+          test "${{ steps.syntax.outputs.status }}" = "success"
