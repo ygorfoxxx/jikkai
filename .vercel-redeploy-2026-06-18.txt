@@ -1,0 +1,2 @@
+Redeploy técnico sem alteração de código ou dados.
+Commit-base esperado: 0257da6919260111a9837f4ebed6861ae0cba0ff
