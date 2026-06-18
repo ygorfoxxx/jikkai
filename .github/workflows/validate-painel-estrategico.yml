@@ -13,11 +13,22 @@ jobs:
       - name: Baixar código
         uses: actions/checkout@v4
 
-      - name: Gerar portal completo e validar integrações
-        run: node scripts/build-etapa2.cjs
+      - name: Gerar portal e registrar saída
+        shell: bash
+        run: node scripts/build-etapa2.cjs > build-painel.log 2>&1 || true
 
-      - name: Confirmar fontes estratégicas
+      - name: Publicar diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-painel
+          path: build-painel.log
+          retention-days: 2
+
+      - name: Confirmar build e fontes estratégicas
+        shell: bash
         run: |
+          cat build-painel.log
+          grep -q 'Portal validado:' build-painel.log
           grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html
           grep -q 'function coletarSinaisEstrategicos' index.html
           grep -q 'Gerar alerta no Painel JIKKAI' index.html
