@@ -1,0 +1,21 @@
+{
+  "testedAt": "2026-06-18T02:38:35.716Z",
+  "url": "https://slpforge.xyz/map",
+  "directStatus": 200,
+  "directFinalUrl": "https://slpforge.xyz/map/",
+  "xFrameOptions": null,
+  "contentSecurityPolicy": null,
+  "frameLoaded": true,
+  "frameTitle": "Shinobi Legends - SLP Forge | Builder & Mapa",
+  "embeddedRender": "black-screen",
+  "consoleErrors": [
+    "Messaging: This browser doesn't support the API's required to use the Firebase SDK. (messaging/unsupported-browser).",
+    "Cannot read properties of undefined (reading 'addEventListener')"
+  ],
+  "differentPixels": 761454,
+  "totalPixels": 1048320,
+  "differenceRatio": 0.726356456043956,
+  "visuallyEquivalent": false,
+  "canEmbedExactly": false,
+  "decision": "Do not apply to main"
+}
