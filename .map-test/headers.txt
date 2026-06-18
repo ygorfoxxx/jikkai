@@ -1,0 +1,49 @@
+HTTP/2 301 
+date: Thu, 18 Jun 2026 02:27:22 GMT
+content-type: text/html
+location: https://slpforge.xyz/map/
+server: cloudflare
+access-control-allow-origin: *
+expires: Thu, 18 Jun 2026 02:37:22 GMT
+cache-control: max-age=600
+x-proxy-cache: MISS
+x-github-request-id: 6A2A:12FD3E:3B353B:3D04C9:6A33578A
+accept-ranges: bytes
+age: 0
+via: 1.1 varnish
+x-served-by: cache-sjc10035-SJC
+x-cache: MISS
+x-cache-hits: 0
+x-timer: S1781749643.622816,VS0,VE96
+vary: Accept-Encoding
+x-fastly-request-id: 2e0524546c9f7dd645fc78cda3cc2410cf038ef8
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=2MjU4xXxYAdjYEqSqa55e4AmvoEiunSKfucVZoiT%2BccCSyIPn2uN8pY79VmiZmKfpw0blUUa8pHwp6qyN0BggkQgEyE62QrzEZaZw6LIJ%2FZXzznYEZvcSvSF6sST%2FIo%3D"}]}
+cf-ray: a0d6dac24be6cf1b-SJC
+alt-svc: h3=":443"; ma=86400
+
+HTTP/2 200 
+date: Thu, 18 Jun 2026 02:27:22 GMT
+content-type: text/html; charset=utf-8
+server: cloudflare
+last-modified: Wed, 17 Jun 2026 01:19:55 GMT
+access-control-allow-origin: *
+expires: Thu, 18 Jun 2026 02:37:22 GMT
+cache-control: max-age=600
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+x-proxy-cache: MISS
+x-github-request-id: FDDA:1E8561:39E51F:3BB624:6A335788
+age: 0
+via: 1.1 varnish
+x-served-by: cache-sjc1000098-SJC
+x-cache: MISS
+x-cache-hits: 0
+x-timer: S1781749643.738507,VS0,VE116
+vary: Accept-Encoding
+x-fastly-request-id: b7dbf4a95301435e6d9ff409a9d5e2e1ed176c24
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=3YXVqqf%2FmIeC5%2BjEP3RdyPHhnLtkAJ91eQIHBEfGyIA8ARX8s%2F4NkH7HTW9QqPJYeZLAxdetnptFX3nssRTs9BQUJhu%2FGdAF9gitzTbTPr3y9kDYTP1K5l3qO6%2BhBdw%3D"}]}
+cf-cache-status: DYNAMIC
+cf-ray: a0d6dac30dc3cf1b-SJC
+alt-svc: h3=":443"; ma=86400
+
