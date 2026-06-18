@@ -1,11 +1,13 @@
 name: Aplicar Fase 8 - Mapa Estratégico
 
 on:
-  push:
+  pull_request:
     branches:
       - fase8-mapa-estrategico
-    paths:
-      - '.phase8/trigger.txt'
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
@@ -15,12 +17,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Baixar repositório
+      - name: Baixar branch da Fase 8
         uses: actions/checkout@v4
         with:
           ref: fase8-mapa-estrategico
 
+      - name: Verificar pacote pendente
+        id: pending
+        shell: bash
+        run: |
+          if [ -f .phase8/apply.py.gz.b64 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Aplicar código da cartografia JIKKAI
+        if: steps.pending.outputs.exists == 'true'
         shell: bash
         run: |
           base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
@@ -28,6 +41,7 @@ jobs:
           python3 /tmp/apply_phase8.py
 
       - name: Validar estrutura e sintaxe JSX
+        if: steps.pending.outputs.exists == 'true'
         shell: bash
         run: |
           grep -q 'function MapaEstrategicoPage' index.html
@@ -46,6 +60,7 @@ jobs:
           npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
 
       - name: Publicar implementação na branch da fase
+        if: steps.pending.outputs.exists == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
