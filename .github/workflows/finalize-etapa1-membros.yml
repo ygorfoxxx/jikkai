@@ -1,0 +1,114 @@
+name: Finalizar e validar Etapa 1
+
+on:
+  push:
+    branches:
+      - feature/etapa1-fundacao-membros
+    paths:
+      - '.finalize-etapa1-membros'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/etapa1-fundacao-membros
+
+      - name: Aplicar ajustes finais
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_avatar = '''function MemberAvatar({ user, size = "md", className = "" }) {
+            const sizes = { xs: "w-8 h-8 text-[10px]", sm: "w-10 h-10 text-xs", md: "w-14 h-14 text-sm", lg: "w-24 h-24 text-xl", xl: "w-32 h-32 text-2xl" };
+            const classes = sizes[size] || sizes.md;
+            return (
+              <div className={`${classes} ${className} rounded-full overflow-hidden border border-orange-800/70 bg-gradient-to-br from-red-950 to-black flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={getCodinome(user)} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                ) : (
+                  <span className="font-black tracking-wider text-orange-300">{iniciaisMembro(user)}</span>
+                )}
+              </div>
+            );
+          }'''
+          new_avatar = '''function MemberAvatar({ user, size = "md", className = "" }) {
+            const sizes = { xs: "w-8 h-8 text-[10px]", sm: "w-10 h-10 text-xs", md: "w-14 h-14 text-sm", lg: "w-24 h-24 text-xl", xl: "w-32 h-32 text-2xl" };
+            const classes = sizes[size] || sizes.md;
+            return (
+              <div className={`${classes} ${className} relative rounded-full overflow-hidden border border-orange-800/70 bg-gradient-to-br from-red-950 to-black flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                <span className="font-black tracking-wider text-orange-300">{iniciaisMembro(user)}</span>
+                {user?.avatarUrl && (
+                  <img src={user.avatarUrl} alt={getCodinome(user)} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                )}
+              </div>
+            );
+          }'''
+          if text.count(old_avatar) != 1:
+              raise SystemExit('Bloco MemberAvatar não encontrado de forma única')
+          text = text.replace(old_avatar, new_avatar, 1)
+
+          old_class = 'className="fixed inset-0 z-[70] flex items-center justify-center p4 bg-black/90 backdrop-blur p-4 bg-black/90 backdrop-blur-sm fadein"'
+          new_class = 'className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm fadein"'
+          if text.count(old_class) != 1:
+              raise SystemExit('Classe duplicada do modal não encontrada de forma única')
+          text = text.replace(old_class, new_class, 1)
+          text = text.replace('const Linha = ({ children }) =>', 'const Linha = () =>', 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Extrair e compilar JSX com Babel do portal
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
+          if not scripts:
+              raise SystemExit('Nenhum script encontrado')
+          Path('/tmp/jikkai-etapa1.jsx').write_text(scripts[-1], encoding='utf-8')
+          PY
+          curl -fsSL https://unpkg.com/@babel/standalone@7.24.7/babel.min.js -o /tmp/babel.min.js
+          node <<'NODE'
+          const fs = require('fs');
+          const vm = require('vm');
+          const context = {};
+          vm.createContext(context);
+          vm.runInContext(fs.readFileSync('/tmp/babel.min.js', 'utf8'), context);
+          const code = fs.readFileSync('/tmp/jikkai-etapa1.jsx', 'utf8');
+          const result = context.Babel.transform(code, { presets: ['env', 'react'], filename: 'index.jsx' });
+          if (!result || !result.code) throw new Error('Babel não produziu código');
+          fs.writeFileSync('/tmp/jikkai-etapa1.js', result.code);
+          console.log('JSX compilado:', result.code.length, 'bytes');
+          NODE
+          node --check /tmp/jikkai-etapa1.js
+
+      - name: Validar estrutura e limpar auxiliares
+        shell: bash
+        run: |
+          grep -q 'ETAPA 1 — FUNDAÇÃO DOS MEMBROS v1' index.html
+          grep -q 'function MeuDossieModal' index.html
+          grep -q 'function EstruturaSection' index.html
+          grep -q 'activityLog' index.html
+          grep -q 'avatarStoragePath' index.html
+          ! grep -q 'justify-center p4 bg-black' index.html
+          test "$(grep -c '^function MembrosPage' index.html)" -eq 1
+          test "$(grep -c '^function TriosSection' index.html)" -eq 1
+          test "$(grep -c '^function UsuariosManager' index.html)" -eq 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .finalize-etapa1-membros .github/workflows/finalize-etapa1-membros.yml
+          git add index.html
+          git commit -m "Finalizar e validar fundação dos membros"
+          git push origin feature/etapa1-fundacao-membros
