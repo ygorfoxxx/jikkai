@@ -36,43 +36,9 @@ const wrapper = [
   'console.log("Portal regenerado a partir dos fontes-base.");',
   '',
 ].join("\n");
+
 fs.writeFileSync("scripts/build-etapa2.cjs", wrapper);
 fs.writeFileSync("vercel.json", '{\n  "outputDirectory": "."\n}\n');
-
-const painelWorkflow = `name: Validar Painel Estratégico JIKKAI
-on:
-  pull_request:
-    branches: [main]
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - run: node scripts/validate-portal-v3.cjs
-      - run: |
-          grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html
-          grep -q 'Gerar alerta no Painel JIKKAI' index.html
-          grep -q 'Integração com o Painel JIKKAI' mapa.html
-`;
-const introWorkflow = `name: Validar introdução de primeiro acesso
-on:
-  pull_request:
-    branches: [main]
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - run: node scripts/validate-portal-v3.cjs
-      - run: |
-          grep -q 'PROTOCOLO DE INICIAÇÃO v1' index.html
-          grep -q 'function IntroducaoPrimeiroAcesso' index.html
-          grep -q 'Imagem do juramento no RP' index.html
-`;
-fs.writeFileSync(".github/workflows/validate-painel-estrategico.yml", painelWorkflow);
-fs.writeFileSync(".github/workflows/validate-introducao.yml", introWorkflow);
 
 for (const file of [
   ".painel-ready",
