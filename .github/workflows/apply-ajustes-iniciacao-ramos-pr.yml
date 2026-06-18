@@ -17,8 +17,28 @@ jobs:
         with:
           ref: feature-ajustes-iniciacao-ramos
 
-      - name: Aplicar ajustes ao portal consolidado
-        run: node scripts/ajustes-iniciacao-ramos.cjs
+      - name: Aplicar ajustes e capturar saída
+        shell: bash
+        run: |
+          set +e
+          node scripts/ajustes-iniciacao-ramos.cjs > ajuste-iniciacao.log 2>&1
+          echo $? > ajuste-iniciacao.status
+          exit 0
+
+      - name: Salvar diagnóstico temporário
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ajuste-iniciacao.log ajuste-iniciacao.status
+          git commit -m "Registrar diagnóstico dos ajustes de iniciação" || true
+          git push origin HEAD:feature-ajustes-iniciacao-ramos
+
+      - name: Confirmar aplicação
+        shell: bash
+        run: |
+          cat ajuste-iniciacao.log
+          test "$(cat ajuste-iniciacao.status)" = "0"
 
       - name: Preservar ajustes no build
         shell: bash
@@ -45,12 +65,9 @@ jobs:
       - name: Consolidar arquivos na branch
         shell: bash
         run: |
+          rm -f ajuste-iniciacao.log ajuste-iniciacao.status
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html scripts/build-etapa2.cjs
-          if git diff --cached --quiet; then
-            echo "Portal já consolidado."
-            exit 0
-          fi
-          git commit -m "Consolidar ajustes de iniciação e responsáveis por ramo"
+          git add -A index.html scripts/build-etapa2.cjs ajuste-iniciacao.log ajuste-iniciacao.status
+          git commit -m "Consolidar ajustes de iniciação e responsáveis por ramo" || true
           git push origin HEAD:feature-ajustes-iniciacao-ramos
