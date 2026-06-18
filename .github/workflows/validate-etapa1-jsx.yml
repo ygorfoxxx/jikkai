@@ -1,0 +1,64 @@
+name: Validar JSX da Etapa 1
+
+on:
+  push:
+    branches:
+      - feature/etapa1-fundacao-membros
+    paths:
+      - '.validate-etapa1-jsx'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/etapa1-fundacao-membros
+
+      - name: Extrair JSX
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
+          if not scripts:
+              raise SystemExit('Nenhum script encontrado')
+          Path('/tmp/jikkai-etapa1.jsx').write_text(scripts[-1], encoding='utf-8')
+          PY
+
+      - name: Compilar JSX com Babel
+        shell: bash
+        run: |
+          npx --yes --package @babel/core --package @babel/cli --package @babel/preset-env --package @babel/preset-react \
+            babel /tmp/jikkai-etapa1.jsx \
+            --presets=@babel/preset-env,@babel/preset-react \
+            --out-file /tmp/jikkai-etapa1.js
+          node --check /tmp/jikkai-etapa1.js
+
+      - name: Validar fundacao
+        shell: bash
+        run: |
+          grep -q 'function MeuDossieModal' index.html
+          grep -q 'function EstruturaSection' index.html
+          grep -q 'function UsuariosManager' index.html
+          grep -q 'activityLog' index.html
+          grep -q 'iniciacaoStatus: "pendente"' index.html
+          grep -q 'avatarStoragePath' index.html
+          test "$(grep -c '^function MembrosPage' index.html)" -eq 1
+          test "$(grep -c '^function TriosSection' index.html)" -eq 1
+
+      - name: Limpar validacao e registrar sucesso
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .validate-etapa1-jsx .github/workflows/validate-etapa1-jsx.yml
+          git commit -m "Validar sintaxe JSX da Etapa 1"
+          git push origin feature/etapa1-fundacao-membros
