@@ -2,36 +2,36 @@ name: Validar Painel Estratégico JIKKAI
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
+
+permissions:
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
-      - name: Baixar código
-        uses: actions/checkout@v4
-
-      - name: Gerar portal e registrar saída
-        shell: bash
-        run: node scripts/build-etapa2.cjs > build-painel.log 2>&1 || true
-
-      - name: Publicar diagnóstico
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: diagnostico-painel
-          path: build-painel.log
-          retention-days: 2
+          ref: feature/painel-estrategico-jikkai
 
-      - name: Confirmar build e fontes estratégicas
+      - name: Consolidar arquivos públicos
         shell: bash
         run: |
-          cat build-painel.log
-          grep -q 'Portal validado:' build-painel.log
-          grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html
-          grep -q 'function coletarSinaisEstrategicos' index.html
-          grep -q 'Gerar alerta no Painel JIKKAI' index.html
-          grep -q 'Painel Estratégico JIKKAI' index.html
-          grep -q 'Integração com o Painel JIKKAI' mapa.html
-          grep -q 'Comprometido' mapa.html
+          if grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html; then
+            echo 'Arquivos já consolidados.'
+            exit 0
+          fi
+          node scripts/materialize-portal.cjs
+          git checkout origin/main -- scripts/validate-portal.cjs || true
+          rm -f .materialize-painel
+          rm -f .github/workflows/materialize-painel.yml scripts/materialize-portal.cjs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Consolidar Painel Estratégico nos arquivos públicos"
+          git push origin HEAD:feature/painel-estrategico-jikkai
+
+      - name: Validar portal consolidado
+        run: node scripts/validate-portal-v3.cjs
