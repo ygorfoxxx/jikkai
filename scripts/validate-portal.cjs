@@ -3,14 +3,22 @@ const https = require("https");
 const vm = require("vm");
 
 const html = fs.readFileSync("index.html", "utf8");
+const mapa = fs.readFileSync("mapa.html", "utf8");
 const markers = [
   "ETAPA 2 — REPUTAÇÃO E LEALDADE v1",
   "PROTOCOLO DE INICIAÇÃO v1",
+  "ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1",
   "function ReputacaoSection",
   "function RamosManager",
   "function IntroducaoPrimeiroAcesso",
   "function RegistroJuramentosManager",
   "function juramentoDoUsuario",
+  "function coletarSinaisEstrategicos",
+  "function SinalManualModal",
+  "function FaseEstrategicaCard",
+  "function ObjetivoEstrategicoCard",
+  "Painel Estratégico JIKKAI",
+  "Gerar alerta no Painel JIKKAI",
   'id: "reputacao", label: "Reputação"',
   'id: "ramos", label: "Ramos"',
   'id: "juramentos", label: "Juramentos"',
@@ -19,9 +27,13 @@ const markers = [
   "Imagem do juramento no RP",
   'usuarioAtual.iniciacaoStatus === "pendente"',
   "migrated.juramentados",
+  "migrated.sinaisEstrategicos",
 ];
 for (const marker of markers) {
   if (!html.includes(marker)) throw new Error("Validação falhou: " + marker);
+}
+for (const marker of ["Comprometido", "Integração com o Painel JIKKAI", "populateStrategicLinks", "editorDraft.faseId"]) {
+  if (!mapa.includes(marker)) throw new Error("Validação do mapa falhou: " + marker);
 }
 for (const unique of [
   "function ReputacaoSection",
@@ -32,6 +44,10 @@ for (const unique of [
   "function JuramentadoView",
   "function MembrosPage",
   "function UsuariosManager",
+  "function PlanoSection",
+  "function FaseEditor",
+  "function SinalManualModal",
+  "function coletarSinaisEstrategicos",
 ]) {
   const count = html.split(unique).length - 1;
   if (count !== 1) throw new Error(unique + " encontrado " + count + " vezes");
@@ -66,6 +82,7 @@ function download(url, redirects = 0) {
   const result = context.Babel.transform(jsx, { presets: ["env", "react"], filename: "index.jsx" });
   if (!result || !result.code) throw new Error("Babel não gerou JavaScript");
   new vm.Script(result.code, { filename: "portal-compilado.js" });
+  new vm.Script([...mapa.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].pop()[1], { filename: "mapa.js" });
   console.log("Portal validado:", result.code.length, "bytes compilados");
 })().catch(error => {
   console.error(error);

@@ -1,0 +1,15 @@
+name: Validar Painel Estratégico JIKKAI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar portal consolidado
+        run: node scripts/validate-portal-v3.cjs

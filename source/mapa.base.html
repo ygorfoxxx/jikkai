@@ -105,29 +105,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
   .mobile{display:block}.detail{left:12px;right:12px;bottom:12px}.legend{display:none}.modebar{top:auto;bottom:16px;width:calc(100% - 24px);justify-content:center;flex-wrap:wrap}
 }
 @media(max-width:540px){.form-grid,.detail-grid{grid-template-columns:1fr}.toolbar.admin-tools{grid-template-columns:1fr}.detail{max-height:55vh;overflow:auto}}
-
-/* jikkai-mobile-map-layout-fix */
-@media(max-width:900px){
-  .app{
-    display:block;
-    position:relative;
-    width:100%;
-    height:100vh;
-    height:100svh;
-    height:100dvh;
-    min-height:100vh;
-    min-height:100dvh;
-  }
-  .map-shell{
-    display:block;
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    min-height:100vh;
-    min-height:100dvh;
-  }
-}
 </style>
 </head>
 <body>
@@ -268,7 +245,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
             <label>Situação</label>
             <select id="fStatus">
               <option>Controlado</option><option>Seguro</option><option>Observado</option>
-              <option>Neutro</option><option>Objetivo</option><option>Hostil</option><option>Comprometido</option><option>Desconhecido</option>
+              <option>Neutro</option><option>Objetivo</option><option>Hostil</option><option>Desconhecido</option>
             </select>
           </div>
           <div class="field">
@@ -289,15 +266,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <div class="field">
           <label>Descrição operacional</label>
           <textarea id="fDesc" maxlength="900" placeholder="Finalidade, riscos, regras de acesso e observações..."></textarea>
-        </div>
-        <div class="field" style="padding:12px;border:1px solid #7f1d1d;background:rgba(69,10,10,.25);border-radius:8px">
-          <label style="color:#f87171">Integração com o Painel JIKKAI</label>
-          <div style="font-size:11px;color:#a1a1aa;line-height:1.55;margin-bottom:10px">Locais do tipo <strong style="color:#fecaca">Risco</strong>, ameaça Alta/Crítica ou situação Hostil/Comprometida geram um alerta estratégico automático e rastreável.</div>
-          <div class="form-grid">
-            <div class="field"><label>Fase afetada</label><select id="fPhase"><option value="">Plano geral</option></select></div>
-            <div class="field"><label>Objetivo afetado</label><select id="fObjective"><option value="">Toda a fase</option></select></div>
-          </div>
-          <div class="field" style="margin-top:10px"><label>Título do alerta</label><input id="fAlertTitle" maxlength="120" placeholder="Ex.: Informante em Suna comprometido"></div>
         </div>
         <div class="coord">
           <span id="coordText">Posição registrada no mapa.</span>
@@ -582,15 +550,6 @@ function populateTypes(kind,current){
   const source=kind==="route"?ROUTE_TYPES:POINT_TYPES;
   Object.entries(source).forEach(([id,cfg])=>{const o=document.createElement("option");o.value=id;o.textContent=cfg.label;if(id===current)o.selected=true;select.appendChild(o)});
 }
-function populateStrategicLinks(phaseId,objectiveId){
-  const phaseSelect=el("fPhase"),objectiveSelect=el("fObjective");
-  phaseSelect.innerHTML='<option value="">Plano geral</option>';
-  (portalState?.fases||[]).forEach(f=>{const o=document.createElement("option");o.value=f.id||("fase_"+f.n);o.textContent="Fase "+f.n+" · "+f.titulo;if(o.value===phaseId)o.selected=true;phaseSelect.appendChild(o)});
-  const phase=(portalState?.fases||[]).find(f=>(f.id||("fase_"+f.n))===phaseSelect.value);
-  objectiveSelect.innerHTML='<option value="">Toda a fase</option>';
-  (phase?.objetivos||[]).forEach(obj=>{const o=document.createElement("option");o.value=obj.id||"";o.textContent=obj.titulo||obj.text||"Objetivo";if(o.value===objectiveId)o.selected=true;objectiveSelect.appendChild(o)});
-  objectiveSelect.disabled=!phase;
-}
 function openEditor(item,isNew){
   editorDraft=JSON.parse(JSON.stringify(item));
   const route=item.kind==="route";
@@ -598,7 +557,6 @@ function openEditor(item,isNew){
   el("editorTitle").textContent=(isNew?"Criar ":"Editar ")+(route?"rota":"local");
   el("fName").value=item.name||"";populateTypes(item.kind,item.type);el("fStatus").value=item.status||"Neutro";
   el("fThreat").value=item.threat||"Média";el("fSecrecy").value=item.sigilo||"Nível II";el("fDesc").value=item.desc||"";
-  populateStrategicLinks(item.faseId||"",item.objetivoId||"");el("fAlertTitle").value=item.alertaTitulo||"";
   el("colorField").hidden=!route;el("fColor").value=item.color||ROUTE_TYPES[item.type]?.color||"#f97316";
   el("coordText").textContent=route?`${item.points.length} pontos definidos na rota.`:`Posição: ${item.x.toFixed(2)}% × ${item.y.toFixed(2)}%.`;
   el("repositionBtn").textContent=route?"Redesenhar rota":"Reposicionar no mapa";
@@ -609,8 +567,7 @@ async function saveEditor(e){
   e.preventDefault();if(!editorDraft||!access.canEdit)return;
   editorDraft.name=el("fName").value.trim();if(!editorDraft.name)return;
   editorDraft.type=el("fType").value;editorDraft.status=el("fStatus").value;editorDraft.threat=el("fThreat").value;
-  editorDraft.sigilo=el("fSecrecy").value;editorDraft.desc=el("fDesc").value.trim();
-  editorDraft.faseId=el("fPhase").value;editorDraft.objetivoId=el("fObjective").value;editorDraft.alertaTitulo=el("fAlertTitle").value.trim();editorDraft.updatedBy=access.user?.username;editorDraft.updatedAt=new Date().toISOString();
+  editorDraft.sigilo=el("fSecrecy").value;editorDraft.desc=el("fDesc").value.trim();editorDraft.updatedBy=access.user?.username;editorDraft.updatedAt=new Date().toISOString();
   if(editorDraft.kind==="route")editorDraft.color=el("fColor").value||ROUTE_TYPES[editorDraft.type]?.color;
   if(editorDraft.kind==="route"){
     const id=editorDraft.id;const exists=routes.some(r=>r.id===id);const next=exists?routes.map(r=>r.id===id?editorDraft:r):[...routes,editorDraft];
@@ -663,7 +620,6 @@ el("menu").onclick=()=>el("panel").classList.toggle("open");
 el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;
 el("modeCancel").onclick=cancelMode;el("modeUndo").onclick=undoRoutePoint;el("modeFinish").onclick=finishRouteDrawing;
 el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;
-el("fPhase").addEventListener("change",()=>populateStrategicLinks(el("fPhase").value,""));
 el("editSelected").onclick=editSelected;el("deleteSelected").onclick=deleteSelected;
 el("authBtn").onclick=openAuth;el("closeAuth").onclick=closeAuth;el("cancelAuth").onclick=closeAuth;el("authForm").onsubmit=submitAuth;
 el("fType").addEventListener("change",()=>{if(editorDraft?.kind==="route"){const c=ROUTE_TYPES[el("fType").value]?.color;if(c)el("fColor").value=c}});

@@ -1,0 +1,123 @@
+function PlanoSection({ data, setData, isLider, usuario = null }) {
+  const [aba, setAba] = useState("visao");
+  const [faseAberta, setFaseAberta] = useState(null);
+  const [editandoFase, setEditandoFase] = useState(null);
+
+  const fases = data.fases || [];
+  const sinais = coletarSinaisEstrategicos(data);
+  const progressoGeral = progressoGeralJikkai(fases);
+  const faseAtual = fases.find(f => f.status === "andamento") || fases.find(f => f.status !== "concluida") || fases[fases.length - 1];
+  const objetivos = fases.flatMap(f => (f.objetivos || []).map(o => ({ ...o, faseId: f.id })));
+  const concluidos = objetivos.filter(o => o.status === "concluido").length;
+  const bloqueados = objetivos.filter(o => o.status === "bloqueado").length;
+  const criticos = sinais.filter(s => s.risco === "Crítico").length;
+  const operacoesAtivas = (data.missoes || []).filter(m => ["atribuida", "aceita", "andamento", "revisao", "devolvida"].includes(m.status)).length;
+
+  const salvarFase = (faseId, patch) => {
+    setData(d => ({
+      ...d,
+      fases: (d.fases || []).map(f => f.id === faseId ? { ...f, ...patch } : f),
+      activityLog: [...(d.activityLog || []), atividade("fase_atualizada", usuario?.username || "lideranca", faseId, "Atualizou a fase " + patch.titulo + " do plano Jikkai")],
+    }));
+    setEditandoFase(null);
+  };
+
+  const criarAlertaManual = () => {
+    const titulo = window.prompt("Título do alerta estratégico:", "");
+    if (!titulo?.trim()) return;
+    const descricao = window.prompt("Descreva a situação, consequência e resposta recomendada:", "") || "";
+    const riscoInformado = window.prompt("Nível de risco: Baixo, Moderado, Elevado ou Crítico", "Moderado") || "Moderado";
+    const risco = normalizarRisco(riscoInformado);
+    const faseId = faseAtual?.id || "";
+    setData(d => ({
+      ...d,
+      sinaisEstrategicos: [...(d.sinaisEstrategicos || []), {
+        id: "sinal_" + uid(),
+        titulo: titulo.trim(),
+        descricao: descricao.trim(),
+        risco,
+        categoria: "Comando",
+        fonteTipo: "comando",
+        fonteId: "",
+        fonteNome: "Decisão do comando",
+        faseId,
+        objetivoId: "",
+        status: "ativo",
+        criadoEm: new Date().toISOString(),
+        criadoPor: usuario?.username || "lideranca",
+      }],
+      activityLog: [...(d.activityLog || []), atividade("alerta_estrategico_criado", usuario?.username || "lideranca", faseId || "jikkai", "Criou o alerta estratégico: " + titulo.trim())],
+    }));
+  };
+
+  const resolverAlertaManual = sinal => {
+    if (sinal.fonteTipo !== "comando") return;
+    setData(d => ({
+      ...d,
+      sinaisEstrategicos: (d.sinaisEstrategicos || []).map(s => s.id === sinal.id ? { ...s, status: "resolvido", resolvidoEm: new Date().toISOString() } : s),
+      activityLog: [...(d.activityLog || []), atividade("alerta_estrategico_resolvido", usuario?.username || "lideranca", sinal.id, "Resolveu o alerta estratégico: " + sinal.titulo)],
+    }));
+  };
+
+  const abrirMapa = () => window.open("./mapa.html", "_blank", "noopener");
+  const tabs = [
+    { id: "visao", label: "Visão Geral", icon: ITarget },
+    { id: "fases", label: "Fases", icon: IClipboard },
+    { id: "riscos", label: "Riscos", icon: IAlert },
+    { id: "historico", label: "Histórico", icon: IBook },
+  ];
+
+  if (faseAberta) {
+    const fase = fases.find(f => f.id === faseAberta);
+    if (fase) {
+      const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
+      const requisitosAtendidos = (fase.requisitos || []).filter(r => r.atendido).length;
+      const sinaisDaFase = sinais.filter(s => s.faseId === fase.id);
+      return <div className="fadein space-y-6">
+        <button onClick={() => setFaseAberta(null)} className="text-zinc-500 hover:text-orange-400 text-xs uppercase tracking-wider">← Voltar à central de comando</button>
+        <div className="p-6 rounded-2xl border border-orange-800/50 bg-gradient-to-br from-red-950/20 to-black">
+          <div className="flex items-start justify-between gap-4"><div><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Fase {String(fase.n).padStart(2, "0")}</div><h1 className="text-3xl font-black text-orange-50 serif mt-1">{fase.titulo}</h1><p className="text-zinc-400 mt-2 max-w-3xl">{fase.desc}</p></div>{isLider && <Btn onClick={() => setEditandoFase(fase.id)} variant="primary"><IEdit className="w-3 h-3" /> Editar fase</Btn>}</div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Progresso</div><div className="text-2xl font-black text-orange-300 mt-1">{progressoFase(fase)}%</div></div>
+            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Risco</div><div className="mt-2"><RiscoBadge risco={fase.riscoGeral} /></div></div>
+            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Responsável</div><div className="text-orange-100 font-bold mt-1">{responsavel ? getCodinome(responsavel) : "Não designado"}</div></div>
+            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Prazo</div><div className="text-orange-100 font-bold mt-1">{fase.prazo ? new Date(fase.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</div></div>
+          </div>
+        </div>
+
+        {sinaisDaFase.length > 0 && <section><div className="text-[9px] uppercase tracking-[0.25em] text-red-500 mb-3">Alertas que afetam esta fase</div><div className="grid lg:grid-cols-2 gap-3">{sinaisDaFase.map(s => <SinalEstrategicoCard key={s.id} sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />)}</div></section>}
+
+        <section><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600 mb-3">Objetivos estratégicos</div><div className="space-y-3">{(fase.objetivos || []).map(o => <ObjetivoEstrategicoCard key={o.id} objetivo={o} data={data} isLider={isLider} onEdit={() => setEditandoFase(fase.id)} />)}</div></section>
+
+        {(fase.requisitos || []).length > 0 && <section className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60"><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Requisitos de desbloqueio</div><div className="text-zinc-600 text-xs mt-1">{requisitosAtendidos} de {fase.requisitos.length} atendidos</div></div><div className="text-orange-300 font-black">{fase.requisitos.length ? Math.round(requisitosAtendidos / fase.requisitos.length * 100) : 0}%</div></div><div className="space-y-2">{fase.requisitos.map(r => <div key={r.id} className="flex items-center gap-2 text-sm">{r.atendido ? <ICheck className="w-4 h-4 text-green-500" /> : <ILock className="w-4 h-4 text-zinc-700" />}<span className={r.atendido ? "text-zinc-300" : "text-zinc-600"}>{r.texto}</span></div>)}</div></section>}
+
+        {editandoFase === fase.id && <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div>}
+      </div>;
+    }
+  }
+
+  return <div className="fadein">
+    <SectionTitle icon={ITarget} sub="Sala de guerra digital integrada aos registros do portal" action={isLider && <Btn onClick={criarAlertaManual} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn>}>Painel Estratégico JIKKAI</SectionTitle>
+
+    <div className="p-5 rounded-2xl border border-orange-900/40 bg-gradient-to-br from-red-950/20 via-black to-black mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-end gap-6"><div className="flex-1"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Plano geral</div><div className="flex items-end gap-3 mt-1"><div className="text-5xl sm:text-6xl font-black text-orange-50 serif leading-none">{progressoGeral}<span className="text-2xl text-orange-600">%</span></div><div className="flex-1 mb-2"><div className="h-3 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progressoGeral + "%" }} /></div></div></div><div className="text-zinc-500 text-sm mt-2">Fase atual: <strong className="text-orange-200">{faseAtual ? "FASE " + faseAtual.n + " — " + faseAtual.titulo : "Nenhuma fase ativa"}</strong></div></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:w-[520px]">{[[concluidos, "Concluídos", "text-green-400"], [bloqueados, "Bloqueados", "text-red-400"], [criticos, "Riscos críticos", "text-red-300"], [operacoesAtivas, "Operações ativas", "text-orange-300"]].map(([valor, label, cor]) => <div key={label} className="p-3 rounded border border-zinc-800 bg-black/50 text-center"><div className={"text-2xl font-black " + cor}>{valor}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 mt-1">{label}</div></div>)}</div>
+      </div>
+    </div>
+
+    <div className="mb-6 p-1 rounded-xl border border-zinc-800 bg-zinc-950/60 flex gap-1 overflow-x-auto">{tabs.map(t => { const Icon = t.icon; return <button key={t.id} onClick={() => setAba(t.id)} className={"flex-1 min-w-[120px] py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-xs uppercase tracking-wider font-bold " + (aba === t.id ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900")}><Icon className="w-4 h-4" />{t.label}</button>; })}</div>
+
+    {aba === "visao" && <div className="space-y-7">
+      {sinais.length > 0 && <section><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-red-500">Alertas ativos</div><div className="text-zinc-600 text-xs">Consolidados de relatórios, mapa, missões, contratos, objetivos e decisões do comando.</div></div><button onClick={() => setAba("riscos")} className="text-orange-400 text-[10px] uppercase tracking-wider">Ver todos</button></div><div className="grid lg:grid-cols-2 gap-3">{sinais.slice(0, 4).map(s => <SinalEstrategicoCard key={s.id} sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />)}</div></section>}
+      <section><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600 mb-3">Fases do plano</div><div className="grid lg:grid-cols-2 gap-4">{fases.map(f => <FaseEstrategicaCard key={f.id} fase={f} data={data} isLider={isLider} onOpen={() => setFaseAberta(f.id)} onEdit={() => setEditandoFase(f.id)} />)}</div></section>
+    </div>}
+
+    {aba === "fases" && <div className="grid lg:grid-cols-2 gap-4">{fases.map(f => <FaseEstrategicaCard key={f.id} fase={f} data={data} isLider={isLider} onOpen={() => setFaseAberta(f.id)} onEdit={() => setEditandoFase(f.id)} />)}</div>}
+
+    {aba === "riscos" && <div className="space-y-4">{sinais.length ? sinais.map(s => <div key={s.id} className="relative"><SinalEstrategicoCard sinal={s} data={data} onOpenPhase={setFaseAberta} onOpenMap={abrirMapa} />{isLider && s.fonteTipo === "comando" && <button onClick={() => resolverAlertaManual(s)} className="absolute bottom-3 right-3 text-[9px] uppercase tracking-wider text-green-500">Marcar resolvido</button>}</div>) : <div className="p-12 text-center rounded-xl border border-zinc-800 bg-zinc-950/40"><IShield className="w-12 h-12 text-green-700 mx-auto mb-3" /><div className="text-green-400 font-bold">Nenhum alerta ativo</div><div className="text-zinc-600 text-sm mt-1">As fontes integradas não indicam riscos no momento.</div></div>}</div>}
+
+    {aba === "historico" && <div className="space-y-2">{(data.activityLog || []).filter(a => ["fase_atualizada", "alerta_estrategico_criado", "alerta_estrategico_resolvido"].includes(a.tipo)).slice().reverse().map(a => <div key={a.id} className="p-3 rounded border border-zinc-800 bg-zinc-950/50 flex items-start gap-3"><IBook className="w-4 h-4 text-orange-600 mt-0.5" /><div><div className="text-zinc-300 text-sm">{a.descricao}</div><div className="text-[10px] text-zinc-700 mt-1">{a.ator} · {new Date(a.data).toLocaleString("pt-BR")}</div></div></div>)}</div>}
+
+    {editandoFase && (() => { const fase = fases.find(f => f.id === editandoFase); return fase ? <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div> : null; })()}
+  </div>;
+}
