@@ -10,6 +10,10 @@ const etapas = [
   "./introducao-juramento.cjs",
   "./introducao-data-app.cjs",
   "./introducao-admin.cjs",
+  "./painel-estrategico-core.cjs",
+  "./painel-estrategico-relatorios.cjs",
+  "./painel-estrategico-ui.cjs",
+  "./painel-estrategico-mapa.cjs",
   "./validate-portal.cjs",
 ];
 
@@ -18,4 +22,4 @@ for (const arquivo of etapas) {
   require(arquivo);
 }
 
-console.log("Build da Etapa 2 e do Protocolo de Iniciação concluído.");
+console.log("Build integrado da Jikkai concluído: membros, reputação, iniciação e painel estratégico.");
