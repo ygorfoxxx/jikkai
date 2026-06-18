@@ -178,6 +178,7 @@ function normalizarMembro(u, existente = true) {
     reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "",
   };
   const out = { ...base, ...u };
+  if (!existente && !String(out.patente || "").trim()) out.patente = "Recruta em Observação";
   out.nomeRP = out.nomeRP || out.displayName || "";
   out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
   if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Desconhecido";
@@ -300,7 +301,7 @@ const DEFAULT_CLAS = [
   },
 ];
 
-const FRASE_JURAMENTO = "Meu sangue pertence à F.O.X.";
+const FRASE_JURAMENTO = "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento";
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
@@ -2156,6 +2157,18 @@ function RelatorioMissaoModal({ missao, onSave, onClose }) {
   );
 }
 
+function nomeResponsavelEstrategico(valor, data) {
+  if (!valor) return "Não designado";
+  const texto = String(valor);
+  if (texto.startsWith("ramo:")) {
+    const ramoId = texto.slice(5);
+    const ramo = (data.clas || []).find(c => c.id === ramoId);
+    return ramo ? "Ramo · " + ramo.nome : "Ramo não encontrado";
+  }
+  const membro = (data.users || []).find(u => u.username === texto);
+  return membro ? getCodinome(membro) : texto;
+}
+
 function FaseEditor({ fase, data, onSave, onCancel }) {
   const [draft, setDraft] = useState(() => ({
     ...fase,
@@ -2163,6 +2176,7 @@ function FaseEditor({ fase, data, onSave, onCancel }) {
     requisitos: (fase.requisitos || []).map(r => ({ ...r })),
   }));
   const users = (data.users || []).filter(u => u.role !== "contratante");
+  const ramos = data.clas || [];
   const update = patch => setDraft(d => ({ ...d, ...patch }));
   const updateObj = (i, patch) => setDraft(d => ({ ...d, objetivos: d.objetivos.map((o, index) => index === i ? { ...o, ...patch } : o) }));
   const addObj = () => setDraft(d => ({ ...d, objetivos: [...d.objetivos, normalizarObjetivoEstrategico({ id: "obj_" + uid(), titulo: "Novo objetivo", status: "nao_iniciado", progresso: 0 }, d, d.objetivos.length)] }));
@@ -2180,7 +2194,7 @@ function FaseEditor({ fase, data, onSave, onCancel }) {
       <div><label className="fox-label">Título</label><input value={draft.titulo} onChange={e => update({ titulo: e.target.value })} className="fox-input" /></div>
       <div><label className="fox-label">Status</label><select value={draft.status} onChange={e => update({ status: e.target.value })} className="fox-input">{Object.entries(FASE_STATUS_CFG).map(([id, c]) => <option key={id} value={id}>{c.label}</option>)}</select></div>
       <div className="sm:col-span-2"><label className="fox-label">Descrição</label><textarea rows="3" value={draft.desc || ""} onChange={e => update({ desc: e.target.value })} className="fox-input" /></div>
-      <div><label className="fox-label">Responsável geral</label><select value={draft.responsavelGeral || ""} onChange={e => update({ responsavelGeral: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
+      <div><label className="fox-label">Responsável geral</label><select value={draft.responsavelGeral || ""} onChange={e => update({ responsavelGeral: e.target.value })} className="fox-input"><option value="">— Não designado —</option><optgroup label="Membros">{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</optgroup><optgroup label="Ramos">{ramos.map(r => <option key={r.id} value={"ramo:" + r.id}>Ramo · {r.nome}</option>)}</optgroup></select></div>
       <div><label className="fox-label">Risco geral</label><select value={draft.riscoGeral} onChange={e => update({ riscoGeral: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
       <div><label className="fox-label">Prazo</label><input type="date" value={draft.prazo || ""} onChange={e => update({ prazo: e.target.value, prazoTipo: e.target.value ? "data_exata" : "sem_prazo" })} className="fox-input" /></div>
       <label className="flex items-center gap-3 p-3 rounded border border-zinc-800 bg-black/40"><input type="checkbox" checked={draft.progressoManualAtivo} onChange={e => update({ progressoManualAtivo: e.target.checked })} className="accent-orange-600" /><span className="text-zinc-300 text-sm">Usar progresso manual</span>{draft.progressoManualAtivo && <input type="number" min="0" max="100" value={draft.progressoManual} onChange={e => update({ progressoManual: Number(e.target.value) })} className="fox-input w-24" />}</label>
@@ -2202,7 +2216,7 @@ function FaseEditor({ fase, data, onSave, onCancel }) {
           <div><label className="fox-label">Risco</label><select value={o.risco} onChange={e => updateObj(i, { risco: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
         </div>
         <div className="grid sm:grid-cols-2 gap-2">
-          <div><label className="fox-label">Responsável</label><select value={o.responsavel || ""} onChange={e => updateObj(i, { responsavel: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
+          <div><label className="fox-label">Responsável</label><select value={o.responsavel || ""} onChange={e => updateObj(i, { responsavel: e.target.value })} className="fox-input"><option value="">— Não designado —</option><optgroup label="Membros">{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</optgroup><optgroup label="Ramos">{ramos.map(r => <option key={r.id} value={"ramo:" + r.id}>Ramo · {r.nome}</option>)}</optgroup></select></div>
           <div><label className="fox-label">Prazo</label><input type="date" value={o.prazo || ""} onChange={e => updateObj(i, { prazo: e.target.value })} className="fox-input" /></div>
         </div>
         <div><label className="fox-label">Descrição</label><textarea rows="2" value={o.descricao || ""} onChange={e => updateObj(i, { descricao: e.target.value })} className="fox-input" /></div>
@@ -2229,13 +2243,13 @@ function OperacaoRelacionada({ tipo, id, data }) {
 }
 
 function ObjetivoEstrategicoCard({ objetivo, data, isLider, onEdit }) {
-  const responsavel = data.users.find(u => u.username === objetivo.responsavel);
+  const responsavelLabel = nomeResponsavelEstrategico(objetivo.responsavel, data);
   const progresso = progressoObjetivo(objetivo);
   const atrasado = prazoAtrasado(objetivo.prazo, objetivo.status);
   return <div className={"p-4 rounded-xl border " + (objetivo.status === "bloqueado" ? "border-red-800 bg-red-950/10" : "border-zinc-800 bg-zinc-950/50")}>
     <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><ObjetivoStatusBadge status={objetivo.status} /><RiscoBadge risco={objetivo.risco} compacto />{atrasado && <span className="text-[9px] text-red-400 uppercase font-black">Atrasado</span>}</div><h3 className="text-orange-50 font-bold mt-2">{objetivo.titulo}</h3><p className="text-zinc-500 text-sm mt-1">{objetivo.descricao}</p></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div>
     <div className="flex items-center justify-between text-[10px] uppercase tracking-wider mt-3"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-1.5 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-orange-700 to-red-600" style={{ width: progresso + "%" }} /></div>
-    <div className="grid sm:grid-cols-2 gap-2 text-xs mt-3"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><div className="text-zinc-600">Prazo: <span className={atrasado ? "text-red-400" : "text-zinc-300"}>{objetivo.prazo ? new Date(objetivo.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</span></div></div>
+    <div className="grid sm:grid-cols-2 gap-2 text-xs mt-3"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavelLabel}</span></div><div className="text-zinc-600">Prazo: <span className={atrasado ? "text-red-400" : "text-zinc-300"}>{objetivo.prazo ? new Date(objetivo.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</span></div></div>
     {objetivo.bloqueio && <div className="mt-3 p-3 rounded border border-red-900/50 bg-red-950/20 text-red-300 text-xs"><strong>Bloqueio:</strong> {objetivo.bloqueio}</div>}
     {objetivo.recursos?.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{objetivo.recursos.map((r, i) => <span key={i} className="text-[10px] px-2 py-1 rounded border border-zinc-800 bg-black/50 text-zinc-400">{r}</span>)}</div>}
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-1 mt-3"><OperacaoRelacionada tipo="missao" id={objetivo.missaoId} data={data} /><OperacaoRelacionada tipo="relatorio" id={objetivo.relatorioId} data={data} /><OperacaoRelacionada tipo="contrato" id={objetivo.contratoId} data={data} /><OperacaoRelacionada tipo="mapa" id={objetivo.mapaId} data={data} /></div>
@@ -2248,13 +2262,13 @@ function FaseEstrategicaCard({ fase, data, isLider, onOpen, onEdit }) {
   const objetivos = fase.objetivos || [];
   const concluidos = objetivos.filter(o => o.status === "concluido").length;
   const bloqueados = objetivos.filter(o => o.status === "bloqueado").length;
-  const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
+  const responsavelLabel = nomeResponsavelEstrategico(fase.responsavelGeral, data);
   return <div className="rounded-2xl border bg-gradient-to-br from-zinc-950 to-black overflow-hidden" style={{ borderColor: cfg.cor + "70" }}>
     <div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.3em]" style={{ color: cfg.cor }}>Fase {String(fase.n).padStart(2, "0")}</div><h3 className="text-xl font-black text-orange-50 serif mt-1">{fase.titulo}</h3><div className="flex flex-wrap gap-2 mt-2"><span className={"text-[9px] px-2 py-0.5 rounded border uppercase font-black " + cfg.badge}>{cfg.label}</span><RiscoBadge risco={fase.riscoGeral} compacto /></div></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div><p className="text-zinc-500 text-sm mt-3">{fase.desc}</p>
       <div className="flex justify-between text-[10px] uppercase tracking-wider mt-4"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-2 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progresso + "%" }} /></div>
     </div>
     <div className="grid grid-cols-3 divide-x divide-zinc-800 text-center border-y border-zinc-800"><div className="p-3"><div className="text-xl font-black text-green-400">{concluidos}</div><div className="text-[9px] uppercase text-zinc-600">Concluídos</div></div><div className="p-3"><div className="text-xl font-black text-red-400">{bloqueados}</div><div className="text-[9px] uppercase text-zinc-600">Bloqueados</div></div><div className="p-3"><div className="text-xl font-black text-orange-300">{objetivos.length}</div><div className="text-[9px] uppercase text-zinc-600">Total</div></div></div>
-    <div className="p-4 text-xs"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><button onClick={onOpen} className="w-full mt-3 py-2.5 rounded bg-orange-700 hover:bg-orange-600 text-white uppercase tracking-wider text-[10px] font-black">Abrir sala estratégica</button></div>
+    <div className="p-4 text-xs"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavelLabel}</span></div><button onClick={onOpen} className="w-full mt-3 py-2.5 rounded bg-orange-700 hover:bg-orange-600 text-white uppercase tracking-wider text-[10px] font-black">Abrir sala estratégica</button></div>
   </div>;
 }
 
@@ -3034,7 +3048,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
   if (faseAberta) {
     const fase = fases.find(f => f.id === faseAberta);
     if (fase) {
-      const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
+      const responsavelLabel = nomeResponsavelEstrategico(fase.responsavelGeral, data);
       const requisitosAtendidos = (fase.requisitos || []).filter(r => r.atendido).length;
       const sinaisDaFase = sinais.filter(s => s.faseId === fase.id);
       return <div className="fadein space-y-6">
@@ -3044,7 +3058,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
             <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Progresso</div><div className="text-2xl font-black text-orange-300 mt-1">{progressoFase(fase)}%</div></div>
             <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Risco</div><div className="mt-2"><RiscoBadge risco={fase.riscoGeral} /></div></div>
-            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Responsável</div><div className="text-orange-100 font-bold mt-1">{responsavel ? getCodinome(responsavel) : "Não designado"}</div></div>
+            <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Responsável</div><div className="text-orange-100 font-bold mt-1">{responsavelLabel}</div></div>
             <div className="p-3 rounded border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-zinc-600">Prazo</div><div className="text-orange-100 font-bold mt-1">{fase.prazo ? new Date(fase.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</div></div>
           </div>
         </div>
@@ -3359,13 +3373,62 @@ function JuramentadoView({ juramentado, modoIniciacao = false }) {
             </div>
           )}
           <div className="pt-6 border-t border-orange-900/40 text-zinc-400 italic max-w-lg mx-auto text-sm">
-            “Que meu sangue se misture ao sangue Lamona. Que minha lâmina sirva à sombra. Que eu seja esquecido pelo mundo, mas lembrado pela F.O.X.”
+            “Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento.”
           </div>
           {!modoIniciacao && <div className="mt-6 text-[10px] uppercase tracking-wider text-zinc-700">Este registro é pessoal. O arquivo completo é visível somente à liderança.</div>}
         </div>
       </div>
     </div>
   );
+}
+
+function normalizarFraseRitual(valor) {
+  return String(valor || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function distanciaLevenshtein(a, b) {
+  const anterior = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diagonal = anterior[0];
+    anterior[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const acima = anterior[j];
+      anterior[j] = Math.min(
+        anterior[j] + 1,
+        anterior[j - 1] + 1,
+        diagonal + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+      diagonal = acima;
+    }
+  }
+  return anterior[b.length];
+}
+
+function fraseJuramentoAceita(valor) {
+  const digitada = normalizarFraseRitual(valor);
+  const alvo = normalizarFraseRitual(FRASE_JURAMENTO);
+  if (!digitada) return false;
+  if (digitada === alvo) return true;
+
+  const variacoes = [
+    FRASE_JURAMENTO,
+    "Que o meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento",
+    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair esse julgamento",
+    "Que meu próprio sangue queime e que as correntes da minha alma me esmaguem se eu trair este julgamento",
+    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem caso eu traia este julgamento",
+  ].map(normalizarFraseRitual);
+  if (variacoes.includes(digitada)) return true;
+
+  const distancia = distanciaLevenshtein(digitada, alvo);
+  const similaridade = 1 - distancia / Math.max(alvo.length, digitada.length, 1);
+  const palavrasObrigatorias = ["sangue", "queime", "correntes", "alma", "esmaguem", "trair", "julgamento"];
+  const presentes = palavrasObrigatorias.filter(palavra => digitada.includes(palavra)).length;
+  return similaridade >= 0.88 || (presentes >= 6 && digitada.length >= alvo.length * 0.75);
 }
 
 function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao = false, onConcluido = null }) {
@@ -3420,7 +3483,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
 
   const todosAceitos = aceitos.every(Boolean);
   const formValido = form.nome.trim() && form.motivacao.trim();
-  const fraseOk = fraseTypo.trim() === FRASE_JURAMENTO;
+  const fraseOk = fraseJuramentoAceita(fraseTypo);
 
   const iniciarSelo = async () => {
     setSelando(true);
@@ -3443,7 +3506,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center fadein">
       <ISkull className="w-24 h-24 text-orange-600 mb-6 pulse-fire" />
       <div className="text-orange-600 uppercase tracking-[0.4em] text-xs mb-3">Selando o Pacto</div>
-      <h2 className="text-3xl font-black text-orange-50 serif mb-6">Seu sangue pertence à F.O.X.</h2>
+      <h2 className="text-3xl font-black text-orange-50 serif mb-6">{FRASE_JURAMENTO}</h2>
       <div className="w-full max-w-md h-2 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-600 blood-fill" /></div>
       <div className="text-zinc-600 text-xs mt-4 italic">Registrando o juramento nos arquivos da Jikkai...</div>
     </div>
@@ -3511,10 +3574,10 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
           <div className="p-6 bg-gradient-to-br from-red-950/30 to-black border-2 border-orange-900/60 rounded-lg text-center">
             <ISkull className="w-12 h-12 text-orange-500 mx-auto mb-3" />
             <h3 className="text-orange-50 font-bold text-xl serif mb-2">O Juramento Final</h3>
-            <p className="text-zinc-400 text-sm mb-6">Digite exatamente a frase abaixo:</p>
+            <p className="text-zinc-400 text-sm mb-6">Digite a frase abaixo. Pequenos erros de acentuação, pontuação ou digitação são tolerados:</p>
             <div className="bg-black/60 border border-orange-700 rounded py-4 px-6 mb-6 inline-block"><code className="text-orange-400 text-lg serif italic">“{FRASE_JURAMENTO}”</code></div>
             <input value={fraseTypo} onChange={(e) => setFraseTypo(e.target.value)} className="fox-input text-center text-lg" placeholder="Digite a frase..." autoFocus />
-            {fraseTypo && !fraseOk && <div className="text-red-500 text-xs mt-2">A frase não coincide exatamente.</div>}
+            {fraseTypo && !fraseOk && <div className="text-red-500 text-xs mt-2">A frase ainda está diferente demais do juramento.</div>}
           </div>
           <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
         </div>
@@ -3547,8 +3610,53 @@ function IntroducaoEstruturaAtual({ data, usuario }) {
   );
 }
 
-function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onConcluir, onLogout }) {
+function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onAtualizarPerfil, onConcluir, onLogout }) {
   const [etapa, setEtapa] = useState(0);
+  const [avatarErro, setAvatarErro] = useState("");
+  const [avatarStatus, setAvatarStatus] = useState("");
+  const avatarInputRef = useRef();
+  const escolherAvatarIniciacao = (e) => {
+    const arquivo = e.target.files?.[0];
+    setAvatarErro("");
+    setAvatarStatus("");
+    if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) {
+      setAvatarErro("Escolha uma imagem JPG, PNG ou WEBP.");
+      return;
+    }
+    if (arquivo.size > 6 * 1024 * 1024) {
+      setAvatarErro("A imagem deve ter no máximo 6 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => setAvatarErro("Não foi possível ler a imagem.");
+    reader.onload = () => {
+      const imagem = new Image();
+      imagem.onerror = () => setAvatarErro("A imagem não pôde ser processada.");
+      imagem.onload = () => {
+        const lado = Math.min(imagem.naturalWidth, imagem.naturalHeight);
+        const sx = Math.max(0, (imagem.naturalWidth - lado) / 2);
+        const sy = Math.max(0, (imagem.naturalHeight - lado) / 2);
+        const tamanho = 384;
+        const canvas = document.createElement("canvas");
+        canvas.width = tamanho;
+        canvas.height = tamanho;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setAvatarErro("Seu navegador não conseguiu preparar a imagem.");
+          return;
+        }
+        ctx.drawImage(imagem, sx, sy, lado, lado, 0, 0, tamanho, tamanho);
+        onAtualizarPerfil?.({
+          avatarUrl: canvas.toDataURL("image/jpeg", 0.82),
+          avatarStoragePath: "",
+        });
+        setAvatarStatus("Foto registrada no seu dossiê.");
+      };
+      imagem.src = reader.result;
+    };
+    reader.readAsDataURL(arquivo);
+  };
   const ramo = (data.clas || []).find(c => c.id === usuario.cla);
   const cargo = (data.roles || []).find(r => r.id === usuario.role);
   const recrutador = (data.users || []).find(u => u.username === usuario.criadoPor);
@@ -3564,7 +3672,31 @@ function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onCo
         <div className="flex gap-1 mb-6">{Array.from({ length: total }).map((_, i) => <div key={i} className={"h-1 flex-1 rounded " + (i <= etapa ? "bg-gradient-to-r from-red-700 to-orange-600" : "bg-zinc-900")} />)}</div>
 
         <div className="rounded-2xl border border-orange-900/50 bg-zinc-950/85 backdrop-blur p-5 sm:p-8 shadow-2xl">
-          {etapa === 0 && <div className="fadein text-center"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-3">Identidade reconhecida</div><MemberAvatar user={usuario} size="xl" className="mx-auto mb-4" /><h1 className="text-4xl font-black text-orange-50 serif">{getCodinome(usuario)}</h1><div className="text-zinc-500 italic mt-1">{usuario.nomeRP || usuario.displayName}</div><div className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto mt-7 text-left">{[["Ramo", ramo?.nome || "Aguardando designação"],["Patente", usuario.patente || cargo?.nome || "Recruta"],["Nível de acesso", "Nível " + (usuario.nivelAcesso || 1)],["Responsável pelo ingresso", recrutador ? getCodinome(recrutador) : "Comando da Jikkai"]].map(([l,v]) => <div key={l} className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-orange-700">{l}</div><div className="text-zinc-200 text-sm mt-1">{v}</div></div>)}</div><p className="text-zinc-500 text-sm max-w-xl mx-auto mt-6">Seu acesso foi autorizado. Antes de entrar no portal, você conhecerá a organização, sua estrutura e as responsabilidades que assumirá.</p><div className="mt-7"><Btn onClick={avancar} variant="primary" size="lg">Confirmar identidade</Btn></div></div>}
+          {etapa === 0 && (
+            <div className="fadein text-center">
+              <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-3">Identidade reconhecida</div>
+              <MemberAvatar user={usuario} size="xl" className="mx-auto mb-4" />
+              <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherAvatarIniciacao} className="hidden" />
+              <Btn onClick={() => avatarInputRef.current?.click()} variant="ghost" className="mx-auto">
+                <IUpload className="w-3 h-3" /> {usuario.avatarUrl ? "Trocar foto" : "Adicionar foto"}
+              </Btn>
+              <div className="text-zinc-600 text-[10px] mt-2">Opcional · recorte quadrado automático · até 6 MB</div>
+              {avatarStatus && <div className="text-green-400 text-xs mt-2">{avatarStatus}</div>}
+              {avatarErro && <div className="text-red-400 text-xs mt-2">{avatarErro}</div>}
+              <h1 className="text-4xl font-black text-orange-50 serif mt-5">{getCodinome(usuario)}</h1>
+              <div className="text-zinc-500 italic mt-1">{usuario.nomeRP || usuario.displayName}</div>
+              <div className="grid sm:grid-cols-2 gap-3 max-w-2xl mx-auto mt-7 text-left">
+                {[
+                  ["Ramo", ramo?.nome || "Aguardando designação"],
+                  ["Patente", usuario.patente || "Recruta em Observação"],
+                  ["Nível de acesso", "Nível " + (usuario.nivelAcesso || 1)],
+                  ["Responsável pelo ingresso", recrutador ? getCodinome(recrutador) : "Comando da Jikkai"],
+                ].map(([l, v]) => <div key={l} className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-orange-700">{l}</div><div className="text-zinc-200 text-sm mt-1">{v}</div></div>)}
+              </div>
+              <p className="text-zinc-500 text-sm max-w-xl mx-auto mt-6">Seu acesso foi autorizado. Antes de entrar no portal, você conhecerá a organização, sua estrutura e as responsabilidades que assumirá.</p>
+              <div className="mt-7"><Btn onClick={avancar} variant="primary" size="lg">Confirmar identidade</Btn></div>
+            </div>
+          )}
 
           {etapa === 1 && <div className="fadein"><div className="text-center mb-7"><IFlame className="w-16 h-16 text-orange-500 mx-auto mb-3 pulse-fire" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Introdução</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O que é a Jikkai</h2></div><div className="max-w-3xl mx-auto space-y-4 text-zinc-300 leading-relaxed"><p>A <strong className="text-orange-400">Jikkai</strong> é a estrutura estratégica responsável por preservar a ordem, conduzir operações e manter vivo o legado da F.O.X.</p><p>Ela reúne liderança, conselho, ramos, divisões e células operacionais. Cada integrante possui uma função, um nível de acesso e responsabilidade sobre aquilo que conhece e executa.</p><div className="p-5 border-l-4 border-orange-600 bg-orange-950/10 italic text-orange-100">À espreita nas trevas, manter a ordem. Nós somos sombras, entretanto mostramos o caminho.</div><p>Entrar não significa apenas receber uma conta. Significa ocupar uma posição registrada dentro da organização.</p></div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Conhecer a estrutura</Btn></div></div>}
 
@@ -4971,6 +5103,15 @@ function App() {
       usuario={usuarioAtual}
       juramentado={meuJuramento}
       juramentar={juramentar}
+      onAtualizarPerfil={(patch) => setData(d => ({
+        ...d,
+        users: d.users.map(u => {
+          if (u.username !== usuarioAtual.username) return u;
+          const atualizado = { ...u, ...patch };
+          return { ...atualizado, perfilCompleto: perfilCompletoUsuario(atualizado) };
+        }),
+        activityLog: [...(d.activityLog || []), atividade("foto_iniciacao_atualizada", usuarioAtual.username, usuarioAtual.username, "Atualizou a foto durante a identificação de primeiro acesso")],
+      }))}
       onConcluir={() => concluirIniciacao(usuarioAtual.username)}
       onLogout={() => setUsuario(null)}
     />;

@@ -17,6 +17,7 @@ const etapas = [
   "./painel-estrategico-relatorios.cjs",
   "./painel-estrategico-ui.cjs",
   "./painel-estrategico-mapa.cjs",
+  "./ajustes-iniciacao-ramos.cjs",
   "./validate-portal-v3.cjs"
 ];
 for (const arquivo of etapas) { console.log("Executando", arquivo); require(arquivo); }

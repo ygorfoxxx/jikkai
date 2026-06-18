@@ -14,7 +14,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Executar build e validação do portal
-        run: node scripts/build-etapa2.cjs
+        run: |
+          node scripts/build-etapa2.cjs
+          node scripts/validate-ajustes-iniciacao-ramos.cjs
 
       - name: Confirmar recursos obrigatórios
         run: |
@@ -24,3 +26,6 @@ jobs:
           grep -q 'Imagem do juramento no RP' index.html
           grep -q 'usuarioAtual.iniciacaoStatus === "pendente"' index.html
           grep -q 'migrated.juramentados' index.html
+          grep -q 'Recruta em Observação' index.html
+          grep -q 'function fraseJuramentoAceita' index.html
+          grep -q 'optgroup label="Ramos"' index.html
