@@ -43,12 +43,14 @@ jobs:
         run: |
           cat materialize.log
           test "$(cat materialize.status)" = "0"
-          git checkout origin/main -- scripts/validate-portal.cjs || true
-          rm -f .materialize-painel
-          rm -f .github/workflows/materialize-painel.yml scripts/materialize-portal.cjs
+          rm -f materialize.log materialize.status
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
+          if git diff --cached --quiet; then
+            echo 'Nenhuma alteração nova para consolidar.'
+            exit 0
+          fi
           git commit -m "Consolidar Painel Estratégico nos arquivos públicos"
           git push origin HEAD:feature/painel-estrategico-jikkai
 
