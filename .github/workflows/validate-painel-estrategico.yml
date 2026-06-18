@@ -16,14 +16,33 @@ jobs:
         with:
           ref: feature/painel-estrategico-jikkai
 
-      - name: Consolidar arquivos públicos
+      - name: Gerar arquivos consolidados
         shell: bash
         run: |
           if grep -q 'ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1' index.html; then
-            echo 'Arquivos já consolidados.'
+            echo 0 > materialize.status
+            echo 'Arquivos já consolidados.' > materialize.log
             exit 0
           fi
-          node scripts/materialize-portal.cjs
+          set +e
+          node scripts/materialize-portal.cjs > materialize.log 2>&1
+          echo $? > materialize.status
+          exit 0
+
+      - name: Publicar diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-materializacao
+          path: |
+            materialize.log
+            materialize.status
+          retention-days: 2
+
+      - name: Confirmar e salvar consolidação
+        shell: bash
+        run: |
+          cat materialize.log
+          test "$(cat materialize.status)" = "0"
           git checkout origin/main -- scripts/validate-portal.cjs || true
           rm -f .materialize-painel
           rm -f .github/workflows/materialize-painel.yml scripts/materialize-portal.cjs
