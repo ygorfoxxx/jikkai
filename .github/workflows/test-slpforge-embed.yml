@@ -21,88 +21,154 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Instalar Playwright e comparador
+      - name: Instalar Playwright e Pillow
         run: |
           npm init -y >/dev/null 2>&1
-          npm install playwright@1.45.0 pixelmatch@5.3.0 pngjs@7.0.0 >/dev/null 2>&1
+          npm install playwright@1.45.0 >/dev/null 2>&1
           npx playwright install --with-deps chromium >/dev/null
+          python3 -m pip install pillow >/dev/null
 
       - name: Testar mapa direto e incorporado
         shell: bash
         run: |
+          set +e
           mkdir -p map-test-result
-          curl -sSIL --max-time 30 https://slpforge.xyz/map > map-test-result/headers.txt || true
+          curl -sSIL --max-time 30 https://slpforge.xyz/map > map-test-result/headers.txt 2>map-test-result/curl-error.txt
+
           cat > /tmp/test-map.js <<'NODE'
           const { chromium } = require('playwright');
-          const { PNG } = require('pngjs');
-          const pixelmatch = require('pixelmatch');
           const fs = require('fs');
 
           (async () => {
             const url = 'https://slpforge.xyz/map';
-            const browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext({ viewport: { width: 1365, height: 768 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
-            const direct = await context.newPage();
-            const embedded = await context.newPage();
-            const consoleMessages = [];
-            embedded.on('console', msg => consoleMessages.push(`[${msg.type()}] ${msg.text()}`));
-            embedded.on('pageerror', err => consoleMessages.push(`[pageerror] ${err.message}`));
-
-            let directStatus = null;
-            let directError = null;
-            let embedError = null;
+            const result = {
+              testedAt: new Date().toISOString(),
+              url,
+              directStatus: null,
+              directFinalUrl: null,
+              directError: null,
+              embedError: null,
+              frameUrls: [],
+              frameTitle: null,
+              consoleMessages: []
+            };
+            let browser;
             try {
-              const response = await direct.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-              directStatus = response ? response.status() : null;
-            } catch (e) { directError = e.message; }
+              browser = await chromium.launch({ headless: true });
+              const context = await browser.newContext({ viewport: { width: 1365, height: 768 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
+              const direct = await context.newPage();
+              const embedded = await context.newPage();
+              embedded.on('console', msg => result.consoleMessages.push(`[${msg.type()}] ${msg.text()}`));
+              embedded.on('pageerror', err => result.consoleMessages.push(`[pageerror] ${err.message}`));
 
-            try {
-              await embedded.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}iframe{display:block;width:100vw;height:100vh;border:0;margin:0;padding:0}</style></head><body><iframe src="${url}" allowfullscreen></iframe></body></html>`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-            } catch (e) { embedError = e.message; }
+              try {
+                const response = await direct.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                result.directStatus = response ? response.status() : null;
+                result.directFinalUrl = direct.url();
+              } catch (e) { result.directError = e.message; }
 
-            await Promise.all([direct.waitForTimeout(15000), embedded.waitForTimeout(15000)]);
-            const frames = embedded.frames().filter(f => f !== embedded.mainFrame());
-            const frameUrls = frames.map(f => f.url());
-            let frameTitle = null;
-            if (frames[0]) { try { frameTitle = await frames[0].title(); } catch {} }
+              try {
+                await embedded.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}iframe{display:block;width:100vw;height:100vh;border:0;margin:0;padding:0}</style></head><body><iframe src="${url}" allowfullscreen></iframe></body></html>`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+              } catch (e) { result.embedError = e.message; }
 
-            await direct.screenshot({ path: 'map-test-result/direct.png' });
-            await embedded.screenshot({ path: 'map-test-result/embedded.png' });
+              await Promise.all([direct.waitForTimeout(15000), embedded.waitForTimeout(15000)]);
+              const frames = embedded.frames().filter(f => f !== embedded.mainFrame());
+              result.frameUrls = frames.map(f => f.url());
+              if (frames[0]) { try { result.frameTitle = await frames[0].title(); } catch {} }
 
-            const a = PNG.sync.read(fs.readFileSync('map-test-result/direct.png'));
-            const b = PNG.sync.read(fs.readFileSync('map-test-result/embedded.png'));
-            const diff = new PNG({ width: a.width, height: a.height });
-            const differentPixels = pixelmatch(a.data, b.data, diff.data, a.width, a.height, { threshold: 0.1 });
-            fs.writeFileSync('map-test-result/diff.png', PNG.sync.write(diff));
-            const totalPixels = a.width * a.height;
-            const differenceRatio = differentPixels / totalPixels;
-
-            const headers = fs.readFileSync('map-test-result/headers.txt', 'utf8');
-            const xFrameOptions = /(?:^|\n)x-frame-options:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim() || null;
-            const csp = /(?:^|\n)content-security-policy:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim() || null;
-            const frameAncestorsBlocked = csp ? /frame-ancestors\s+[^;]*(?:'none'|'self')/i.test(csp) : false;
-            const headerBlocked = !!xFrameOptions || frameAncestorsBlocked;
-            const frameLoaded = frameUrls.some(u => u.startsWith('https://slpforge.xyz/map'));
-            const consoleBlocked = consoleMessages.some(m => /refused to display|x-frame-options|frame-ancestors|blocked a frame/i.test(m));
-            const visuallyEquivalent = differenceRatio <= 0.01;
-            const canEmbedExactly = directStatus >= 200 && directStatus < 400 && frameLoaded && !headerBlocked && !consoleBlocked && visuallyEquivalent;
-
-            const result = { testedAt: new Date().toISOString(), url, directStatus, directError, embedError, xFrameOptions, contentSecurityPolicy: csp, frameAncestorsBlocked, frameUrls, frameTitle, consoleMessages, differentPixels, totalPixels, differenceRatio, visuallyEquivalent, frameLoaded, headerBlocked, consoleBlocked, canEmbedExactly };
-            fs.writeFileSync('map-test-result/result.json', JSON.stringify(result, null, 2));
-            console.log('MAP_TEST_RESULT=' + JSON.stringify(result));
-            await browser.close();
-            if (!canEmbedExactly) process.exitCode = 2;
-          })().catch(err => {
-            fs.writeFileSync('map-test-result/result.json', JSON.stringify({ canEmbedExactly: false, fatalError: err.message, stack: err.stack }, null, 2));
-            console.error(err);
-            process.exitCode = 3;
-          });
+              await direct.screenshot({ path: 'map-test-result/direct.png' });
+              await embedded.screenshot({ path: 'map-test-result/embedded.png' });
+            } catch (e) {
+              result.fatalError = e.message;
+              result.stack = e.stack;
+            } finally {
+              if (browser) await browser.close();
+              fs.writeFileSync('map-test-result/browser-result.json', JSON.stringify(result, null, 2));
+              console.log('BROWSER_RESULT=' + JSON.stringify(result));
+            }
+          })();
           NODE
-          node /tmp/test-map.js
+          node /tmp/test-map.js > map-test-result/node-output.txt 2>&1
+
+          cat > /tmp/finalize.py <<'PY'
+          import json, re
+          from pathlib import Path
+          from PIL import Image, ImageChops
+
+          out = Path('map-test-result')
+          try:
+              browser = json.loads((out / 'browser-result.json').read_text(encoding='utf-8'))
+          except Exception as exc:
+              browser = {'fatalError': f'browser-result indisponível: {exc}', 'consoleMessages': [], 'frameUrls': []}
+
+          headers = (out / 'headers.txt').read_text(encoding='utf-8', errors='replace') if (out / 'headers.txt').exists() else ''
+          xfo_match = re.search(r'(?:^|\n)x-frame-options:\s*([^\r\n]+)', headers, re.I)
+          csp_match = re.search(r'(?:^|\n)content-security-policy:\s*([^\r\n]+)', headers, re.I)
+          xfo = xfo_match.group(1).strip() if xfo_match else None
+          csp = csp_match.group(1).strip() if csp_match else None
+          frame_ancestors_blocked = bool(csp and re.search(r"frame-ancestors\s+[^;]*(?:'none'|'self')", csp, re.I))
+          header_blocked = bool(xfo or frame_ancestors_blocked)
+          frame_urls = browser.get('frameUrls') or []
+          frame_loaded = any(u.startswith('https://slpforge.xyz/map') for u in frame_urls)
+          console_messages = browser.get('consoleMessages') or []
+          console_blocked = any(re.search(r'refused to display|x-frame-options|frame-ancestors|blocked a frame', m, re.I) for m in console_messages)
+
+          difference_ratio = None
+          different_pixels = None
+          total_pixels = None
+          image_error = None
+          direct_path = out / 'direct.png'
+          embedded_path = out / 'embedded.png'
+          if direct_path.exists() and embedded_path.exists():
+              try:
+                  a = Image.open(direct_path).convert('RGBA')
+                  b = Image.open(embedded_path).convert('RGBA')
+                  if a.size != b.size:
+                      image_error = f'dimensões diferentes: {a.size} vs {b.size}'
+                  else:
+                      diff = ImageChops.difference(a, b)
+                      diff.save(out / 'diff.png')
+                      pixels = list(diff.getdata())
+                      different_pixels = sum(1 for px in pixels if max(px) > 20)
+                      total_pixels = a.width * a.height
+                      difference_ratio = different_pixels / total_pixels
+              except Exception as exc:
+                  image_error = str(exc)
+          else:
+              image_error = 'capturas direta ou incorporada não foram geradas'
+
+          visually_equivalent = difference_ratio is not None and difference_ratio <= 0.01
+          direct_status = browser.get('directStatus')
+          direct_ok = isinstance(direct_status, int) and 200 <= direct_status < 400
+          can_embed_exactly = bool(direct_ok and frame_loaded and not header_blocked and not console_blocked and visually_equivalent)
+
+          result = {
+              **browser,
+              'xFrameOptions': xfo,
+              'contentSecurityPolicy': csp,
+              'frameAncestorsBlocked': frame_ancestors_blocked,
+              'headerBlocked': header_blocked,
+              'frameLoaded': frame_loaded,
+              'consoleBlocked': console_blocked,
+              'differentPixels': different_pixels,
+              'totalPixels': total_pixels,
+              'differenceRatio': difference_ratio,
+              'imageError': image_error,
+              'visuallyEquivalent': visually_equivalent,
+              'canEmbedExactly': can_embed_exactly,
+          }
+          (out / 'result.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+          print('MAP_TEST_RESULT=' + json.dumps(result, ensure_ascii=False))
+          raise SystemExit(0 if can_embed_exactly else 2)
+          PY
+
+          python3 /tmp/finalize.py | tee map-test-result/final-output.txt
+          STATUS=${PIPESTATUS[0]}
+          exit $STATUS
 
       - name: Enviar evidências
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: teste-mapa-slpforge
+          name: teste-mapa-slpforge-v2
           path: map-test-result
