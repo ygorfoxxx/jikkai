@@ -2,8 +2,8 @@ name: Consolidar portal estratégico
 
 on:
   push:
-    branches: [feature/painel-estrategico-jikkai]
-    paths: [.materialize-painel]
+    branches:
+      - feature/painel-estrategico-jikkai
 
 permissions:
   contents: write
