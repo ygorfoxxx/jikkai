@@ -1,0 +1,27 @@
+name: Consolidar portal estratégico
+
+on:
+  push:
+    branches: [feature/painel-estrategico-jikkai]
+    paths:
+      - '.materialize-painel'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/painel-estrategico-jikkai
+      - run: node scripts/materialize-portal.cjs
+      - run: |
+          git checkout origin/main -- scripts/validate-portal.cjs || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Consolidar Painel Estratégico nos arquivos públicos"
+          git push origin feature/painel-estrategico-jikkai
