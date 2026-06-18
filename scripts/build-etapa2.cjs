@@ -14,7 +14,7 @@ const etapas = [
   "./painel-estrategico-relatorios.cjs",
   "./painel-estrategico-ui.cjs",
   "./painel-estrategico-mapa.cjs",
-  "./validate-portal.cjs",
+  "./validate-portal-v3.cjs",
 ];
 
 for (const arquivo of etapas) {
