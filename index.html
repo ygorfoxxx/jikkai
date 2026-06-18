@@ -170,11 +170,10 @@ function MemberAvatar({ user, size = "md", className = "" }) {
   const sizes = { xs: "w-8 h-8 text-[10px]", sm: "w-10 h-10 text-xs", md: "w-14 h-14 text-sm", lg: "w-24 h-24 text-xl", xl: "w-32 h-32 text-2xl" };
   const classes = sizes[size] || sizes.md;
   return (
-    <div className={`${classes} ${className} rounded-full overflow-hidden border border-orange-800/70 bg-gradient-to-br from-red-950 to-black flex items-center justify-center flex-shrink-0 shadow-lg`}>
-      {user?.avatarUrl ? (
-        <img src={user.avatarUrl} alt={getCodinome(user)} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-      ) : (
-        <span className="font-black tracking-wider text-orange-300">{iniciaisMembro(user)}</span>
+    <div className={`${classes} ${className} relative rounded-full overflow-hidden border border-orange-800/70 bg-gradient-to-br from-red-950 to-black flex items-center justify-center flex-shrink-0 shadow-lg`}>
+      <span className="font-black tracking-wider text-orange-300">{iniciaisMembro(user)}</span>
+      {user?.avatarUrl && (
+        <img src={user.avatarUrl} alt={getCodinome(user)} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
       )}
     </div>
   );
@@ -1159,7 +1158,7 @@ function DossieModal({ membro, data, onClose }) {
     ["Nível de acesso", `Nível ${membro.nivelAcesso || 1}`],
   ];
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p4 bg-black/90 backdrop-blur p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
       <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="relative p-6 border-b border-orange-900/40 bg-gradient-to-br from-red-950/50 via-black to-orange-950/20">
           <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
@@ -1362,7 +1361,7 @@ function EstruturaSection({ data, onOpen }) {
   const divisoes = (data.clas || []).map(c => ({ ...c, membros: membros.filter(u => !alocados.has(u.username) && u.cla === c.id) })).filter(c => c.membros.length);
   const semDivisao = membros.filter(u => !alocados.has(u.username) && !u.cla);
 
-  const Linha = ({ children }) => <div className="h-8 w-px bg-gradient-to-b from-orange-700 to-zinc-800 mx-auto" aria-hidden="true" />;
+  const Linha = () => <div className="h-8 w-px bg-gradient-to-b from-orange-700 to-zinc-800 mx-auto" aria-hidden="true" />;
   return (
     <div className="fadein space-y-10">
       <div className="text-center">
