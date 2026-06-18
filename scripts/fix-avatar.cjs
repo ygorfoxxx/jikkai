@@ -45,23 +45,36 @@ const newChoose = `  const escolherFoto = (e) => {
     reader.readAsDataURL(file);
   };`;
 
-const start = html.indexOf('      if (arquivo) {', html.indexOf('function MeuDossieModal'));
-const end = html.indexOf('      setData(d => {', start);
-
-if (!html.includes(oldChoose) || start < 0 || end < 0) {
-  throw new Error('Estrutura esperada do Meu Dossiê não encontrada.');
+if (!html.includes(oldChoose)) {
+  throw new Error('Seletor de foto original não encontrado.');
 }
 
 html = html.replace(oldChoose, newChoose);
+
+const modalStart = html.indexOf('function MeuDossieModal');
+const start = html.indexOf('      if (arquivo) {', modalStart);
+const end = html.indexOf('      setData(d => {', start);
+
+if (modalStart < 0 || start < 0 || end < 0 || end <= start) {
+  throw new Error('Bloco de salvamento do Meu Dossiê não encontrado.');
+}
+
 html = html.slice(0, start) + `      if (arquivo) {
         avatarUrl = preview;
         avatarStoragePath = "";
       }
 ` + html.slice(end);
+
 html = html.replace(
   'JPG, PNG ou WEBP, até 3 MB. Use uma imagem quadrada para melhor enquadramento.',
   'JPG, PNG ou WEBP, até 3 MB. A foto será recortada e otimizada automaticamente.'
 );
+
+const modalEnd = html.indexOf('function MembrosListSection', modalStart);
+const modalCode = html.slice(modalStart, modalEnd);
+if (!modalCode.includes('const recorte = Math.min') || modalCode.includes('storage.from("galeria")')) {
+  throw new Error('A correção do avatar não foi aplicada corretamente.');
+}
 
 fs.writeFileSync(path, html, 'utf8');
 console.log('Avatar corrigido sem dependência de bucket.');
