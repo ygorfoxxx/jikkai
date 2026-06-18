@@ -4,102 +4,628 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>JIKKAI — Mapa Estratégico</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#050505;--panel:#0d0d0f;--line:#27272a;--muted:#71717a;--text:#f4f4f5;--orange:#ea580c;--red:#991b1b;--purple:#7e22ce}
+:root{
+  --bg:#050505;--panel:#0d0d0f;--line:#27272a;--muted:#71717a;--text:#f4f4f5;
+  --orange:#ea580c;--orange2:#fb923c;--purple:#7e22ce;--red:#991b1b;--green:#15803d;
+}
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#020202;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 20% 10%,rgba(234,88,12,.08),transparent 28%),radial-gradient(circle at 80% 90%,rgba(126,34,206,.08),transparent 30%);pointer-events:none}
-.app{display:grid;grid-template-columns:320px 1fr;height:100vh}
-.panel{background:linear-gradient(180deg,rgba(13,13,15,.98),rgba(5,5,5,.98));border-right:1px solid #27272a;display:flex;flex-direction:column;z-index:20;box-shadow:18px 0 50px rgba(0,0,0,.45)}
-.brand{padding:18px;border-bottom:1px solid #27272a}
-.kicker{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#f97316;font-weight:800}
-h1{font-family:Georgia,serif;font-size:24px;margin:5px 0 3px;letter-spacing:.03em}
-.sub{font-size:12px;color:#71717a;line-height:1.5}
-.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-bottom:1px solid #27272a}
-button,.btn{appearance:none;border:1px solid #3f3f46;background:#18181b;color:#e4e4e7;border-radius:8px;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;cursor:pointer;text-decoration:none;text-align:center}
-button:hover,.btn:hover{border-color:#ea580c;color:#fff}
-button.primary{background:#c2410c;border-color:#ea580c}
-.filters{padding:12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #27272a}
+button,input,select,textarea{font:inherit}
+.app{display:grid;grid-template-columns:340px 1fr;height:100vh}
+.panel{background:linear-gradient(180deg,rgba(13,13,15,.985),rgba(5,5,5,.985));border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:30;box-shadow:18px 0 50px rgba(0,0,0,.48)}
+.brand{padding:18px;border-bottom:1px solid var(--line)}
+.kicker{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#f97316;font-weight:900}
+h1{font-family:Georgia,serif;font-size:24px;margin:5px 0 3px}
+.sub{font-size:12px;color:#a1a1aa;line-height:1.5}
+.roleline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #1f1f22}
+.rolebadge{font-size:9px;text-transform:uppercase;letter-spacing:.1em;border:1px solid #3f3f46;border-radius:999px;padding:4px 7px;color:#d4d4d8}
+.rolebadge.admin{border-color:#ea580c;background:#7c2d12;color:#ffedd5}
+.auth-mini{padding:5px 7px;font-size:9px;white-space:nowrap}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+.toolbar.admin-tools{grid-template-columns:1fr 1fr}
+button,.btn{appearance:none;border:1px solid #3f3f46;background:#18181b;color:#e4e4e7;border-radius:8px;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;cursor:pointer;text-decoration:none;text-align:center}
+button:hover,.btn:hover{border-color:var(--orange);color:#fff}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#c2410c;border-color:var(--orange)}
+.danger{background:#450a0a;border-color:#991b1b;color:#fecaca}
+.success{background:#14532d;border-color:#16a34a;color:#dcfce7}
+.filters{padding:12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .filter{padding:6px 8px;font-size:10px}
-.filter.active{background:#7c2d12;border-color:#ea580c}
+.filter.active{background:#7c2d12;border-color:var(--orange)}
 .list{overflow:auto;padding:10px;flex:1}
-.card{padding:11px;margin-bottom:8px;border:1px solid #27272a;background:rgba(24,24,27,.72);border-radius:9px;cursor:pointer;transition:.15s}
-.card:hover,.card.active{border-color:#ea580c;background:rgba(67,20,7,.35)}
+.group-title{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:#71717a;margin:9px 3px 7px}
+.card{padding:11px;margin-bottom:8px;border:1px solid var(--line);background:rgba(24,24,27,.72);border-radius:9px;cursor:pointer}
+.card:hover,.card.active{border-color:var(--orange);background:rgba(67,20,7,.35)}
 .card-title{font-weight:800;font-size:13px;display:flex;justify-content:space-between;gap:8px}
 .card-meta{font-size:10px;color:#a1a1aa;margin-top:5px;text-transform:uppercase;letter-spacing:.08em}
 .badge{font-size:9px;padding:3px 6px;border-radius:99px;border:1px solid #52525b;color:#d4d4d8;white-space:nowrap}
-.footer{padding:10px 12px;border-top:1px solid #27272a;font-size:10px;color:#52525b}
+.footer{padding:10px 12px;border-top:1px solid var(--line);font-size:10px;color:#71717a}
+.sync{display:flex;align-items:center;gap:6px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#52525b}
+.sync-dot.ok{background:#22c55e}.sync-dot.busy{background:#f59e0b}.sync-dot.err{background:#ef4444}
 .map-shell{position:relative;overflow:hidden;background:#0b3c4b;cursor:grab}
 .map-shell.dragging{cursor:grabbing}
-.map-stage{position:absolute;left:0;top:0;width:954px;height:702px;transform-origin:0 0;will-change:transform;user-select:none}
-.map-stage img{display:block;width:954px;height:702px;pointer-events:none}
+.map-shell.mode-place{cursor:crosshair}
+.stage{position:absolute;left:0;top:0;width:954px;height:702px;transform-origin:0 0;will-change:transform;user-select:none}
+.stage img{display:block;width:954px;height:702px;pointer-events:none}
 .overlay{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.12),transparent 15%,transparent 85%,rgba(0,0,0,.18)),repeating-linear-gradient(0deg,transparent 0 31px,rgba(255,255,255,.025) 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(255,255,255,.025) 32px);mix-blend-mode:multiply}
+.routes{position:absolute;inset:0;width:954px;height:702px;overflow:visible;pointer-events:none}
+.route-visible{fill:none;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(0,0,0,.7));pointer-events:none}
+.route-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.route-label{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;fill:#fff;paint-order:stroke;stroke:#09090b;stroke-width:4px;stroke-linejoin:round;pointer-events:none}
+.route-vertex{fill:#fff;stroke:#09090b;stroke-width:2;pointer-events:none}
 .marker{position:absolute;width:22px;height:22px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid white;box-shadow:0 0 0 5px rgba(0,0,0,.35),0 0 20px currentColor;cursor:pointer;pointer-events:auto;display:grid;place-items:center;font-size:9px;font-weight:900;transition:.18s}
-.marker:hover,.marker.active{transform:translate(-50%,-50%) scale(1.28);z-index:5}
-.marker.vila{background:#c2410c;color:#fb923c}
-.marker.regiao{background:#713f12;color:#facc15}
-.marker.base{background:#581c87;color:#c084fc}
-.marker:after{content:attr(data-label);position:absolute;left:50%;top:27px;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.82);border:1px solid #3f3f46;color:#f4f4f5;padding:4px 7px;border-radius:5px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none}
+.marker:hover,.marker.active{transform:translate(-50%,-50%) scale(1.28);z-index:8}
+.marker:after{content:attr(data-label);position:absolute;left:50%;top:27px;transform:translateX(-50%);white-space:nowrap;background:rgba(0,0,0,.9);border:1px solid #3f3f46;color:#f4f4f5;padding:4px 7px;border-radius:5px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none}
 .marker:hover:after,.marker.active:after{opacity:1}
-.zoom{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;gap:7px;z-index:10}
-.zoom button{width:42px;height:42px;padding:0;font-size:18px;background:rgba(9,9,11,.9)}
-.legend{position:absolute;right:16px;bottom:16px;background:rgba(9,9,11,.9);border:1px solid #3f3f46;border-radius:9px;padding:10px;z-index:10;font-size:10px;color:#a1a1aa}
+.marker.vila{background:#c2410c;color:#fb923c}
+.marker.regiao{background:#a16207;color:#facc15}
+.marker.base{background:#581c87;color:#c084fc}
+.marker.treino{background:#166534;color:#4ade80}
+.marker.fuga{background:#075985;color:#38bdf8}
+.marker.encontro{background:#4338ca;color:#818cf8}
+.marker.risco{background:#7f1d1d;color:#f87171}
+.zoom{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;gap:7px;z-index:12}
+.zoom button{width:42px;height:42px;padding:0;font-size:18px;background:rgba(9,9,11,.92)}
+.legend{position:absolute;right:16px;bottom:16px;background:rgba(9,9,11,.92);border:1px solid #3f3f46;border-radius:9px;padding:10px;z-index:12;font-size:10px;color:#a1a1aa}
 .legend-row{display:flex;align-items:center;gap:7px;margin:5px 0}
 .dot{width:9px;height:9px;border-radius:50%}
-.detail{position:absolute;left:340px;right:20px;bottom:20px;max-width:620px;background:rgba(9,9,11,.94);border:1px solid #ea580c;border-radius:12px;padding:16px;z-index:15;box-shadow:0 20px 60px rgba(0,0,0,.6);display:none}
+.detail{position:absolute;left:360px;right:20px;bottom:20px;max-width:660px;background:rgba(9,9,11,.97);border:1px solid var(--orange);border-radius:12px;padding:16px;z-index:18;box-shadow:0 20px 60px rgba(0,0,0,.65);display:none}
 .detail.show{display:block}
 .detail h2{font-family:Georgia,serif;margin:0 0 6px;font-size:21px}
 .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.detail-cell{background:#18181b;border:1px solid #27272a;border-radius:7px;padding:8px}
-.detail-label{font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:.1em}
-.detail-value{font-size:12px;margin-top:3px;font-weight:700}
+.cell{background:#18181b;border:1px solid var(--line);border-radius:7px;padding:8px}
+.label{font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:.1em}
+.value{font-size:12px;margin-top:3px;font-weight:700}
 .close{position:absolute;right:10px;top:10px;width:30px;height:30px;padding:0}
-.mobile-toggle{display:none;position:absolute;left:12px;top:12px;z-index:30}
-@media(max-width:820px){
-.app{display:block}.panel{position:absolute;inset:0 auto 0 0;width:min(88vw,340px);transform:translateX(-102%);transition:.2s}.panel.open{transform:translateX(0)}.mobile-toggle{display:block}.detail{left:12px;right:12px;bottom:12px}.legend{display:none}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mobile{display:none;position:absolute;left:12px;top:12px;z-index:35}
+.modebar{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:20;background:rgba(9,9,11,.96);border:1px solid var(--orange);border-radius:12px;padding:10px 12px;display:none;align-items:center;gap:8px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.modebar.show{display:flex}
+.modebar .hint{font-size:11px;color:#fed7aa;max-width:340px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100;display:none;align-items:center;justify-content:center;padding:18px}
+.modal-backdrop.show{display:flex}
+.modal{width:min(680px,100%);max-height:92vh;overflow:auto;background:#09090b;border:1px solid #ea580c;border-radius:14px;box-shadow:0 30px 100px rgba(0,0,0,.8)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #27272a}
+.modal-head h2{font-family:Georgia,serif;margin:0;font-size:22px}
+.modal-body{padding:18px;display:grid;gap:13px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:#c2410c;margin-bottom:5px;font-weight:800}
+.field input,.field select,.field textarea{width:100%;background:#000;border:1px solid #3f3f46;color:#fef3c7;border-radius:7px;padding:10px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#ea580c}
+.field textarea{min-height:100px;resize:vertical}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid #27272a}
+.coord{display:flex;gap:8px;align-items:center;padding:9px;background:#18181b;border:1px solid #27272a;border-radius:8px;font-size:11px;color:#a1a1aa}
+.readonly-note{margin:12px;padding:10px;border:1px solid #3f3f46;background:#18181b;border-radius:8px;font-size:11px;color:#a1a1aa}
+@media(max-width:900px){
+  .app{display:block}.panel{position:absolute;inset:0 auto 0 0;width:min(88vw,350px);transform:translateX(-102%);transition:.2s}.panel.open{transform:translateX(0)}
+  .mobile{display:block}.detail{left:12px;right:12px;bottom:12px}.legend{display:none}.modebar{top:auto;bottom:16px;width:calc(100% - 24px);justify-content:center;flex-wrap:wrap}
 }
+@media(max-width:540px){.form-grid,.detail-grid{grid-template-columns:1fr}.toolbar.admin-tools{grid-template-columns:1fr}.detail{max-height:55vh;overflow:auto}}
 </style>
 </head>
 <body>
 <div class="app">
-<aside class="panel" id="panel">
-  <div class="brand"><div class="kicker">F.O.X. · Cartografia Operacional</div><h1>Mapa Estratégico</h1><div class="sub">Base cartográfica oficial do Shinobi Legends adaptada para operações da JIKKAI.</div></div>
-  <div class="toolbar"><button class="primary" id="resetBtn">Centralizar</button><a class="btn" href="./">Voltar ao portal</a></div>
-  <div class="filters" id="filters"></div>
-  <div class="list" id="list"></div>
-  <div class="footer">Arraste para mover · roda do mouse para ampliar · clique em um ponto para abrir o dossiê.</div>
-</aside>
-<main class="map-shell" id="shell">
-  <button class="mobile-toggle" id="menuBtn">☰</button>
-  <div class="map-stage" id="stage">
-    <img alt="Mapa oficial Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
-    <div class="overlay"></div>
-    <div id="markers"></div>
-  </div>
-  <div class="zoom"><button id="plus">+</button><button id="minus">−</button><button id="fit">⌂</button></div>
-  <div class="legend"><div class="kicker" style="margin-bottom:7px">Legenda</div><div class="legend-row"><span class="dot" style="background:#c2410c"></span>Vilas</div><div class="legend-row"><span class="dot" style="background:#ca8a04"></span>Regiões</div><div class="legend-row"><span class="dot" style="background:#7e22ce"></span>Bases</div></div>
-</main>
+  <aside class="panel" id="panel">
+    <div class="brand">
+      <div class="kicker">F.O.X. · Cartografia Operacional</div>
+      <h1>Mapa Estratégico</h1>
+      <div class="sub">Cartografia oficial do Shinobi Legends adaptada às operações da JIKKAI.</div>
+      <div class="roleline">
+        <div>
+          <div class="label">Sessão</div>
+          <div class="value" id="sessionName">Leitura restrita</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="rolebadge" id="roleBadge">Somente leitura</span>
+          <button class="auth-mini" id="authBtn">Ativar edição</button>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="primary" id="reset">Centralizar</button>
+      <a class="btn" href="./">Voltar ao portal</a>
+    </div>
+    <div class="toolbar admin-tools" id="adminTools" hidden>
+      <button id="newPoint">+ Novo local</button>
+      <button id="newRoute">+ Nova rota</button>
+    </div>
+    <div class="readonly-note" id="readonlyNote">Entre no portal como Líder ou Conselheiro para criar e editar locais e rotas.</div>
+    <div class="filters" id="filters"></div>
+    <div class="list" id="list"></div>
+    <div class="footer">
+      <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncText">Carregando mapa...</span></div>
+      <div style="margin-top:5px">Arraste para mover · roda para ampliar · clique nos pontos e rotas para abrir os dossiês.</div>
+    </div>
+  </aside>
+
+  <main class="map-shell" id="shell">
+    <button class="mobile" id="menu">☰</button>
+    <div class="stage" id="stage">
+      <img alt="Mapa oficial Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
+      <svg class="routes" id="routesSvg" viewBox="0 0 954 702"></svg>
+      <div class="overlay"></div>
+      <div id="markers"></div>
+    </div>
+    <div class="zoom">
+      <button id="plus">+</button>
+      <button id="minus">−</button>
+      <button id="fit">⌂</button>
+    </div>
+    <div class="legend">
+      <div class="kicker">Legenda</div>
+      <div class="legend-row"><span class="dot" style="background:#c2410c"></span>Vilas</div>
+      <div class="legend-row"><span class="dot" style="background:#ca8a04"></span>Regiões</div>
+      <div class="legend-row"><span class="dot" style="background:#7e22ce"></span>Bases</div>
+      <div class="legend-row"><span class="dot" style="background:#16a34a"></span>Treino</div>
+      <div class="legend-row"><span class="dot" style="background:#0284c7"></span>Fuga</div>
+      <div class="legend-row"><span class="dot" style="background:#fff"></span>Rotas</div>
+    </div>
+    <div class="modebar" id="modebar">
+      <div class="hint" id="modeHint"></div>
+      <button id="modeUndo" hidden>Desfazer</button>
+      <button class="success" id="modeFinish" hidden>Concluir</button>
+      <button class="danger" id="modeCancel">Cancelar</button>
+    </div>
+  </main>
 </div>
-<section class="detail" id="detail"><button class="close" id="close">×</button><div class="kicker" id="detailType"></div><h2 id="detailName"></h2><p class="sub" id="detailDesc"></p><div class="detail-grid"><div class="detail-cell"><div class="detail-label">Situação</div><div class="detail-value" id="detailStatus"></div></div><div class="detail-cell"><div class="detail-label">Ameaça</div><div class="detail-value" id="detailThreat"></div></div><div class="detail-cell"><div class="detail-label">Sigilo</div><div class="detail-value" id="detailSecrecy"></div></div></div></section>
+
+<section class="detail" id="detail">
+  <button class="close" id="closeDetail">×</button>
+  <div class="kicker" id="dtype"></div>
+  <h2 id="dname"></h2>
+  <p class="sub" id="ddesc"></p>
+  <div class="detail-grid">
+    <div class="cell"><div class="label">Situação</div><div class="value" id="dstatus"></div></div>
+    <div class="cell"><div class="label">Ameaça</div><div class="value" id="dthreat"></div></div>
+    <div class="cell"><div class="label">Sigilo</div><div class="value" id="dsecrecy"></div></div>
+  </div>
+  <div class="detail-actions" id="detailActions" hidden>
+    <button id="editSelected">Editar</button>
+    <button class="danger" id="deleteSelected">Excluir</button>
+  </div>
+</section>
+
+<div class="modal-backdrop" id="authBackdrop">
+  <div class="modal" style="width:min(430px,100%)">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">Autorização cartográfica</div>
+        <h2>Ativar modo de edição</h2>
+      </div>
+      <button class="close" id="closeAuth">×</button>
+    </div>
+    <form id="authForm">
+      <div class="modal-body">
+        <div class="sub">Use o mesmo usuário e senha do portal. Apenas Líder e Conselheiro podem alterar o mapa.</div>
+        <div class="field">
+          <label>Usuário</label>
+          <input id="authUser" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input id="authPass" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="readonly-note" id="authError" hidden></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" id="cancelAuth">Cancelar</button>
+        <button type="submit" class="primary">Entrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editorBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="kicker" id="editorKicker">Cartografia</div>
+        <h2 id="editorTitle">Novo local</h2>
+      </div>
+      <button class="close" id="closeEditor">×</button>
+    </div>
+    <form id="editorForm">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>Nome</label>
+            <input id="fName" maxlength="80" required placeholder="Ex.: Campo de treinamento leste">
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select id="fType"></select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Situação</label>
+            <select id="fStatus">
+              <option>Controlado</option><option>Seguro</option><option>Observado</option>
+              <option>Neutro</option><option>Objetivo</option><option>Hostil</option><option>Desconhecido</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Ameaça</label>
+            <select id="fThreat"><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Nível de sigilo</label>
+            <select id="fSecrecy"><option>Nível I</option><option>Nível II</option><option>Nível III</option><option>Nível IV</option><option>Nível V</option></select>
+          </div>
+          <div class="field" id="colorField" hidden>
+            <label>Cor da rota</label>
+            <input id="fColor" type="color" value="#f97316">
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição operacional</label>
+          <textarea id="fDesc" maxlength="900" placeholder="Finalidade, riscos, regras de acesso e observações..."></textarea>
+        </div>
+        <div class="coord">
+          <span id="coordText">Posição registrada no mapa.</span>
+          <button type="button" id="repositionBtn">Reposicionar</button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" id="cancelEditor">Cancelar</button>
+        <button type="submit" class="primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
-const POINTS=[{"id": "konoha", "name": "Konohagakure", "type": "vila", "x": 65.5, "y": 60.5, "status": "Neutra", "threat": "Média", "sigilo": "Nível II", "desc": "Centro político e militar do País do Fogo. Rotas principais convergem nesta região."}, {"id": "kiri", "name": "Kirigakure", "type": "vila", "x": 85.2, "y": 78.2, "status": "Hostil", "threat": "Alta", "sigilo": "Nível III", "desc": "Território de origem dos eventos que levaram à formação da F.O.X. Vigilância constante."}, {"id": "suna", "name": "Sunagakure", "type": "vila", "x": 24.5, "y": 71.2, "status": "Neutra", "threat": "Média", "sigilo": "Nível II", "desc": "Vila do deserto. Acesso por rotas expostas e pontos de água limitados."}, {"id": "iwa", "name": "Iwagakure", "type": "vila", "x": 22.5, "y": 28.5, "status": "Desconhecida", "threat": "Média", "sigilo": "Nível II", "desc": "Região rochosa com terreno favorável a emboscadas e defesa vertical."}, {"id": "kumo", "name": "Kumogakure", "type": "vila", "x": 86.2, "y": 13.5, "status": "Objetivo", "threat": "Alta", "sigilo": "Nível IV", "desc": "Destino estratégico final do plano JIKKAI. Informações restritas à liderança."}, {"id": "vale-fim", "name": "Vale do Fim", "type": "regiao", "x": 49.4, "y": 49.6, "status": "Observado", "threat": "Alta", "sigilo": "Nível III", "desc": "Gargalo natural entre áreas centrais. Alto valor para interceptação e retirada."}, {"id": "floresta-morte", "name": "Floresta da Morte", "type": "regiao", "x": 59.7, "y": 45.5, "status": "Observado", "threat": "Alta", "sigilo": "Nível II", "desc": "Vegetação densa, baixa visibilidade e múltiplas rotas clandestinas."}, {"id": "esconderijo", "name": "Esconderijo", "type": "base", "x": 44.5, "y": 70.5, "status": "Controlado", "threat": "Baixa", "sigilo": "Nível III", "desc": "Ponto logístico próximo à fronteira entre o deserto e o País do Fogo."}];
-const shell=document.getElementById('shell'), stage=document.getElementById('stage'), markers=document.getElementById('markers'), list=document.getElementById('list'), filters=document.getElementById('filters'), detail=document.getElementById('detail');
-let scale=1,x=0,y=0,drag=false,sx=0,sy=0,ox=0,oy=0,active=null,filter='todos';
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function renderTransform(){stage.style.transform=`translate(${x}px,${y}px) scale(${scale})`}
-function fit(){const w=shell.clientWidth,h=shell.clientHeight;scale=Math.min(w/954,h/702);x=(w-954*scale)/2;y=(h-702*scale)/2;renderTransform()}
-function zoomAt(next,cx=shell.clientWidth/2,cy=shell.clientHeight/2){next=clamp(next,.45,4);const wx=(cx-x)/scale,wy=(cy-y)/scale;x=cx-wx*next;y=cy-wy*next;scale=next;renderTransform()}
-function select(id){active=id;document.querySelectorAll('.marker,.card').forEach(el=>el.classList.toggle('active',el.dataset.id===id));const p=POINTS.find(v=>v.id===id);if(!p)return;detail.classList.add('show');detailType.textContent=p.type;detailName.textContent=p.name;detailDesc.textContent=p.desc;detailStatus.textContent=p.status;detailThreat.textContent=p.threat;detailSecrecy.textContent=p.sigilo}
-function render(){markers.innerHTML='';list.innerHTML='';POINTS.filter(p=>filter==='todos'||p.type===filter).forEach(p=>{const m=document.createElement('button');m.className='marker '+p.type;m.dataset.id=p.id;m.dataset.label=p.name;m.style.left=p.x+'%';m.style.top=p.y+'%';m.textContent=p.type==='vila'?'◆':p.type==='base'?'▲':'●';m.onclick=e=>{e.stopPropagation();select(p.id)};markers.appendChild(m);const c=document.createElement('div');c.className='card';c.dataset.id=p.id;c.innerHTML=`<div class="card-title"><span>${p.name}</span><span class="badge">${p.sigilo}</span></div><div class="card-meta">${p.type} · ${p.status} · ameaça ${p.threat}</div>`;c.onclick=()=>{select(p.id);zoomAt(Math.max(scale,1.15),shell.clientWidth*.55,shell.clientHeight*.5)};list.appendChild(c)})}
-['todos','vila','regiao','base'].forEach(f=>{const b=document.createElement('button');b.className='filter'+(f==='todos'?' active':'');b.textContent=f==='todos'?'Todos':f==='regiao'?'Regiões':f==='vila'?'Vilas':'Bases';b.onclick=()=>{filter=f;document.querySelectorAll('.filter').forEach(e=>e.classList.remove('active'));b.classList.add('active');render()};filters.appendChild(b)})
-shell.addEventListener('mousedown',e=>{if(e.target.closest('button'))return;drag=true;shell.classList.add('dragging');sx=e.clientX;sy=e.clientY;ox=x;oy=y});
-window.addEventListener('mousemove',e=>{if(!drag)return;x=ox+e.clientX-sx;y=oy+e.clientY-sy;renderTransform()});
-window.addEventListener('mouseup',()=>{drag=false;shell.classList.remove('dragging')});
-shell.addEventListener('wheel',e=>{e.preventDefault();const r=shell.getBoundingClientRect();zoomAt(scale*(e.deltaY<0?1.13:.885),e.clientX-r.left,e.clientY-r.top)},{passive:false});
-let touch=null;shell.addEventListener('touchstart',e=>{if(e.touches.length===1){touch={x:e.touches[0].clientX,y:e.touches[0].clientY,ox:x,oy:y}}},{passive:true});
-shell.addEventListener('touchmove',e=>{if(touch&&e.touches.length===1){x=touch.ox+e.touches[0].clientX-touch.x;y=touch.oy+e.touches[0].clientY-touch.y;renderTransform()}},{passive:true});
-shell.addEventListener('touchend',()=>touch=null);
-plus.onclick=()=>zoomAt(scale*1.25);minus.onclick=()=>zoomAt(scale/1.25);fit.onclick=resetBtn.onclick=fit;close.onclick=()=>detail.classList.remove('show');menuBtn.onclick=()=>panel.classList.toggle('open');window.addEventListener('resize',fit);
-render();fit();
+const SUPABASE_URL="https://mhbbqtjsxruuuiqixlvc.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+const STORAGE_KEY="fox-portal-v3";
+const SESSION_KEY="fox-map-session";
+const cloudClient=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+const POINT_TYPES={
+  vila:{label:"Vila",symbol:"◆",color:"#c2410c"},
+  regiao:{label:"Região",symbol:"●",color:"#ca8a04"},
+  base:{label:"Base",symbol:"▲",color:"#7e22ce"},
+  treino:{label:"Treino",symbol:"T",color:"#16a34a"},
+  fuga:{label:"Fuga",symbol:"↗",color:"#0284c7"},
+  encontro:{label:"Encontro",symbol:"E",color:"#4f46e5"},
+  risco:{label:"Risco",symbol:"!",color:"#b91c1c"}
+};
+const ROUTE_TYPES={
+  infiltracao:{label:"Infiltração",color:"#f97316"},
+  fuga:{label:"Fuga",color:"#38bdf8"},
+  patrulha:{label:"Patrulha",color:"#a78bfa"},
+  transporte:{label:"Transporte",color:"#facc15"},
+  ataque:{label:"Ataque",color:"#ef4444"},
+  segura:{label:"Rota segura",color:"#22c55e"}
+};
+
+const DEFAULT_POINTS=[
+{id:"konoha",name:"Konohagakure",kind:"point",type:"vila",x:65.5,y:60.5,status:"Neutro",threat:"Média",sigilo:"Nível II",desc:"Centro político e militar do País do Fogo. As rotas principais convergem nesta região.",system:true},
+{id:"kiri",name:"Kirigakure",kind:"point",type:"vila",x:85.2,y:78.2,status:"Hostil",threat:"Alta",sigilo:"Nível III",desc:"Território de origem dos eventos que levaram à formação da F.O.X. Vigilância constante.",system:true},
+{id:"suna",name:"Sunagakure",kind:"point",type:"vila",x:24.5,y:71.2,status:"Neutro",threat:"Média",sigilo:"Nível II",desc:"Vila do deserto. Acesso por rotas expostas e pontos de água limitados.",system:true},
+{id:"iwa",name:"Iwagakure",kind:"point",type:"vila",x:22.5,y:28.5,status:"Desconhecido",threat:"Média",sigilo:"Nível II",desc:"Região rochosa com terreno favorável a emboscadas e defesa vertical.",system:true},
+{id:"kumo",name:"Kumogakure",kind:"point",type:"vila",x:86.2,y:13.5,status:"Objetivo",threat:"Alta",sigilo:"Nível IV",desc:"Destino estratégico final do plano JIKKAI. Informações restritas à liderança.",system:true},
+{id:"vale",name:"Vale do Fim",kind:"point",type:"regiao",x:49.4,y:49.6,status:"Observado",threat:"Alta",sigilo:"Nível III",desc:"Gargalo natural entre áreas centrais. Alto valor para interceptação e retirada.",system:true},
+{id:"morte",name:"Floresta da Morte",kind:"point",type:"regiao",x:59.7,y:45.5,status:"Observado",threat:"Alta",sigilo:"Nível II",desc:"Vegetação densa, baixa visibilidade e múltiplas rotas clandestinas.",system:true},
+{id:"base",name:"Esconderijo",kind:"point",type:"base",x:44.5,y:70.5,status:"Controlado",threat:"Baixa",sigilo:"Nível III",desc:"Ponto logístico próximo à fronteira entre o deserto e o País do Fogo.",system:true}
+];
+
+const el=id=>document.getElementById(id);
+const shell=el("shell"),stage=el("stage"),markers=el("markers"),routesSvg=el("routesSvg"),list=el("list"),filters=el("filters");
+const detail=el("detail"),editorBackdrop=el("editorBackdrop"),authBackdrop=el("authBackdrop");
+let portalState=null,points=[],routes=[],access={user:null,role:null,canEdit:false};
+let scale=1,tx=0,ty=0,drag=false,downX=0,downY=0,startTx=0,startTy=0,moved=false;
+let active=null,filter="all",mode=null,editorDraft=null,saving=false;
+
+function setSync(text,state=""){
+  el("syncText").textContent=text;
+  el("syncDot").className="sync-dot"+(state?" "+state:"");
+}
+function parseSession(){
+  try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null")}catch{return null}
+}
+function resolveAccess(state){
+  const session=parseSession();
+  const user=session&&state?.users?.find(u=>u.username===session.username);
+  const role=user&&state?.roles?.find(r=>r.id===user.role);
+  const canEdit=roleCanEdit(role);
+  return{user,role,canEdit};
+}
+function roleCanEdit(role){
+  return !!(role&&(role.hasLeaderPerms===true||role.id==="conselheiro"||(Array.isArray(role.permissions)&&role.permissions.includes("edit_map"))));
+}
+function openAuth(){
+  if(access.canEdit){
+    sessionStorage.removeItem(SESSION_KEY);
+    applyState(portalState);
+    closeDetail();
+    return;
+  }
+  el("authError").hidden=true;
+  el("authUser").value="";
+  el("authPass").value="";
+  authBackdrop.classList.add("show");
+  setTimeout(()=>el("authUser").focus(),50);
+}
+function closeAuth(){authBackdrop.classList.remove("show");el("authError").hidden=true}
+function submitAuth(e){
+  e.preventDefault();
+  const username=el("authUser").value.trim();
+  const password=el("authPass").value;
+  const user=portalState?.users?.find(u=>u.username===username&&u.password===password);
+  const role=user&&portalState?.roles?.find(r=>r.id===user.role);
+  if(!user||!roleCanEdit(role)){
+    el("authError").textContent=user?"Este cargo não possui autorização para editar o mapa.":"Usuário ou senha inválidos.";
+    el("authError").hidden=false;
+    return;
+  }
+  sessionStorage.setItem(SESSION_KEY,JSON.stringify({username:user.username,authenticatedAt:new Date().toISOString()}));
+  closeAuth();
+  applyState(portalState);
+  setSync("Modo de edição ativado","ok");
+}
+function normalizePoint(p){
+  return{kind:"point",status:"Neutro",threat:"Média",sigilo:"Nível II",desc:"",type:"regiao",...p,x:Number(p.x),y:Number(p.y)};
+}
+function normalizeRoute(r){
+  return{kind:"route",status:"Observado",threat:"Média",sigilo:"Nível II",desc:"",type:"infiltracao",color:ROUTE_TYPES[r.type]?.color||"#f97316",points:[],...r,points:(r.points||[]).map(p=>({x:Number(p.x),y:Number(p.y)}))};
+}
+function applyState(state){
+  portalState=state||{};
+  points=(Array.isArray(portalState.mapaPontos)&&portalState.mapaPontos.length?portalState.mapaPontos:DEFAULT_POINTS).map(normalizePoint);
+  routes=(Array.isArray(portalState.mapaRotas)?portalState.mapaRotas:[]).map(normalizeRoute);
+  access=resolveAccess(portalState);
+  el("sessionName").textContent=access.user?(access.user.codinome||access.user.displayName||access.user.username):"Leitura restrita";
+  el("roleBadge").textContent=access.role?.nome||"Somente leitura";
+  el("roleBadge").className="rolebadge"+(access.canEdit?" admin":"");
+  el("adminTools").hidden=!access.canEdit;
+  el("readonlyNote").hidden=access.canEdit;
+  el("detailActions").hidden=!access.canEdit;
+  el("authBtn").textContent=access.canEdit?"Encerrar edição":"Ativar edição";
+  render();
+}
+async function loadState(){
+  setSync("Carregando mapa...","busy");
+  let state=null;
+  if(cloudClient){
+    try{
+      const{data,error}=await cloudClient.from("fox_state").select("data").eq("id",1).single();
+      if(!error&&data?.data)state=data.data;
+    }catch(e){console.error(e)}
+  }
+  if(!state){
+    try{state=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")}catch{}
+  }
+  applyState(state||{});
+  setSync(cloudClient?"Mapa sincronizado":"Modo local",cloudClient?"ok":"");
+}
+async function persistMap(nextPoints,nextRoutes){
+  if(!access.canEdit)return;
+  saving=true;setSync("Salvando alterações...","busy");
+  points=nextPoints.map(normalizePoint);routes=nextRoutes.map(normalizeRoute);render();
+  let base=portalState||{};
+  let cloudOk=false;
+  if(cloudClient){
+    try{
+      const{data}=await cloudClient.from("fox_state").select("data").eq("id",1).single();
+      if(data?.data)base=data.data;
+      const merged={...base,mapaPontos:points,mapaRotas:routes,mapaAtualizadoEm:new Date().toISOString(),mapaAtualizadoPor:access.user?.username||"desconhecido"};
+      const{error}=await cloudClient.from("fox_state").upsert({id:1,data:merged,updated_at:new Date().toISOString()});
+      if(error)throw error;
+      portalState=merged;cloudOk=true;
+    }catch(e){console.error("Erro ao salvar mapa",e)}
+  }else{
+    portalState={...base,mapaPontos:points,mapaRotas:routes,mapaAtualizadoEm:new Date().toISOString()};
+  }
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(portalState))}catch{}
+  saving=false;setSync(cloudClient?(cloudOk?"Alterações sincronizadas":"Falha ao sincronizar"):"Alterações salvas neste dispositivo",cloudClient?(cloudOk?"ok":"err"):"ok");
+}
+
+function transform(){stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
+function center(){const w=shell.clientWidth,h=shell.clientHeight;scale=Math.min(w/954,h/702);tx=(w-954*scale)/2;ty=(h-702*scale)/2;transform()}
+function zoom(next,cx=shell.clientWidth/2,cy=shell.clientHeight/2){
+  next=Math.max(.42,Math.min(4,next));const wx=(cx-tx)/scale,wy=(cy-ty)/scale;tx=cx-wx*next;ty=cy-wy*next;scale=next;transform();
+}
+function eventMapPosition(e){
+  const r=shell.getBoundingClientRect();
+  const px=(e.clientX-r.left-tx)/scale,py=(e.clientY-r.top-ty)/scale;
+  return{x:Math.max(0,Math.min(100,px/954*100)),y:Math.max(0,Math.min(100,py/702*100))};
+}
+function pctToPx(p){return{x:p.x/100*954,y:p.y/100*702}}
+
+function typeLabel(item){
+  return item.kind==="route"?(ROUTE_TYPES[item.type]?.label||"Rota"):(POINT_TYPES[item.type]?.label||"Local");
+}
+function visibleItems(){
+  if(filter==="point")return points;
+  if(filter==="route")return routes;
+  return [...points,...routes];
+}
+function renderFilters(){
+  filters.innerHTML="";
+  [["all","Todos"],["point","Locais"],["route","Rotas"]].forEach(([id,label])=>{
+    const b=document.createElement("button");b.className="filter"+(filter===id?" active":"");b.textContent=label;
+    b.onclick=()=>{filter=id;render()};filters.appendChild(b);
+  });
+}
+function renderList(){
+  list.innerHTML="";
+  const items=visibleItems();
+  if(!items.length){list.innerHTML='<div class="readonly-note">Nenhum item neste filtro.</div>';return}
+  const pointItems=items.filter(i=>i.kind!=="route"),routeItems=items.filter(i=>i.kind==="route");
+  const addGroup=(title,arr)=>{
+    if(!arr.length)return;
+    const h=document.createElement("div");h.className="group-title";h.textContent=title;list.appendChild(h);
+    arr.forEach(item=>{
+      const c=document.createElement("div");c.className="card"+(active?.id===item.id&&active.kind===item.kind?" active":"");c.dataset.id=item.id;
+      c.innerHTML=`<div class="card-title"><span>${escapeHtml(item.name)}</span><span class="badge">${escapeHtml(item.sigilo)}</span></div><div class="card-meta">${escapeHtml(typeLabel(item))} · ${escapeHtml(item.status)} · ameaça ${escapeHtml(item.threat)}</div>`;
+      c.onclick=()=>selectItem(item.kind,item.id);list.appendChild(c);
+    });
+  };
+  addGroup("Locais",pointItems);addGroup("Rotas",routeItems);
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderMarkers(){
+  markers.innerHTML="";
+  points.forEach(p=>{
+    const m=document.createElement("button");m.className="marker "+(POINT_TYPES[p.type]?p.type:"regiao")+(active?.kind==="point"&&active.id===p.id?" active":"");
+    m.dataset.label=p.name;m.style.left=p.x+"%";m.style.top=p.y+"%";m.textContent=POINT_TYPES[p.type]?.symbol||"●";
+    m.onclick=e=>{e.stopPropagation();selectItem("point",p.id)};markers.appendChild(m);
+  });
+}
+function svgEl(tag,attrs={}){
+  const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));return n;
+}
+function renderRoutes(){
+  routesSvg.innerHTML="";
+  routes.forEach(r=>{
+    if(!r.points||r.points.length<2)return;
+    const pts=r.points.map(p=>{const q=pctToPx(p);return`${q.x},${q.y}`}).join(" ");
+    const color=r.color||ROUTE_TYPES[r.type]?.color||"#f97316";
+    const visible=svgEl("polyline",{points:pts,class:"route-visible",stroke:color,"stroke-width":active?.kind==="route"&&active.id===r.id?6:4,"stroke-dasharray":r.type==="fuga"?"12 7":""});
+    const hit=svgEl("polyline",{points:pts,class:"route-hit"});
+    hit.addEventListener("click",e=>{e.stopPropagation();selectItem("route",r.id)});
+    routesSvg.appendChild(visible);routesSvg.appendChild(hit);
+    const mid=pctToPx(r.points[Math.floor(r.points.length/2)]);
+    const label=svgEl("text",{x:mid.x,y:mid.y-9,class:"route-label","text-anchor":"middle"});label.textContent=r.name;routesSvg.appendChild(label);
+  });
+  if(mode?.kind?.startsWith("route-")&&mode.points?.length){
+    const pts=mode.points.map(p=>{const q=pctToPx(p);return`${q.x},${q.y}`}).join(" ");
+    if(mode.points.length>1)routesSvg.appendChild(svgEl("polyline",{points:pts,class:"route-visible",stroke:"#ffffff","stroke-width":"3","stroke-dasharray":"8 7"}));
+    mode.points.forEach(p=>{const q=pctToPx(p);routesSvg.appendChild(svgEl("circle",{cx:q.x,cy:q.y,r:5,class:"route-vertex"}))});
+  }
+}
+function render(){renderFilters();renderList();renderMarkers();renderRoutes()}
+
+function selectItem(kind,id){
+  const item=kind==="route"?routes.find(r=>r.id===id):points.find(p=>p.id===id);if(!item)return;
+  active={kind,id};render();
+  el("dtype").textContent=typeLabel(item);el("dname").textContent=item.name;el("ddesc").textContent=item.desc||"Sem descrição operacional.";
+  el("dstatus").textContent=item.status;el("dthreat").textContent=item.threat;el("dsecrecy").textContent=item.sigilo;
+  detail.classList.add("show");
+}
+function closeDetail(){detail.classList.remove("show");active=null;render()}
+
+function showMode(next,hint){
+  mode=next;shell.classList.add("mode-place");el("modebar").classList.add("show");el("modeHint").textContent=hint;
+  const routeMode=next?.kind?.startsWith("route-");
+  el("modeUndo").hidden=!routeMode;el("modeFinish").hidden=!routeMode;renderRoutes();
+}
+function cancelMode(){mode=null;shell.classList.remove("mode-place");el("modebar").classList.remove("show");renderRoutes()}
+function startNewPoint(){
+  if(!access.canEdit)return;closeDetail();showMode({kind:"point-new"},"Clique no mapa para posicionar o novo local.");
+}
+function startNewRoute(){
+  if(!access.canEdit)return;closeDetail();showMode({kind:"route-new",points:[]},"Clique no mapa para traçar a rota. Adicione ao menos dois pontos.");
+}
+function finishRouteDrawing(){
+  if(!mode?.kind?.startsWith("route-")||mode.points.length<2){alert("Adicione pelo menos dois pontos à rota.");return}
+  if(mode.kind==="route-new"){
+    const draft={id:"route_"+uid(),kind:"route",name:"",type:"infiltracao",status:"Observado",threat:"Média",sigilo:"Nível III",desc:"",color:ROUTE_TYPES.infiltracao.color,points:mode.points,createdBy:access.user?.username,createdAt:new Date().toISOString()};
+    cancelMode();openEditor(draft,true);
+  }else{
+    const original=routes.find(r=>r.id===mode.routeId);const draft={...original,points:mode.points,updatedBy:access.user?.username,updatedAt:new Date().toISOString()};
+    cancelMode();openEditor(draft,false);
+  }
+}
+function undoRoutePoint(){if(mode?.points?.length){mode.points.pop();renderRoutes()}}
+
+function populateTypes(kind,current){
+  const select=el("fType");select.innerHTML="";
+  const source=kind==="route"?ROUTE_TYPES:POINT_TYPES;
+  Object.entries(source).forEach(([id,cfg])=>{const o=document.createElement("option");o.value=id;o.textContent=cfg.label;if(id===current)o.selected=true;select.appendChild(o)});
+}
+function openEditor(item,isNew){
+  editorDraft=JSON.parse(JSON.stringify(item));
+  const route=item.kind==="route";
+  el("editorKicker").textContent=route?"Rota operacional":"Local estratégico";
+  el("editorTitle").textContent=(isNew?"Criar ":"Editar ")+(route?"rota":"local");
+  el("fName").value=item.name||"";populateTypes(item.kind,item.type);el("fStatus").value=item.status||"Neutro";
+  el("fThreat").value=item.threat||"Média";el("fSecrecy").value=item.sigilo||"Nível II";el("fDesc").value=item.desc||"";
+  el("colorField").hidden=!route;el("fColor").value=item.color||ROUTE_TYPES[item.type]?.color||"#f97316";
+  el("coordText").textContent=route?`${item.points.length} pontos definidos na rota.`:`Posição: ${item.x.toFixed(2)}% × ${item.y.toFixed(2)}%.`;
+  el("repositionBtn").textContent=route?"Redesenhar rota":"Reposicionar no mapa";
+  editorBackdrop.classList.add("show");el("fName").focus();
+}
+function closeEditor(){editorBackdrop.classList.remove("show");editorDraft=null}
+async function saveEditor(e){
+  e.preventDefault();if(!editorDraft||!access.canEdit)return;
+  editorDraft.name=el("fName").value.trim();if(!editorDraft.name)return;
+  editorDraft.type=el("fType").value;editorDraft.status=el("fStatus").value;editorDraft.threat=el("fThreat").value;
+  editorDraft.sigilo=el("fSecrecy").value;editorDraft.desc=el("fDesc").value.trim();editorDraft.updatedBy=access.user?.username;editorDraft.updatedAt=new Date().toISOString();
+  if(editorDraft.kind==="route")editorDraft.color=el("fColor").value||ROUTE_TYPES[editorDraft.type]?.color;
+  if(editorDraft.kind==="route"){
+    const id=editorDraft.id;const exists=routes.some(r=>r.id===id);const next=exists?routes.map(r=>r.id===id?editorDraft:r):[...routes,editorDraft];
+    closeEditor();await persistMap(points,next);selectItem("route",id);
+  }else{
+    const exists=points.some(p=>p.id===editorDraft.id);const next=exists?points.map(p=>p.id===editorDraft.id?editorDraft:p):[...points,editorDraft];
+    const id=editorDraft.id;closeEditor();await persistMap(next,routes);selectItem("point",id);
+  }
+}
+function repositionDraft(){
+  if(!editorDraft)return;
+  const d=JSON.parse(JSON.stringify(editorDraft));closeEditor();
+  if(d.kind==="route")showMode({kind:"route-redraw",routeId:d.id,points:[]},"Clique no mapa para redesenhar a rota. Conclua após dois ou mais pontos.");
+  else showMode({kind:"point-reposition",draft:d},"Clique no mapa para definir a nova posição.");
+}
+function editSelected(){
+  if(!active||!access.canEdit)return;const item=active.kind==="route"?routes.find(r=>r.id===active.id):points.find(p=>p.id===active.id);if(item)openEditor(item,false);
+}
+async function deleteSelected(){
+  if(!active||!access.canEdit)return;const selection={...active};const item=selection.kind==="route"?routes.find(r=>r.id===selection.id):points.find(p=>p.id===selection.id);if(!item)return;
+  if(!confirm(`Excluir "${item.name}" do mapa estratégico?`))return;
+  closeDetail();
+  if(selection.kind==="route")await persistMap(points,routes.filter(r=>r.id!==item.id));
+  else await persistMap(points.filter(p=>p.id!==item.id),routes);
+}
+
+shell.addEventListener("pointerdown",e=>{
+  if(e.target.closest("button")||e.target.closest(".route-hit"))return;
+  drag=!mode;downX=e.clientX;downY=e.clientY;startTx=tx;startTy=ty;moved=false;
+  if(drag)shell.classList.add("dragging");
+});
+window.addEventListener("pointermove",e=>{if(!drag)return;const dx=e.clientX-downX,dy=e.clientY-downY;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;tx=startTx+dx;ty=startTy+dy;transform()});
+window.addEventListener("pointerup",e=>{
+  if(drag){drag=false;shell.classList.remove("dragging");return}
+  if(!mode||moved||e.target.closest("button")||e.target.closest(".route-hit"))return;
+  const pos=eventMapPosition(e);
+  if(mode.kind==="point-new"){
+    const draft={id:"point_"+uid(),kind:"point",name:"",type:"treino",x:pos.x,y:pos.y,status:"Seguro",threat:"Baixa",sigilo:"Nível II",desc:"",createdBy:access.user?.username,createdAt:new Date().toISOString()};
+    cancelMode();openEditor(draft,true);
+  }else if(mode.kind==="point-reposition"){
+    const draft={...mode.draft,x:pos.x,y:pos.y,updatedBy:access.user?.username,updatedAt:new Date().toISOString()};cancelMode();openEditor(draft,false);
+  }else if(mode.kind.startsWith("route-")){
+    mode.points.push(pos);renderRoutes();
+  }
+});
+shell.addEventListener("wheel",e=>{e.preventDefault();const r=shell.getBoundingClientRect();zoom(scale*(e.deltaY<0?1.13:.885),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+
+el("plus").onclick=()=>zoom(scale*1.25);el("minus").onclick=()=>zoom(scale/1.25);el("fit").onclick=el("reset").onclick=center;
+el("menu").onclick=()=>el("panel").classList.toggle("open");
+el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;
+el("modeCancel").onclick=cancelMode;el("modeUndo").onclick=undoRoutePoint;el("modeFinish").onclick=finishRouteDrawing;
+el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;
+el("editSelected").onclick=editSelected;el("deleteSelected").onclick=deleteSelected;
+el("authBtn").onclick=openAuth;el("closeAuth").onclick=closeAuth;el("cancelAuth").onclick=closeAuth;el("authForm").onsubmit=submitAuth;
+el("fType").addEventListener("change",()=>{if(editorDraft?.kind==="route"){const c=ROUTE_TYPES[el("fType").value]?.color;if(c)el("fColor").value=c}});
+editorBackdrop.addEventListener("mousedown",e=>{if(e.target===editorBackdrop)closeEditor()});
+authBackdrop.addEventListener("mousedown",e=>{if(e.target===authBackdrop)closeAuth()});
+window.addEventListener("resize",center);
+
+(async()=>{
+  renderFilters();center();await loadState();
+  if(cloudClient){
+    cloudClient.channel("fox_map_changes").on("postgres_changes",{event:"*",schema:"public",table:"fox_state"},payload=>{
+      if(saving)return;const state=payload.new?.data;if(state)applyState(state);
+    }).subscribe();
+  }
+})();
 </script>
-</body></html>
+</body>
+</html>
