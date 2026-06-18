@@ -1,13 +1,11 @@
 name: Aplicar Fase 8 - Mapa Estratégico
 
 on:
-  pull_request:
+  push:
     branches:
-      - fase8-mapa-estrategico
-    types:
-      - opened
-      - synchronize
-      - reopened
+      - main
+    paths:
+      - '.phase8/apply.py.gz.b64'
 
 permissions:
   contents: write
@@ -17,23 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Baixar branch da Fase 8
+      - name: Baixar repositório
         uses: actions/checkout@v4
         with:
-          ref: fase8-mapa-estrategico
-
-      - name: Verificar pacote pendente
-        id: pending
-        shell: bash
-        run: |
-          if [ -f .phase8/apply.py.gz.b64 ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
+          ref: main
 
       - name: Aplicar código da cartografia JIKKAI
-        if: steps.pending.outputs.exists == 'true'
         shell: bash
         run: |
           base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
@@ -41,7 +28,6 @@ jobs:
           python3 /tmp/apply_phase8.py
 
       - name: Validar estrutura e sintaxe JSX
-        if: steps.pending.outputs.exists == 'true'
         shell: bash
         run: |
           grep -q 'function MapaEstrategicoPage' index.html
@@ -59,13 +45,14 @@ jobs:
           PY
           npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
 
-      - name: Publicar implementação na branch da fase
-        if: steps.pending.outputs.exists == 'true'
+      - name: Publicar e limpar arquivos temporários
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git rm -r .phase8
+          git rm -f phase8-validation.txt || true
+          git rm .github/workflows/apply-phase8-map.yml
           git commit -m "Fase 8: adicionar mapa estratégico interativo"
-          git push origin fase8-mapa-estrategico
+          git push origin main
