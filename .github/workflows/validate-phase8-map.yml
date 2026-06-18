@@ -1,0 +1,60 @@
+name: Validar Fase 8 - Mapa Estratégico
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  validate-map:
+    if: github.head_ref == 'fase8-mapa-estrategico'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar branch da implementação
+        uses: actions/checkout@v4
+
+      - name: Aplicar cartografia no arquivo isolado
+        shell: bash
+        run: |
+          base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
+          python3 -m py_compile /tmp/apply_phase8.py
+          python3 /tmp/apply_phase8.py
+
+      - name: Validar estrutura e sintaxe
+        shell: bash
+        run: |
+          grep -q 'function MapaEstrategicoPage' index.html
+          grep -q 'function MapaPontoModal' index.html
+          grep -q 'function MapaRotaModal' index.html
+          grep -q 'https://slpforge.xyz/images/map/map_base_low.webp' index.html
+          grep -q 'id: "edit_map"' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('index.html').read_text(encoding='utf-8')
+          start = text.index('<script type="text/babel" data-presets="env,react">')
+          start = text.index('>', start) + 1
+          end = text.rindex('</script>')
+          Path('/tmp/portal.jsx').write_text(text[start:end], encoding='utf-8')
+          PY
+          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
+
+      - name: Gerar pacote validado
+        shell: bash
+        run: |
+          mkdir -p validated-phase8
+          cp index.html validated-phase8/index.html
+          printf '%s\n' 'Fase 8 validada com esbuild.' > validated-phase8/validation.txt
+
+      - name: Enviar resultado validado
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase8-index-validado
+          path: validated-phase8
