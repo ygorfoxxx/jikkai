@@ -78,8 +78,8 @@ replaceOnce(
 );
 
 replaceOnce(
-  `el("editorForm").addEventListener("submit",saveEditor);`,
-  `el("editorForm").addEventListener("submit",saveEditor);
+  `el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;`,
+  `el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;
 el("fPhase").addEventListener("change",()=>populateStrategicLinks(el("fPhase").value,""));`,
   "evento da fase do mapa"
 );
