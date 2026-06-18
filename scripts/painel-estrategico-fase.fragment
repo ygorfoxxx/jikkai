@@ -1,0 +1,106 @@
+function FaseEditor({ fase, data, onSave, onCancel }) {
+  const [draft, setDraft] = useState(() => ({
+    ...fase,
+    objetivos: (fase.objetivos || []).map(o => ({ ...o, recursosTexto: (o.recursos || []).join("\n") })),
+    requisitos: (fase.requisitos || []).map(r => ({ ...r })),
+  }));
+  const users = (data.users || []).filter(u => u.role !== "contratante");
+  const update = patch => setDraft(d => ({ ...d, ...patch }));
+  const updateObj = (i, patch) => setDraft(d => ({ ...d, objetivos: d.objetivos.map((o, index) => index === i ? { ...o, ...patch } : o) }));
+  const addObj = () => setDraft(d => ({ ...d, objetivos: [...d.objetivos, normalizarObjetivoEstrategico({ id: "obj_" + uid(), titulo: "Novo objetivo", status: "nao_iniciado", progresso: 0 }, d, d.objetivos.length)] }));
+  const removeObj = i => setDraft(d => ({ ...d, objetivos: d.objetivos.filter((_, index) => index !== i) }));
+  const addReq = () => setDraft(d => ({ ...d, requisitos: [...d.requisitos, { id: "req_" + uid(), texto: "Novo requisito", atendido: false }] }));
+  const salvar = () => onSave({
+    ...draft,
+    objetivos: draft.objetivos.map((o, i) => normalizarObjetivoEstrategico({ ...o, recursos: String(o.recursosTexto || "").split("\n").map(v => v.trim()).filter(Boolean), atualizadaEm: new Date().toISOString() }, draft, i)),
+    atualizadaEm: new Date().toISOString(),
+  });
+
+  return <div className="space-y-5">
+    <div className="flex items-center justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Planejamento militar</div><h3 className="text-2xl font-black text-orange-50 serif">Editar Fase {draft.n}</h3></div><button onClick={onCancel} className="text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button></div>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div><label className="fox-label">Título</label><input value={draft.titulo} onChange={e => update({ titulo: e.target.value })} className="fox-input" /></div>
+      <div><label className="fox-label">Status</label><select value={draft.status} onChange={e => update({ status: e.target.value })} className="fox-input">{Object.entries(FASE_STATUS_CFG).map(([id, c]) => <option key={id} value={id}>{c.label}</option>)}</select></div>
+      <div className="sm:col-span-2"><label className="fox-label">Descrição</label><textarea rows="3" value={draft.desc || ""} onChange={e => update({ desc: e.target.value })} className="fox-input" /></div>
+      <div><label className="fox-label">Responsável geral</label><select value={draft.responsavelGeral || ""} onChange={e => update({ responsavelGeral: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
+      <div><label className="fox-label">Risco geral</label><select value={draft.riscoGeral} onChange={e => update({ riscoGeral: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
+      <div><label className="fox-label">Prazo</label><input type="date" value={draft.prazo || ""} onChange={e => update({ prazo: e.target.value, prazoTipo: e.target.value ? "data_exata" : "sem_prazo" })} className="fox-input" /></div>
+      <label className="flex items-center gap-3 p-3 rounded border border-zinc-800 bg-black/40"><input type="checkbox" checked={draft.progressoManualAtivo} onChange={e => update({ progressoManualAtivo: e.target.checked })} className="accent-orange-600" /><span className="text-zinc-300 text-sm">Usar progresso manual</span>{draft.progressoManualAtivo && <input type="number" min="0" max="100" value={draft.progressoManual} onChange={e => update({ progressoManual: Number(e.target.value) })} className="fox-input w-24" />}</label>
+    </div>
+
+    <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+      <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Desbloqueio</div><div className="text-zinc-600 text-xs">Condições exigidas para avançar no plano.</div></div><Btn onClick={addReq} variant="ghost"><IPlus className="w-3 h-3" /> Requisito</Btn></div>
+      <div className="space-y-2">{draft.requisitos.map((r, i) => <div key={r.id || i} className="flex items-center gap-2"><input type="checkbox" checked={r.atendido} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, atendido: e.target.checked } : x) }))} className="accent-green-600" /><input value={r.texto} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, texto: e.target.value } : x) }))} className="fox-input flex-1" /><button onClick={() => setDraft(d => ({ ...d, requisitos: d.requisitos.filter((_, index) => index !== i) }))} className="text-red-500"><ITrash className="w-4 h-4" /></button></div>)}</div>
+    </div>
+
+    <div className="space-y-3">
+      <div className="flex items-center justify-between"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Objetivos estratégicos</div><div className="text-zinc-600 text-xs">O peso e o progresso definem a porcentagem automática da fase.</div></div><Btn onClick={addObj} variant="primary"><IPlus className="w-3 h-3" /> Objetivo</Btn></div>
+      {draft.objetivos.map((o, i) => <div key={o.id || i} className="p-4 rounded-xl border border-zinc-800 bg-black/40 space-y-3">
+        <div className="flex gap-2"><input value={o.titulo} onChange={e => updateObj(i, { titulo: e.target.value })} className="fox-input flex-1 font-bold" /><button onClick={() => removeObj(i)} className="text-red-500"><ITrash className="w-4 h-4" /></button></div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div><label className="fox-label">Status</label><select value={o.status} onChange={e => updateObj(i, { status: e.target.value, progresso: e.target.value === "concluido" ? 100 : o.progresso })} className="fox-input">{Object.entries(OBJETIVO_STATUS_CFG).map(([id, c]) => <option key={id} value={id}>{c.label}</option>)}</select></div>
+          <div><label className="fox-label">Progresso %</label><input type="number" min="0" max="100" value={o.progresso} onChange={e => updateObj(i, { progresso: Number(e.target.value) })} className="fox-input" /></div>
+          <div><label className="fox-label">Prioridade</label><select value={o.prioridade} onChange={e => updateObj(i, { prioridade: e.target.value, peso: PRIORIDADE_PESO[e.target.value] })} className="fox-input">{Object.keys(PRIORIDADE_PESO).map(p => <option key={p}>{p}</option>)}</select></div>
+          <div><label className="fox-label">Risco</label><select value={o.risco} onChange={e => updateObj(i, { risco: e.target.value })} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2">
+          <div><label className="fox-label">Responsável</label><select value={o.responsavel || ""} onChange={e => updateObj(i, { responsavel: e.target.value })} className="fox-input"><option value="">— Não designado —</option>{users.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
+          <div><label className="fox-label">Prazo</label><input type="date" value={o.prazo || ""} onChange={e => updateObj(i, { prazo: e.target.value })} className="fox-input" /></div>
+        </div>
+        <div><label className="fox-label">Descrição</label><textarea rows="2" value={o.descricao || ""} onChange={e => updateObj(i, { descricao: e.target.value })} className="fox-input" /></div>
+        <div><label className="fox-label">Bloqueio atual</label><input value={o.bloqueio || ""} onChange={e => updateObj(i, { bloqueio: e.target.value })} className="fox-input" placeholder="Ex.: Informante perdeu contato com a operação" /></div>
+        <div><label className="fox-label">Recursos necessários — um por linha</label><textarea rows="2" value={o.recursosTexto || ""} onChange={e => updateObj(i, { recursosTexto: e.target.value })} className="fox-input" /></div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div><label className="fox-label">Missão</label><select value={o.missaoId || ""} onChange={e => updateObj(i, { missaoId: e.target.value })} className="fox-input"><option value="">Nenhuma</option>{(data.missoes || []).map(m => <option key={m.id} value={m.id}>{m.titulo}</option>)}</select></div>
+          <div><label className="fox-label">Relatório</label><select value={o.relatorioId || ""} onChange={e => updateObj(i, { relatorioId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{(data.relatorios || []).map(r => <option key={r.id} value={r.id}>{r.titulo}</option>)}</select></div>
+          <div><label className="fox-label">Contrato</label><select value={o.contratoId || ""} onChange={e => updateObj(i, { contratoId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{(data.contratos || []).map(c => <option key={c.id} value={c.id}>{c.titulo}</option>)}</select></div>
+          <div><label className="fox-label">Mapa</label><select value={o.mapaId || ""} onChange={e => updateObj(i, { mapaId: e.target.value })} className="fox-input"><option value="">Nenhum</option>{[...(data.mapaPontos || []), ...(data.mapaRotas || [])].map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></div>
+        </div>
+      </div>)}
+    </div>
+    <div className="flex gap-2 pt-4 border-t border-zinc-800"><Btn onClick={onCancel} variant="ghost">Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar fase</Btn></div>
+  </div>;
+}
+
+function OperacaoRelacionada({ tipo, id, data }) {
+  if (!id) return null;
+  const colecao = tipo === "missao" ? data.missoes : tipo === "relatorio" ? data.relatorios : tipo === "contrato" ? data.contratos : [...(data.mapaPontos || []), ...(data.mapaRotas || [])];
+  const item = (colecao || []).find(x => x.id === id);
+  if (!item) return null;
+  return <div className="flex items-center gap-2 p-2 rounded border border-zinc-800 bg-black/40"><FonteEstrategicaBadge tipo={tipo} /><span className="text-zinc-400 text-xs truncate">{item.titulo || item.name}</span></div>;
+}
+
+function ObjetivoEstrategicoCard({ objetivo, data, isLider, onEdit }) {
+  const responsavel = data.users.find(u => u.username === objetivo.responsavel);
+  const progresso = progressoObjetivo(objetivo);
+  const atrasado = prazoAtrasado(objetivo.prazo, objetivo.status);
+  return <div className={"p-4 rounded-xl border " + (objetivo.status === "bloqueado" ? "border-red-800 bg-red-950/10" : "border-zinc-800 bg-zinc-950/50")}>
+    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><ObjetivoStatusBadge status={objetivo.status} /><RiscoBadge risco={objetivo.risco} compacto />{atrasado && <span className="text-[9px] text-red-400 uppercase font-black">Atrasado</span>}</div><h3 className="text-orange-50 font-bold mt-2">{objetivo.titulo}</h3><p className="text-zinc-500 text-sm mt-1">{objetivo.descricao}</p></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div>
+    <div className="flex items-center justify-between text-[10px] uppercase tracking-wider mt-3"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-1.5 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-orange-700 to-red-600" style={{ width: progresso + "%" }} /></div>
+    <div className="grid sm:grid-cols-2 gap-2 text-xs mt-3"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><div className="text-zinc-600">Prazo: <span className={atrasado ? "text-red-400" : "text-zinc-300"}>{objetivo.prazo ? new Date(objetivo.prazo + "T00:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</span></div></div>
+    {objetivo.bloqueio && <div className="mt-3 p-3 rounded border border-red-900/50 bg-red-950/20 text-red-300 text-xs"><strong>Bloqueio:</strong> {objetivo.bloqueio}</div>}
+    {objetivo.recursos?.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{objetivo.recursos.map((r, i) => <span key={i} className="text-[10px] px-2 py-1 rounded border border-zinc-800 bg-black/50 text-zinc-400">{r}</span>)}</div>}
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-1 mt-3"><OperacaoRelacionada tipo="missao" id={objetivo.missaoId} data={data} /><OperacaoRelacionada tipo="relatorio" id={objetivo.relatorioId} data={data} /><OperacaoRelacionada tipo="contrato" id={objetivo.contratoId} data={data} /><OperacaoRelacionada tipo="mapa" id={objetivo.mapaId} data={data} /></div>
+  </div>;
+}
+
+function FaseEstrategicaCard({ fase, data, isLider, onOpen, onEdit }) {
+  const progresso = progressoFase(fase);
+  const cfg = FASE_STATUS_CFG[fase.status] || FASE_STATUS_CFG.planejada;
+  const objetivos = fase.objetivos || [];
+  const concluidos = objetivos.filter(o => o.status === "concluido").length;
+  const bloqueados = objetivos.filter(o => o.status === "bloqueado").length;
+  const responsavel = data.users.find(u => u.username === fase.responsavelGeral);
+  return <div className="rounded-2xl border bg-gradient-to-br from-zinc-950 to-black overflow-hidden" style={{ borderColor: cfg.cor + "70" }}>
+    <div className="p-5"><div className="flex items-start justify-between gap-3"><div><div className="text-[9px] uppercase tracking-[0.3em]" style={{ color: cfg.cor }}>Fase {String(fase.n).padStart(2, "0")}</div><h3 className="text-xl font-black text-orange-50 serif mt-1">{fase.titulo}</h3><div className="flex flex-wrap gap-2 mt-2"><span className={"text-[9px] px-2 py-0.5 rounded border uppercase font-black " + cfg.badge}>{cfg.label}</span><RiscoBadge risco={fase.riscoGeral} compacto /></div></div>{isLider && <button onClick={onEdit} className="text-zinc-600 hover:text-orange-400"><IEdit className="w-4 h-4" /></button>}</div><p className="text-zinc-500 text-sm mt-3">{fase.desc}</p>
+      <div className="flex justify-between text-[10px] uppercase tracking-wider mt-4"><span className="text-zinc-600">Progresso</span><span className="text-orange-300 font-black">{progresso}%</span></div><div className="h-2 bg-zinc-900 rounded overflow-hidden mt-1"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progresso + "%" }} /></div>
+    </div>
+    <div className="grid grid-cols-3 divide-x divide-zinc-800 text-center border-y border-zinc-800"><div className="p-3"><div className="text-xl font-black text-green-400">{concluidos}</div><div className="text-[9px] uppercase text-zinc-600">Concluídos</div></div><div className="p-3"><div className="text-xl font-black text-red-400">{bloqueados}</div><div className="text-[9px] uppercase text-zinc-600">Bloqueados</div></div><div className="p-3"><div className="text-xl font-black text-orange-300">{objetivos.length}</div><div className="text-[9px] uppercase text-zinc-600">Total</div></div></div>
+    <div className="p-4 text-xs"><div className="text-zinc-600">Responsável: <span className="text-zinc-300">{responsavel ? getCodinome(responsavel) : "Não designado"}</span></div><button onClick={onOpen} className="w-full mt-3 py-2.5 rounded bg-orange-700 hover:bg-orange-600 text-white uppercase tracking-wider text-[10px] font-black">Abrir sala estratégica</button></div>
+  </div>;
+}
+
+function SinalEstrategicoCard({ sinal, data, onOpenPhase, onOpenMap }) {
+  const fase = data.fases.find(f => f.id === sinal.faseId);
+  return <div className={"p-4 rounded-xl border " + (sinal.risco === "Crítico" ? "border-red-700 bg-red-950/20" : sinal.risco === "Elevado" ? "border-orange-700 bg-orange-950/10" : "border-zinc-800 bg-zinc-950/50")}><div className="flex items-start justify-between gap-3"><div><div className="flex flex-wrap gap-2"><RiscoBadge risco={sinal.risco} /><FonteEstrategicaBadge tipo={sinal.fonteTipo} /><span className="text-[9px] uppercase tracking-wider text-zinc-600">{sinal.categoria}</span></div><div className="text-orange-50 font-bold mt-2">{sinal.titulo}</div><p className="text-zinc-500 text-xs mt-1">{sinal.descricao}</p>{fase && <div className="text-[10px] text-zinc-600 mt-2">Afeta: Fase {fase.n} · {fase.titulo}</div>}</div><div>{sinal.fonteTipo === "mapa" ? <button onClick={onOpenMap} className="text-sky-400 text-[10px] uppercase">Mapa</button> : sinal.faseId && <button onClick={() => onOpenPhase(sinal.faseId)} className="text-orange-400 text-[10px] uppercase">Fase</button>}</div></div></div>;
+}
