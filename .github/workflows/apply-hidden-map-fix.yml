@@ -1,0 +1,61 @@
+name: Corrigir ocultação dos controles do mapa
+
+on:
+  push:
+    branches:
+      - fix-hidden-map-controls
+    paths:
+      - '.fix-hidden-map-controls'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-hidden-map-controls
+
+      - name: Aplicar correção
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('mapa.html')
+          text = path.read_text(encoding='utf-8')
+          rule = '[hidden]{display:none!important}'
+          if rule not in text:
+              anchor = '*{box-sizing:border-box}'
+              if anchor not in text:
+                  raise SystemExit('Âncora CSS não encontrada')
+              text = text.replace(anchor, anchor + '\n' + rule, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validar
+        shell: bash
+        run: |
+          grep -q '^\[hidden\]{display:none!important}$' mapa.html
+          grep -q 'id="adminTools" hidden' mapa.html
+          grep -q 'id="authBtn" hidden' mapa.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('mapa.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
+          Path('/tmp/mapa.js').write_text(scripts[-1], encoding='utf-8')
+          PY
+          node --check /tmp/mapa.js
+
+      - name: Salvar
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mapa.html
+          git rm .fix-hidden-map-controls .github/workflows/apply-hidden-map-fix.yml
+          git commit -m "Garantir ocultação dos controles administrativos do mapa"
+          git push origin fix-hidden-map-controls
