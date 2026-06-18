@@ -1,0 +1,4 @@
+{
+  "buildCommand": "node scripts/fix-avatar.cjs",
+  "outputDirectory": "."
+}
