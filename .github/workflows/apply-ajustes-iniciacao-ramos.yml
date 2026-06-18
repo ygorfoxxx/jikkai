@@ -1,0 +1,58 @@
+name: Aplicar ajustes de iniciação e ramos
+
+on:
+  push:
+    branches:
+      - feature-ajustes-iniciacao-ramos
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature-ajustes-iniciacao-ramos
+
+      - name: Aplicar ajustes ao portal consolidado
+        run: node scripts/ajustes-iniciacao-ramos.cjs
+
+      - name: Preservar ajustes na regeneração futura
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'scripts/build-etapa2.cjs';
+          let source = fs.readFileSync(path, 'utf8');
+          if (!source.includes('./ajustes-iniciacao-ramos.cjs')) {
+            source = source.replace(
+              '  "./validate-portal-v3.cjs"',
+              '  "./ajustes-iniciacao-ramos.cjs",\n  "./validate-portal-v3.cjs"'
+            );
+          }
+          if (!source.includes('./ajustes-iniciacao-ramos.cjs')) {
+            throw new Error('Não foi possível incluir os ajustes no build.');
+          }
+          fs.writeFileSync(path, source);
+          NODE
+
+      - name: Validar portal e novos recursos
+        run: |
+          node scripts/validate-portal-v3.cjs
+          node scripts/validate-ajustes-iniciacao-ramos.cjs
+
+      - name: Salvar arquivos consolidados
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html scripts/build-etapa2.cjs
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração pendente."
+            exit 0
+          fi
+          git commit -m "Consolidar ajustes de iniciação e responsáveis por ramo"
+          git push origin HEAD:feature-ajustes-iniciacao-ramos
