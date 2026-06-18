@@ -1,0 +1,108 @@
+name: Testar mapa SLP Forge em iframe
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'map-test-trigger.txt'
+
+permissions:
+  contents: read
+
+jobs:
+  test-embed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar Playwright e comparador
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.45.0 pixelmatch@5.3.0 pngjs@7.0.0 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null
+
+      - name: Testar mapa direto e incorporado
+        shell: bash
+        run: |
+          mkdir -p map-test-result
+          curl -sSIL --max-time 30 https://slpforge.xyz/map > map-test-result/headers.txt || true
+          cat > /tmp/test-map.js <<'NODE'
+          const { chromium } = require('playwright');
+          const { PNG } = require('pngjs');
+          const pixelmatch = require('pixelmatch');
+          const fs = require('fs');
+
+          (async () => {
+            const url = 'https://slpforge.xyz/map';
+            const browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext({ viewport: { width: 1365, height: 768 }, deviceScaleFactor: 1, ignoreHTTPSErrors: true });
+            const direct = await context.newPage();
+            const embedded = await context.newPage();
+            const consoleMessages = [];
+            embedded.on('console', msg => consoleMessages.push(`[${msg.type()}] ${msg.text()}`));
+            embedded.on('pageerror', err => consoleMessages.push(`[pageerror] ${err.message}`));
+
+            let directStatus = null;
+            let directError = null;
+            let embedError = null;
+            try {
+              const response = await direct.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+              directStatus = response ? response.status() : null;
+            } catch (e) { directError = e.message; }
+
+            try {
+              await embedded.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}iframe{display:block;width:100vw;height:100vh;border:0;margin:0;padding:0}</style></head><body><iframe src="${url}" allowfullscreen></iframe></body></html>`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            } catch (e) { embedError = e.message; }
+
+            await Promise.all([direct.waitForTimeout(15000), embedded.waitForTimeout(15000)]);
+            const frames = embedded.frames().filter(f => f !== embedded.mainFrame());
+            const frameUrls = frames.map(f => f.url());
+            let frameTitle = null;
+            if (frames[0]) { try { frameTitle = await frames[0].title(); } catch {} }
+
+            await direct.screenshot({ path: 'map-test-result/direct.png' });
+            await embedded.screenshot({ path: 'map-test-result/embedded.png' });
+
+            const a = PNG.sync.read(fs.readFileSync('map-test-result/direct.png'));
+            const b = PNG.sync.read(fs.readFileSync('map-test-result/embedded.png'));
+            const diff = new PNG({ width: a.width, height: a.height });
+            const differentPixels = pixelmatch(a.data, b.data, diff.data, a.width, a.height, { threshold: 0.1 });
+            fs.writeFileSync('map-test-result/diff.png', PNG.sync.write(diff));
+            const totalPixels = a.width * a.height;
+            const differenceRatio = differentPixels / totalPixels;
+
+            const headers = fs.readFileSync('map-test-result/headers.txt', 'utf8');
+            const xFrameOptions = /(?:^|\n)x-frame-options:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim() || null;
+            const csp = /(?:^|\n)content-security-policy:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim() || null;
+            const frameAncestorsBlocked = csp ? /frame-ancestors\s+[^;]*(?:'none'|'self')/i.test(csp) : false;
+            const headerBlocked = !!xFrameOptions || frameAncestorsBlocked;
+            const frameLoaded = frameUrls.some(u => u.startsWith('https://slpforge.xyz/map'));
+            const consoleBlocked = consoleMessages.some(m => /refused to display|x-frame-options|frame-ancestors|blocked a frame/i.test(m));
+            const visuallyEquivalent = differenceRatio <= 0.01;
+            const canEmbedExactly = directStatus >= 200 && directStatus < 400 && frameLoaded && !headerBlocked && !consoleBlocked && visuallyEquivalent;
+
+            const result = { testedAt: new Date().toISOString(), url, directStatus, directError, embedError, xFrameOptions, contentSecurityPolicy: csp, frameAncestorsBlocked, frameUrls, frameTitle, consoleMessages, differentPixels, totalPixels, differenceRatio, visuallyEquivalent, frameLoaded, headerBlocked, consoleBlocked, canEmbedExactly };
+            fs.writeFileSync('map-test-result/result.json', JSON.stringify(result, null, 2));
+            console.log('MAP_TEST_RESULT=' + JSON.stringify(result));
+            await browser.close();
+            if (!canEmbedExactly) process.exitCode = 2;
+          })().catch(err => {
+            fs.writeFileSync('map-test-result/result.json', JSON.stringify({ canEmbedExactly: false, fatalError: err.message, stack: err.stack }, null, 2));
+            console.error(err);
+            process.exitCode = 3;
+          });
+          NODE
+          node /tmp/test-map.js
+
+      - name: Enviar evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teste-mapa-slpforge
+          path: map-test-result
