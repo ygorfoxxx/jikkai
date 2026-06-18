@@ -1260,6 +1260,125 @@ function statusMissaoConfig(status) {
   return MISSAO_STATUS_CFG[status] || MISSAO_STATUS_CFG.atribuida;
 }
 
+// ============ NÍVEIS DE SIGILO ============
+const SIGILO_NIVEIS = ["Público", "Restrito", "Confidencial", "Olhos do Líder"];
+const SIGILO_CFG = {
+  "Público": {
+    nivel: 1, codigo: "NÍVEL I", label: "Público",
+    cor: "#16A34A", border: "border-green-800", bg: "bg-green-950/20",
+    badge: "bg-green-950 text-green-300 border-green-800",
+    desc: "Visível para membros e contratantes."
+  },
+  "Restrito": {
+    nivel: 2, codigo: "NÍVEL II", label: "Restrito",
+    cor: "#EA580C", border: "border-orange-800", bg: "bg-orange-950/20",
+    badge: "bg-orange-950 text-orange-300 border-orange-800",
+    desc: "Juramentados e operadores diretamente escalados."
+  },
+  "Confidencial": {
+    nivel: 3, codigo: "NÍVEL III", label: "Confidencial",
+    cor: "#B91C1C", border: "border-red-800", bg: "bg-red-950/30",
+    badge: "bg-red-950 text-red-300 border-red-800",
+    desc: "Soke, Bunke, Conselho e operadores diretamente escalados."
+  },
+  "Olhos do Líder": {
+    nivel: 4, codigo: "NÍVEL IV", label: "Olhos do Líder",
+    cor: "#A855F7", border: "border-purple-800", bg: "bg-purple-950/30",
+    badge: "bg-purple-950 text-purple-300 border-purple-800",
+    desc: "Acesso exclusivo da liderança máxima."
+  },
+};
+
+function normalizarSigilo(valor) {
+  if (valor === "Interno") return "Restrito";
+  return SIGILO_CFG[valor] ? valor : "Restrito";
+}
+
+function sigiloConfig(sigilo) {
+  return SIGILO_CFG[normalizarSigilo(sigilo)];
+}
+
+function usuarioTemJuramento(data, usuario) {
+  if (!usuario) return false;
+  return (data?.juramentados || []).some(j =>
+    j.username === usuario.username ||
+    (j.nome || "").toLowerCase() === (usuario.displayName || "").toLowerCase()
+  );
+}
+
+function nivelAcessoUsuario(data, usuario, roleInformado = null) {
+  if (!usuario) return 0;
+  const role = roleInformado || data?.roles?.find(r => r.id === usuario.role);
+  if (role?.hasLeaderPerms === true) return 4;
+  if (usuario.role === "contratante") return 1;
+  if (usuario.role === "conselheiro" || ["soke", "bunke"].includes(usuario.cla)) return 3;
+  if (usuarioTemJuramento(data, usuario)) return 2;
+  return 1;
+}
+
+function podeVerSigilo(sigilo, data, usuario, role = null) {
+  return nivelAcessoUsuario(data, usuario, role) >= sigiloConfig(sigilo).nivel;
+}
+
+function podeReceberSigilo(data, usuario, sigilo) {
+  const role = data?.roles?.find(r => r.id === usuario?.role);
+  return podeVerSigilo(sigilo, data, usuario, role);
+}
+
+function podeVerItemSigiloso(item, data, usuario, role = null) {
+  if (!item || !usuario) return false;
+  const sigilo = normalizarSigilo(item.sigilo || item.confidencialidade);
+  if (podeVerSigilo(sigilo, data, usuario, role)) return true;
+  if (usuarioParticipaMissao(item, usuario.username)) return true;
+  if (item.autorUsername === usuario.username) return true;
+  if (item.missaoId) {
+    const missao = (data?.missoes || []).find(m => m.id === item.missaoId);
+    if (missao && usuarioParticipaMissao(missao, usuario.username)) return true;
+  }
+  return false;
+}
+
+function niveisPermitidosPara(data, usuario, role = null) {
+  const nivel = nivelAcessoUsuario(data, usuario, role);
+  return SIGILO_NIVEIS.filter(s => SIGILO_CFG[s].nivel <= nivel);
+}
+
+function SigiloBadge({ sigilo, compacto = false }) {
+  const c = sigiloConfig(sigilo);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider ${c.badge} ${compacto ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5"}`}
+      title={c.desc}
+    >
+      <ILock className={compacto ? "w-2.5 h-2.5" : "w-3 h-3"} />
+      {c.codigo} · {c.label}
+    </span>
+  );
+}
+
+function ConteudoCensurado({ sigilo, tipo = "OPERAÇÃO", subtitulo = "INFORMAÇÃO RESTRITA" }) {
+  const c = sigiloConfig(sigilo);
+  return (
+    <div className={`rounded-lg border ${c.border} ${c.bg} p-5 fadein relative overflow-hidden`}>
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "repeating-linear-gradient(135deg,#fff 0,#fff 1px,transparent 1px,transparent 9px)" }} />
+      <div className="relative flex items-start gap-4">
+        <div className="w-11 h-11 rounded-full border border-zinc-800 bg-black/60 flex items-center justify-center flex-shrink-0">
+          <ILock className="w-5 h-5 text-zinc-500" />
+        </div>
+        <div className="min-w-0 flex-1 font-mono">
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            <SigiloBadge sigilo={sigilo} />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-zinc-600">Acesso negado</span>
+          </div>
+          <div className="text-zinc-300 text-sm mb-1">{tipo}: <span className="tracking-[0.18em] text-zinc-600">████████████</span></div>
+          <div className="text-zinc-500 text-xs mb-1">ALVO: {subtitulo}</div>
+          <div className="text-zinc-600 text-xs">OPERADORES: █████ · AUTORIZAÇÃO: {c.codigo}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RelatorioMissaoModal({ missao, onSave, onClose }) {
   const [resultado, setResultado] = useState("Sucesso");
   const [resumo, setResumo] = useState("");
@@ -1286,6 +1405,7 @@ function RelatorioMissaoModal({ missao, onSave, onClose }) {
             <div>
               <h3 className="text-xl font-bold text-orange-50 serif">Relatório Final da Operação</h3>
               <p className="text-zinc-600 text-xs truncate max-w-[70vw]">{missao.titulo}</p>
+              <div className="mt-1"><SigiloBadge sigilo={missao.sigilo} compacto /></div>
             </div>
           </div>
           <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
@@ -1373,18 +1493,14 @@ function FaseEditor({ fase, onSave, onCancel }) {
 }
 
 // ============ RELATÓRIOS DE INTELIGÊNCIA ============
-const CONFID_CFG = {
-  "Público":      { cor: "#16A34A", bg: "bg-green-950/30",   border: "border-green-800",   text: "text-green-300" },
-  "Interno":      { cor: "#EA580C", bg: "bg-orange-950/30",  border: "border-orange-800",  text: "text-orange-300" },
-  "Confidencial": { cor: "#B91C1C", bg: "bg-red-950/40",     border: "border-red-800",     text: "text-red-300" },
-};
+const CONFID_CFG = SIGILO_CFG;
 
-function RelatorioModal({ relatorio, onSave, onClose }) {
+function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_NIVEIS }) {
   const editando = !!relatorio?.id;
   const [titulo, setTitulo] = useState(relatorio?.titulo || "");
   const [local, setLocal] = useState(relatorio?.local || "");
   const [descricao, setDescricao] = useState(relatorio?.descricao || "");
-  const [confidencialidade, setConfid] = useState(relatorio?.confidencialidade || "Interno");
+  const [confidencialidade, setConfid] = useState(normalizarSigilo(relatorio?.confidencialidade || niveisPermitidos[Math.min(1, niveisPermitidos.length - 1)] || "Público"));
 
   const valido = titulo.trim() && descricao.trim();
 
@@ -1421,10 +1537,11 @@ function RelatorioModal({ relatorio, onSave, onClose }) {
             <div>
               <label className="fox-label">Confidencialidade</label>
               <select value={confidencialidade} onChange={(e) => setConfid(e.target.value)} className="fox-input">
-                <option>Público</option>
-                <option>Interno</option>
-                <option>Confidencial</option>
+                {niveisPermitidos.map(n => <option key={n}>{n}</option>)}
               </select>
+              <div className="mt-2 text-[10px] text-zinc-600 leading-relaxed">
+                {sigiloConfig(confidencialidade).codigo} — {sigiloConfig(confidencialidade).desc}
+              </div>
             </div>
           </div>
           <div>
@@ -1441,10 +1558,12 @@ function RelatorioModal({ relatorio, onSave, onClose }) {
   );
 }
 
-function RelatoriosSection({ data, setData, isLider, usuario }) {
+function RelatoriosSection({ data, setData, isLider, usuario, role }) {
   const [modal, setModal] = useState(null); // null | {} (criar) | {id, ...} (editar)
+  const niveisPermitidos = niveisPermitidosPara(data, usuario, role);
 
   const relatorios = (data.relatorios || []).slice().sort((a, b) => new Date(b.data) - new Date(a.data));
+  const relatoriosLiberados = relatorios.filter(r => podeVerItemSigiloso(r, data, usuario, role));
 
   const criar = (form) => {
     const novo = {
@@ -1479,7 +1598,7 @@ function RelatoriosSection({ data, setData, isLider, usuario }) {
             <IFile className="w-6 h-6 text-orange-500" />
             <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Relatórios de Inteligência</h2>
           </div>
-          <p className="text-zinc-500 text-sm mt-1 italic">{relatorios.length} {relatorios.length === 1 ? "relatório registrado" : "relatórios registrados"}</p>
+          <p className="text-zinc-500 text-sm mt-1 italic">{relatoriosLiberados.length} liberados · {relatorios.length} registros no arquivo</p>
         </div>
         <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> Novo Relatório</Btn>
       </div>
@@ -1494,14 +1613,17 @@ function RelatoriosSection({ data, setData, isLider, usuario }) {
 
       <div className="grid md:grid-cols-2 gap-4">
         {relatorios.map((r) => {
-          const c = CONFID_CFG[r.confidencialidade] || CONFID_CFG["Interno"];
+          const sigilo = normalizarSigilo(r.confidencialidade);
+          const c = sigiloConfig(sigilo);
+          const autorizado = podeVerItemSigiloso(r, data, usuario, role);
+          if (!autorizado) return <ConteudoCensurado key={r.id} sigilo={sigilo} tipo="RELATÓRIO" />;
           return (
             <div key={r.id} className={`rounded-lg border ${c.border} ${c.bg} p-5 fadein hover:border-orange-600 transition-colors`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>
-                      {r.confidencialidade}
+                      {c.codigo} · {sigilo}
                     </span>
                     {r.tipo === "Operacional" && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-950 text-purple-300 border border-purple-800">Operacional</span>}
                     {r.statusAprovacao && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-zinc-800">{r.statusAprovacao}</span>}
@@ -1536,6 +1658,7 @@ function RelatoriosSection({ data, setData, isLider, usuario }) {
           relatorio={modal.id ? modal : null}
           onSave={modal.id ? editar : criar}
           onClose={() => setModal(null)}
+          niveisPermitidos={niveisPermitidos}
         />
       )}
     </div>
@@ -1787,6 +1910,7 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
       objetivos: [],
       status: "atribuida",
       source: "contrato",
+      sigilo: "Restrito",
       contratoId: contrato.id,
       recompensa: `${contrato.valorRecompensa} ${contrato.tipoRecompensa}`,
     };
@@ -2097,7 +2221,81 @@ function PlanoSection({ data, setData, isLider }) {
   );
 }
 
-function JikkaiPage({ data, setData, isLider, usuario, viewerIsContratante }) {
+
+function ArquivoPublicoPage({ data }) {
+  const relatorios = (data.relatorios || [])
+    .filter(r => normalizarSigilo(r.confidencialidade) === "Público")
+    .slice()
+    .sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+  const missoes = (data.missoes || [])
+    .filter(m => normalizarSigilo(m.sigilo) === "Público")
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  return (
+    <div className="fadein">
+      <SectionTitle icon={ILock} sub="Informações liberadas pela F.O.X. para consulta externa">Arquivo Público</SectionTitle>
+      <div className="mb-8 p-5 rounded-lg border border-green-900/50 bg-green-950/10 flex items-start gap-3">
+        <IShield className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <div className="text-green-300 text-xs uppercase tracking-widest font-black">Autorização Nível I</div>
+          <p className="text-zinc-500 text-sm mt-1 leading-relaxed">
+            Somente operações e relatórios expressamente desclassificados aparecem aqui. Identidades reais continuam protegidas por codinomes.
+          </p>
+        </div>
+      </div>
+      <div className="grid lg:grid-cols-2 gap-8">
+        <section>
+          <h3 className="text-orange-50 font-bold serif text-lg mb-4 flex items-center gap-2">
+            <IClipboard className="w-4 h-4 text-orange-500" /> Operações desclassificadas
+          </h3>
+          <div className="space-y-3">
+            {missoes.length === 0 && <div className="p-6 border border-zinc-800 bg-zinc-950/50 rounded text-zinc-600 text-sm italic">Nenhuma operação pública.</div>}
+            {missoes.map(m => {
+              const status = statusMissaoConfig(m.status);
+              return (
+                <div key={m.id} className="p-4 rounded-lg border border-green-900/40 bg-zinc-950/60">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <SigiloBadge sigilo="Público" compacto />
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${status.badge}`}>{status.label}</span>
+                  </div>
+                  <h4 className="text-orange-50 font-bold serif">{m.titulo}</h4>
+                  {m.desc && <p className="text-zinc-400 text-sm mt-2 leading-relaxed">{m.desc}</p>}
+                  <div className="text-zinc-600 text-xs mt-3">
+                    Operadores: {participantesDaMissao(m).map(p => getCodinomeMascarado(data.users.find(u => u.username === p))).join(", ") || "Não divulgado"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        <section>
+          <h3 className="text-orange-50 font-bold serif text-lg mb-4 flex items-center gap-2">
+            <IFile className="w-4 h-4 text-orange-500" /> Relatórios desclassificados
+          </h3>
+          <div className="space-y-3">
+            {relatorios.length === 0 && <div className="p-6 border border-zinc-800 bg-zinc-950/50 rounded text-zinc-600 text-sm italic">Nenhum relatório público.</div>}
+            {relatorios.map(r => (
+              <div key={r.id} className="p-4 rounded-lg border border-green-900/40 bg-zinc-950/60">
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <SigiloBadge sigilo="Público" compacto />
+                  {r.local && <span className="text-zinc-600 text-[10px] uppercase tracking-wider">{r.local}</span>}
+                </div>
+                <h4 className="text-orange-50 font-bold serif">{r.titulo}</h4>
+                <p className="text-zinc-400 text-sm mt-2 leading-relaxed whitespace-pre-wrap">{r.resumo || r.descricao}</p>
+                <div className="text-zinc-700 text-[10px] mt-3 uppercase tracking-wider">
+                  Publicado em {new Date(r.data).toLocaleDateString("pt-BR")}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante }) {
   const [subTab, setSubTab] = useState(viewerIsContratante ? "contratos" : "plano");
 
   // Se contratante, força sub-aba contratos
@@ -2106,7 +2304,7 @@ function JikkaiPage({ data, setData, isLider, usuario, viewerIsContratante }) {
   }, [viewerIsContratante, subTab]);
 
   const contratosAbertos = (data.contratos || []).filter(c => c.status === "Aberto").length;
-  const relatoriosCount = (data.relatorios || []).length;
+  const relatoriosCount = (data.relatorios || []).filter(r => podeVerItemSigiloso(r, data, usuario, role)).length;
 
   const SUB_TABS = [
     { id: "plano", label: "Plano", icon: ITarget, badge: null },
@@ -2158,7 +2356,7 @@ function JikkaiPage({ data, setData, isLider, usuario, viewerIsContratante }) {
 
       {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} />}
       {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} viewerIsContratante={false} />}
-      {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
+      {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} />}
     </div>
   );
 }
@@ -2433,7 +2631,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, juramentados, remover
 }
 
 // ============ MINHAS MISSÕES ============
-function MinhasMissoesPage({ data, setData, usuario }) {
+function MinhasMissoesPage({ data, setData, usuario, role }) {
   const [filtro, setFiltro] = useState("Ativas");
   const [relatorioMissao, setRelatorioMissao] = useState(null);
 
@@ -2494,7 +2692,7 @@ function MinhasMissoesPage({ data, setData, usuario }) {
       resumo: form.resumo,
       resultado: form.resultado,
       evidencias: form.evidencias,
-      confidencialidade: "Interno",
+      confidencialidade: normalizarSigilo(m.sigilo || "Restrito"),
       tipo: "Operacional",
       statusAprovacao: "Pendente",
       missaoId: m.id,
@@ -2553,6 +2751,7 @@ function MinhasMissoesPage({ data, setData, usuario }) {
       <div className="space-y-4">
         {minhas.map((m) => {
           const c = statusMissaoConfig(m.status);
+          const sigilo = normalizarSigilo(m.sigilo);
           const objetivos = m.objetivos || [];
           const prog = objetivos.length > 0 ? Math.round(objetivos.filter(o => o.done).length / objetivos.length * 100) : 0;
           const atribuidor = data.users.find(u => u.username === m.assignedBy);
@@ -2573,6 +2772,7 @@ function MinhasMissoesPage({ data, setData, usuario }) {
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h3 className="text-orange-50 font-bold text-lg">{m.titulo}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                    <SigiloBadge sigilo={sigilo} compacto />
                     {m.contratoId && <span className="text-[10px] px-2 py-0.5 rounded border border-red-800 text-red-300 uppercase tracking-wider">Contrato</span>}
                   </div>
                   <p className="text-zinc-400 text-sm leading-relaxed mb-2">{m.desc}</p>
@@ -2698,7 +2898,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
 
       {aba === "usuarios" && <UsuariosManager data={data} setData={setData} />}
       {aba === "cargos" && <CargosManager data={data} setData={setData} />}
-      {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} />}
+      {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
     </div>
   );
@@ -2894,11 +3094,24 @@ function CargosManager({ data, setData }) {
   );
 }
 
-function MissoesManager({ data, setData, usuario }) {
+function MissoesManager({ data, setData, usuario, role }) {
   const [criando, setCriando] = useState(false);
   const [filtro, setFiltro] = useState("Ativas");
   const [expandida, setExpandida] = useState(null);
-  const [form, setForm] = useState({ titulo: "", desc: "", participants: [], objetivosText: "" });
+  const niveisPermitidos = niveisPermitidosPara(data, usuario, role);
+  const sigiloInicial = niveisPermitidos.includes("Restrito") ? "Restrito" : niveisPermitidos[0] || "Público";
+  const [form, setForm] = useState({ titulo: "", desc: "", participants: [], objetivosText: "", sigilo: sigiloInicial });
+
+  const usuariosElegiveis = data.users
+    .filter(u => u.role !== "contratante")
+    .filter(u => podeReceberSigilo(data, u, form.sigilo));
+
+  const mudarSigilo = (sigilo) => {
+    const permitidos = new Set(
+      data.users.filter(u => u.role !== "contratante" && podeReceberSigilo(data, u, sigilo)).map(u => u.username)
+    );
+    setForm(f => ({ ...f, sigilo, participants: f.participants.filter(p => permitidos.has(p)) }));
+  };
 
   const toggleParticipante = (username) => {
     setForm(f => ({
@@ -2923,10 +3136,11 @@ function MissoesManager({ data, setData, usuario }) {
       createdAt: new Date().toISOString(),
       objetivos,
       status: "atribuida",
+      sigilo: normalizarSigilo(form.sigilo),
       source: "manual",
     };
     setData(d => ({ ...d, missoes: [...d.missoes, nova] }));
-    setForm({ titulo: "", desc: "", participants: [], objetivosText: "" });
+    setForm({ titulo: "", desc: "", participants: [], objetivosText: "", sigilo: sigiloInicial });
     setCriando(false);
   };
 
@@ -3025,17 +3239,31 @@ function MissoesManager({ data, setData, usuario }) {
       {criando && (
         <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-3 fadein">
           <h4 className="text-orange-50 font-bold">Nova Missão</h4>
+          <div className="grid sm:grid-cols-[220px_1fr] gap-3 items-start">
+            <div>
+              <label className="fox-label">Classificação de sigilo</label>
+              <select value={form.sigilo} onChange={(e) => mudarSigilo(e.target.value)} className="fox-input">
+                {niveisPermitidos.map(n => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+            <div className={`p-3 rounded border ${sigiloConfig(form.sigilo).border} ${sigiloConfig(form.sigilo).bg}`}>
+              <div className="mb-1"><SigiloBadge sigilo={form.sigilo} /></div>
+              <p className="text-zinc-500 text-xs leading-relaxed">{sigiloConfig(form.sigilo).desc}</p>
+            </div>
+          </div>
           <div>
-            <label className="fox-label">Escalar operadores *</label>
+            <label className="fox-label">Escalar operadores autorizados *</label>
             <div className="grid sm:grid-cols-2 gap-2 p-3 bg-black border border-zinc-800 rounded max-h-56 overflow-y-auto">
-              {data.users.filter(u => u.role !== "contratante").map(u => (
+              {usuariosElegiveis.map(u => (
                 <label key={u.username} className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer p-1 hover:text-orange-300">
                   <input type="checkbox" checked={form.participants.includes(u.username)} onChange={() => toggleParticipante(u.username)} className="w-4 h-4 accent-orange-600" />
                   <span>{u.codinome || u.displayName || u.username} <span className="text-zinc-700">(@{u.username})</span></span>
                 </label>
               ))}
             </div>
-            <div className="text-zinc-600 text-[10px] mt-1">O primeiro operador selecionado será registrado como responsável principal.</div>
+            <div className="text-zinc-600 text-[10px] mt-1">
+              O primeiro operador selecionado será o responsável principal. A lista já respeita a autorização exigida por {sigiloConfig(form.sigilo).codigo}.
+            </div>
           </div>
           <div><label className="fox-label">Título *</label><input value={form.titulo} onChange={(e) => setForm({...form, titulo: e.target.value})} className="fox-input" placeholder="Ex: Infiltração em Kirigakure" /></div>
           <div><label className="fox-label">Descrição</label><textarea value={form.desc} onChange={(e) => setForm({...form, desc: e.target.value})} rows="3" className="fox-input" placeholder="Contexto, objetivo geral, riscos e limites..." /></div>
@@ -3063,6 +3291,9 @@ function MissoesManager({ data, setData, usuario }) {
       <div className="space-y-3">
         {missoes.map((m) => {
           const c = statusMissaoConfig(m.status);
+          const sigilo = normalizarSigilo(m.sigilo);
+          const autorizado = podeVerItemSigiloso(m, data, usuario, role);
+          if (!autorizado) return <ConteudoCensurado key={m.id} sigilo={sigilo} tipo="OPERAÇÃO" />;
           const participantes = participantesDaMissao(m);
           const objetivos = m.objetivos || [];
           const prog = objetivos.length > 0 ? Math.round(objetivos.filter(o => o.done).length / objetivos.length * 100) : 0;
@@ -3076,6 +3307,7 @@ function MissoesManager({ data, setData, usuario }) {
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h4 className="text-orange-50 font-bold">{m.titulo}</h4>
                     <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                    <SigiloBadge sigilo={sigilo} compacto />
                     {m.contratoId && <span className="text-[10px] px-2 py-0.5 rounded border border-red-800 text-red-300 uppercase tracking-wider">Contrato</span>}
                   </div>
                   <div className="text-zinc-500 text-xs">
@@ -3282,6 +3514,10 @@ function migrate(raw) {
     migrated.mandamentos = DEFAULT_MANDAMENTOS;
   }
   if (!raw.relatorios) migrated.relatorios = [];
+  migrated.relatorios = (raw.relatorios || []).map(r => ({
+    ...r,
+    confidencialidade: normalizarSigilo(r.confidencialidade || "Restrito"),
+  }));
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
   if (!raw.missoes) migrated.missoes = [];
@@ -3295,6 +3531,7 @@ function migrate(raw) {
       aceites: Array.isArray(m.aceites) ? m.aceites : (jaEstavaEmExecucao ? participants : []),
       objetivos: Array.isArray(m.objetivos) ? m.objetivos : [],
       status,
+      sigilo: normalizarSigilo(m.sigilo || "Restrito"),
       source: m.source || (m.contratoId ? "contrato" : "manual"),
     };
   });
@@ -3549,11 +3786,13 @@ function App() {
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = usuarioAtual?.role === "contratante";
   const meuJuramento = data?.juramentados.find((j) => j.username === usuarioAtual?.username || j.nome.toLowerCase() === (usuarioAtual?.displayName || "").toLowerCase());
+  const nivelAcesso = nivelAcessoUsuario(data, usuarioAtual, role);
+  const minhaAutorizacao = SIGILO_NIVEIS[Math.max(0, nivelAcesso - 1)] || "Público";
   const minhasMissoesCount = usuarioAtual && data ? data.missoes.filter(m => usuarioParticipaMissao(m, usuarioAtual.username) && !MISSAO_STATUS_TERMINAIS.includes(m.status)).length : 0;
 
   // Se contratante e tab não permitida, força "visaogeral"
   useEffect(() => {
-    if (isContratante && tab !== "visaogeral" && tab !== "jikkai") {
+    if (isContratante && tab !== "visaogeral" && tab !== "jikkai" && tab !== "arquivos") {
       setTab("visaogeral");
     }
   }, [isContratante, tab]);
@@ -3606,6 +3845,7 @@ function App() {
   const TABS = isContratante ? [
     { id: "visaogeral", label: "Visão Geral", icon: IBriefcase },
     { id: "jikkai", label: "Contratos F.O.X.", icon: ITarget },
+    { id: "arquivos", label: "Arquivo Público", icon: ILock },
   ] : [
     { id: "home", label: "Visão Geral", icon: IFlame },
     { id: "historia", label: "História", icon: IBook },
@@ -3654,6 +3894,7 @@ function App() {
                 <div className="text-zinc-600 text-[9px] truncate max-w-[160px]">{usuarioAtual.displayName}</div>
               )}
               <div className="text-[9px]" style={{ color: role?.cor || "#71717a" }}>{role?.nome || usuarioAtual.role}</div>
+              <div className="text-[8px] text-zinc-600 uppercase tracking-wider">{sigiloConfig(minhaAutorizacao).codigo} · {minhaAutorizacao}</div>
             </div>
             <div className="text-right hidden md:block">{syncIndicator}</div>
             <button onClick={() => setUsuario(null)} className="p-2 text-zinc-500 hover:text-red-500 transition-colors">
@@ -3682,11 +3923,12 @@ function App() {
         {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} />}
         {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} role={role} />}
         {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} viewerIsContratante={isContratante} />}
-        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} viewerIsContratante={isContratante} />}
+        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} />}
+        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} />}
         {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
         {tab === "visaogeral" && <VisaoGeralContratantes data={data} setData={setData} isLider={isLider} />}
+        {tab === "arquivos" && isContratante && <ArquivoPublicoPage data={data} />}
         {tab === "gerenciar" && podeGerenciar && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} role={role} exportar={exportar} importar={importar} />}
       </main>
 
