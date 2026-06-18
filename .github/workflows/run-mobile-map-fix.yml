@@ -1,0 +1,48 @@
+name: Executar correção mobile do mapa
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/run-mobile-map-fix.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-mobile-map-black-screen
+      - name: Aplicar correção
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('mapa.html')
+          text=p.read_text(encoding='utf-8')
+          old='''@media(max-width:900px){
+  .app{display:block}.panel{position:absolute;inset:0 auto 0 0;width:min(88vw,350px);transform:translateX(-102%);transition:.2s}.panel.open{transform:translateX(0)}
+  .mobile{display:block}.detail{left:12px;right:12px;bottom:12px}.legend{display:none}.modebar{top:auto;bottom:16px;width:calc(100% - 24px);justify-content:center;flex-wrap:wrap}
+}'''
+          new='''@media(max-width:900px){
+  .app{display:block;position:relative;height:100vh;height:100dvh}
+  .map-shell{position:absolute;inset:0;width:100%;height:100%;min-height:100vh;min-height:100dvh}
+  .panel{position:absolute;inset:0 auto 0 0;width:min(88vw,350px);transform:translateX(-102%);transition:.2s}.panel.open{transform:translateX(0)}
+  .mobile{display:block}.detail{left:12px;right:12px;bottom:12px}.legend{display:none}.modebar{top:auto;bottom:16px;width:calc(100% - 24px);justify-content:center;flex-wrap:wrap}
+}'''
+          if old in text: text=text.replace(old,new,1)
+          elif 'min-height:100dvh' not in text: raise SystemExit('Bloco mobile não encontrado')
+          p.write_text(text,encoding='utf-8')
+          PY
+          grep -q 'min-height:100dvh' mapa.html
+      - name: Salvar na branch de correção
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mapa.html
+          git rm -f .github/workflows/fix-mobile-map.yml mobile-fix-trigger.txt mobile-fix-trigger2.txt note.txt last-trigger-safe.txt || true
+          git commit -m "Corrigir tela preta do mapa no celular"
+          git push origin fix-mobile-map-black-screen
