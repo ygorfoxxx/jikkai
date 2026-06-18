@@ -1,4 +1,4 @@
 {
-  "buildCommand": "node scripts/fix-avatar.cjs",
+  "buildCommand": "node scripts/fix-avatar.cjs && node scripts/etapa2-core.cjs && node scripts/etapa2-reputacao-ui.cjs && node scripts/etapa2-admin-tabs.cjs && node scripts/etapa2-admin-user-fields.cjs && node scripts/etapa2-admin-notes.cjs && node scripts/etapa2-admin-badges.cjs && node scripts/etapa2-ramos.cjs && node scripts/validate-portal.cjs",
   "outputDirectory": "."
 }
