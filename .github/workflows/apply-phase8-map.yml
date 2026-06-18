@@ -1,71 +1,13 @@
-name: Aplicar Fase 8 - Mapa Estratégico
+name: Preparação da Fase 8
 
 on:
-  pull_request:
-    branches:
-      - fase8-mapa-estrategico
-    types:
-      - opened
-      - synchronize
-      - reopened
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply-map:
+  info:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Baixar branch da Fase 8
-        uses: actions/checkout@v4
-        with:
-          ref: fase8-mapa-estrategico
-
-      - name: Verificar pacote pendente
-        id: pending
-        shell: bash
-        run: |
-          if [ -f .phase8/apply.py.gz.b64 ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Aplicar código da cartografia JIKKAI
-        if: steps.pending.outputs.exists == 'true'
-        shell: bash
-        run: |
-          base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
-          python3 -m py_compile /tmp/apply_phase8.py
-          python3 /tmp/apply_phase8.py
-
-      - name: Validar estrutura e sintaxe JSX
-        if: steps.pending.outputs.exists == 'true'
-        shell: bash
-        run: |
-          grep -q 'function MapaEstrategicoPage' index.html
-          grep -q 'function MapaPontoModal' index.html
-          grep -q 'function MapaRotaModal' index.html
-          grep -q 'https://slpforge.xyz/images/map/map_base_low.webp' index.html
-          grep -q 'id: "edit_map"' index.html
-          python3 - <<'PY'
-          from pathlib import Path
-          text = Path('index.html').read_text(encoding='utf-8')
-          start = text.index('<script type="text/babel" data-presets="env,react">')
-          start = text.index('>', start) + 1
-          end = text.rindex('</script>')
-          Path('/tmp/portal.jsx').write_text(text[start:end], encoding='utf-8')
-          PY
-          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
-
-      - name: Publicar implementação na branch da fase
-        if: steps.pending.outputs.exists == 'true'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git rm -r .phase8
-          git commit -m "Fase 8: adicionar mapa estratégico interativo"
-          git push origin fase8-mapa-estrategico
+      - run: echo "A validação da Fase 8 é executada pelo fluxo isolado da branch principal."
