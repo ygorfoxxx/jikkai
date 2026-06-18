@@ -1,11 +1,13 @@
 name: Aplicar fase 2 - niveis de sigilo v2
 
 on:
-  push:
+  pull_request:
     branches:
       - main
-    paths:
-      - '.phase2/trigger-v2.txt'
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: write
@@ -14,8 +16,10 @@ jobs:
   apply-phase2:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar repositorio
+      - name: Baixar branch principal
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Aplicar sistema de sigilo
         shell: bash
