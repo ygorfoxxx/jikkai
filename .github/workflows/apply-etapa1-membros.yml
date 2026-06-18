@@ -1,0 +1,69 @@
+name: Aplicar Etapa 1 - Fundacao dos Membros
+
+on:
+  push:
+    branches:
+      - feature/etapa1-fundacao-membros
+    paths:
+      - '.apply-etapa1-membros'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/etapa1-fundacao-membros
+
+      - name: Reconstruir e validar aplicador
+        shell: bash
+        run: |
+          cat .etapa1-parts/part-* | base64 -d > /tmp/apply_etapa1.py
+          python3 -m py_compile /tmp/apply_etapa1.py
+
+      - name: Aplicar Etapa 1
+        shell: bash
+        run: |
+          python3 /tmp/apply_etapa1.py
+
+      - name: Validar portal
+        shell: bash
+        run: |
+          grep -q 'ETAPA 1 — FUNDAÇÃO DOS MEMBROS v1' index.html
+          grep -q 'function MeuDossieModal' index.html
+          grep -q 'function DossieModal' index.html
+          grep -q 'function EstruturaSection' index.html
+          grep -q 'function MemberAvatar' index.html
+          grep -q 'activityLog' index.html
+          grep -q 'avatarStoragePath' index.html
+          grep -q 'iniciacaoStatus' index.html
+          grep -q 'usuario={usuarioAtual}' index.html
+          test "$(grep -c '^function MembrosPage' index.html)" -eq 1
+          test "$(grep -c '^function TriosSection' index.html)" -eq 1
+          test "$(grep -c '^function UsuariosManager' index.html)" -eq 1
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          assert text.count('<script type="text/babel" data-presets="env,react">') == 1
+          assert text.count('</script>') >= 5
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S)
+          assert scripts, 'Nenhum script encontrado'
+          Path('/tmp/jikkai-etapa1.jsx').write_text(scripts[-1], encoding='utf-8')
+          print('index.html validado:', len(text), 'bytes')
+          PY
+
+      - name: Limpar arquivos temporarios e salvar
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -r .etapa1-parts .apply-etapa1-membros .github/workflows/apply-etapa1-membros.yml
+          git add index.html
+          git commit -m "Iniciar Etapa 1: fundação dos membros"
+          git push origin feature/etapa1-fundacao-membros
