@@ -5,17 +5,34 @@ const vm = require("vm");
 const html = fs.readFileSync("index.html", "utf8");
 const markers = [
   "ETAPA 2 — REPUTAÇÃO E LEALDADE v1",
+  "PROTOCOLO DE INICIAÇÃO v1",
   "function ReputacaoSection",
   "function RamosManager",
+  "function IntroducaoPrimeiroAcesso",
+  "function RegistroJuramentosManager",
+  "function juramentoDoUsuario",
   'id: "reputacao", label: "Reputação"',
   'id: "ramos", label: "Ramos"',
+  'id: "juramentos", label: "Juramentos"',
   "REPUTACAO_NIVEIS",
   "LEALDADE_NIVEIS",
+  "Imagem do juramento no RP",
+  'usuarioAtual.iniciacaoStatus === "pendente"',
+  "migrated.juramentados",
 ];
 for (const marker of markers) {
   if (!html.includes(marker)) throw new Error("Validação falhou: " + marker);
 }
-for (const unique of ["function ReputacaoSection", "function RamosManager", "function MembrosPage", "function UsuariosManager"]) {
+for (const unique of [
+  "function ReputacaoSection",
+  "function RamosManager",
+  "function IntroducaoPrimeiroAcesso",
+  "function RegistroJuramentosManager",
+  "function JuramentoPage",
+  "function JuramentadoView",
+  "function MembrosPage",
+  "function UsuariosManager",
+]) {
   const count = html.split(unique).length - 1;
   if (count !== 1) throw new Error(unique + " encontrado " + count + " vezes");
 }
