@@ -78,3 +78,48 @@ if (!modalCode.includes('const recorte = Math.min') || modalCode.includes('stora
 
 fs.writeFileSync(path, html, 'utf8');
 console.log('Avatar corrigido sem dependência de bucket.');
+
+// No layout mobile, .app deixa de ser grid. Como os filhos do mapa são absolutos,
+// a área .map-shell ficava sem altura e o navegador mostrava apenas o fundo preto.
+const mapPath = 'mapa.html';
+let mapHtml = fs.readFileSync(mapPath, 'utf8');
+const mobileMapFixMarker = 'jikkai-mobile-map-layout-fix';
+const mobileMapFix = `
+/* ${mobileMapFixMarker} */
+@media(max-width:900px){
+  .app{
+    display:block;
+    position:relative;
+    width:100%;
+    height:100vh;
+    height:100svh;
+    height:100dvh;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  .map-shell{
+    display:block;
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+}
+`;
+
+if (!mapHtml.includes(mobileMapFixMarker)) {
+  const styleEnd = mapHtml.indexOf('</style>');
+  if (styleEnd < 0) {
+    throw new Error('Bloco de estilos do mapa não encontrado.');
+  }
+  mapHtml = mapHtml.slice(0, styleEnd) + mobileMapFix + mapHtml.slice(styleEnd);
+}
+
+if (!mapHtml.includes(mobileMapFixMarker) || !mapHtml.includes('min-height:100dvh')) {
+  throw new Error('A correção mobile do mapa não foi aplicada corretamente.');
+}
+
+fs.writeFileSync(mapPath, mapHtml, 'utf8');
+console.log('Layout mobile do mapa estratégico corrigido.');
