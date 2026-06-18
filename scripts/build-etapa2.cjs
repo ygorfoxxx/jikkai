@@ -7,6 +7,9 @@ const etapas = [
   "./etapa2-admin-notes.cjs",
   "./etapa2-admin-badges.cjs",
   "./etapa2-ramos.cjs",
+  "./introducao-juramento.cjs",
+  "./introducao-data-app.cjs",
+  "./introducao-admin.cjs",
   "./validate-portal.cjs",
 ];
 
@@ -15,4 +18,4 @@ for (const arquivo of etapas) {
   require(arquivo);
 }
 
-console.log("Build da Etapa 2 iniciado e validado.");
+console.log("Build da Etapa 2 e do Protocolo de Iniciação concluído.");

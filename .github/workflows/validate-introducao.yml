@@ -1,0 +1,26 @@
+name: Validar introdução de primeiro acesso
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Executar build e validação do portal
+        run: node scripts/build-etapa2.cjs
+
+      - name: Confirmar recursos obrigatórios
+        run: |
+          grep -q 'PROTOCOLO DE INICIAÇÃO v1' index.html
+          grep -q 'function IntroducaoPrimeiroAcesso' index.html
+          grep -q 'function RegistroJuramentosManager' index.html
+          grep -q 'Imagem do juramento no RP' index.html
+          grep -q 'usuarioAtual.iniciacaoStatus === "pendente"' index.html
+          grep -q 'migrated.juramentados' index.html
