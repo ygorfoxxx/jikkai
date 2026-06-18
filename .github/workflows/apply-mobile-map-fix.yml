@@ -1,7 +1,7 @@
 name: Aplicar correção mobile do mapa
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
     types: [opened, synchronize, reopened]
 
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   apply:
-    if: github.head_ref == 'fix-mobile-map-black-screen'
+    if: github.event.pull_request.head.ref == 'fix-mobile-map-black-screen'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
