@@ -1,0 +1,68 @@
+Executando ./fix-avatar.cjs
+Avatar corrigido sem dependência de bucket.
+Layout mobile do mapa estratégico corrigido.
+Executando ./etapa2-core.cjs
+Núcleo da Etapa 2 aplicado.
+Executando ./etapa2-reputacao-ui.cjs
+Painel visual de reputação aplicado.
+Executando ./etapa2-admin-tabs.cjs
+Aba administrativa de ramos aplicada.
+Executando ./etapa2-admin-user-fields.cjs
+Níveis narrativos adicionados ao editor.
+Executando ./etapa2-admin-notes.cjs
+Notas narrativas aplicadas.
+Executando ./etapa2-admin-badges.cjs
+Badges administrativos aplicados.
+Executando ./etapa2-ramos.cjs
+Gestão de ramos aplicada.
+Executando ./introducao-juramento.cjs
+Introdução e juramento adaptado aplicados.
+Executando ./introducao-data-app.cjs
+Dados e login integrados ao Protocolo de Iniciação.
+Executando ./introducao-admin.cjs
+Arquivo administrativo de juramentos aplicado.
+Executando ./painel-estrategico-core.cjs
+Fundação integrada do Painel Estratégico aplicada.
+Executando ./painel-estrategico-relatorios.cjs
+Relatórios integrados ao Painel Estratégico.
+Executando ./painel-estrategico-ui.cjs
+Sala de comando do Painel JIKKAI aplicada.
+Executando ./painel-estrategico-mapa.cjs
+Mapa integrado ao Painel Estratégico.
+Executando ./ajustes-iniciacao-ramos.cjs
+Ajustes de iniciação, juramento e responsáveis por ramo aplicados.
+Executando ./mobile-responsive-loader.cjs
+Camada responsiva para celulares aplicada.
+Executando ./mobile-responsive-polish.cjs
+Refinamentos finais da experiência mobile aplicados.
+Executando ./estrutura-mapa-v2-loader.cjs
+Hierarquia configurável aplicada ao portal.
+Rolagem independente dos locais do mapa aplicada.
+Executando ./fix-root-leader.cjs
+Acesso raiz permanente do usuário leader aplicado ao portal.
+Acesso raiz permanente do usuário leader aplicado ao mapa.
+Executando ./central-comando-historia.cjs
+Central de Comando e História unificada aplicadas.
+Executando ./validate-portal-v3.cjs
+Executando ./validate-estrutura-mapa-v2.cjs
+Estrutura hierárquica e rolagem dos locais do mapa validadas.
+Executando ./validate-root-leader.cjs
+Acesso raiz permanente do usuário leader validado no portal e no mapa.
+Executando ./validate-central-comando-historia.cjs
+/home/runner/work/jikkai/jikkai/scripts/validate-central-comando-historia.cjs:28
+  if (!html.includes(marker)) throw new Error("Validação da Central de Comando falhou: " + marker);
+                              ^
+
+Error: Validação da Central de Comando falhou: Clã Lamona</span>
+    at Object.<anonymous> (/home/runner/work/jikkai/jikkai/scripts/validate-central-comando-historia.cjs:28:37)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/home/runner/work/jikkai/jikkai/scripts/build-etapa2.cjs:33:3)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+
+Node.js v22.22.3

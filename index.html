@@ -69,6 +69,7 @@
 // MOBILE POLISH v1 (áreas seguras, densidade e rótulos móveis)
 // ESTRUTURA HIERARQUICA v2 (cargos posicionais, conselheiro lateral e capitães de ramo)
 // ACESSO RAIZ LEADER v1 (o username leader mantém autoridade total independentemente do cargo)
+// CENTRAL DE COMANDO v2 (F.O.X. como grupo, Lamona como legado e Jikkai como organização operacional)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -528,58 +529,258 @@ function Btn({ children, onClick, variant = "default", size = "sm", disabled, cl
 }
 
 // ============ HOME ============
-function HomePage({ data, usuario, missoesCount }) {
-  const armasCaps = data.armas.filter(a => a.status === "Capturada").length;
-  const faseAtiva = data.fases.find(f => f.status === "andamento");
+function destinoSinalVisaoGeral(sinal) {
+  if (sinal?.fonteTipo === "mapa") return { tab: "mapa" };
+  if (sinal?.fonteTipo === "missao") return { tab: "missoes" };
+  if (sinal?.fonteTipo === "relatorio") return { tab: "jikkai", subTab: "relatorios" };
+  if (sinal?.fonteTipo === "contrato") return { tab: "jikkai", subTab: "contratos" };
+  return { tab: "jikkai", subTab: "plano" };
+}
+
+function sinalAutorizadoNaVisaoGeral(sinal, data, usuario, role) {
+  if (!sinal) return false;
+  if (sinal.fonteTipo === "relatorio") {
+    const relatorio = (data.relatorios || []).find(r => r.id === sinal.fonteId);
+    return !relatorio || podeVerItemSigiloso(relatorio, data, usuario, role);
+  }
+  if (sinal.fonteTipo === "missao") {
+    const missao = (data.missoes || []).find(m => m.id === sinal.fonteId);
+    return !missao || podeVerItemSigiloso(missao, data, usuario, role);
+  }
+  return true;
+}
+
+function DashboardMetric({ icon: I, label, value, detail, accent = "#71717a", onClick }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-lg border border-orange-900/50 bg-gradient-to-br from-black via-red-950/30 to-black p-5 sm:p-8">
-        <div className="text-orange-600 text-xs uppercase tracking-[0.3em] mb-2">Força Operacional de Extermínio</div>
-        <h1 className="text-4xl sm:text-5xl font-black text-orange-50 mb-4 serif">F.O.X.</h1>
-        <p className="text-zinc-400 max-w-2xl leading-relaxed">
-          Pela primeira vez na história, o clã Lamona dominou todos os pilares de Kirigakure.
-          Foram esquecidos. Agora, nas sombras, a F.O.X. cresce — mais forte, mais livre e mais letal do que nunca.
-        </p>
+    <Tag onClick={onClick} className={`w-full text-left p-4 rounded-xl border bg-zinc-950/60 transition-all ${onClick ? "hover:-translate-y-0.5 hover:bg-zinc-900/80" : ""}`} style={{ borderColor: accent + "70" }}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[9px] uppercase tracking-[0.22em] text-zinc-600">{label}</div>
+          <div className="text-2xl font-black text-orange-50 mt-1 serif">{value}</div>
+          {detail && <div className="text-zinc-600 text-[11px] mt-1 leading-relaxed">{detail}</div>}
+        </div>
+        <div className="w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0" style={{ color: accent, borderColor: accent + "70", background: accent + "14" }}>
+          <I className="w-5 h-5" />
+        </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-        <StatBox icon={IUsers} label="Membros" value={data.users.length} />
-        <StatBox icon={ISkull} label="Juramentados" value={data.juramentados.length} accent />
-        <StatBox icon={ISwords} label="Armas" value={`${armasCaps} / ${data.armas.length}`} />
-        <StatBox icon={ITarget} label="Fase Atual" value={faseAtiva ? `${faseAtiva.n} / ${data.fases.length}` : "—"} />
+    </Tag>
+  );
+}
+
+function DashboardPriority({ item, onNavigate }) {
+  const cor = item.cor || "#EA580C";
+  return (
+    <button onClick={() => onNavigate(item.tab, item.subTab || "", item.action || "")} className="w-full text-left p-3 rounded-lg border border-zinc-800 bg-black/45 hover:border-orange-700 transition-colors">
+      <div className="flex items-start gap-3">
+        <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: cor, boxShadow: `0 0 12px ${cor}80` }} />
+        <div className="min-w-0 flex-1">
+          <div className="text-orange-50 text-sm font-bold leading-tight">{item.titulo}</div>
+          {item.desc && <div className="text-zinc-600 text-xs mt-1 leading-relaxed">{item.desc}</div>}
+        </div>
+        <span className="text-zinc-700 text-sm">›</span>
       </div>
-      {missoesCount > 0 && (
-        <div className="p-4 rounded-lg border border-orange-700 bg-orange-950/20 flex items-center gap-3">
-          <IClipboard className="w-6 h-6 text-orange-500" />
-          <div className="flex-1">
-            <div className="text-orange-50 font-bold">Você tem {missoesCount} {missoesCount === 1 ? "missão atribuída" : "missões atribuídas"}</div>
-            <div className="text-zinc-500 text-xs">Acesse a aba "Minhas Missões" para visualizar.</div>
+    </button>
+  );
+}
+
+function HomePage({ data, usuario, role, isLider, onNavigate }) {
+  const membrosFox = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
+  const roleOf = u => (data.roles || []).find(r => r.id === u.role);
+  const ramoUsuario = (data.clas || []).find(c => c.id === usuario?.cla);
+  const trioUsuario = trioDoUsuario(data, usuario?.username);
+  const cargoUsuario = roleOf(usuario);
+  const lideresJikkai = membrosFox.filter(u => estruturaPosicaoRole(roleOf(u)) === "lider");
+  const nomesLideranca = lideresJikkai.length ? lideresJikkai.map(getCodinome).join(" · ") : "Não designada";
+  const juramentoUsuario = juramentoDoUsuario(data.juramentados, usuario);
+
+  const faseAtiva = (data.fases || []).find(f => f.status === "andamento") || (data.fases || []).find(f => f.status !== "concluida") || (data.fases || [])[0];
+  const progressoGeral = progressoGeralJikkai(data.fases || []);
+  const progressoAtual = faseAtiva ? progressoFase(faseAtiva) : 0;
+  const objetivosAtuais = faseAtiva?.objetivos || [];
+  const objetivosConcluidos = objetivosAtuais.filter(o => o.status === "concluido").length;
+  const objetivosBloqueados = objetivosAtuais.filter(o => o.status === "bloqueado").length;
+  const objetivosAndamento = objetivosAtuais.filter(o => ["preparacao", "andamento", "parcial"].includes(o.status)).length;
+
+  const statusInativos = ["concluida", "falhou", "recusada", "arquivada"];
+  const minhasMissoes = (data.missoes || []).filter(m => {
+    const participa = m.assignedTo === usuario?.username || (m.participants || []).includes(usuario?.username);
+    return participa && !statusInativos.includes(m.status) && podeVerItemSigiloso(m, data, usuario, role);
+  });
+
+  const sinaisTodos = coletarSinaisEstrategicos(data);
+  const sinaisVisiveis = sinaisTodos.filter(s => sinalAutorizadoNaVisaoGeral(s, data, usuario, role));
+  const sinaisOcultos = Math.max(0, sinaisTodos.length - sinaisVisiveis.length);
+  const maiorRisco = sinaisVisiveis[0]?.risco || (objetivosBloqueados ? "Elevado" : "Baixo");
+  const riscoCfg = RISCO_CFG[normalizarRisco(maiorRisco)] || RISCO_CFG.Baixo;
+
+  const capitaesDesignados = (data.clas || []).filter(ramo => membrosFox.some(u => u.cla === ramo.id && estruturaPosicaoRole(roleOf(u)) === "capitao_ramo")).length;
+  const ramosSemCapitao = Math.max(0, (data.clas || []).length - capitaesDesignados);
+  const membrosPendentes = membrosFox.filter(u => u.iniciacaoStatus === "pendente").length;
+  const dossiesIncompletos = membrosFox.filter(u => !perfilCompletoUsuario(u)).length;
+  const missoesRevisao = (data.missoes || []).filter(m => m.status === "revisao").length;
+  const propostas = (data.contratos || []).filter(c => c.status === "Proposta").length;
+
+  const prioridades = [];
+  const addPrioridade = item => {
+    if (!item?.titulo || prioridades.some(p => p.titulo === item.titulo)) return;
+    prioridades.push(item);
+  };
+
+  if (!perfilCompletoUsuario(usuario)) addPrioridade({ titulo: "Concluir seu dossiê", desc: "Preencha identificação, especialidade e foto para completar o registro operacional.", tab: "membros", subTab: "lista", action: "meu-dossie", cor: "#CA8A04" });
+  if (usuario?.iniciacaoStatus === "pendente" || !juramentoUsuario) addPrioridade({ titulo: "Protocolo de iniciação pendente", desc: "O juramento ainda não consta como concluído no seu registro.", tab: "juramento", cor: "#DC2626" });
+
+  minhasMissoes.slice(0, 2).forEach(m => addPrioridade({
+    titulo: m.status === "atribuida" || m.status === "pendente" ? "Missão aguardando confirmação" : "Operação em andamento",
+    desc: m.titulo,
+    tab: "missoes",
+    cor: m.status === "devolvida" ? "#CA8A04" : "#EA580C",
+  }));
+
+  if (isLider) {
+    if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Há resultados operacionais esperando decisão da liderança da Jikkai.", tab: "missoes", cor: "#A855F7" });
+    if (propostas) addPrioridade({ titulo: `${propostas} ${propostas === 1 ? "proposta externa" : "propostas externas"}`, desc: "Contratos enviados aguardam análise da organização.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
+    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", cor: "#F59E0B" });
+    if (ramosSemCapitao) addPrioridade({ titulo: `${ramosSemCapitao} ${ramosSemCapitao === 1 ? "ramo está" : "ramos estão"} sem Capitão`, desc: "Designe o Caporegime responsável por cada ramo da Jikkai.", tab: "gerenciar", cor: "#DC2626" });
+    if (dossiesIncompletos) addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Existem registros de membros que ainda precisam ser completados.", tab: "membros", subTab: "lista", cor: "#CA8A04" });
+  }
+
+  sinaisVisiveis.slice(0, 4).forEach(s => {
+    const destino = destinoSinalVisaoGeral(s);
+    addPrioridade({ titulo: s.titulo, desc: s.descricao || `${fonteLabel(s.fonteTipo).label} estratégico`, ...destino, cor: RISCO_CFG[normalizarRisco(s.risco)]?.cor || "#EA580C" });
+  });
+
+  const atividadesBloqueadas = /senha|backup|membro_editado|membro_removido|perfil_atualizado|foto_iniciacao|cargo_removido/i;
+  const atividadesRecentes = (data.activityLog || [])
+    .filter(a => a.descricao && !atividadesBloqueadas.test(`${a.tipo} ${a.descricao}`))
+    .slice()
+    .sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0))
+    .slice(0, 6);
+
+  const navegarSinal = sinal => {
+    const destino = destinoSinalVisaoGeral(sinal);
+    onNavigate(destino.tab, destino.subTab || "");
+  };
+
+  return (
+    <div className="space-y-6 sm:space-y-8 fadein">
+      <section className="relative overflow-hidden rounded-2xl border border-orange-900/50 bg-gradient-to-br from-black via-red-950/25 to-black p-5 sm:p-7">
+        <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-red-900/10 blur-3xl" />
+        <div className="relative grid lg:grid-cols-[1fr_340px] gap-6 items-stretch">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Grupo F.O.X. · Central de Comando</div>
+            <h1 className="text-3xl sm:text-4xl font-black text-orange-50 serif mt-2">Bem-vindo, {getCodinome(usuario)}</h1>
+            <p className="text-zinc-400 leading-relaxed mt-3 max-w-3xl">
+              A F.O.X. é o grupo que reúne seus membros e não possui uma chefia única. A Jikkai é a organização operacional criada pelo grupo e possui sua própria estrutura de comando.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="px-3 py-1.5 rounded-full border border-orange-800 bg-orange-950/20 text-orange-300 text-[10px] uppercase tracking-wider font-black">F.O.X. · coletivo</span>
+              <span className="px-3 py-1.5 rounded-full border border-red-800 bg-red-950/20 text-red-300 text-[10px] uppercase tracking-wider font-black">Jikkai · organização</span>
+              <span className="px-3 py-1.5 rounded-full border border-zinc-700 bg-zinc-950 text-zinc-400 text-[10px] uppercase tracking-wider font-black">Lamona · legado familiar</span>
+            </div>
+            <div className="mt-6 p-4 rounded-xl border border-red-900/40 bg-black/45">
+              <div className="text-[9px] uppercase tracking-[0.28em] text-red-600">Comando atual da Jikkai</div>
+              <div className="text-orange-50 font-black text-lg serif mt-1">{nomesLideranca}</div>
+              <div className="text-zinc-600 text-xs mt-1">A liderança acima pertence à Jikkai. Ela não representa uma liderança absoluta sobre todo o grupo F.O.X.</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border p-5 flex flex-col justify-between" style={{ borderColor: riscoCfg.cor + "80", background: riscoCfg.cor + "10" }}>
+            <div>
+              <div className="text-[9px] uppercase tracking-[0.28em] text-zinc-500">Situação operacional</div>
+              <div className="flex items-center gap-3 mt-3">
+                <div className="w-3 h-3 rounded-full pulse-fire" style={{ background: riscoCfg.cor, boxShadow: `0 0 18px ${riscoCfg.cor}` }} />
+                <div className="text-2xl font-black serif" style={{ color: riscoCfg.cor }}>{normalizarRisco(maiorRisco)}</div>
+              </div>
+              <div className="text-zinc-500 text-sm mt-3">{sinaisVisiveis.length} alertas liberados para seu nível de acesso.</div>
+              {sinaisOcultos > 0 && <div className="text-zinc-700 text-xs mt-2">{sinaisOcultos} registro{sinaisOcultos === 1 ? "" : "s"} estratégico{sinaisOcultos === 1 ? "" : "s"} acima da sua autorização.</div>}
+            </div>
+            <button onClick={() => onNavigate("jikkai", "plano")} className="mt-5 w-full py-2.5 rounded-lg border border-orange-800 text-orange-300 hover:bg-orange-950/30 text-xs uppercase tracking-wider font-black">Abrir Painel Jikkai</button>
           </div>
         </div>
+      </section>
+
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <DashboardMetric icon={ITarget} label="Progresso Jikkai" value={`${progressoGeral}%`} detail="Avanço geral do plano" accent="#EA580C" onClick={() => onNavigate("jikkai", "plano")} />
+        <DashboardMetric icon={IFlame} label="Fase atual" value={faseAtiva ? `Fase ${faseAtiva.n}` : "—"} detail={faseAtiva ? `${faseAtiva.titulo} · ${progressoAtual}%` : "Nenhuma fase ativa"} accent="#B91C1C" onClick={() => onNavigate("jikkai", "plano")} />
+        <DashboardMetric icon={IClipboard} label="Minhas operações" value={minhasMissoes.length} detail="Missões que exigem sua participação" accent="#A855F7" onClick={() => onNavigate("missoes")} />
+        <DashboardMetric icon={IAlert} label="Alertas visíveis" value={sinaisVisiveis.length} detail={`${sinaisVisiveis.filter(s => normalizarRisco(s.risco) === "Crítico").length} críticos`} accent={riscoCfg.cor} onClick={() => onNavigate("jikkai", "plano")} />
+      </section>
+
+      <section className="grid lg:grid-cols-[1.45fr_0.85fr] gap-4">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Ações recomendadas</div><h2 className="text-xl font-black text-orange-50 serif">Prioridades</h2></div>
+            <span className="text-zinc-700 text-xs">{Math.min(prioridades.length, 6)} registros</span>
+          </div>
+          <div className="space-y-2">
+            {prioridades.slice(0, 6).map((p, i) => <DashboardPriority key={`${p.titulo}_${i}`} item={p} onNavigate={onNavigate} />)}
+            {prioridades.length === 0 && <div className="p-8 text-center rounded-lg border border-zinc-800 bg-black/30 text-zinc-600 text-sm italic">Nenhuma prioridade imediata. A organização está estável dentro do seu nível de acesso.</div>}
+          </div>
+        </div>
+
+        <button onClick={() => onNavigate("membros", "lista", "meu-dossie")} className="rounded-xl border border-orange-900/50 bg-gradient-to-br from-red-950/20 to-black p-5 text-left hover:border-orange-600 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Meu registro</div>
+          <div className="flex items-center gap-4 mt-4">
+            <MemberAvatar user={usuario} size="lg" />
+            <div className="min-w-0">
+              <div className="text-xl font-black text-orange-50 serif truncate">{getCodinome(usuario)}</div>
+              <div className="text-zinc-500 text-xs mt-1 truncate">{usuario?.patente || cargoUsuario?.nome || "Operador"}</div>
+              <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-1">{ramoUsuario?.nome || "Sem ramo"}{trioUsuario ? ` · ${trioUsuario.nome}` : ""}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-5">
+            <div className="p-3 rounded-lg border border-red-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-red-700">Reputação</div><div className="text-red-300 text-xs font-bold mt-1">{usuario?.reputacao || "Desconhecido"}</div></div>
+            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700">Lealdade</div><div className="text-orange-300 text-xs font-bold mt-1">{usuario?.lealdade || "Observado"}</div></div>
+          </div>
+          <div className={`mt-4 text-xs font-bold ${perfilCompletoUsuario(usuario) ? "text-green-500" : "text-yellow-500"}`}>{perfilCompletoUsuario(usuario) ? "Dossiê completo" : "Dossiê incompleto · toque para atualizar"}</div>
+        </button>
+      </section>
+
+      {faseAtiva && (
+        <section className="rounded-xl border border-orange-900/40 bg-gradient-to-r from-red-950/15 to-black p-5">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div><div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Plano estratégico em execução</div><h2 className="text-2xl font-black text-orange-50 serif mt-1">Fase {faseAtiva.n} — {faseAtiva.titulo}</h2><p className="text-zinc-500 text-sm mt-2">{faseAtiva.desc}</p></div>
+            <div className="text-3xl font-black text-orange-400 serif">{progressoAtual}%</div>
+          </div>
+          <div className="h-2 bg-black border border-zinc-800 rounded-full overflow-hidden mt-5"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: `${progressoAtual}%` }} /></div>
+          <div className="flex flex-wrap gap-2 mt-4 text-[10px] uppercase tracking-wider font-bold">
+            <span className="px-2 py-1 rounded border border-green-900 text-green-500 bg-green-950/20">{objetivosConcluidos} concluídos</span>
+            <span className="px-2 py-1 rounded border border-orange-900 text-orange-500 bg-orange-950/20">{objetivosAndamento} em movimento</span>
+            <span className="px-2 py-1 rounded border border-red-900 text-red-500 bg-red-950/20">{objetivosBloqueados} bloqueados</span>
+          </div>
+          <button onClick={() => onNavigate("jikkai", "plano")} className="mt-4 text-orange-400 text-xs uppercase tracking-wider font-black hover:text-orange-300">Ver fase completa →</button>
+        </section>
       )}
-      <div className="grid md:grid-cols-2 gap-4">
-        <InfoCard icon={IBook} title="Os 7 Mandamentos" desc="O código que rege todo membro juramentado." />
-        <InfoCard icon={ITarget} title="JIKKAI — O Grande Plano" desc="As cinco fases para o objetivo." />
-        <InfoCard icon={ISkull} title="Bunke Lamona" desc="Os agentes das sombras. Espionagem e sabotagem." />
-        <InfoCard icon={ICrown} title="Soke Lamona" desc="A liderança estratégica. Guardiões do legado de Ayaka Uzumaki." />
-      </div>
-    </div>
-  );
-}
-function StatBox({ icon: I, label, value, accent }) {
-  return (
-    <div className={`p-3 sm:p-4 rounded-lg border ${accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800 bg-zinc-950/50"}`}>
-      <I className={`w-5 h-5 mb-2 ${accent ? "text-orange-500 pulse-fire" : "text-zinc-500"}`} />
-      <div className="text-2xl font-bold text-orange-50">{value}</div>
-      <div className="text-xs text-zinc-500 uppercase tracking-wider">{label}</div>
-    </div>
-  );
-}
-function InfoCard({ icon: I, title, desc }) {
-  return (
-    <div className="p-5 rounded-lg border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black hover:border-orange-700/50 transition-colors">
-      <I className="w-6 h-6 text-orange-500 mb-3" />
-      <h3 className="text-orange-50 font-bold mb-1">{title}</h3>
-      <p className="text-zinc-500 text-sm">{desc}</p>
+
+      <section className="grid lg:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-5">
+          <div className="flex items-center justify-between gap-3 mb-4"><div><div className="text-[9px] uppercase tracking-[0.28em] text-red-600">Inteligência integrada</div><h2 className="text-xl font-black text-orange-50 serif">Situação estratégica</h2></div><button onClick={() => onNavigate("mapa")} className="text-sky-400 text-[10px] uppercase tracking-wider font-black">Abrir mapa</button></div>
+          <div className="space-y-2">
+            {sinaisVisiveis.slice(0, 5).map(s => <button key={s.id} onClick={() => navegarSinal(s)} className="w-full text-left p-3 rounded-lg border border-zinc-800 bg-black/40 hover:border-orange-800"><div className="flex items-center gap-2 flex-wrap"><RiscoBadge risco={s.risco} compacto /><FonteEstrategicaBadge tipo={s.fonteTipo} /></div><div className="text-orange-50 font-bold text-sm mt-2">{s.titulo}</div><div className="text-zinc-600 text-xs mt-1 line-clamp-2">{s.descricao}</div></button>)}
+            {sinaisVisiveis.length === 0 && <div className="p-7 text-center text-zinc-600 text-sm italic border border-zinc-800 rounded-lg">Nenhum alerta estratégico visível.</div>}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-5">
+          <div className="flex items-center justify-between gap-3 mb-4"><div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Registro narrativo</div><h2 className="text-xl font-black text-orange-50 serif">Movimentações recentes</h2></div>{isLider && <button onClick={() => onNavigate("gerenciar")} className="text-zinc-500 text-[10px] uppercase tracking-wider font-black">Registro completo</button>}</div>
+          <div className="space-y-3">
+            {atividadesRecentes.map(a => <div key={a.id} className="flex gap-3"><div className="w-px bg-gradient-to-b from-orange-700 to-transparent flex-shrink-0" /><div><div className="text-zinc-300 text-sm leading-relaxed">{a.descricao}</div><div className="text-zinc-700 text-[10px] mt-1">{a.ator ? `Por ${a.ator} · ` : ""}{a.data ? new Date(a.data).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "Registro interno"}</div></div></div>)}
+            {atividadesRecentes.length === 0 && <div className="p-7 text-center text-zinc-600 text-sm italic border border-zinc-800 rounded-lg">Nenhuma movimentação narrativa registrada.</div>}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid md:grid-cols-3 gap-3">
+        <button onClick={() => onNavigate("historia", "cla")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><ICrown className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Clã Lamona</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">A família que antecede a F.O.X. e preserva o legado de Archie Lamona.</p></button>
+        <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><IUsers className="w-6 h-6 text-red-500 mb-3" /><div className="text-orange-50 font-black serif">Grupo F.O.X.</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">{membrosFox.length} membros reunidos como grupo, sem uma chefia única sobre todos.</p></button>
+        <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-red-950/15 to-black text-left hover:border-orange-700 transition-colors"><ITarget className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Organização Jikkai</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">{(data.clas || []).length} ramos · {capitaesDesignados} Capitães · comando: {nomesLideranca}.</p></button>
+      </section>
+
+      <section className="rounded-xl border border-red-900/30 bg-black/55 p-5 flex flex-col sm:flex-row items-start gap-4">
+        <div className="w-11 h-11 rounded-full border border-red-800 bg-red-950/30 flex items-center justify-center flex-shrink-0"><IBook className="w-5 h-5 text-red-500" /></div>
+        <div><div className="text-[9px] uppercase tracking-[0.3em] text-red-600">Legado fundador</div><p className="text-zinc-400 text-sm leading-relaxed mt-2">Em seus últimos dias, Archie Lamona reuniu a família para uma nova jornada, fundou a F.O.X. e, por meio de suas cartas, confiou a <strong className="text-orange-300">Tenshigami — Viper-01</strong> a chefia da organização Jikkai.</p><button onClick={() => onNavigate("historia", "cla")} className="text-orange-500 text-xs uppercase tracking-wider font-black mt-3">Abrir história do Clã Lamona →</button></div>
+      </section>
     </div>
   );
 }
@@ -982,24 +1183,24 @@ function LinhaDoTempoSection({ data, setData, podeEditar }) {
   );
 }
 
-function HistoriaPage({ data, setData, role, usuario }) {
+function HistoriaPage({ data, setData, role, usuario, navigationRequest }) {
   const [subTab, setSubTab] = useState("timeline");
-  const isMobile = useMediaQuery("(max-width: 639px)");
 
   useEffect(() => {
-    if (!isMobile && subTab === "cla") setSubTab("timeline");
-  }, [isMobile, subTab]);
+    if (navigationRequest?.tab !== "historia") return;
+    if (["timeline", "cla", "galeria"].includes(navigationRequest.subTab)) setSubTab(navigationRequest.subTab);
+  }, [navigationRequest?.token]);
 
   const galeriaCount = (data.galeria || []).length;
   const SUB_TABS = [
     { id: "timeline", label: "Linha do Tempo", mobileLabel: "Linha do Tempo", icon: IBook, badge: null },
-    ...(isMobile ? [{ id: "cla", label: "Clã Lamona", mobileLabel: "Clã Lamona", icon: ICrown, badge: null }] : []),
+    { id: "cla", label: "Clã Lamona", mobileLabel: "Clã Lamona", icon: ICrown, badge: null },
     { id: "galeria", label: "Galeria de Sombras", mobileLabel: "Galeria", icon: IImage, badge: galeriaCount > 0 ? galeriaCount : null },
   ];
 
   return (
     <div>
-      <SectionTitle icon={IBook} sub="O legado e os registros do clã Lamona">História</SectionTitle>
+      <SectionTitle icon={IBook} sub="O legado Lamona, o nascimento da F.O.X. e a história que conduz à Jikkai">História</SectionTitle>
 
       <div className="mb-5 sm:mb-8 bg-zinc-950/60 border border-zinc-800 rounded-xl p-1 grid grid-cols-3 sm:flex gap-1">
         {SUB_TABS.map(t => {
@@ -1012,7 +1213,7 @@ function HistoriaPage({ data, setData, role, usuario }) {
               className={`min-w-0 sm:min-w-[140px] sm:flex-1 min-h-14 sm:min-h-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 rounded-lg text-[9px] sm:text-xs uppercase tracking-wide sm:tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
             >
               <I className="w-4 h-4 flex-shrink-0" />
-              <span className="leading-tight text-center">{isMobile ? t.mobileLabel : t.label}</span>
+              <span className="leading-tight text-center">{t.mobileLabel}</span>
               {t.badge && (
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>
               )}
@@ -1022,7 +1223,7 @@ function HistoriaPage({ data, setData, role, usuario }) {
       </div>
 
       {subTab === "timeline" && <LinhaDoTempoSection data={data} setData={setData} podeEditar={hasPerm(role,"edit_history")} />}
-      {subTab === "cla" && isMobile && <ClaPage data={data} setData={setData} role={role} embedded />}
+      {subTab === "cla" && <ClaPage data={data} setData={setData} role={role} embedded />}
       {subTab === "galeria" && <GaleriaSection data={data} setData={setData} isLider={hasPerm(role,"edit_gallery")} usuario={usuario} />}
     </div>
   );
@@ -1160,7 +1361,16 @@ function ClaPage({ data, setData, role, embedded = false }) {
 
   return (
     <div className="space-y-8">
-      <SectionTitle icon={ICrown} sub={embedded ? "Ramos, figuras, membros e mandamentos" : "As faces do clã Lamona"} action={action}>{embedded ? "Clã Lamona" : "Clãs"}</SectionTitle>
+      {embedded ? (
+        <div className="mb-6 border-l-4 border-orange-600 pl-4">
+          <div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Legado familiar</div>
+          <h2 className="text-2xl font-black text-orange-50 serif mt-1">Clã Lamona</h2>
+          <p className="text-zinc-500 text-sm mt-1 italic">A família que antecede a F.O.X.; seus ramos, membros, figuras e mandamentos.</p>
+          {action && <div className="mt-3">{action}</div>}
+        </div>
+      ) : (
+        <SectionTitle icon={ICrown} sub="As faces do clã Lamona" action={action}>Clãs</SectionTitle>
+      )}
 
       {clas.map((c, ci) => {
         const I = CLA_ICONS[c.icon] || IShield;
@@ -1746,10 +1956,20 @@ function ReputacaoSection({ data, onOpen }) {
   );
 }
 
-function MembrosPage({ data, setData, role, usuario, viewerIsContratante }) {
+function MembrosPage({ data, setData, role, usuario, viewerIsContratante, navigationRequest }) {
   const [subTab, setSubTab] = useState("lista");
   const [dossieAberto, setDossieAberto] = useState(null);
   const [editandoMeuDossie, setEditandoMeuDossie] = useState(false);
+
+  useEffect(() => {
+    if (navigationRequest?.tab !== "membros") return;
+    if (["lista", "estrutura", "reputacao", "trios"].includes(navigationRequest.subTab)) setSubTab(navigationRequest.subTab);
+    if (navigationRequest.action === "meu-dossie") {
+      setSubTab("lista");
+      setEditandoMeuDossie(true);
+    }
+  }, [navigationRequest?.token]);
+
   const podeEditarTrios = hasPerm(role, "edit_trios");
   const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
   const membroAtual = data.users.find(u => u.username === usuario?.username) || usuario;
@@ -3320,13 +3540,18 @@ function ArquivoPublicoPage({ data }) {
   );
 }
 
-function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante }) {
+function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante, navigationRequest }) {
   const [subTab, setSubTab] = useState(viewerIsContratante ? "contratos" : "plano");
 
   // Se contratante, força sub-aba contratos
   useEffect(() => {
     if (viewerIsContratante && subTab !== "contratos") setSubTab("contratos");
   }, [viewerIsContratante, subTab]);
+
+  useEffect(() => {
+    if (viewerIsContratante || navigationRequest?.tab !== "jikkai") return;
+    if (["plano", "contratos", "relatorios"].includes(navigationRequest.subTab)) setSubTab(navigationRequest.subTab);
+  }, [navigationRequest?.token, viewerIsContratante]);
 
   const contratosAbertos = (data.contratos || []).filter(c => c.status === "Aberto").length;
   const relatoriosCount = (data.relatorios || []).filter(r => podeVerItemSigiloso(r, data, usuario, role)).length;
@@ -5122,6 +5347,7 @@ function App() {
   const [usuario, setUsuario] = useState(null);
   const [tab, setTab] = useState("home");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
+  const [navigationRequest, setNavigationRequest] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState({ cloudOk: null, localOk: true, time: null, syncing: false });
@@ -5318,7 +5544,6 @@ function App() {
   ] : [
     { id: "home", label: "Visão Geral", icon: IFlame },
     { id: "historia", label: "História", icon: IBook },
-    { id: "cla", label: "Clã Lamona", icon: ICrown },
     { id: "membros", label: "Membros", icon: IUsers },
     { id: "jikkai", label: "JIKKAI", icon: ITarget },
     { id: "armas", label: "Armas", icon: IShield },
@@ -5336,13 +5561,19 @@ function App() {
     ? ["visaogeral", "jikkai", "arquivos"]
     : ["home", "historia", "membros", "jikkai"];
   const mobilePrimaryTabs = TABS.filter(t => mobilePrimaryIds.includes(t.id));
-  const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id) && t.id !== "cla");
+  const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id));
   const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
-  const selecionarTabMobile = (id) => {
+  const navegarPara = (id, subTab = "", action = "") => {
+    if (id === "mapa") {
+      window.location.href = "./mapa.html";
+      return;
+    }
     setTab(id);
+    setNavigationRequest({ tab: id, subTab, action, token: Date.now() });
     setMobileMoreOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  const selecionarTabMobile = (id) => navegarPara(id);
 
   // Sync indicator
   const syncIndicator = (() => {
@@ -5390,7 +5621,7 @@ function App() {
               const I = t.icon;
               const active = tab === t.id;
               return (
-                <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-wider whitespace-nowrap border-b-2 transition-colors ${active ? "border-orange-600 text-orange-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}>
+                <button key={t.id} onClick={() => navegarPara(t.id)} className={`flex items-center gap-2 px-4 py-3 text-xs uppercase tracking-wider whitespace-nowrap border-b-2 transition-colors ${active ? "border-orange-600 text-orange-400" : "border-transparent text-zinc-600 hover:text-zinc-300"}`}>
                   <I className="w-3.5 h-3.5" />
                   {t.label}
                 </button>
@@ -5401,11 +5632,10 @@ function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 sm:pb-8">
-        {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
-        {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} />}
-        {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} role={role} />}
-        {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} />}
-        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} />}
+        {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} role={role} isLider={isLider} onNavigate={navegarPara} />}
+        {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} navigationRequest={navigationRequest} />}
+        {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
+        {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
         {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} />}
         {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
