@@ -20,7 +20,7 @@ const etapas = [
   "./ajustes-iniciacao-ramos.cjs",
   "./mobile-responsive-loader.cjs",
   "./mobile-responsive-polish.cjs",
-  "./estrutura-mapa-v2.cjs",
+  "./estrutura-mapa-v2-loader.cjs",
   "./validate-portal-v3.cjs",
   "./validate-estrutura-mapa-v2.cjs"
 ];
