@@ -3,6 +3,8 @@ const fs = require("fs");
 const html = fs.readFileSync("index.html", "utf8");
 const markers = [
   "MOBILE RESPONSIVE v1",
+  "MOBILE POLISH v1",
+  "viewport-fit=cover",
   "function useMediaQuery",
   "font-size: 16px",
   "mobileMoreOpen",
@@ -17,6 +19,7 @@ const markers = [
   "opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
   "max-h-[100dvh] sm:max-h-[92vh]",
   "pb-28 sm:pb-8",
+  't.id === "visaogeral" || t.id === "home" ? "Início"',
 ];
 
 for (const marker of markers) {
