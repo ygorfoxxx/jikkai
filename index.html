@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>F.O.X. Portal· JIKKAI </title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -46,6 +46,15 @@
     .mobile-safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
     .mobile-sheet-panel { max-height: 82dvh; padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem); }
   }
+
+  @media (max-width: 639px) {
+    .p-6 { padding: 1rem !important; }
+    .p-8, .p-10 { padding: 1.25rem !important; }
+    .text-5xl { font-size: 2.5rem !important; line-height: 1 !important; }
+    .text-4xl { font-size: 2rem !important; line-height: 1.1 !important; }
+    .text-3xl { line-height: 1.15 !important; }
+    .fixed.inset-0 { overscroll-behavior: contain; }
+  }
 </style>
 </head>
 <body>
@@ -57,6 +66,7 @@
 // PROTOCOLO DE INICIAÇÃO v1 (primeiro acesso e juramento integrado)
 // ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1 (fases, riscos e fontes integradas)
 // MOBILE RESPONSIVE v1 (navegação, toque, formulários e História integrada)
+// MOBILE POLISH v1 (áreas seguras, densidade e rótulos móveis)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -5203,7 +5213,7 @@ function App() {
   return (
     <div className="min-h-screen bg-black text-zinc-200">
       <header className="border-b border-orange-900/30 bg-black/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="p-2 rounded-full border border-orange-700 flex-shrink-0">
               <IFlame className="w-5 h-5 text-orange-500" />
@@ -5224,7 +5234,7 @@ function App() {
               <div className="text-[8px] text-zinc-600 uppercase tracking-wider">{sigiloConfig(minhaAutorizacao).codigo} · {minhaAutorizacao}</div>
             </div>
             <div className="text-right hidden md:block">{syncIndicator}</div>
-            <button onClick={() => setUsuario(null)} className="p-2 text-zinc-500 hover:text-red-500 transition-colors">
+            <button onClick={() => setUsuario(null)} className="mobile-tap p-2 text-zinc-500 hover:text-red-500 transition-colors flex items-center justify-center">
               <ILogout className="w-4 h-4" />
             </button>
           </div>
@@ -5284,7 +5294,7 @@ function App() {
         <div className="grid" style={{ gridTemplateColumns: `repeat(${mobilePrimaryTabs.length + 1}, minmax(0, 1fr))` }}>
           {mobilePrimaryTabs.map(t => { const I = t.icon; const active = tab === t.id; return (
             <button key={t.id} onClick={() => selecionarTabMobile(t.id)} className={`min-h-[62px] px-1 py-2 flex flex-col items-center justify-center gap-1 border-t-2 ${active ? "border-orange-500 text-orange-400 bg-orange-950/20" : "border-transparent text-zinc-600"}`}>
-              <I className="w-5 h-5" /><span className="text-[8px] uppercase tracking-wide font-bold leading-none text-center">{t.id === "visaogeral" ? "Início" : t.label.replace(/ (.+)$/, "")}</span>
+              <I className="w-5 h-5" /><span className="text-[8px] uppercase tracking-wide font-bold leading-none text-center">{t.id === "visaogeral" || t.id === "home" ? "Início" : t.label.replace(/ \(.+\)$/, "")}</span>
             </button>
           ); })}
           <button onClick={() => setMobileMoreOpen(true)} className={`min-h-[62px] px-1 py-2 flex flex-col items-center justify-center gap-1 border-t-2 ${mobileMoreOpen || mobileMoreActive ? "border-orange-500 text-orange-400 bg-orange-950/20" : "border-transparent text-zinc-600"}`}>
