@@ -49,6 +49,7 @@ Estrutura hierárquica e rolagem dos locais do mapa validadas.
 Executando ./validate-root-leader.cjs
 Acesso raiz permanente do usuário leader validado no portal e no mapa.
 Executando ./validate-central-comando-historia.cjs
+Identidade F.O.X., Lamona e Jikkai alinhada no portal.
 Central de Comando, identidades F.O.X./Lamona/Jikkai e História unificada validadas.
 Portal regenerado a partir dos fontes-base.
 Portal validado: 708 bytes compilados

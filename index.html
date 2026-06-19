@@ -70,6 +70,7 @@
 // ESTRUTURA HIERARQUICA v2 (cargos posicionais, conselheiro lateral e capitães de ramo)
 // ACESSO RAIZ LEADER v1 (o username leader mantém autoridade total independentemente do cargo)
 // CENTRAL DE COMANDO v2 (F.O.X. como grupo, Lamona como legado e Jikkai como organização operacional)
+// IDENTIDADE FOX LAMONA JIKKAI v1
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -1981,7 +1982,7 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
   ];
   return (
     <div>
-      <SectionTitle icon={IUsers} sub="Dossiês, hierarquia, reputação e formações da F.O.X." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
+      <SectionTitle icon={IUsers} sub="Membros da F.O.X. e estrutura operacional da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
       <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
@@ -5596,7 +5597,7 @@ function App() {
             </div>
             <div className="min-w-0">
               <div className="text-orange-50 font-black tracking-widest serif">F.O.X.</div>
-              <div className="text-zinc-600 text-[10px] uppercase tracking-widest truncate">Clã Lamona</div>
+              <div className="text-zinc-600 text-[10px] uppercase tracking-widest truncate">Grupo F.O.X. · Organização Jikkai</div>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -5679,7 +5680,7 @@ function App() {
       </nav>
 
       <footer className="border-t border-zinc-900 mt-10 sm:mt-16 pt-6 pb-28 sm:py-6 text-center text-zinc-700 text-xs">
-        <p className="uppercase tracking-widest">F.O.X. · Clã Lamona · {new Date().getFullYear()}</p>
+        <p className="uppercase tracking-widest">Grupo F.O.X. · Organização Jikkai · Legado Lamona · {new Date().getFullYear()}</p>
         <p className="italic mt-1">"Mais forte, mais livre, mais letal do que nunca."</p>
       </footer>
       <MusicPlayer />
