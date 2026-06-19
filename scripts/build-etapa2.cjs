@@ -18,7 +18,12 @@ const etapas = [
   "./painel-estrategico-ui.cjs",
   "./painel-estrategico-mapa.cjs",
   "./ajustes-iniciacao-ramos.cjs",
+  "./mobile-responsive-loader.cjs",
+  "./mobile-responsive-polish.cjs",
   "./validate-portal-v3.cjs"
 ];
-for (const arquivo of etapas) { console.log("Executando", arquivo); require(arquivo); }
+for (const arquivo of etapas) {
+  console.log("Executando", arquivo);
+  require(arquivo);
+}
 console.log("Portal regenerado a partir dos fontes-base.");

@@ -1,0 +1,19 @@
+name: Validar experiência mobile
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerar portal completo
+        run: node scripts/build-etapa2.cjs
+
+      - name: Validar experiência mobile e desktop
+        run: node scripts/validate-mobile-responsive.cjs
