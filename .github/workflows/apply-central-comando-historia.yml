@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature-central-comando-historia
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
