@@ -1,9 +1,11 @@
 const fs = require("fs");
+require("./central-comando-polish.cjs");
 
 const html = fs.readFileSync("index.html", "utf8");
 
 const markers = [
   "CENTRAL DE COMANDO v2",
+  "IDENTIDADE FOX LAMONA JIKKAI v1",
   "function HomePage({ data, usuario, role, isLider, onNavigate })",
   "A F.O.X. é o grupo que reúne seus membros e não possui uma chefia única",
   "A Jikkai é a organização operacional criada pelo grupo",
@@ -22,6 +24,9 @@ const markers = [
   "const [navigationRequest, setNavigationRequest] = useState(null);",
   "const navegarPara = (id, subTab = \"\", action = \"\")",
   "navigationRequest={navigationRequest}",
+  "Grupo F.O.X. · Organização Jikkai",
+  "Membros da F.O.X. e estrutura operacional da Jikkai.",
+  "Grupo F.O.X. · Organização Jikkai · Legado Lamona",
 ];
 
 for (const marker of markers) {
@@ -33,6 +38,7 @@ const forbidden = [
   'tab === "cla" && !isContratante',
   '...(isMobile ? [{ id: "cla"',
   'if (!isMobile && subTab === "cla")',
+  '>Clã Lamona</div>\n            </div>\n          </div>',
 ];
 
 for (const marker of forbidden) {
