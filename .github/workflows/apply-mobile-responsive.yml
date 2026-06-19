@@ -18,7 +18,7 @@ jobs:
           ref: feature-mobile-responsive
 
       - name: Aplicar camada responsiva
-        run: node scripts/mobile-responsive.cjs
+        run: node scripts/mobile-responsive-loader.cjs
 
       - name: Validar portal completo
         run: |
