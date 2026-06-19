@@ -20,18 +20,27 @@ jobs:
         with:
           ref: feature-central-comando-historia
 
-      - name: Regenerar e validar portal
-        run: node scripts/build-etapa2.cjs
+      - name: Regenerar portal e capturar diagnóstico
+        shell: bash
+        run: |
+          set +e
+          node scripts/build-etapa2.cjs > central-build.log 2>&1
+          echo $? > central-build.status
+          exit 0
 
-      - name: Consolidar arquivo público
+      - name: Consolidar saída e diagnóstico
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then
-            echo "O portal já está consolidado."
-            exit 0
+          git add index.html central-build.log central-build.status
+          if ! git diff --cached --quiet; then
+            git commit -m "Registrar build da Central de Comando"
+            git push origin HEAD:feature-central-comando-historia
           fi
-          git commit -m "Consolidar Central de Comando e História unificada"
-          git push origin HEAD:feature-central-comando-historia
+
+      - name: Confirmar resultado
+        shell: bash
+        run: |
+          cat central-build.log
+          test "$(cat central-build.status)" = "0"
