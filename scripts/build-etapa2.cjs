@@ -20,7 +20,9 @@ const etapas = [
   "./ajustes-iniciacao-ramos.cjs",
   "./mobile-responsive-loader.cjs",
   "./mobile-responsive-polish.cjs",
-  "./validate-portal-v3.cjs"
+  "./estrutura-mapa-v2-loader.cjs",
+  "./validate-portal-v3.cjs",
+  "./validate-estrutura-mapa-v2.cjs"
 ];
 for (const arquivo of etapas) {
   console.log("Executando", arquivo);
