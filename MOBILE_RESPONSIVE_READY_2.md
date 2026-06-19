@@ -1,1 +1,0 @@
-Revisão mobile preparada.
