@@ -22,9 +22,11 @@ const etapas = [
   "./mobile-responsive-polish.cjs",
   "./estrutura-mapa-v2-loader.cjs",
   "./fix-root-leader.cjs",
+  "./central-comando-historia.cjs",
   "./validate-portal-v3.cjs",
   "./validate-estrutura-mapa-v2.cjs",
-  "./validate-root-leader.cjs"
+  "./validate-root-leader.cjs",
+  "./validate-central-comando-historia.cjs"
 ];
 for (const arquivo of etapas) {
   console.log("Executando", arquivo);
