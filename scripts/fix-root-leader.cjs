@@ -32,16 +32,9 @@ if (!html.includes("// ACESSO RAIZ LEADER v1")) {
 
   html = replaceOnce(
     html,
-    `  const isLider = role?.hasLeaderPerms === true;`,
-    `  const isLider = isRootUser(usuarioAtual) || role?.hasLeaderPerms === true;`,
-    "identificação de líder"
-  );
-
-  html = replaceOnce(
-    html,
-    `  const isContratante = usuarioAtual?.role === "contratante";`,
-    `  const isContratante = !isRootUser(usuarioAtual) && usuarioAtual?.role === "contratante";`,
-    "proteção contra perfil externo"
+    `  const isLider = role?.hasLeaderPerms === true;\n  const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");\n  const isContratante = usuarioAtual?.role === "contratante";`,
+    `  const isLider = isRootUser(usuarioAtual) || role?.hasLeaderPerms === true;\n  const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");\n  const isContratante = !isRootUser(usuarioAtual) && usuarioAtual?.role === "contratante";`,
+    "autoridade efetiva da sessão"
   );
 
   fs.writeFileSync("index.html", html, "utf8");
