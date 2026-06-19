@@ -49,20 +49,6 @@ Estrutura hierárquica e rolagem dos locais do mapa validadas.
 Executando ./validate-root-leader.cjs
 Acesso raiz permanente do usuário leader validado no portal e no mapa.
 Executando ./validate-central-comando-historia.cjs
-/home/runner/work/jikkai/jikkai/scripts/validate-central-comando-historia.cjs:28
-  if (!html.includes(marker)) throw new Error("Validação da Central de Comando falhou: " + marker);
-                              ^
-
-Error: Validação da Central de Comando falhou: Clã Lamona</span>
-    at Object.<anonymous> (/home/runner/work/jikkai/jikkai/scripts/validate-central-comando-historia.cjs:28:37)
-    at Module._compile (node:internal/modules/cjs/loader:1781:14)
-    at Object..js (node:internal/modules/cjs/loader:1913:10)
-    at Module.load (node:internal/modules/cjs/loader:1505:32)
-    at Function._load (node:internal/modules/cjs/loader:1309:12)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
-    at Module.require (node:internal/modules/cjs/loader:1527:12)
-    at require (node:internal/modules/helpers:147:16)
-    at Object.<anonymous> (/home/runner/work/jikkai/jikkai/scripts/build-etapa2.cjs:33:3)
-    at Module._compile (node:internal/modules/cjs/loader:1781:14)
-
-Node.js v22.22.3
+Central de Comando, identidades F.O.X./Lamona/Jikkai e História unificada validadas.
+Portal regenerado a partir dos fontes-base.
+Portal validado: 708 bytes compilados
