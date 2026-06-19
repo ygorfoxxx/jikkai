@@ -18,7 +18,7 @@ const etapas = [
   "./painel-estrategico-ui.cjs",
   "./painel-estrategico-mapa.cjs",
   "./ajustes-iniciacao-ramos.cjs",
-  "./mobile-responsive.cjs",
+  "./mobile-responsive-loader.cjs",
   "./validate-portal-v3.cjs"
 ];
 for (const arquivo of etapas) {
