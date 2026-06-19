@@ -1,18 +1,22 @@
-name: Diagnosticar camada mobile
+name: Validar e consolidar camada mobile
 
 on:
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature-mobile-responsive
+
       - name: Executar build e capturar saída
         shell: bash
         run: |
@@ -20,6 +24,7 @@ jobs:
           node scripts/build-etapa2.cjs > mobile-build.log 2>&1
           echo $? > mobile-build.status
           exit 0
+
       - name: Publicar diagnóstico
         uses: actions/upload-artifact@v4
         with:
@@ -28,8 +33,23 @@ jobs:
             mobile-build.log
             mobile-build.status
           retention-days: 2
+
       - name: Confirmar resultado
         shell: bash
         run: |
           cat mobile-build.log
           test "$(cat mobile-build.status)" = "0"
+
+      - name: Consolidar arquivo público
+        shell: bash
+        run: |
+          rm -f mobile-build.log mobile-build.status
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "O arquivo público já está consolidado."
+            exit 0
+          fi
+          git commit -m "Consolidar experiência mobile no portal"
+          git push origin HEAD:feature-mobile-responsive
