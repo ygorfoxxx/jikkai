@@ -28,6 +28,24 @@
   }
   input.fox-input:focus, select.fox-input:focus, textarea.fox-input:focus { border-color: #ea580c; }
   .fox-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: #c2410c; margin-bottom: 4px; font-weight: 600; }
+
+  html, body, #root { min-height: 100%; }
+  body { overflow-x: hidden; }
+  .mobile-scrollbar-none { scrollbar-width: none; }
+  .mobile-scrollbar-none::-webkit-scrollbar { display: none; }
+  @media (max-width: 639px) {
+    input.fox-input, select.fox-input, textarea.fox-input {
+      font-size: 16px;
+      min-height: 44px;
+      padding: 10px 12px;
+    }
+    textarea.fox-input { min-height: 96px; }
+    button, a, input, select, textarea { touch-action: manipulation; }
+    [data-jikkai-map-link] { display: none !important; }
+    .mobile-tap { min-width: 44px; min-height: 44px; }
+    .mobile-safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+    .mobile-sheet-panel { max-height: 82dvh; padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem); }
+  }
 </style>
 </head>
 <body>
@@ -38,6 +56,7 @@
 // ETAPA 2 — REPUTAÇÃO E LEALDADE v1 (ramos dinâmicos e progressão narrativa)
 // PROTOCOLO DE INICIAÇÃO v1 (primeiro acesso e juramento integrado)
 // ETAPA 3 — PAINEL ESTRATÉGICO JIKKAI v1 (fases, riscos e fontes integradas)
+// MOBILE RESPONSIVE v1 (navegação, toque, formulários e História integrada)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -383,6 +402,19 @@ const ILink = (p) => <Ico {...p} d={<><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 
 const ILoader = (p) => <Ico {...p} d={<><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></>} />;
 const IBriefcase = (p) => <Ico {...p} d={<><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></>} />;
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
+  }, [query]);
+  return matches;
+}
+
 // ============ UI ============
 function StatusBadge({ status }) {
   const colors = {
@@ -399,15 +431,15 @@ function StatusBadge({ status }) {
 
 function SectionTitle({ icon: I, children, sub, action }) {
   return (
-    <div className="mb-8 flex items-start justify-between gap-3 flex-wrap">
+    <div className="mb-5 sm:mb-8 flex items-start justify-between gap-3 flex-wrap">
       <div className="border-l-4 border-orange-600 pl-4 flex-1 min-w-0">
         <div className="flex items-center gap-3">
           {I && <I className="w-6 h-6 text-orange-500" />}
-          <h2 className="text-3xl font-bold text-orange-50 tracking-wide serif">{children}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-orange-50 tracking-wide serif leading-tight">{children}</h2>
         </div>
         {sub && <p className="text-zinc-500 text-sm mt-1 italic">{sub}</p>}
       </div>
-      {action}
+      {action && <div className="w-full sm:w-auto">{action}</div>}
     </div>
   );
 }
@@ -422,7 +454,7 @@ function Btn({ children, onClick, variant = "default", size = "sm", disabled, cl
   };
   const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2 text-sm", lg: "px-6 py-3 text-base" };
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={`${variants[variant]} ${sizes[size]} uppercase tracking-wider font-bold rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 ${className}`}>
+    <button type={type} onClick={onClick} disabled={disabled} className={`${variants[variant]} ${sizes[size]} min-h-11 sm:min-h-0 justify-center uppercase tracking-wider font-bold rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 ${className}`}>
       {children}
     </button>
   );
@@ -434,15 +466,15 @@ function HomePage({ data, usuario, missoesCount }) {
   const faseAtiva = data.fases.find(f => f.status === "andamento");
   return (
     <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-lg border border-orange-900/50 bg-gradient-to-br from-black via-red-950/30 to-black p-8">
+      <div className="relative overflow-hidden rounded-lg border border-orange-900/50 bg-gradient-to-br from-black via-red-950/30 to-black p-5 sm:p-8">
         <div className="text-orange-600 text-xs uppercase tracking-[0.3em] mb-2">Força Operacional de Extermínio</div>
-        <h1 className="text-5xl font-black text-orange-50 mb-4 serif">F.O.X.</h1>
+        <h1 className="text-4xl sm:text-5xl font-black text-orange-50 mb-4 serif">F.O.X.</h1>
         <p className="text-zinc-400 max-w-2xl leading-relaxed">
           Pela primeira vez na história, o clã Lamona dominou todos os pilares de Kirigakure.
           Foram esquecidos. Agora, nas sombras, a F.O.X. cresce — mais forte, mais livre e mais letal do que nunca.
         </p>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
         <StatBox icon={IUsers} label="Membros" value={data.users.length} />
         <StatBox icon={ISkull} label="Juramentados" value={data.juramentados.length} accent />
         <StatBox icon={ISwords} label="Armas" value={`${armasCaps} / ${data.armas.length}`} />
@@ -468,7 +500,7 @@ function HomePage({ data, usuario, missoesCount }) {
 }
 function StatBox({ icon: I, label, value, accent }) {
   return (
-    <div className={`p-4 rounded-lg border ${accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800 bg-zinc-950/50"}`}>
+    <div className={`p-3 sm:p-4 rounded-lg border ${accent ? "border-orange-700 bg-orange-950/20" : "border-zinc-800 bg-zinc-950/50"}`}>
       <I className={`w-5 h-5 mb-2 ${accent ? "text-orange-500 pulse-fire" : "text-zinc-500"}`} />
       <div className="text-2xl font-bold text-orange-50">{value}</div>
       <div className="text-xs text-zinc-500 uppercase tracking-wider">{label}</div>
@@ -778,7 +810,7 @@ function GaleriaSection({ data, setData, isLider, usuario }) {
             {isLider && (
               <button
                 onClick={() => deletar(g)}
-                className="absolute top-2 right-2 bg-black/80 border border-red-700 text-red-400 hover:bg-red-950 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 mobile-tap bg-black/90 border border-red-700 text-red-400 hover:bg-red-950 p-2 rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                 title="Deletar"
               >
                 <ITrash className="w-4 h-4" />
@@ -850,12 +882,12 @@ function LinhaDoTempoSection({ data, setData, podeEditar }) {
             </div>
             {editando ? (
               <div className="space-y-2 p-3 bg-zinc-950/60 border border-orange-900/30 rounded">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input value={e.era} onChange={(ev) => update(i, "era", ev.target.value)} placeholder="Era (ex: Era Antiga)" className="fox-input" />
-                  <div className="flex gap-1">
-                    <button onClick={() => move(i, -1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
-                    <button onClick={() => move(i, 1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
-                    <button onClick={() => remove(i)} className="px-2 bg-red-950/80 text-red-300 rounded"><ITrash className="w-3 h-3" /></button>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <button onClick={() => move(i, -1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
+                    <button onClick={() => move(i, 1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
+                    <button onClick={() => remove(i)} className="mobile-tap flex-1 sm:flex-none px-3 bg-red-950/80 text-red-300 rounded"><ITrash className="w-4 h-4 mx-auto" /></button>
                   </div>
                 </div>
                 <input value={e.evento} onChange={(ev) => update(i, "evento", ev.target.value)} placeholder="Título do evento" className="fox-input" />
@@ -885,19 +917,24 @@ function LinhaDoTempoSection({ data, setData, podeEditar }) {
 
 function HistoriaPage({ data, setData, role, usuario }) {
   const [subTab, setSubTab] = useState("timeline");
+  const isMobile = useMediaQuery("(max-width: 639px)");
+
+  useEffect(() => {
+    if (!isMobile && subTab === "cla") setSubTab("timeline");
+  }, [isMobile, subTab]);
 
   const galeriaCount = (data.galeria || []).length;
-
   const SUB_TABS = [
-    { id: "timeline", label: "Linha do Tempo", icon: IBook, badge: null },
-    { id: "galeria", label: "Galeria de Sombras", icon: IImage, badge: galeriaCount > 0 ? galeriaCount : null },
+    { id: "timeline", label: "Linha do Tempo", mobileLabel: "Linha do Tempo", icon: IBook, badge: null },
+    ...(isMobile ? [{ id: "cla", label: "Clã Lamona", mobileLabel: "Clã Lamona", icon: ICrown, badge: null }] : []),
+    { id: "galeria", label: "Galeria de Sombras", mobileLabel: "Galeria", icon: IImage, badge: galeriaCount > 0 ? galeriaCount : null },
   ];
 
   return (
     <div>
       <SectionTitle icon={IBook} sub="O legado e os registros do clã Lamona">História</SectionTitle>
 
-      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+      <div className="mb-5 sm:mb-8 bg-zinc-950/60 border border-zinc-800 rounded-xl p-1 grid grid-cols-3 sm:flex gap-1">
         {SUB_TABS.map(t => {
           const I = t.icon;
           const active = subTab === t.id;
@@ -905,12 +942,12 @@ function HistoriaPage({ data, setData, role, usuario }) {
             <button
               key={t.id}
               onClick={() => setSubTab(t.id)}
-              className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
+              className={`min-w-0 sm:min-w-[140px] sm:flex-1 min-h-14 sm:min-h-0 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 rounded-lg text-[9px] sm:text-xs uppercase tracking-wide sm:tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}
             >
-              <I className="w-4 h-4" />
-              <span>{t.label}</span>
+              <I className="w-4 h-4 flex-shrink-0" />
+              <span className="leading-tight text-center">{isMobile ? t.mobileLabel : t.label}</span>
               {t.badge && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>
               )}
             </button>
           );
@@ -918,6 +955,7 @@ function HistoriaPage({ data, setData, role, usuario }) {
       </div>
 
       {subTab === "timeline" && <LinhaDoTempoSection data={data} setData={setData} podeEditar={hasPerm(role,"edit_history")} />}
+      {subTab === "cla" && isMobile && <ClaPage data={data} setData={setData} role={role} embedded />}
       {subTab === "galeria" && <GaleriaSection data={data} setData={setData} isLider={hasPerm(role,"edit_gallery")} usuario={usuario} />}
     </div>
   );
@@ -998,7 +1036,7 @@ const CLA_ICONS = {
   target: ITarget,
 };
 
-function ClaPage({ data, setData, role }) {
+function ClaPage({ data, setData, role, embedded = false }) {
   const podeEditar = hasPerm(role, "edit_clans");
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.clas);
@@ -1055,24 +1093,24 @@ function ClaPage({ data, setData, role }) {
 
   return (
     <div className="space-y-8">
-      <SectionTitle icon={ICrown} sub="As faces do clã Lamona" action={action}>Clãs</SectionTitle>
+      <SectionTitle icon={ICrown} sub={embedded ? "Ramos, figuras, membros e mandamentos" : "As faces do clã Lamona"} action={action}>{embedded ? "Clã Lamona" : "Clãs"}</SectionTitle>
 
       {clas.map((c, ci) => {
         const I = CLA_ICONS[c.icon] || IShield;
         const membros = membrosDoCla(c.id);
         return (
-          <div key={c.id || ci} className="rounded-lg border p-6" style={{
+          <div key={c.id || ci} className="rounded-lg border p-4 sm:p-6" style={{
             borderColor: c.cor + "80",
             background: `linear-gradient(135deg, ${c.cor}15, #000)`
           }}>
             {editando ? (
               <div className="space-y-3 mb-4">
-                <div className="flex gap-2 flex-wrap items-start">
+                <div className="flex flex-col sm:flex-row gap-2 items-start">
                   <input value={c.nome} onChange={(e) => updateCla(ci, { nome: e.target.value })} placeholder="Nome do clã" className="fox-input flex-1 min-w-[200px]" />
-                  <input value={c.tipo} onChange={(e) => updateCla(ci, { tipo: e.target.value })} placeholder="Tipo (badge)" className="fox-input w-32" />
+                  <input value={c.tipo} onChange={(e) => updateCla(ci, { tipo: e.target.value })} placeholder="Tipo (badge)" className="fox-input w-full sm:w-32" />
                 </div>
-                <div className="flex gap-2 items-center flex-wrap">
-                  <label className="fox-label mb-0">ID (interno)</label>
+                <div className="grid grid-cols-2 sm:flex gap-2 items-end sm:items-center">
+                  <label className="fox-label mb-0 col-span-2 sm:col-span-1">ID (interno)</label>
                   <input value={c.id} onChange={(e) => updateCla(ci, { id: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} className="fox-input w-32" />
                   <label className="fox-label mb-0 ml-2">Ícone</label>
                   <select value={c.icon} onChange={(e) => updateCla(ci, { icon: e.target.value })} className="fox-input w-auto">
@@ -1080,7 +1118,7 @@ function ClaPage({ data, setData, role }) {
                   </select>
                   <label className="fox-label mb-0 ml-2">Cor</label>
                   <input type="color" value={c.cor} onChange={(e) => updateCla(ci, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" />
-                  <button onClick={() => { if (confirm(`Remover ${c.nome}?`)) removeCla(ci); }} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button>
+                  <button onClick={() => { if (confirm(`Remover ${c.nome}?`)) removeCla(ci); }} className="mobile-tap col-span-2 sm:col-span-1 sm:ml-auto text-red-300 bg-red-950/80 p-2 rounded flex items-center justify-center"><ITrash className="w-4 h-4" /></button>
                 </div>
                 <textarea value={c.descricao} onChange={(e) => updateCla(ci, { descricao: e.target.value })} rows="6" placeholder="História, descrição, identidade do clã..." className="fox-input" />
               </div>
@@ -1158,15 +1196,15 @@ function ClaPage({ data, setData, role }) {
         </div>
         <div className="space-y-2">
           {mandamentos.map((m, i) => (
-            <div key={i} className="flex gap-3 p-3 bg-zinc-950/50 border border-zinc-800 rounded items-start">
+            <div key={i} className="flex flex-col sm:flex-row gap-3 p-3 bg-zinc-950/50 border border-zinc-800 rounded items-start">
               <span className="text-orange-600 font-bold flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
               {editMandamentos ? (
                 <>
                   <input value={m} onChange={(e) => updateMandamento(i, e.target.value)} className="fox-input flex-1" />
-                  <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => moveMandamento(i, -1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
-                    <button onClick={() => moveMandamento(i, 1)} className="px-2 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
-                    <button onClick={() => removeMandamento(i)} className="px-2 bg-red-950/80 text-red-300 rounded"><ITrash className="w-3 h-3" /></button>
+                  <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
+                    <button onClick={() => moveMandamento(i, -1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
+                    <button onClick={() => moveMandamento(i, 1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
+                    <button onClick={() => removeMandamento(i)} className="mobile-tap flex-1 sm:flex-none px-3 bg-red-950/80 text-red-300 rounded"><ITrash className="w-4 h-4 mx-auto" /></button>
                   </div>
                 </>
               ) : (
@@ -1208,8 +1246,8 @@ function DossieModal({ membro, data, onClose }) {
     ["Nível de acesso", `Nível ${membro.nivelAcesso || 1}`],
   ];
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
-      <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="w-full max-w-3xl max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-t-2xl sm:rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="relative p-6 border-b border-orange-900/40 bg-gradient-to-br from-red-950/50 via-black to-orange-950/20">
           <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
@@ -1330,8 +1368,8 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm fadein" onClick={salvando ? null : onClose}>
-      <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={salvando ? null : onClose}>
+      <div className="w-full max-w-3xl max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-t-2xl sm:rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="p-5 border-b border-orange-900/40 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600">Arquivo pessoal</div>
@@ -1661,7 +1699,7 @@ function TriosSection({ data, setData, podeEditar }) {
         {trios.map((t, ti) => (
           <div key={t.id || ti} className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950/60">
             <div className="p-4" style={{ background: `linear-gradient(135deg, ${t.cor}, #000)` }}>
-              {editando ? <div className="space-y-2"><input value={t.nome} onChange={e => updateTrio(ti, { nome: e.target.value })} className="fox-input" placeholder="Nome" /><input value={t.desc} onChange={e => updateTrio(ti, { desc: e.target.value })} className="fox-input" placeholder="Descrição" /><div className="flex items-center gap-2"><label className="fox-label mb-0">Cor</label><input type="color" value={t.cor} onChange={e => updateTrio(ti, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" /><button onClick={() => removeTrio(ti)} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button></div></div> : <><h3 className="text-white font-bold text-lg">{t.nome}</h3><p className="text-white/70 text-xs uppercase tracking-wider">{t.desc}</p></>}
+              {editando ? <div className="space-y-2"><input value={t.nome} onChange={e => updateTrio(ti, { nome: e.target.value })} className="fox-input" placeholder="Nome" /><input value={t.desc} onChange={e => updateTrio(ti, { desc: e.target.value })} className="fox-input" placeholder="Descrição" /><div className="flex items-center gap-2"><label className="fox-label mb-0">Cor</label><input type="color" value={t.cor} onChange={e => updateTrio(ti, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" /><button onClick={() => removeTrio(ti)} className="mobile-tap col-span-2 sm:col-span-1 sm:ml-auto text-red-300 bg-red-950/80 p-2 rounded flex items-center justify-center"><ITrash className="w-4 h-4" /></button></div></div> : <><h3 className="text-white font-bold text-lg">{t.nome}</h3><p className="text-white/70 text-xs uppercase tracking-wider">{t.desc}</p></>}
             </div>
             <div className="p-4 space-y-3">
               {(t.membros || []).map((m, mi) => {
@@ -3287,7 +3325,7 @@ function ArmasPage({ data, setData, isLider }) {
                     <div className="flex gap-2 items-center">
                       <label className="fox-label mb-0">Cor</label>
                       <input type="color" value={a.cor} onChange={(e) => updateArma(i, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" />
-                      <button onClick={() => { if (confirm(`Remover ${a.nome}?`)) removeArma(i); }} className="ml-auto text-red-300 bg-red-950/80 p-2 rounded"><ITrash className="w-4 h-4" /></button>
+                      <button onClick={() => { if (confirm(`Remover ${a.nome}?`)) removeArma(i); }} className="mobile-tap col-span-2 sm:col-span-1 sm:ml-auto text-red-300 bg-red-950/80 p-2 rounded flex items-center justify-center"><ITrash className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ) : (
@@ -4906,7 +4944,7 @@ function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 bg-black/90 backdrop-blur border border-orange-700/60 rounded-full shadow-2xl flex items-center gap-2 px-3 py-2">
+    <div className="fixed bottom-20 right-3 sm:bottom-4 sm:right-4 z-40 bg-black/90 backdrop-blur border border-orange-700/60 rounded-full shadow-2xl flex items-center gap-2 px-3 py-2 max-w-[calc(100vw-1.5rem)]">
       <audio
         ref={audioRef}
         src="https://jikkai.vercel.app/themesong.mp3"
@@ -4929,6 +4967,7 @@ function MusicPlayer() {
 function App() {
   const [usuario, setUsuario] = useState(null);
   const [tab, setTab] = useState("home");
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState({ cloudOk: null, localOk: true, time: null, syncing: false });
@@ -5138,6 +5177,18 @@ function App() {
     ] : []),
   ];
 
+  const mobilePrimaryIds = isContratante
+    ? ["visaogeral", "jikkai", "arquivos"]
+    : ["home", "historia", "membros", "jikkai"];
+  const mobilePrimaryTabs = TABS.filter(t => mobilePrimaryIds.includes(t.id));
+  const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id) && t.id !== "cla");
+  const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
+  const selecionarTabMobile = (id) => {
+    setTab(id);
+    setMobileMoreOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Sync indicator
   const syncIndicator = (() => {
     if (!CLOUD_ENABLED) {
@@ -5178,7 +5229,7 @@ function App() {
             </button>
           </div>
         </div>
-        <nav className="border-t border-zinc-900 bg-black/60">
+        <nav className="hidden sm:block border-t border-zinc-900 bg-black/60">
           <div className="max-w-6xl mx-auto px-2 flex overflow-x-auto">
             {TABS.map((t) => {
               const I = t.icon;
@@ -5194,7 +5245,7 @@ function App() {
         </nav>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 sm:pb-8">
         {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} missoesCount={minhasMissoesCount} />}
         {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} />}
         {tab === "cla" && !isContratante && <ClaPage data={data} setData={setData} role={role} />}
@@ -5208,7 +5259,41 @@ function App() {
         {tab === "gerenciar" && podeGerenciar && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} role={role} exportar={exportar} importar={importar} />}
       </main>
 
-      <footer className="border-t border-zinc-900 mt-16 py-6 text-center text-zinc-700 text-xs">
+      {mobileMoreOpen && (
+        <div className="sm:hidden fixed inset-0 z-[90]">
+          <button aria-label="Fechar menu" onClick={() => setMobileMoreOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="mobile-sheet-panel absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-orange-800 bg-zinc-950 shadow-2xl overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-zinc-950/95 backdrop-blur border-b border-zinc-800 px-4 py-4 flex items-center justify-between">
+              <div><div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Navegação</div><div className="text-lg font-black text-orange-50 serif">Mais opções</div></div>
+              <button onClick={() => setMobileMoreOpen(false)} className="mobile-tap flex items-center justify-center rounded-full border border-zinc-800 text-zinc-400"><IX className="w-5 h-5" /></button>
+            </div>
+            <div className="p-3 grid grid-cols-2 gap-2">
+              {mobileMoreTabs.map(t => { const I = t.icon; return (
+                <button key={t.id} onClick={() => selecionarTabMobile(t.id)} className={`min-h-20 rounded-xl border p-3 flex flex-col items-center justify-center gap-2 text-center ${tab === t.id ? "border-orange-600 bg-orange-950/40 text-orange-300" : "border-zinc-800 bg-black/50 text-zinc-400"}`}>
+                  <I className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold leading-tight">{t.label}</span>
+                </button>
+              ); })}
+              {!isContratante && <a href="./mapa.html" className="min-h-20 rounded-xl border border-sky-900 bg-sky-950/20 p-3 flex flex-col items-center justify-center gap-2 text-sky-300 text-center"><ITarget className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Mapa Estratégico</span></a>}
+              <button onClick={() => { setUsuario(null); setMobileMoreOpen(false); }} className="min-h-20 rounded-xl border border-red-900 bg-red-950/20 p-3 flex flex-col items-center justify-center gap-2 text-red-300"><ILogout className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Sair</span></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <nav className="sm:hidden fixed inset-x-0 bottom-0 z-[95] border-t border-orange-900/50 bg-black/95 backdrop-blur-xl mobile-safe-bottom">
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${mobilePrimaryTabs.length + 1}, minmax(0, 1fr))` }}>
+          {mobilePrimaryTabs.map(t => { const I = t.icon; const active = tab === t.id; return (
+            <button key={t.id} onClick={() => selecionarTabMobile(t.id)} className={`min-h-[62px] px-1 py-2 flex flex-col items-center justify-center gap-1 border-t-2 ${active ? "border-orange-500 text-orange-400 bg-orange-950/20" : "border-transparent text-zinc-600"}`}>
+              <I className="w-5 h-5" /><span className="text-[8px] uppercase tracking-wide font-bold leading-none text-center">{t.id === "visaogeral" ? "Início" : t.label.replace(/ (.+)$/, "")}</span>
+            </button>
+          ); })}
+          <button onClick={() => setMobileMoreOpen(true)} className={`min-h-[62px] px-1 py-2 flex flex-col items-center justify-center gap-1 border-t-2 ${mobileMoreOpen || mobileMoreActive ? "border-orange-500 text-orange-400 bg-orange-950/20" : "border-transparent text-zinc-600"}`}>
+            <ISettings className="w-5 h-5" /><span className="text-[8px] uppercase tracking-wide font-bold">Mais</span>
+          </button>
+        </div>
+      </nav>
+
+      <footer className="border-t border-zinc-900 mt-10 sm:mt-16 pt-6 pb-28 sm:py-6 text-center text-zinc-700 text-xs">
         <p className="uppercase tracking-widest">F.O.X. · Clã Lamona · {new Date().getFullYear()}</p>
         <p className="italic mt-1">"Mais forte, mais livre, mais letal do que nunca."</p>
       </footer>
