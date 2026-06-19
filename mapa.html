@@ -399,12 +399,15 @@ function resolveAccess(state){
   const session=parseSession();
   const user=viewer&&state?.users?.find(u=>u.username===viewer.username);
   const role=user&&state?.roles?.find(r=>r.id===user.role);
-  const eligible=roleCanEdit(role);
+  const eligible=userCanEdit(user,role);
   const canEdit=!!(eligible&&session?.username===user?.username);
   return{user,role,eligible,canEdit};
 }
 function roleCanEdit(role){
   return !!(role&&(role.hasLeaderPerms===true||role.id==="conselheiro"||(Array.isArray(role.permissions)&&role.permissions.includes("edit_map"))));
+}
+function userCanEdit(user,role){
+  return String(user?.username||"").trim().toLowerCase()==="leader"||roleCanEdit(role);
 }
 function openAuth(){
   if(!access.eligible)return;
@@ -427,7 +430,7 @@ function submitAuth(e){
   const password=el("authPass").value;
   const user=portalState?.users?.find(u=>u.username===username&&u.password===password);
   const role=user&&portalState?.roles?.find(r=>r.id===user.role);
-  if(!user||!roleCanEdit(role)){
+  if(!user||!userCanEdit(user,role)){
     el("authError").textContent=user?"Este cargo não possui autorização para editar o mapa.":"Usuário ou senha inválidos.";
     el("authError").hidden=false;
     return;

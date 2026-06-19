@@ -68,6 +68,7 @@
 // MOBILE RESPONSIVE v1 (navegação, toque, formulários e História integrada)
 // MOBILE POLISH v1 (áreas seguras, densidade e rótulos móveis)
 // ESTRUTURA HIERARQUICA v2 (cargos posicionais, conselheiro lateral e capitães de ramo)
+// ACESSO RAIZ LEADER v1 (o username leader mantém autoridade total independentemente do cargo)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -93,6 +94,24 @@ function hasPerm(role, permId) {
   if (!role) return false;
   if (role.hasLeaderPerms === true) return true;
   return Array.isArray(role.permissions) && role.permissions.includes(permId);
+}
+
+function isRootUser(user) {
+  return String(user?.username || "").trim().toLowerCase() === "leader";
+}
+
+function roleEfetivoUsuario(user, role) {
+  if (!isRootUser(user)) return role;
+  return {
+    id: role?.id || "leader",
+    nome: role?.nome || "Acesso raiz",
+    cor: role?.cor || "#D85A30",
+    estruturaPosicao: role?.estruturaPosicao || "independente",
+    ...(role || {}),
+    hasLeaderPerms: true,
+    permissions: ALL_PERMISSIONS,
+    rootAccess: true,
+  };
 }
 
 const DEFAULT_ROLES = [
@@ -5150,7 +5169,8 @@ function App() {
   }, [data, loading]);
 
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
-  const role = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
+  const roleRegistrado = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
+  const role = roleEfetivoUsuario(usuarioAtual, roleRegistrado);
 
 
   // Compartilha a identidade e o cargo da sessão atual com o mapa estratégico.
@@ -5168,9 +5188,9 @@ function App() {
       }
     } catch {}
   }, [usuarioAtual?.username, role?.id]);
-  const isLider = role?.hasLeaderPerms === true;
+  const isLider = isRootUser(usuarioAtual) || role?.hasLeaderPerms === true;
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
-  const isContratante = usuarioAtual?.role === "contratante";
+  const isContratante = !isRootUser(usuarioAtual) && usuarioAtual?.role === "contratante";
   const meuJuramento = juramentoDoUsuario(data?.juramentados, usuarioAtual);
   const nivelAcesso = nivelAcessoUsuario(data, usuarioAtual, role);
   const minhaAutorizacao = SIGILO_NIVEIS[Math.max(0, nivelAcesso - 1)] || "Público";
