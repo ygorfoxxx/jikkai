@@ -13,7 +13,7 @@ const markers = [
   "function sinalAutorizadoNaVisaoGeral",
   "function DashboardMetric",
   "function DashboardPriority",
-  "Clã Lamona</span>",
+  ">Clã Lamona</h2>",
   "function HistoriaPage({ data, setData, role, usuario, navigationRequest })",
   '{ id: "cla", label: "Clã Lamona"',
   'subTab === "cla" && <ClaPage data={data} setData={setData} role={role} embedded />',
