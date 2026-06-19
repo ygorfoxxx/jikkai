@@ -1,0 +1,22 @@
+name: Validar Central de Comando
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerar portal completo
+        run: node scripts/build-etapa2.cjs
+
+      - name: Instalar parser JSX temporário
+        run: npm install --no-save --package-lock=false @babel/parser@7.24.7
+
+      - name: Validar sintaxe JSX
+        run: node scripts/validate-jsx-syntax.cjs
