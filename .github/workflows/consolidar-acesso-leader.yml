@@ -1,0 +1,22 @@
+name: Consolidar acesso permanente
+
+on:
+  push:
+    branches:
+      - fix-leader-permissions
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-leader-permissions
+      - run: node scripts/build-etapa2.cjs
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Consolidar acesso permanente do leader
+          file_pattern: index.html mapa.html
