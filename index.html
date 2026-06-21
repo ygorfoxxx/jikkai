@@ -72,6 +72,7 @@
 // CENTRAL DE COMANDO v2 (F.O.X. como grupo, Lamona como legado e Jikkai como organização operacional)
 // IDENTIDADE FOX LAMONA JIKKAI v1
 // CENTRAL DO MEMBRO LIMPA v1 (ações claras, missões, relatórios e atalhos)
+// RETORNO DO MAPA v1 (preserva sessão e página ao voltar do mapa estratégico)
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
@@ -3420,7 +3421,10 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
     }));
   };
 
-  const abrirMapa = () => window.open("./mapa.html", "_blank", "noopener");
+  const abrirMapa = () => {
+    if (typeof window.foxOpenStrategicMap === "function") window.foxOpenStrategicMap();
+    else window.location.href = "./mapa.html";
+  };
   const tabs = [
     { id: "visao", label: "Visão Geral", icon: ITarget },
     { id: "fases", label: "Fases", icon: IClipboard },
@@ -5068,6 +5072,67 @@ function LoginScreen({ data, onLogin }) {
 }
 
 // ============ APP ============
+
+const PORTAL_SESSION_KEY = "fox-portal-session-v2";
+const MAP_RETURN_KEY = "fox-map-return-v2";
+const PORTAL_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
+function parseSessaoPortal(raw) {
+  if (!raw) return null;
+  try {
+    const payload = JSON.parse(raw);
+    if (!payload?.username) return null;
+    const updatedAt = Number(payload.updatedAtMs || new Date(payload.updatedAt || 0).getTime());
+    if (updatedAt && Date.now() - updatedAt > PORTAL_SESSION_TTL_MS) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function lerSessaoPortal() {
+  try {
+    return parseSessaoPortal(sessionStorage.getItem(PORTAL_SESSION_KEY))
+      || parseSessaoPortal(localStorage.getItem(MAP_RETURN_KEY))
+      || parseSessaoPortal(localStorage.getItem(PORTAL_SESSION_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function salvarSessaoPortalSnapshot({ usuario, tab = "home", navigationRequest = null } = {}) {
+  if (!usuario?.username) return;
+  const payload = {
+    username: usuario.username,
+    tab: tab || "home",
+    subTab: navigationRequest?.subTab || "",
+    action: navigationRequest?.action || "",
+    updatedAt: new Date().toISOString(),
+    updatedAtMs: Date.now(),
+  };
+  try { sessionStorage.setItem(PORTAL_SESSION_KEY, JSON.stringify(payload)); } catch {}
+  try {
+    localStorage.setItem(PORTAL_SESSION_KEY, JSON.stringify(payload));
+    localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function limparSessaoPortal() {
+  try {
+    sessionStorage.removeItem(PORTAL_SESSION_KEY);
+    localStorage.removeItem(PORTAL_SESSION_KEY);
+    localStorage.removeItem(MAP_RETURN_KEY);
+    localStorage.removeItem("fox-map-viewer");
+  } catch {}
+}
+
+function prepararRetornoMapa() {
+  try {
+    const raw = sessionStorage.getItem(PORTAL_SESSION_KEY) || localStorage.getItem(PORTAL_SESSION_KEY);
+    if (raw) localStorage.setItem(MAP_RETURN_KEY, raw);
+  } catch {}
+}
+
 const DEFAULT_DATA = {
   users: DEFAULT_USERS,
   roles: DEFAULT_ROLES,
@@ -5366,8 +5431,9 @@ function MusicPlayer() {
 }
 
 function App() {
-  const [usuario, setUsuario] = useState(null);
-  const [tab, setTab] = useState("home");
+  const [sessaoInicial] = useState(() => lerSessaoPortal());
+  const [usuario, setUsuario] = useState(() => sessaoInicial?.username ? { username: sessaoInicial.username } : null);
+  const [tab, setTab] = useState(() => sessaoInicial?.tab || "home");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [navigationRequest, setNavigationRequest] = useState(null);
   const [data, setData] = useState(null);
@@ -5436,6 +5502,21 @@ function App() {
       }
     } catch {}
   }, [usuarioAtual?.username, role?.id]);
+
+  useEffect(() => {
+    if (!usuarioAtual) return;
+    salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
+  }, [usuarioAtual?.username, tab, navigationRequest?.token]);
+
+  useEffect(() => {
+    window.foxOpenStrategicMap = () => {
+      if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
+      window.location.href = "./mapa.html";
+    };
+    return () => {
+      if (window.foxOpenStrategicMap) delete window.foxOpenStrategicMap;
+    };
+  }, [usuarioAtual?.username, tab, navigationRequest?.token]);
   const isLider = isRootUser(usuarioAtual) || role?.hasLeaderPerms === true;
   const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
   const isContratante = !isRootUser(usuarioAtual) && usuarioAtual?.role === "contratante";
@@ -5478,6 +5559,14 @@ function App() {
     };
     reader.readAsText(file);
     e.target.value = "";
+  };
+
+  const logoutPortal = () => {
+    limparSessaoPortal();
+    setUsuario(null);
+    setTab("home");
+    setNavigationRequest(null);
+    setMobileMoreOpen(false);
   };
 
   const juramentar = (dados) => setData(d => {
@@ -5537,7 +5626,7 @@ function App() {
     );
   }
 
-  if (!usuarioAtual) return <LoginScreen data={data} onLogin={setUsuario} />;
+  if (!usuarioAtual) return <LoginScreen data={data} onLogin={(u) => { salvarSessaoPortalSnapshot({ usuario: u, tab: "home" }); setUsuario(u); }} />;
 
   if (!isContratante && !isLider && usuarioAtual.iniciacaoStatus === "pendente") {
     return <IntroducaoPrimeiroAcesso
@@ -5555,7 +5644,7 @@ function App() {
         activityLog: [...(d.activityLog || []), atividade("foto_iniciacao_atualizada", usuarioAtual.username, usuarioAtual.username, "Atualizou a foto durante a identificação de primeiro acesso")],
       }))}
       onConcluir={() => concluirIniciacao(usuarioAtual.username)}
-      onLogout={() => setUsuario(null)}
+      onLogout={logoutPortal}
     />;
   }
 
@@ -5587,7 +5676,11 @@ function App() {
   const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
   const navegarPara = (id, subTab = "", action = "") => {
     if (id === "mapa") {
-      window.location.href = "./mapa.html";
+      if (typeof window.foxOpenStrategicMap === "function") window.foxOpenStrategicMap();
+      else {
+        if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
+        window.location.href = "./mapa.html";
+      }
       return;
     }
     setTab(id);
@@ -5632,7 +5725,7 @@ function App() {
               <div className="text-[8px] text-zinc-600 uppercase tracking-wider">{sigiloConfig(minhaAutorizacao).codigo} · {minhaAutorizacao}</div>
             </div>
             <div className="text-right hidden md:block">{syncIndicator}</div>
-            <button onClick={() => setUsuario(null)} className="mobile-tap p-2 text-zinc-500 hover:text-red-500 transition-colors flex items-center justify-center">
+            <button onClick={logoutPortal} className="mobile-tap p-2 text-zinc-500 hover:text-red-500 transition-colors flex items-center justify-center">
               <ILogout className="w-4 h-4" />
             </button>
           </div>
@@ -5680,8 +5773,8 @@ function App() {
                   <I className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold leading-tight">{t.label}</span>
                 </button>
               ); })}
-              {!isContratante && <a href="./mapa.html" className="min-h-20 rounded-xl border border-sky-900 bg-sky-950/20 p-3 flex flex-col items-center justify-center gap-2 text-sky-300 text-center"><ITarget className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Mapa Estratégico</span></a>}
-              <button onClick={() => { setUsuario(null); setMobileMoreOpen(false); }} className="min-h-20 rounded-xl border border-red-900 bg-red-950/20 p-3 flex flex-col items-center justify-center gap-2 text-red-300"><ILogout className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Sair</span></button>
+              {!isContratante && <button onClick={() => navegarPara("mapa")} className="min-h-20 rounded-xl border border-sky-900 bg-sky-950/20 p-3 flex flex-col items-center justify-center gap-2 text-sky-300 text-center"><ITarget className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Mapa Estratégico</span></button>}
+              <button onClick={logoutPortal} className="min-h-20 rounded-xl border border-red-900 bg-red-950/20 p-3 flex flex-col items-center justify-center gap-2 text-red-300"><ILogout className="w-5 h-5" /><span className="text-[10px] uppercase tracking-wider font-bold">Sair</span></button>
             </div>
           </div>
         </div>
@@ -5711,5 +5804,5 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-<script data-jikkai-map-link>(function(){function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:10px;padding:11px 14px;font:800 11px/1 system-ui;letter-spacing:.09em;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.55)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
+<script data-jikkai-map-link>(function(){function s(){try{var k='fox-portal-session-v2',m='fox-map-return-v2';var raw=sessionStorage.getItem(k)||localStorage.getItem(k);if(raw)localStorage.setItem(m,raw)}catch(e){}}function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.addEventListener('click',s);a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:10px;padding:11px 14px;font:800 11px/1 system-ui;letter-spacing:.09em;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.55)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
 </html>
