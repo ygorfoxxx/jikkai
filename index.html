@@ -55,6 +55,33 @@
     .text-3xl { line-height: 1.15 !important; }
     .fixed.inset-0 { overscroll-behavior: contain; }
   }
+
+  /* jikkai-compact-v1: reduz blocos longos sem remover conteúdo */
+  @media (min-width: 640px) {
+    .jikkai-compact main .p-5 { padding: 1rem !important; }
+    .jikkai-compact main .p-6 { padding: 1.1rem !important; }
+    .jikkai-compact main .p-8, .jikkai-compact main .p-10 { padding: 1.25rem !important; }
+    .jikkai-compact main .mb-8 { margin-bottom: 1.25rem !important; }
+    .jikkai-compact main .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.35rem !important; }
+    .jikkai-compact main .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.1rem !important; }
+    .jikkai-compact main .text-4xl { font-size: 2.15rem !important; }
+    .jikkai-compact main .text-3xl { font-size: 1.65rem !important; }
+  }
+  .portal-quick-actions {
+    position: fixed; right: 14px; top: 50%; transform: translateY(-50%);
+    z-index: 80; display: flex; flex-direction: column; gap: 8px;
+  }
+  .portal-quick-actions button {
+    width: 46px; height: 46px; border-radius: 14px;
+    border: 1px solid rgba(234,88,12,.45);
+    background: rgba(9,9,11,.92); color: #fed7aa;
+    display: grid; place-items: center;
+    box-shadow: 0 12px 34px rgba(0,0,0,.42);
+    transition: .18s ease;
+  }
+  .portal-quick-actions button:hover { border-color: #fb923c; transform: translateX(-2px); color: #fff7ed; }
+  @media (max-width: 1279px) { .portal-quick-actions { display: none; } }
+
 </style>
 </head>
 <body>
@@ -71,6 +98,7 @@
 // ACESSO RAIZ LEADER v1 (o username leader mantém autoridade total independentemente do cargo)
 // CENTRAL DE COMANDO v2 (F.O.X. como grupo, Lamona como legado e Jikkai como organização operacional)
 // IDENTIDADE FOX LAMONA JIKKAI v1
+// RELATORIOS GUIADOS v1 (atalhos, relatório avulso e instruções claras)
 // CENTRAL DO MEMBRO LIMPA v1 (ações claras, missões, relatórios e atalhos)
 // RETORNO DO MAPA v1 (preserva sessão e página ao voltar do mapa estratégico)
 const { useState, useEffect, useRef } = React;
@@ -83,7 +111,7 @@ const PERMISSIONS_LIST = [
   { id: "manage_roles",        label: "Gerenciar cargos", desc: "Criar/editar cargos e permissões" },
   { id: "edit_history",        label: "Editar História", desc: "Editar linha do tempo" },
   { id: "edit_clans",          label: "Editar Clãs & Mandamentos", desc: "Criar/editar clãs e os 7 mandamentos" },
-  { id: "edit_trios",          label: "Editar Trios", desc: "Editar composição dos trios" },
+  { id: "edit_trios",          label: "Editar Equipes", desc: "Criar e editar equipes das divisões" },
   { id: "edit_arms",           label: "Editar Armas", desc: "Editar armas lendárias" },
   { id: "edit_jikkai",         label: "Editar JIKKAI", desc: "Editar fases e objetivos do plano" },
   { id: "edit_contracts",      label: "Editar Contratos", desc: "Forjar/editar/aprovar contratos" },
@@ -127,11 +155,12 @@ const DEFAULT_ROLES = [
 ];
 
 const ESTRUTURA_POSICOES = [
-  { id: "lider", label: "Liderança central", desc: "Fica no topo do organograma." },
-  { id: "conselheiro", label: "Conselheiro", desc: "Fica à direita e um pouco abaixo do líder, como um Consigliere." },
-  { id: "capitao_ramo", label: "Capitão de ramo", desc: "Comanda um ramo, como um Caporegime." },
-  { id: "operador", label: "Operador do ramo", desc: "Fica abaixo do capitão dentro do ramo." },
-  { id: "independente", label: "Núcleo independente", desc: "Fica fora dos ramos, abaixo do comando central." },
+  { id: "lider", label: "Líder da Jikkai", desc: "Chefe máximo da organização." },
+  { id: "braco_direito", label: "Braço Direito", desc: "Underboss opcional: executa a vontade do líder quando designado." },
+  { id: "conselheiro", label: "Conselheiro", desc: "Consigliere: aconselha o líder e protege a coerência da organização." },
+  { id: "capitao_ramo", label: "Capitão da Divisão", desc: "Comanda uma divisão operacional, como um Caporegime." },
+  { id: "operador", label: "Soldado / Operador", desc: "Membro operacional abaixo do capitão da divisão." },
+  { id: "independente", label: "Associado externo", desc: "Colaborador fora das divisões formais." },
   { id: "oculto", label: "Fora do organograma", desc: "O cargo continua existindo, mas não aparece na estrutura." },
   { id: "fora", label: "Externo", desc: "Reservado a contratantes e perfis externos." },
 ];
@@ -141,6 +170,7 @@ function normalizarPosicaoEstrutura(role) {
   if (ESTRUTURA_POSICOES.some(p => p.id === valor)) return valor;
   const nome = String(role?.nome || role?.id || "").toLowerCase();
   if (role?.id === "leader" || role?.hasLeaderPerms === true || /líder|lider|chef|boss/.test(nome)) return "lider";
+  if (/bra[cç]o|underboss|subchefe|sub-chefe|segundo/.test(nome)) return "braco_direito";
   if (role?.id === "conselheiro" || /conselh|consigliere/.test(nome)) return "conselheiro";
   if (role?.id === "capitao" || /capit[aã]o|caporegime|comandante/.test(nome)) return "capitao_ramo";
   if (role?.id === "contratante" || /contratante|externo/.test(nome)) return "fora";
@@ -153,13 +183,13 @@ function estruturaPosicaoRole(role) {
 
 function estruturaPosicaoLabel(role) {
   const id = estruturaPosicaoRole(role);
-  return ESTRUTURA_POSICOES.find(p => p.id === id)?.label || "Operador do ramo";
+  return ESTRUTURA_POSICOES.find(p => p.id === id)?.label || "Soldado / Operador";
 }
 
 function ordemEstruturaRole(role) {
   const numero = Number(role?.ordemEstrutura);
   if (Number.isFinite(numero)) return numero;
-  const padrao = { lider: 0, conselheiro: 10, capitao_ramo: 30, operador: 100, independente: 150, oculto: 900, fora: 999 };
+  const padrao = { lider: 0, braco_direito: 5, conselheiro: 10, capitao_ramo: 30, operador: 100, independente: 150, oculto: 900, fora: 999 };
   return padrao[estruturaPosicaoRole(role)] ?? 100;
 }
 
@@ -172,7 +202,7 @@ const DEFAULT_USERS = [
     bio: "", avatarUrl: "", avatarStoragePath: "", estruturaNivel: "lideranca",
     respondeA: "", nivelAcesso: 5, iniciacaoStatus: "concluida", perfilCompleto: false,
     criadoEm: new Date().toISOString(), criadoPor: "sistema",
-    reputacao: "Sussurros", lealdade: "Pilar da F.O.X.", reputacaoNota: "", lealdadeNota: ""
+    reputacao: "Baixo perfil", lealdade: "Pilar da Jikkai", conduta: "Limpo", reputacaoNota: "", lealdadeNota: "", condutaNota: "", condutaRegistros: []
   },
 ];
 
@@ -211,15 +241,20 @@ function nomeUsernamePara(username, users, viewerIsContratante) {
 }
 
 
-const REPUTACAO_NIVEIS = ["Desconhecido", "Sussurros", "Temido", "Procurado", "Lenda das Sombras"];
-const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
+const REPUTACAO_NIVEIS = ["Baixo perfil", "Rumores locais", "Exposto", "Procurado", "Temido"];
+const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da Jikkai"];
+const CONDUTA_NIVEIS = ["Limpo", "Sob observação", "Advertido", "Suspenso", "Risco interno"];
 
 const REPUTACAO_CFG = {
-  "Desconhecido": { indice: 0, badge: "border-zinc-700 bg-zinc-950 text-zinc-400", desc: "O mundo exterior ainda não reconhece este nome." },
-  "Sussurros": { indice: 1, badge: "border-slate-700 bg-slate-950 text-slate-300", desc: "Rumores começaram a circular entre vilas e informantes." },
-  "Temido": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "A presença deste operador já altera decisões e rotas." },
-  "Procurado": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "Vilas, rivais ou autoridades procuram ativamente este nome." },
-  "Lenda das Sombras": { indice: 4, badge: "border-purple-700 bg-purple-950/50 text-purple-300", desc: "O nome ultrapassou os fatos e tornou-se parte da história." },
+  "Baixo perfil": { indice: 0, badge: "border-zinc-700 bg-zinc-950 text-zinc-400", desc: "Sem exposição relevante fora da organização." },
+  "Rumores locais": { indice: 1, badge: "border-slate-700 bg-slate-950 text-slate-300", desc: "Há rumores ou menções pontuais no RP, mas nada consolidado." },
+  "Exposto": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "Alguma ação deixou rastros, testemunhas ou identificação parcial." },
+  "Procurado": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "Vilas, rivais ou autoridades podem estar procurando esse nome." },
+  "Temido": { indice: 4, badge: "border-purple-700 bg-purple-950/50 text-purple-300", desc: "O impacto externo foi marcado por feitos narrativos reconhecidos." },
+  // compatibilidade com dados antigos
+  "Desconhecido": { indice: 0, badge: "border-zinc-700 bg-zinc-950 text-zinc-400", desc: "Registro antigo convertido para baixo perfil." },
+  "Sussurros": { indice: 1, badge: "border-slate-700 bg-slate-950 text-slate-300", desc: "Registro antigo convertido para rumores locais." },
+  "Lenda das Sombras": { indice: 4, badge: "border-purple-700 bg-purple-950/50 text-purple-300", desc: "Registro antigo de alto impacto externo." },
 };
 
 const LEALDADE_CFG = {
@@ -227,27 +262,107 @@ const LEALDADE_CFG = {
   "Recruta": { indice: 1, badge: "border-blue-800 bg-blue-950/40 text-blue-300", desc: "Foi admitido, mas ainda está construindo confiança interna." },
   "Juramentado": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "Assumiu formalmente o pacto e os princípios da organização." },
   "Veterano": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "Possui histórico comprovado de serviço, presença e confiança." },
-  "Pilar da F.O.X.": { indice: 4, badge: "border-yellow-700 bg-yellow-950/40 text-yellow-300", desc: "Sustenta a organização, o legado e suas decisões mais importantes." },
+  "Pilar da Jikkai": { indice: 4, badge: "border-yellow-700 bg-yellow-950/40 text-yellow-300", desc: "Sustenta a organização, o legado e suas decisões mais importantes." },
+  // compatibilidade com dados antigos
+  "Pilar da F.O.X.": { indice: 4, badge: "border-yellow-700 bg-yellow-950/40 text-yellow-300", desc: "Registro antigo convertido para Pilar da Jikkai." },
+};
+
+const CONDUTA_CFG = {
+  "Limpo": { indice: 0, badge: "border-green-800 bg-green-950/30 text-green-300", desc: "Sem registros negativos ativos." },
+  "Sob observação": { indice: 1, badge: "border-yellow-800 bg-yellow-950/30 text-yellow-300", desc: "A liderança acompanha as próximas ações." },
+  "Advertido": { indice: 2, badge: "border-orange-800 bg-orange-950/40 text-orange-300", desc: "Há advertência disciplinar registrada." },
+  "Suspenso": { indice: 3, badge: "border-red-800 bg-red-950/50 text-red-300", desc: "A atuação está suspensa ou limitada." },
+  "Risco interno": { indice: 4, badge: "border-red-700 bg-red-950/70 text-red-200", desc: "Requer atenção direta do comando." },
 };
 
 function reputacaoConfig(valor) {
-  return REPUTACAO_CFG[valor] || REPUTACAO_CFG.Desconhecido;
+  return REPUTACAO_CFG[valor] || REPUTACAO_CFG[converterReputacaoLegada(valor)] || REPUTACAO_CFG["Baixo perfil"];
 }
 
 function lealdadeConfig(valor) {
   return LEALDADE_CFG[valor] || LEALDADE_CFG.Observado;
 }
 
+function condutaConfig(valor) {
+  return CONDUTA_CFG[valor] || CONDUTA_CFG.Limpo;
+}
+
+function converterReputacaoLegada(valor) {
+  const mapa = { "Desconhecido": "Baixo perfil", "Sussurros": "Rumores locais", "Temido": "Temido", "Procurado": "Procurado", "Lenda das Sombras": "Temido" };
+  return mapa[valor] || valor || "Baixo perfil";
+}
+
 function ReputacaoBadge({ tipo, valor, compacto = false }) {
+  const conduta = tipo === "conduta";
   const interno = tipo === "lealdade";
-  const config = interno ? lealdadeConfig(valor) : reputacaoConfig(valor);
-  const Icone = interno ? IShield : ITarget;
+  const impacto = tipo === "impacto" || tipo === "reputacao";
+  const valorNormalizado = impacto ? converterReputacaoLegada(valor) : (valor === "Pilar da F.O.X." ? "Pilar da Jikkai" : valor);
+  const config = conduta ? condutaConfig(valorNormalizado) : interno ? lealdadeConfig(valorNormalizado) : reputacaoConfig(valorNormalizado);
+  const Icone = conduta ? IAlert : interno ? IShield : ITarget;
   return (
     <span className={`inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider ${config.badge} ${compacto ? "text-[8px] px-1.5 py-0.5" : "text-[10px] px-2 py-1"}`} title={config.desc}>
       <Icone className={compacto ? "w-2.5 h-2.5" : "w-3 h-3"} />
-      {valor || (interno ? "Observado" : "Desconhecido")}
+      {valorNormalizado || (conduta ? "Limpo" : interno ? "Observado" : "Baixo perfil")}
     </span>
   );
+}
+
+function registroConduta(tipo, ator, descricao) {
+  return { id: uid(), tipo, ator: ator || "sistema", descricao: descricao || "Registro interno", data: new Date().toISOString() };
+}
+
+function indicadoresMembro(data, membro) {
+  const username = membro?.username;
+  const missoes = (data?.missoes || []).filter(m => usuarioParticipaMissao(m, username));
+  const relatorios = (data?.relatorios || []).filter(r => r.autorUsername === username);
+  const contratos = (data?.contratos || []).filter(c => c.aceitoPor === username || c.criadoPor === username);
+  const concluidas = missoes.filter(m => m.status === "concluida").length;
+  const falhas = missoes.filter(m => m.status === "falhou").length;
+  const devolvidas = missoes.filter(m => m.status === "devolvida").length;
+  const abertas = missoes.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status)).length;
+  const alertas = relatorios.filter(r => r.alertaJikkai).length;
+  const contratosConcluidos = contratos.filter(c => c.status === "Concluído").length;
+  const registros = Array.isArray(membro?.condutaRegistros) ? membro.condutaRegistros : [];
+  const meritos = registros.filter(r => r.tipo === "merito").length;
+  const advertencias = registros.filter(r => ["advertencia", "observacao", "suspensao"].includes(r.tipo)).length;
+
+  let lealdadeSugerida = membro?.iniciacaoStatus !== "concluida" ? "Observado" : "Recruta";
+  if (membro?.iniciacaoStatus === "concluida" && (concluidas >= 1 || relatorios.length >= 1)) lealdadeSugerida = "Juramentado";
+  if (concluidas >= 3 && relatorios.length >= 3) lealdadeSugerida = "Veterano";
+  if (concluidas >= 6 && relatorios.length >= 6 && falhas === 0) lealdadeSugerida = "Pilar da Jikkai";
+  if (falhas >= 2 || advertencias >= 2) lealdadeSugerida = "Observado";
+
+  let condutaSugerida = "Limpo";
+  if (devolvidas >= 2 || falhas >= 1 || alertas >= 2 || advertencias >= 1) condutaSugerida = "Sob observação";
+  if (advertencias >= 2 || falhas >= 2) condutaSugerida = "Advertido";
+  if ((membro?.conduta || "") === "Suspenso") condutaSugerida = "Suspenso";
+  if ((membro?.conduta || "") === "Risco interno") condutaSugerida = "Risco interno";
+
+  let impactoSugerido = "Baixo perfil";
+  if (alertas >= 1 || contratosConcluidos >= 1) impactoSugerido = "Rumores locais";
+  if (alertas >= 3 || falhas >= 1) impactoSugerido = "Exposto";
+  if ((membro?.reputacao || "") === "Procurado") impactoSugerido = "Procurado";
+  if ((membro?.reputacao || "") === "Temido" || (membro?.reputacao || "") === "Lenda das Sombras") impactoSugerido = "Temido";
+
+  const pontuacao = concluidas * 3 + relatorios.length * 2 + contratosConcluidos * 3 + meritos * 2 - falhas * 4 - devolvidas - advertencias * 3;
+  const resumo = [
+    `${concluidas} missão${concluidas === 1 ? "" : "ões"} concluída${concluidas === 1 ? "" : "s"}`,
+    `${relatorios.length} relatório${relatorios.length === 1 ? "" : "s"}`,
+    `${abertas} ativa${abertas === 1 ? "" : "s"}`,
+    `${falhas} falha${falhas === 1 ? "" : "s"}`,
+  ];
+  return { missoes, relatorios, contratos, concluidas, falhas, devolvidas, abertas, alertas, contratosConcluidos, meritos, advertencias, pontuacao, lealdadeSugerida, condutaSugerida, impactoSugerido, resumo };
+}
+
+function podeEditarLealdadeConduta(data, viewer, viewerRole, alvo) {
+  if (!viewer || !alvo) return false;
+  const pos = estruturaPosicaoRole(viewerRole);
+  if (isRootUser(viewer) || viewerRole?.hasLeaderPerms || pos === "lider" || pos === "conselheiro" || pos === "braco_direito") return true;
+  if (pos === "capitao_ramo") {
+    const divs = new Set(divisoesDoCapitao(data, viewer).map(d => d.id));
+    return equipesJikkai(data).some(e => divs.has(e.divisaoId) && (e.membros || []).some(m => m.username === alvo.username));
+  }
+  return false;
 }
 
 const MEMBER_PROFILE_FIELDS = ["nomeRP", "elemento", "linhagem", "vilaOrigem", "especialidade"];
@@ -264,16 +379,20 @@ function normalizarMembro(u, existente = true) {
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
-    reputacao: "Desconhecido", lealdade: "", reputacaoNota: "", lealdadeNota: "",
-    reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "",
+    reputacao: "Baixo perfil", lealdade: "", conduta: "Limpo", reputacaoNota: "", lealdadeNota: "", condutaNota: "", condutaRegistros: [],
+    reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "", condutaAtualizadaEm: "",
   };
   const out = { ...base, ...u };
   if (!existente && !String(out.patente || "").trim()) out.patente = "Recruta em Observação";
   out.nomeRP = out.nomeRP || out.displayName || "";
   out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
-  if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Desconhecido";
-  if (!u?.lealdade) out.lealdade = out.role === "leader" ? "Pilar da F.O.X." : (existente ? "Recruta" : "Observado");
+  out.reputacao = converterReputacaoLegada(out.reputacao);
+  if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Baixo perfil";
+  if (out.lealdade === "Pilar da F.O.X.") out.lealdade = "Pilar da Jikkai";
+  if (!u?.lealdade) out.lealdade = out.role === "leader" ? "Pilar da Jikkai" : (existente ? "Recruta" : "Observado");
   if (!LEALDADE_NIVEIS.includes(out.lealdade)) out.lealdade = existente ? "Recruta" : "Observado";
+  if (!CONDUTA_NIVEIS.includes(out.conduta)) out.conduta = "Limpo";
+  if (!Array.isArray(out.condutaRegistros)) out.condutaRegistros = [];
   out.perfilCompleto = perfilCompletoUsuario(out);
   return out;
 }
@@ -336,6 +455,22 @@ const DEFAULT_TRIOS = [
     { nome: "Kayz", elemento: "Suiton + Defesa", papel: "Defesa" },
   ]},
 ];
+
+const DEFAULT_DIVISOES = [
+  {
+    id: "divisao_central",
+    nome: "Divisão Central",
+    desc: "Primeira divisão operacional da Jikkai. Use como base inicial até a liderança criar divisões especializadas.",
+    cor: "#D85A30",
+    status: "ativa",
+    capitaoUsername: "",
+  },
+];
+
+const EQUIPE_TIPOS = ["Ataque", "Inteligência", "Defesa", "Suporte", "Escolta", "Contrato", "Missão temporária", "Elite", "Treinamento"];
+const EQUIPE_STATUS = ["Ativa", "Em formação", "Em missão", "Suspensa", "Arquivada"];
+const EQUIPE_PAPEIS = ["Líder", "Soldado", "Recruta", "Associado", "Ataque", "Suporte", "Defesa", "Rastreador", "Médico", "Negociador"];
+
 
 const DEFAULT_FASES = [
   { n: 1, titulo: "Preparação & Consolidação", desc: "Reunir membros, definir líder, mandamentos, hierarquia. Farmar nível, dinheiro, profissão.", objetivos: [
@@ -642,7 +777,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
   if (isLider) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Relatórios operacionais esperando decisão da liderança.", tab: "missoes", cor: "#A855F7" });
     if (propostas) addPrioridade({ titulo: `${propostas} ${propostas === 1 ? "proposta externa" : "propostas externas"}`, desc: "Contratos enviados aguardam análise.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
-    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", cor: "#F59E0B" });
+    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", subTab: "usuarios", action: "iniciacoes-pendentes", cor: "#F59E0B" });
     if (ramosSemCapitao) addPrioridade({ titulo: `${ramosSemCapitao} ${ramosSemCapitao === 1 ? "ramo está" : "ramos estão"} sem Capitão`, desc: "Designe o responsável por cada ramo.", tab: "gerenciar", cor: "#DC2626" });
     if (dossiesIncompletos) addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", cor: "#CA8A04" });
   }
@@ -718,7 +853,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <QuickCard icon={IClipboard} titulo="Minhas Missões" desc="Aceite, acompanhe objetivos e envie relatório final." badge={minhasMissoes.length ? `${minhasMissoes.length} ativa${minhasMissoes.length === 1 ? "" : "s"}` : "0 ativa"} onClick={() => onNavigate("missoes")} accent="#A855F7" />
-        <QuickCard icon={IFile} titulo="Relatórios" desc="Registre resultado de missão ou acontecimento relevante do RP." badge={relatoriosMeus.length ? `${relatoriosMeus.length} meu${relatoriosMeus.length === 1 ? "" : "s"}` : "Criar"} onClick={() => onNavigate("jikkai", "relatorios")} accent="#38BDF8" />
+        <QuickCard icon={IFile} titulo="Criar Relatório" desc="Missão concluída, ocorrência sem missão, risco ou registro narrativo." badge={relatoriosMeus.length ? `${relatoriosMeus.length} meu${relatoriosMeus.length === 1 ? "" : "s"}` : "Avulso"} onClick={() => onNavigate("jikkai", "relatorios", "novo-relatorio-avulso")} accent="#38BDF8" />
         <QuickCard icon={IUsers} titulo="Meu Dossiê" desc="Foto, elemento, linhagem, ramo, patente e especialidade." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("membros", "lista", "meu-dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
         <QuickCard icon={ITarget} titulo="Mapa Estratégico" desc="Locais, rotas e pontos importantes da organização." badge="Mapa" onClick={() => onNavigate("mapa")} accent="#EA580C" />
       </section>
@@ -739,7 +874,11 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
           </div>
           <div className="space-y-2 mt-4">
             {minhasMissoes.slice(0, 3).map(m => <button key={m.id} onClick={() => onNavigate("missoes")} className="w-full text-left p-3 rounded-lg border border-zinc-800 bg-black/40 hover:border-orange-800"><div className="flex items-center gap-2 flex-wrap"><span className="text-[10px] px-2 py-0.5 rounded border border-orange-900 text-orange-300 uppercase tracking-wider font-bold">{statusMissaoConfig(m.status).label}</span><SigiloBadge sigilo={m.sigilo} compacto /></div><div className="text-orange-50 font-bold text-sm mt-2">{m.titulo}</div><div className="text-zinc-600 text-xs mt-1 line-clamp-2">{m.desc || "Operação designada."}</div></button>)}
-            {minhasMissoes.length === 0 && <div className="p-6 text-center rounded-lg border border-zinc-800 bg-black/30 text-zinc-600 text-sm italic">Nenhuma missão ativa no momento. Aguarde designação ou registre acontecimentos relevantes em Relatórios.</div>}
+            {minhasMissoes.length === 0 && <div className="p-6 text-center rounded-lg border border-zinc-800 bg-black/30 text-zinc-600 text-sm italic">
+              <div>Nenhuma missão ativa no momento.</div>
+              <div className="mt-1">Aguarde designação ou registre acontecimentos relevantes em Relatórios.</div>
+              <button onClick={() => onNavigate("jikkai", "relatorios", "novo-relatorio-avulso")} className="mt-4 px-4 py-2 rounded-lg border border-sky-800 bg-sky-950/20 text-sky-300 text-xs uppercase tracking-wider font-black hover:border-sky-500">Criar relatório avulso</button>
+            </div>}
           </div>
         </div>
 
@@ -754,8 +893,8 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-5">
-            <div className="p-3 rounded-lg border border-red-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-red-700">Reputação</div><div className="text-red-300 text-xs font-bold mt-1">{usuario?.reputacao || "Desconhecido"}</div></div>
-            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700">Lealdade</div><div className="text-orange-300 text-xs font-bold mt-1">{usuario?.lealdade || "Observado"}</div></div>
+            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700">Lealdade</div><div className="text-orange-300 text-xs font-bold mt-1">{usuario?.lealdade === "Pilar da F.O.X." ? "Pilar da Jikkai" : (usuario?.lealdade || "Observado")}</div></div>
+            <div className="p-3 rounded-lg border border-yellow-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-yellow-700">Conduta</div><div className="text-yellow-300 text-xs font-bold mt-1">{usuario?.conduta || "Limpo"}</div></div>
           </div>
           <div className={`mt-4 text-xs font-bold ${perfilCompletoUsuario(usuario) ? "text-green-500" : "text-yellow-500"}`}>{perfilCompletoUsuario(usuario) ? "Dossiê completo" : "Dossiê incompleto · toque para atualizar"}</div>
         </button>
@@ -789,7 +928,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
 
       <section className="grid md:grid-cols-3 gap-3">
         <button onClick={() => onNavigate("historia", "cla")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><ICrown className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Clã Lamona</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Conheça a origem, Archie e o legado familiar.</p></button>
-        <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><IUsers className="w-6 h-6 text-red-500 mb-3" /><div className="text-orange-50 font-black serif">Organização</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Ramos, estrutura, trios e dossiês dos membros.</p></button>
+        <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><IUsers className="w-6 h-6 text-red-500 mb-3" /><div className="text-orange-50 font-black serif">Organização</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Divisões, equipes e dossiês dos membros.</p></button>
         <button onClick={() => onNavigate("jikkai", "plano")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-red-950/15 to-black text-left hover:border-orange-700 transition-colors"><ITarget className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Painel Jikkai</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Plano, contratos, relatórios e situação estratégica. {sinaisOcultos > 0 ? `${sinaisOcultos} registros acima do seu acesso.` : ""}</p></button>
       </section>
 
@@ -1559,16 +1698,21 @@ function DossieModal({ membro, data, onClose }) {
           </div>
         </div>
         <div className="p-6">
-          <div className="grid sm:grid-cols-2 gap-3 mb-4">
-            <div className="p-4 rounded-lg border border-red-900/40 bg-red-950/10">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-red-600 mb-2">Reputação externa</div>
-              <ReputacaoBadge tipo="reputacao" valor={membro.reputacao} />
-              <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.reputacaoNota || reputacaoConfig(membro.reputacao).desc}</p>
-            </div>
+          <div className="grid sm:grid-cols-3 gap-3 mb-4">
             <div className="p-4 rounded-lg border border-orange-900/40 bg-orange-950/10">
               <div className="text-[9px] uppercase tracking-[0.2em] text-orange-600 mb-2">Lealdade interna</div>
               <ReputacaoBadge tipo="lealdade" valor={membro.lealdade} />
               <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.lealdadeNota || lealdadeConfig(membro.lealdade).desc}</p>
+            </div>
+            <div className="p-4 rounded-lg border border-yellow-900/40 bg-yellow-950/10">
+              <div className="text-[9px] uppercase tracking-[0.2em] text-yellow-600 mb-2">Conduta</div>
+              <ReputacaoBadge tipo="conduta" valor={membro.conduta || "Limpo"} />
+              <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.condutaNota || condutaConfig(membro.conduta).desc}</p>
+            </div>
+            <div className="p-4 rounded-lg border border-sky-900/40 bg-sky-950/10">
+              <div className="text-[9px] uppercase tracking-[0.2em] text-sky-600 mb-2">Impacto externo</div>
+              <ReputacaoBadge tipo="impacto" valor={membro.reputacao} />
+              <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.reputacaoNota || reputacaoConfig(membro.reputacao).desc}</p>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -1759,164 +1903,354 @@ function OrganogramaCard({ membro, data, onOpen, destaque = false }) {
   );
 }
 
+
+function familiaDoMembro(data, membro) {
+  return (data.clas || []).find(c => c.id === membro?.cla);
+}
+
+function divisoesJikkai(data) {
+  const base = Array.isArray(data.divisoes) && data.divisoes.length ? data.divisoes : DEFAULT_DIVISOES;
+  return base.map((d, i) => ({
+    id: d.id || "divisao_" + (slugEstrutura(d.nome) || i),
+    nome: d.nome || "Divisão " + (i + 1),
+    desc: d.desc || d.descricao || "Divisão operacional da Jikkai.",
+    cor: d.cor || ["#D85A30", "#B91C1C", "#7C2D12", "#EA580C"][i % 4],
+    status: d.status || "ativa",
+    capitaoUsername: d.capitaoUsername || d.capitao || "",
+  }));
+}
+
+function equipesJikkai(data) {
+  const divisoes = divisoesJikkai(data);
+  const divPadrao = divisoes[0]?.id || "divisao_central";
+  return (data.trios || []).map((t, i) => {
+    const membros = (t.membros || []).map(m => {
+      const encontrado = m.username ? (data.users || []).find(u => u.username === m.username) : usuarioPorIdentidade(data.users || [], m.nome);
+      return { ...m, username: m.username || encontrado?.username || "", papel: m.papel || "Soldado" };
+    });
+    const liderPorPapel = membros.find(m => String(m.papel || "").toLowerCase().includes("líder") || String(m.papel || "").toLowerCase().includes("lider"));
+    return {
+      ...t,
+      id: t.id || "equipe_" + (slugEstrutura(t.nome) || i),
+      nome: t.nome || "Equipe " + (i + 1),
+      desc: t.desc || t.descricao || "Equipe operacional da Jikkai.",
+      cor: t.cor || "#D85A30",
+      divisaoId: t.divisaoId || t.ramoId || divPadrao,
+      tipo: t.tipo || "Ataque",
+      status: t.status || "Ativa",
+      liderUsername: t.liderUsername || liderPorPapel?.username || "",
+      membros,
+    };
+  });
+}
+
+function papelEquipeGrupo(papel) {
+  const p = String(papel || "").toLowerCase();
+  if (p.includes("recruta") || p.includes("associado") || p.includes("prospect")) return "base";
+  return "soldado";
+}
+
+function podeGerenciarTodasEquipes(role) {
+  const pos = estruturaPosicaoRole(role);
+  return !!(role?.hasLeaderPerms || hasPerm(role, "edit_trios") || pos === "lider" || pos === "braco_direito" || pos === "conselheiro");
+}
+
+function divisoesDoCapitao(data, usuario) {
+  if (!usuario) return [];
+  return divisoesJikkai(data).filter(d => d.capitaoUsername === usuario.username);
+}
+
 function EstruturaSection({ data, onOpen }) {
   const membros = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
-  const roleOf = u => (data.roles || []).find(r => r.id === u.role);
+  const roleOf = u => (data.roles || []).find(r => r.id === u?.role);
   const posOf = u => estruturaPosicaoRole(roleOf(u));
   const ordenar = lista => lista.slice().sort((a, b) => ordemEstruturaRole(roleOf(a)) - ordemEstruturaRole(roleOf(b)) || getCodinome(a).localeCompare(getCodinome(b), "pt-BR"));
   const lideranca = ordenar(membros.filter(u => posOf(u) === "lider"));
+  const bracos = ordenar(membros.filter(u => posOf(u) === "braco_direito"));
   const conselheiros = ordenar(membros.filter(u => posOf(u) === "conselheiro"));
-  const reservados = new Set([...lideranca, ...conselheiros].map(u => u.username));
-  const ramos = (data.clas || []).map(ramo => {
-    const integrantes = membros.filter(u => !reservados.has(u.username) && u.cla === ramo.id && !["oculto", "fora", "independente"].includes(posOf(u)));
-    return {
-      ...ramo,
-      capitaes: ordenar(integrantes.filter(u => posOf(u) === "capitao_ramo")),
-      operadores: ordenar(integrantes.filter(u => posOf(u) !== "capitao_ramo")),
-    };
-  });
-  const alocadosNosRamos = new Set(ramos.flatMap(r => [...r.capitaes, ...r.operadores].map(u => u.username)));
-  const independentes = ordenar(membros.filter(u => !reservados.has(u.username) && !alocadosNosRamos.has(u.username) && !["oculto", "fora"].includes(posOf(u))));
+  const divisoes = divisoesJikkai(data);
+  const equipes = equipesJikkai(data);
+  const familias = data.clas || [];
+  const usuariosPorNome = username => membros.find(u => u.username === username);
+  const usuariosEmEquipes = new Set(equipes.flatMap(e => (e.membros || []).map(m => m.username).filter(Boolean)));
+  const foraDeEquipe = ordenar(membros.filter(u => !["lider", "braco_direito", "conselheiro", "fora", "oculto"].includes(posOf(u)) && !usuariosEmEquipes.has(u.username)));
 
-  const Linha = ({ longa = false }) => <div className={`${longa ? "h-12" : "h-8"} w-px bg-gradient-to-b from-orange-700 to-zinc-800 mx-auto`} aria-hidden="true" />;
-  const Vaga = ({ titulo, texto }) => (
-    <div className="w-44 min-h-[118px] p-3 rounded-xl border border-dashed border-zinc-800 bg-zinc-950/40 text-center flex flex-col items-center justify-center">
-      <div className="text-[9px] uppercase tracking-[0.18em] text-zinc-600">{titulo}</div>
-      <div className="text-zinc-700 text-xs mt-2 italic">{texto}</div>
+  const Mugshot = ({ user, cargo, nota, tone = "orange", mini = false, className = "" }) => {
+    const toneMap = {
+      orange: "border-orange-700/70 bg-orange-950/20 text-orange-200",
+      yellow: "border-yellow-700/60 bg-yellow-950/15 text-yellow-100",
+      purple: "border-purple-700/60 bg-purple-950/15 text-purple-100",
+      red: "border-red-800/60 bg-red-950/15 text-red-100",
+      zinc: "border-zinc-800 bg-zinc-950/70 text-zinc-200",
+    };
+    if (!user) {
+      return (
+        <div className={`rounded-lg border border-dashed border-zinc-800 bg-black/35 ${mini ? "p-1.5" : "p-2"} text-center ${className}`}>
+          <div className={`${mini ? "w-8 h-9" : "w-12 h-14"} mx-auto rounded-md border border-zinc-800 bg-zinc-950 flex items-center justify-center text-zinc-700 text-[10px] font-black`}>?</div>
+          <div className="text-[9px] text-zinc-700 italic mt-1 truncate">não definido</div>
+        </div>
+      );
+    }
+    const role = roleOf(user);
+    return (
+      <button onClick={() => onOpen(user)} className={`group rounded-lg border ${toneMap[tone] || toneMap.zinc} ${mini ? "p-1.5" : "p-2"} text-left hover:border-orange-500 hover:-translate-y-0.5 transition-all ${className}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`${mini ? "w-8 h-9" : "w-12 h-14"} relative rounded-md overflow-hidden border border-black/60 bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center flex-shrink-0 shadow-inner`}>
+            <span className="font-black text-orange-300 text-[10px]">{iniciaisMembro(user)}</span>
+            {user?.avatarUrl && <img src={user.avatarUrl} alt={getCodinome(user)} className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className={`${mini ? "text-[11px]" : "text-xs"} font-black truncate group-hover:text-orange-300`}>{getCodinome(user)}</div>
+            <div className="text-[8px] uppercase tracking-wider text-zinc-500 truncate mt-0.5">{cargo || user.patente || role?.nome || "Operador"}</div>
+            {nota && <div className="text-[8px] text-zinc-600 truncate mt-0.5">{nota}</div>}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  const CargoBox = ({ titulo, subtitulo, lista, tone, vazio }) => (
+    <div className="relative rounded-xl border border-zinc-800 bg-black/60 p-3 min-h-[104px] shadow-[0_18px_45px_rgba(0,0,0,.35)]">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div>
+          <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">{titulo}</div>
+          <div className="text-[10px] text-zinc-600 mt-0.5">{subtitulo}</div>
+        </div>
+        <span className="text-[9px] px-2 py-1 rounded-full border border-zinc-800 text-zinc-600">{lista.length || 0}</span>
+      </div>
+      {lista.length ? <div className="grid gap-2">{lista.map(u => <Mugshot key={u.username} user={u} tone={tone} cargo={u.patente || roleOf(u)?.nome} />)}</div> : <Mugshot user={null} mini nota={vazio} />}
     </div>
   );
 
-  return (
-    <div className="fadein space-y-10">
-      <div className="text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-orange-600">Estrutura de comando</div>
-        <h3 className="text-2xl font-black text-orange-50 serif mt-1">Hierarquia da Jikkai</h3>
-        <p className="text-zinc-600 text-sm mt-2">A posição de cada membro é herdada do cargo definido pela liderança e sincronizada em todo o portal.</p>
+  const MemberStrip = ({ titulo, registros }) => {
+    if (!registros.length) return null;
+    return (
+      <div>
+        <div className="text-[8px] uppercase tracking-[0.18em] text-zinc-600 mb-1">{titulo}</div>
+        <div className="grid grid-cols-1 gap-1.5">
+          {registros.map(({ user, registro }) => <Mugshot key={`${user.username}_${registro.papel || "m"}`} user={user} tone="zinc" cargo={registro.papel || "Soldado"} mini />)}
+        </div>
       </div>
+    );
+  };
 
-      <section className="max-w-5xl mx-auto">
-        <div className="relative min-h-[250px] sm:min-h-[230px]">
-          <div className="text-center text-[10px] uppercase tracking-[0.3em] text-orange-500 mb-4">Liderança</div>
-          <div className="flex flex-wrap justify-center gap-4">
-            {lideranca.length ? lideranca.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} destaque />) : <Vaga titulo="Liderança" texto="Líder não designado" />}
+  const EquipeCard = ({ equipe }) => {
+    const lider = usuariosPorNome(equipe.liderUsername);
+    const membrosEquipe = (equipe.membros || []).map(m => ({ registro: m, user: usuariosPorNome(m.username) })).filter(x => x.user);
+    const soldados = membrosEquipe.filter(x => papelEquipeGrupo(x.registro.papel) !== "base");
+    const base = membrosEquipe.filter(x => papelEquipeGrupo(x.registro.papel) === "base");
+    return (
+      <div className="relative rounded-xl border border-zinc-800 bg-black/50 p-2.5 hover:border-orange-900/80 transition-colors min-w-[210px]">
+        <div className="absolute left-1/2 -top-2 h-2 w-px bg-zinc-800" />
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[8px] uppercase tracking-[0.22em] text-zinc-600">Equipe · Crew</div>
+            <div className="text-orange-50 font-black text-sm truncate">{equipe.nome}</div>
+            <div className="text-[9px] uppercase tracking-wider text-zinc-600 truncate">{equipe.tipo} · {equipe.status}</div>
           </div>
+          <span className="text-[9px] px-2 py-1 rounded-full border border-zinc-800 text-zinc-500 whitespace-nowrap">{soldados.length} S{base.length ? ` · ${base.length} A` : ""}</span>
+        </div>
+        {lider && <div className="mt-2">
+          <div className="text-[8px] uppercase tracking-[0.18em] text-zinc-600 mb-1">Líder de equipe</div>
+          <Mugshot user={lider} tone="red" cargo="Líder" mini />
+        </div>}
+        {(soldados.length || base.length) ? <div className={`mt-2 grid ${soldados.length && base.length ? "grid-cols-2" : "grid-cols-1"} gap-2 border-t border-zinc-900 pt-2`}>
+          <MemberStrip titulo="Soldados" registros={soldados} />
+          <MemberStrip titulo="Recrutas / Associados" registros={base} />
+        </div> : <div className="mt-2 rounded-lg border border-dashed border-zinc-800 bg-black/25 px-2 py-2 text-[10px] text-zinc-700 italic text-center">Equipe sem integrantes.</div>}
+      </div>
+    );
+  };
 
-          <div className="mt-6 sm:mt-0 sm:absolute sm:right-0 sm:top-16 flex flex-col items-center">
-            <div className="hidden sm:block absolute -left-14 top-8 w-12 border-t border-red-900/70" aria-hidden="true" />
-            <div className="text-center text-[9px] uppercase tracking-[0.26em] text-red-500 mb-3">Conselheiro · Consigliere</div>
-            <div className="flex flex-wrap justify-center gap-3">
-              {conselheiros.length ? conselheiros.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />) : <Vaga titulo="Conselheiro" texto="Cargo ainda não atribuído" />}
+  const DivisaoBoard = ({ divisao }) => {
+    const capitao = usuariosPorNome(divisao.capitaoUsername) || membros.find(u => posOf(u) === "capitao_ramo" && (u.divisaoId === divisao.id || u.ramoId === divisao.id));
+    const equipesDaDivisao = equipes.filter(e => e.divisaoId === divisao.id);
+    const usernames = new Set(equipesDaDivisao.flatMap(e => (e.membros || []).map(m => m.username).filter(Boolean)));
+    const soldados = Array.from(usernames).map(usuariosPorNome).filter(Boolean);
+    return (
+      <div className="relative flex flex-col items-center min-w-[520px]">
+        <div className="h-7 w-px bg-orange-900/70" />
+        <div className="w-full rounded-2xl border bg-zinc-950/75 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,.45)]" style={{ borderColor: (divisao.cor || "#7C2D12") + "95" }}>
+          <div className="p-3 text-center" style={{ background: `linear-gradient(135deg, ${(divisao.cor || "#7C2D12")}38, #050505 78%)` }}>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <div className="text-[9px] uppercase tracking-[0.26em] text-orange-200/75">Divisão</div>
+              <span className="text-[8px] px-2 py-1 rounded-full border border-black/50 bg-black/40 text-zinc-400 uppercase tracking-wider">{divisao.status}</span>
+            </div>
+            <div className="text-orange-50 font-black serif text-lg truncate mt-0.5">{divisao.nome}</div>
+            <div className="text-[9px] uppercase tracking-wider text-zinc-500 mt-0.5">{equipesDaDivisao.length} equipes · {soldados.length} soldados</div>
+            <div className="mt-3 flex justify-center">
+              <div className="w-[250px] rounded-xl border border-red-900/50 bg-black/55 p-2">
+                <div className="text-[8px] uppercase tracking-[0.22em] text-red-500 mb-1 text-center">Capitão</div>
+                <Mugshot user={capitao} tone="red" cargo="Capitão da divisão" mini />
+              </div>
             </div>
           </div>
+          <div className="p-2.5">
+            {equipesDaDivisao.length ? <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+              {equipesDaDivisao.map(equipe => <EquipeCard key={equipe.id} equipe={equipe} />)}
+            </div> : <div className="rounded-xl border border-dashed border-zinc-800 bg-black/35 p-4 text-center text-zinc-700 text-xs italic">Nenhuma equipe criada nesta divisão.</div>}
+          </div>
         </div>
-        {(ramos.length > 0 || independentes.length > 0) && <Linha longa />}
-      </section>
+      </div>
+    );
+  };
 
-      <section>
-        <div className="text-center text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-5">Ramos e divisões</div>
-        <div className="grid md:grid-cols-2 gap-5">
-          {ramos.map(ramo => {
-            const capitao = ramo.capitaes[0];
-            const excedentes = ramo.capitaes.slice(1);
-            return (
-              <div key={ramo.id} className="rounded-xl border p-5" style={{ borderColor: (ramo.cor || "#7C2D12") + "70", background: `linear-gradient(145deg, ${(ramo.cor || "#7C2D12")}14, #050505)` }}>
-                <div className="text-center mb-4">
-                  <div className="font-black text-lg serif" style={{ color: ramo.cor }}>{ramo.nome}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-zinc-600">{ramo.tipo || "Divisão"}</div>
+  const FamiliaBox = ({ familia }) => {
+    const membrosFamilia = membros.filter(u => u.cla === familia.id);
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-black/35 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="font-black serif" style={{ color: familia.cor }}>{familia.nome}</div>
+          <span className="text-[9px] uppercase tracking-wider text-zinc-600">{membrosFamilia.length} ligados</span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-1.5 mt-3">{membrosFamilia.slice(0, 8).map(u => <Mugshot key={u.username} user={u} tone="zinc" cargo={u.patente || roleOf(u)?.nome} mini />)}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fadein space-y-5">
+      <section className="rounded-2xl border border-zinc-800 bg-black/60 p-3 sm:p-4 overflow-hidden">
+        <div className="overflow-x-auto pb-3 -mx-2 px-2">
+          <div className="min-w-[1120px] relative rounded-2xl border border-zinc-900 bg-[radial-gradient(circle_at_top,rgba(234,88,12,.09),transparent_32%),linear-gradient(180deg,rgba(24,24,27,.45),rgba(0,0,0,.76))] p-5">
+            <div className="absolute inset-0 opacity-[.06] pointer-events-none" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "44px 44px" }} />
+            <div className="relative">
+              <div className="flex justify-center">
+                <div className="w-[300px]"><CargoBox lista={lideranca} titulo="Líder / Boss" subtitulo="topo da organização" tone="orange" vazio="Líder não definido" /></div>
+              </div>
+
+              <div className="relative h-10 mx-auto max-w-4xl">
+                <div className="absolute left-1/2 top-0 h-full w-px bg-orange-800/80" />
+                <div className="absolute left-[18%] right-[18%] top-[70%] h-px bg-gradient-to-r from-transparent via-orange-800/70 to-transparent" />
+              </div>
+
+              <div className="grid grid-cols-[300px_260px_300px] gap-5 items-start justify-center">
+                <div className="w-[300px] justify-self-end">
+                  <CargoBox lista={conselheiros} titulo="Conselheiro" subtitulo="aconselha e media" tone="yellow" vazio="Sem conselheiro" />
                 </div>
-
-                <div className="rounded-lg border border-orange-900/40 bg-black/45 p-4 mb-4">
-                  <div className="text-center text-[9px] uppercase tracking-[0.24em] text-orange-600 mb-3">Capitão do ramo · Caporegime</div>
-                  <div className="flex justify-center">
-                    {capitao ? <OrganogramaCard membro={capitao} data={data} onOpen={onOpen} destaque /> : <Vaga titulo="Capitão" texto="Designe um membro com cargo posicionado como Capitão de ramo" />}
+                <div className="w-[260px] justify-self-center self-stretch flex flex-col items-center justify-center">
+                  <div className="h-7 w-px bg-orange-900/60" />
+                  <div className="w-full rounded-xl border border-orange-900/50 bg-orange-950/10 p-2 text-center">
+                    <div className="text-[9px] uppercase tracking-[0.28em] text-orange-500">Mesa Central</div>
+                    <div className="text-orange-50 font-black serif mt-0.5">Comando</div>
+                    <div className="text-zinc-700 text-[9px] mt-0.5">decisão · conselho · ordem</div>
                   </div>
-                  {excedentes.length > 0 && <div className="mt-3 text-center text-yellow-500 text-[10px]">Atenção: há {ramo.capitaes.length} capitães neste ramo. Mantenha apenas um.</div>}
+                  <div className="h-7 w-px bg-orange-900/60" />
                 </div>
-
-                <div className="text-center text-[9px] uppercase tracking-[0.22em] text-zinc-600 mb-3">Operadores</div>
-                {ramo.operadores.length > 0 ? (
-                  <div className="flex flex-wrap justify-center gap-3">{ramo.operadores.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />)}</div>
-                ) : (
-                  <div className="text-center text-zinc-700 text-xs italic py-4">Nenhum operador alocado.</div>
-                )}
+                <div className="w-[300px] justify-self-start">
+                  {bracos.length > 0 && <CargoBox lista={bracos} titulo="Braço Direito / Underboss" subtitulo="nomeado pelo líder" tone="purple" vazio="" />}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
 
-      {independentes.length > 0 && (
-        <section className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-5">
-          <div className="text-center mb-4"><div className="font-black text-lg text-zinc-300 serif">Núcleo Independente</div><div className="text-[10px] uppercase tracking-widest text-zinc-600">Sem ramo ou cargo independente</div></div>
-          <div className="flex flex-wrap justify-center gap-3">{independentes.map(u => <OrganogramaCard key={u.username} membro={u} data={data} onOpen={onOpen} />)}</div>
-        </section>
-      )}
-
-      <section className="pt-8 border-t border-orange-900/30">
-        <div className="text-center mb-6">
-          <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Células operacionais</div>
-          <h3 className="text-xl font-black text-orange-50 serif mt-1">Trios da Jikkai</h3>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(data.trios || []).map(t => (
-            <div key={t.id || t.nome} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950/60">
-              <div className="p-4" style={{ background: `linear-gradient(135deg, ${t.cor || "#7c2d12"}, #000)` }}>
-                <div className="font-black text-white">{t.nome}</div><div className="text-white/60 text-[10px] uppercase tracking-wider">{t.desc}</div>
+              <div className="relative h-12 mx-auto max-w-5xl">
+                <div className="absolute left-1/2 top-0 h-full w-px bg-orange-800/70" />
+                <div className="absolute left-[6%] right-[6%] top-[70%] h-px bg-gradient-to-r from-transparent via-orange-800/70 to-transparent" />
               </div>
-              <div className="p-4 flex flex-wrap gap-3">
-                {(t.membros || []).map((m, i) => {
-                  const u = data.users.find(x => x.username === m.username) || usuarioPorIdentidade(data.users, m.nome);
-                  return u ? (
-                    <button key={m.username || i} onClick={() => onOpen(u)} className="flex items-center gap-2 min-w-0 text-left">
-                      <MemberAvatar user={u} size="sm" />
-                      <div className="min-w-0"><div className="text-orange-50 text-xs font-bold truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider" style={{ color: t.cor }}>{m.papel || "Operador"}</div></div>
-                    </button>
-                  ) : null;
-                })}
+
+              <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.max(divisoes.length, 1)}, minmax(520px, 1fr))` }}>
+                {divisoes.length ? divisoes.map(divisao => <DivisaoBoard key={divisao.id} divisao={divisao} />) : <div className="rounded-xl border border-dashed border-zinc-800 bg-black/35 p-8 text-center text-zinc-600">Nenhuma divisão criada.</div>}
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </section>
+
     </div>
   );
 }
 
-function ReputacaoSection({ data, onOpen }) {
-  const [filtroReputacao, setFiltroReputacao] = useState("Todos");
+function ReputacaoSection({ data, setData, role, usuario, onOpen }) {
   const [filtroLealdade, setFiltroLealdade] = useState("Todos");
+  const [filtroConduta, setFiltroConduta] = useState("Todos");
   const [busca, setBusca] = useState("");
 
-  const membros = (data.users || [])
+  const membrosBase = (data.users || [])
     .filter(u => u.role !== "contratante")
-    .filter(u => filtroReputacao === "Todos" || u.reputacao === filtroReputacao)
-    .filter(u => filtroLealdade === "Todos" || u.lealdade === filtroLealdade)
+    .map(u => ({ ...u, _indicadores: indicadoresMembro(data, u) }))
+    .filter(u => filtroLealdade === "Todos" || (u.lealdade === filtroLealdade || (u.lealdade === "Pilar da F.O.X." && filtroLealdade === "Pilar da Jikkai")))
+    .filter(u => filtroConduta === "Todos" || (u.conduta || "Limpo") === filtroConduta)
     .filter(u => {
       const termo = busca.trim().toLowerCase();
       if (!termo) return true;
       return [u.codinome, u.displayName, u.nomeRP, u.username].some(v => String(v || "").toLowerCase().includes(termo));
-    })
-    .slice()
-    .sort((a, b) => {
-      const lealdade = lealdadeConfig(b.lealdade).indice - lealdadeConfig(a.lealdade).indice;
-      if (lealdade !== 0) return lealdade;
-      return reputacaoConfig(b.reputacao).indice - reputacaoConfig(a.reputacao).indice;
     });
 
+  const membros = membrosBase.slice().sort((a, b) => {
+    const conduta = condutaConfig(b.conduta).indice - condutaConfig(a.conduta).indice;
+    if (conduta !== 0) return conduta;
+    const lealdade = lealdadeConfig(b.lealdade).indice - lealdadeConfig(a.lealdade).indice;
+    if (lealdade !== 0) return lealdade;
+    return b._indicadores.pontuacao - a._indicadores.pontuacao;
+  });
+
+  const totalRegistros = (data.relatorios || []).length + (data.missoes || []).length + (data.contratos || []).length;
+  const sobObservacao = membrosBase.filter(u => ["Sob observação", "Advertido", "Suspenso", "Risco interno"].includes(u.conduta || "Limpo")).length;
+  const confiaveis = membrosBase.filter(u => ["Juramentado", "Veterano", "Pilar da Jikkai", "Pilar da F.O.X."].includes(u.lealdade)).length;
+  const comSugestao = membrosBase.filter(u => {
+    const i = u._indicadores;
+    return (u.lealdade === "Pilar da F.O.X." ? "Pilar da Jikkai" : u.lealdade) !== i.lealdadeSugerida || (u.conduta || "Limpo") !== i.condutaSugerida || converterReputacaoLegada(u.reputacao) !== i.impactoSugerido;
+  }).length;
+
+  const atualizarMembro = (username, patch, registro = null) => {
+    setData(d => ({
+      ...d,
+      users: (d.users || []).map(u => {
+        if (u.username !== username) return u;
+        return {
+          ...u,
+          ...patch,
+          condutaRegistros: registro ? [registro, ...(u.condutaRegistros || [])].slice(0, 30) : (u.condutaRegistros || []),
+        };
+      }),
+      activityLog: [...(d.activityLog || []), atividade("lealdade_conduta", usuario?.username, username, registro?.descricao || "Atualizou Lealdade & Conduta")],
+    }));
+  };
+
+  const aplicarSugestao = (u) => {
+    const i = indicadoresMembro(data, u);
+    atualizarMembro(u.username, {
+      lealdade: i.lealdadeSugerida,
+      conduta: i.condutaSugerida,
+      reputacao: i.impactoSugerido,
+      lealdadeNota: `Sugestão aplicada pelo sistema com base em: ${i.resumo.join(" · ")}.`,
+      condutaNota: `Conduta calculada por registros operacionais: ${i.falhas} falha(s), ${i.devolvidas} ajuste(s), ${i.alertas} alerta(s).`,
+      reputacaoNota: `Impacto externo mantido como registro narrativo: ${i.impactoSugerido}.`,
+      lealdadeAtualizadaEm: new Date().toISOString(),
+      condutaAtualizadaEm: new Date().toISOString(),
+      reputacaoAtualizadaEm: new Date().toISOString(),
+    }, registroConduta("sistema", usuario?.username, `Aplicou sugestão automática: lealdade ${i.lealdadeSugerida}, conduta ${i.condutaSugerida}, impacto ${i.impactoSugerido}.`));
+  };
+
+  const registroRapido = (u, tipo) => {
+    if (tipo === "merito") {
+      const atual = u.lealdade === "Pilar da F.O.X." ? "Pilar da Jikkai" : (u.lealdade || "Observado");
+      const proximo = LEALDADE_NIVEIS[Math.min(LEALDADE_NIVEIS.length - 1, Math.max(0, LEALDADE_NIVEIS.indexOf(atual)) + 1)] || atual;
+      atualizarMembro(u.username, { lealdade: proximo, conduta: u.conduta || "Limpo", lealdadeAtualizadaEm: new Date().toISOString() }, registroConduta("merito", usuario?.username, `Mérito operacional registrado. Lealdade ajustada para ${proximo}.`));
+    }
+    if (tipo === "observacao") atualizarMembro(u.username, { conduta: "Sob observação", condutaAtualizadaEm: new Date().toISOString() }, registroConduta("observacao", usuario?.username, "Membro colocado sob observação pela liderança."));
+    if (tipo === "advertencia") atualizarMembro(u.username, { conduta: "Advertido", condutaAtualizadaEm: new Date().toISOString() }, registroConduta("advertencia", usuario?.username, "Advertência disciplinar registrada."));
+    if (tipo === "limpar") atualizarMembro(u.username, { conduta: "Limpo", condutaAtualizadaEm: new Date().toISOString() }, registroConduta("limpeza", usuario?.username, "Conduta normalizada após revisão."));
+  };
+
   return (
-    <div className="fadein space-y-6">
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-red-900/40 bg-gradient-to-br from-red-950/20 to-black p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-red-600 mb-1">Visão do mundo</div>
-          <h3 className="text-xl font-black text-orange-50 serif">Reputação externa</h3>
-          <p className="text-zinc-500 text-sm mt-2">Representa como vilas, rivais, contratantes e rumores enxergam cada operador.</p>
-          <div className="flex flex-wrap gap-2 mt-4">{REPUTACAO_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="reputacao" valor={n} compacto />)}</div>
-        </div>
+    <div className="fadein space-y-5">
+      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-4">
         <div className="rounded-xl border border-orange-900/40 bg-gradient-to-br from-orange-950/20 to-black p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600 mb-1">Confiança da organização</div>
-          <h3 className="text-xl font-black text-orange-50 serif">Lealdade interna</h3>
-          <p className="text-zinc-500 text-sm mt-2">Representa confiança, compromisso, histórico e importância dentro da Jikkai.</p>
-          <div className="flex flex-wrap gap-2 mt-4">{LEALDADE_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="lealdade" valor={n} compacto />)}</div>
+          <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600 mb-1">Sistema interno</div>
+          <h3 className="text-2xl font-black text-orange-50 serif">Lealdade & Conduta</h3>
+          <p className="text-zinc-500 text-sm mt-2 leading-relaxed">Agora o painel usa os próprios sinais do portal — missões, relatórios, contratos e alertas — para sugerir ajustes. A liderança decide com um clique, mas não precisa preencher tudo do zero.</p>
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40 text-center"><div className="text-xl font-black text-orange-300">{confiaveis}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">confiáveis</div></div>
+            <div className="p-3 rounded-lg border border-yellow-900/40 bg-black/40 text-center"><div className="text-xl font-black text-yellow-300">{sobObservacao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">atenção</div></div>
+            <div className="p-3 rounded-lg border border-sky-900/40 bg-black/40 text-center"><div className="text-xl font-black text-sky-300">{comSugestao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">sugestões</div></div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-1">Impacto externo</div>
+          <h3 className="text-xl font-black text-orange-50 serif">Registro narrativo, não placar</h3>
+          <p className="text-zinc-500 text-sm mt-2 leading-relaxed">O portal não inventa fama fora do jogo. Ele só sugere impacto quando há relatório, alerta, falha pública ou contrato relevante registrado.</p>
+          <div className="flex flex-wrap gap-2 mt-4">{REPUTACAO_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="impacto" valor={n} compacto />)}</div>
         </div>
       </div>
 
@@ -1926,44 +2260,71 @@ function ReputacaoSection({ data, onOpen }) {
           <input value={busca} onChange={e => setBusca(e.target.value)} className="fox-input" placeholder="Codinome, nome ou usuário" />
         </div>
         <div>
-          <label className="fox-label">Reputação externa</label>
-          <select value={filtroReputacao} onChange={e => setFiltroReputacao(e.target.value)} className="fox-input">
-            <option>Todos</option>
-            {REPUTACAO_NIVEIS.map(n => <option key={n}>{n}</option>)}
-          </select>
-        </div>
-        <div>
           <label className="fox-label">Lealdade interna</label>
           <select value={filtroLealdade} onChange={e => setFiltroLealdade(e.target.value)} className="fox-input">
             <option>Todos</option>
             {LEALDADE_NIVEIS.map(n => <option key={n}>{n}</option>)}
           </select>
         </div>
+        <div>
+          <label className="fox-label">Conduta</label>
+          <select value={filtroConduta} onChange={e => setFiltroConduta(e.target.value)} className="fox-input">
+            <option>Todos</option>
+            {CONDUTA_NIVEIS.map(n => <option key={n}>{n}</option>)}
+          </select>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-zinc-500 text-sm italic">{membros.length} {membros.length === 1 ? "registro encontrado" : "registros encontrados"}</div>
-        <div className="text-[10px] uppercase tracking-wider text-zinc-700">Alterações oficiais: somente liderança</div>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="text-zinc-500 text-sm italic">{membros.length} {membros.length === 1 ? "registro encontrado" : "registros encontrados"} · {totalRegistros} sinais usados no cálculo</div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-700">Capitães editam somente membros da própria divisão</div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
         {membros.map(u => {
-          const ramo = (data.clas || []).find(c => c.id === u.cla);
+          const i = u._indicadores;
+          const podeEditar = podeEditarLealdadeConduta(data, usuario, role, u);
+          const precisaAplicar = (u.lealdade === "Pilar da F.O.X." ? "Pilar da Jikkai" : u.lealdade) !== i.lealdadeSugerida || (u.conduta || "Limpo") !== i.condutaSugerida || converterReputacaoLegada(u.reputacao) !== i.impactoSugerido;
+          const ultimos = (u.condutaRegistros || []).slice(0, 2);
           return (
-            <button key={u.username} onClick={() => onOpen(u)} className="text-left rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-orange-700 transition-all p-4">
-              <div className="flex items-center gap-3">
+            <div key={u.username} className="rounded-xl border border-zinc-800 bg-zinc-950/60 overflow-hidden hover:border-orange-900/70 transition-all">
+              <button onClick={() => onOpen(u)} className="w-full text-left p-4 flex items-center gap-3 border-b border-zinc-800/70 hover:bg-black/30">
                 <MemberAvatar user={u} size="md" />
                 <div className="min-w-0 flex-1">
                   <div className="text-orange-50 font-black truncate">{getCodinome(u)}</div>
-                  <div className="text-zinc-600 text-xs truncate">{ramo?.nome || "Sem ramo"} · {u.patente || "Sem patente"}</div>
+                  <div className="text-zinc-600 text-xs truncate">@{u.username} · {u.patente || "Sem patente"}</div>
                 </div>
+                <div className="text-right"><div className={(i.pontuacao >= 0 ? "text-green-400" : "text-red-400") + " text-lg font-black"}>{i.pontuacao}</div><div className="text-[8px] uppercase text-zinc-700">sinal</div></div>
+              </button>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-2 rounded border border-orange-900/30 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700 mb-1">Lealdade</div><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div>
+                  <div className="p-2 rounded border border-yellow-900/30 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-yellow-700 mb-1">Conduta</div><ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto /></div>
+                  <div className="p-2 rounded border border-sky-900/30 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-sky-700 mb-1">Impacto</div><ReputacaoBadge tipo="impacto" valor={u.reputacao} compacto /></div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1 text-center">
+                  {[[i.concluidas, "concl."], [i.relatorios.length, "relat."], [i.abertas, "ativas"], [i.falhas, "falhas"]].map(([v,l]) => <div key={l} className="p-2 rounded bg-black/40 border border-zinc-800"><div className="text-orange-200 font-black">{v}</div><div className="text-[8px] uppercase text-zinc-700">{l}</div></div>)}
+                </div>
+
+                {precisaAplicar && <div className="p-3 rounded-lg border border-sky-900/40 bg-sky-950/10">
+                  <div className="text-[9px] uppercase tracking-wider text-sky-400 font-black">Sugestão automática</div>
+                  <div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="lealdade" valor={i.lealdadeSugerida} compacto /><ReputacaoBadge tipo="conduta" valor={i.condutaSugerida} compacto /><ReputacaoBadge tipo="impacto" valor={i.impactoSugerido} compacto /></div>
+                  {podeEditar && <button onClick={() => aplicarSugestao(u)} className="mt-3 w-full py-2 rounded border border-sky-700 bg-sky-950/30 text-sky-300 text-[10px] uppercase tracking-wider font-black hover:border-sky-400">Aplicar sugestão</button>}
+                </div>}
+
+                {podeEditar && <div className="grid grid-cols-2 gap-1">
+                  <button onClick={() => registroRapido(u, "merito")} className="py-2 rounded border border-green-800 bg-green-950/20 text-green-300 text-[9px] uppercase tracking-wider font-black">Mérito</button>
+                  <button onClick={() => registroRapido(u, "observacao")} className="py-2 rounded border border-yellow-800 bg-yellow-950/20 text-yellow-300 text-[9px] uppercase tracking-wider font-black">Observar</button>
+                  <button onClick={() => registroRapido(u, "advertencia")} className="py-2 rounded border border-red-900 bg-red-950/20 text-red-300 text-[9px] uppercase tracking-wider font-black">Advertir</button>
+                  <button onClick={() => registroRapido(u, "limpar")} className="py-2 rounded border border-zinc-700 bg-black/30 text-zinc-300 text-[9px] uppercase tracking-wider font-black">Limpar</button>
+                </div>}
+
+                {ultimos.length > 0 && <div className="pt-2 border-t border-zinc-800 space-y-1">
+                  {ultimos.map(r => <div key={r.id || r.data} className="text-[10px] text-zinc-600 line-clamp-1"><span className="text-orange-700 uppercase">{r.tipo}</span> · {r.descricao}</div>)}
+                </div>}
               </div>
-              <div className="grid gap-2 mt-4">
-                <div className="flex items-center justify-between gap-2"><span className="text-[9px] uppercase tracking-wider text-red-700">Externa</span><ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto /></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-[9px] uppercase tracking-wider text-orange-700">Interna</span><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div>
-              </div>
-              {(u.reputacaoNota || u.lealdadeNota) && <div className="mt-3 pt-3 border-t border-zinc-800 text-zinc-600 text-xs line-clamp-2">{u.lealdadeNota || u.reputacaoNota}</div>}
-            </button>
+            </div>
           );
         })}
       </div>
@@ -1987,18 +2348,18 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
     }
   }, [navigationRequest?.token]);
 
-  const podeEditarTrios = hasPerm(role, "edit_trios");
+  const podeEditarTrios = hasPerm(role, "edit_trios") || ["lider", "braco_direito", "conselheiro", "capitao_ramo"].includes(estruturaPosicaoRole(role));
   const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
   const membroAtual = data.users.find(u => u.username === usuario?.username) || usuario;
   const SUB_TABS = [
     { id: "lista", label: "Dossiês", icon: IUsers, badge: usuariosVisiveis.length || null },
     { id: "estrutura", label: "Estrutura", icon: ICrown, badge: null },
-    { id: "reputacao", label: "Reputação", icon: ITarget, badge: null },
-    { id: "trios", label: "Trios", icon: ISwords, badge: (data.trios || []).length || null },
+    { id: "reputacao", label: "Lealdade & Conduta", icon: IShield, badge: null },
+    { id: "trios", label: "Divisões & Equipes", icon: ISwords, badge: (data.trios || []).length || null },
   ];
   return (
     <div>
-      <SectionTitle icon={IUsers} sub="Membros da F.O.X. e estrutura operacional da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
+      <SectionTitle icon={IUsers} sub="Dossiês, famílias, divisões e equipes operacionais da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
       <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
@@ -2008,62 +2369,321 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
       </div>
       {subTab === "lista" && <MembrosListSection data={data} viewerIsContratante={viewerIsContratante} onOpen={setDossieAberto} />}
       {subTab === "estrutura" && <EstruturaSection data={data} onOpen={setDossieAberto} />}
-      {subTab === "reputacao" && <ReputacaoSection data={data} onOpen={setDossieAberto} />}
-      {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} />}
+      {subTab === "reputacao" && <ReputacaoSection data={data} setData={setData} role={role} usuario={usuario} onOpen={setDossieAberto} />}
+      {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} role={role} usuario={usuario} />}
       {dossieAberto && <DossieModal membro={data.users.find(u => u.username === dossieAberto.username) || dossieAberto} data={data} onClose={() => setDossieAberto(null)} />}
       {editandoMeuDossie && membroAtual && <MeuDossieModal membro={membroAtual} data={data} setData={setData} onClose={() => setEditandoMeuDossie(false)} />}
     </div>
   );
 }
 
-function TriosSection({ data, setData, podeEditar }) {
+function TriosSection({ data, setData, podeEditar, role, usuario }) {
   const [editando, setEditando] = useState(false);
-  const [draft, setDraft] = useState(data.trios || []);
-  useEffect(() => { if (!editando) setDraft(data.trios || []); }, [data.trios, editando]);
+  const [draftEquipes, setDraftEquipes] = useState(equipesJikkai(data));
+  const [draftDivisoes, setDraftDivisoes] = useState(divisoesJikkai(data));
+  const [abertas, setAbertas] = useState({});
+  const [divisaoAtivaId, setDivisaoAtivaId] = useState("");
+  const [equipeAtivaId, setEquipeAtivaId] = useState("");
   const usuarios = (data.users || []).filter(u => u.role !== "contratante");
+  const fullAdmin = podeGerenciarTodasEquipes(role);
+  const pos = estruturaPosicaoRole(role);
+  const divisoesGerenciadas = fullAdmin ? draftDivisoes.map(d => d.id) : draftDivisoes.filter(d => d.capitaoUsername === usuario?.username).map(d => d.id);
+  const podeCriarEquipe = podeEditar && (fullAdmin || (pos === "capitao_ramo" && divisoesGerenciadas.length > 0));
+  const canEditEquipe = equipe => fullAdmin || divisoesGerenciadas.includes(equipe.divisaoId);
+  const divisoesComando = fullAdmin ? draftDivisoes : draftDivisoes.filter(d => divisoesGerenciadas.includes(d.id));
+  const divisaoAtiva = draftDivisoes.find(d => d.id === divisaoAtivaId) || divisoesComando[0] || draftDivisoes[0];
+  const equipesDaDivisaoAtiva = divisaoAtiva ? draftEquipes.filter(t => t.divisaoId === divisaoAtiva.id) : [];
+  const equipeAtiva = draftEquipes.find(t => t.id === equipeAtivaId) || equipesDaDivisaoAtiva[0];
+  const podeEditarDivisaoAtiva = !!(podeEditar && divisaoAtiva && (fullAdmin || divisoesGerenciadas.includes(divisaoAtiva.id)));
+
+  useEffect(() => {
+    if (!editando) {
+      setDraftEquipes(equipesJikkai(data));
+      setDraftDivisoes(divisoesJikkai(data));
+    }
+  }, [data.trios, data.divisoes, editando]);
+
+  useEffect(() => {
+    const disponiveis = fullAdmin ? draftDivisoes : draftDivisoes.filter(d => d.capitaoUsername === usuario?.username);
+    if (!disponiveis.length) return;
+    if (!divisaoAtivaId || !disponiveis.some(d => d.id === divisaoAtivaId)) setDivisaoAtivaId(disponiveis[0].id);
+  }, [draftDivisoes.length, editando, usuario?.username, role?.id]);
+
+  useEffect(() => {
+    const divisao = draftDivisoes.find(d => d.id === divisaoAtivaId) || (fullAdmin ? draftDivisoes[0] : draftDivisoes.find(d => d.capitaoUsername === usuario?.username));
+    const equipes = divisao ? draftEquipes.filter(t => t.divisaoId === divisao.id) : [];
+    if (!equipes.length) { if (equipeAtivaId) setEquipeAtivaId(""); return; }
+    if (!equipeAtivaId || !equipes.some(t => t.id === equipeAtivaId)) setEquipeAtivaId(equipes[0].id);
+  }, [draftEquipes.length, divisaoAtivaId, editando, usuario?.username, role?.id]);
+
   const salvar = () => {
-    const limpos = draft.filter(t => t.nome.trim()).map(t => ({ ...t, id: t.id || `trio_${slugEstrutura(t.nome) || uid()}`, membros: (t.membros || []).filter(m => m.username || m.nome) }));
-    setData(d => ({ ...d, trios: limpos, activityLog: [...(d.activityLog || []), atividade("trios_atualizados", "lideranca", "trios", "Atualizou a composição das células operacionais")] }));
+    const divisoesLimpas = draftDivisoes.filter(d => String(d.nome || "").trim()).map((d, i) => ({
+      ...d,
+      id: d.id || "divisao_" + (slugEstrutura(d.nome) || uid()),
+      nome: d.nome.trim(),
+      desc: d.desc || "",
+      cor: d.cor || "#D85A30",
+      status: d.status || "ativa",
+      capitaoUsername: d.capitaoUsername || "",
+      ordem: Number.isFinite(Number(d.ordem)) ? Number(d.ordem) : i,
+    }));
+    const divPadrao = divisoesLimpas[0]?.id || "divisao_central";
+    const equipesLimpas = draftEquipes.filter(t => String(t.nome || "").trim()).map(t => ({
+      ...t,
+      id: t.id || "equipe_" + (slugEstrutura(t.nome) || uid()),
+      nome: t.nome.trim(),
+      desc: t.desc || "",
+      cor: t.cor || "#D85A30",
+      divisaoId: t.divisaoId || divPadrao,
+      tipo: t.tipo || "Ataque",
+      status: t.status || "Ativa",
+      liderUsername: t.liderUsername || "",
+      membros: (t.membros || []).filter(m => m.username || m.nome).map(m => ({ ...m, papel: m.papel || "Soldado" })),
+    }));
+    setData(d => ({ ...d, divisoes: divisoesLimpas, trios: equipesLimpas }));
     setEditando(false);
   };
-  const cancelar = () => { setDraft(data.trios || []); setEditando(false); };
-  const updateTrio = (i, patch) => setDraft(draft.map((t, idx) => idx === i ? { ...t, ...patch } : t));
-  const removeTrio = i => setDraft(draft.filter((_, idx) => idx !== i));
-  const addTrio = () => setDraft([...draft, { id: `trio_${uid()}`, nome: "NOVO TRIO", desc: "Descrição", cor: "#D85A30", membros: [] }]);
-  const updateMembro = (ti, mi, patch) => updateTrio(ti, { membros: (draft[ti].membros || []).map((m, idx) => idx === mi ? { ...m, ...patch } : m) });
-  const removeMembro = (ti, mi) => updateTrio(ti, { membros: (draft[ti].membros || []).filter((_, idx) => idx !== mi) });
-  const addMembro = ti => updateTrio(ti, { membros: [...(draft[ti].membros || []), { username: "", papel: "Operador" }] });
-  const trios = editando ? draft : (data.trios || []);
+
+  const cancelar = () => { setDraftEquipes(equipesJikkai(data)); setDraftDivisoes(divisoesJikkai(data)); setEditando(false); };
+  const addDivisao = () => setDraftDivisoes(ds => [...ds, { id: "divisao_" + uid(), nome: "Nova Divisão", desc: "Divisão operacional da Jikkai.", cor: "#D85A30", status: "ativa", capitaoUsername: "" }]);
+  const updateDivisao = (i, patch) => setDraftDivisoes(ds => ds.map((d, idx) => idx === i ? { ...d, ...patch } : d));
+  const removeDivisao = i => {
+    const alvo = draftDivisoes[i];
+    if (!alvo || !confirm(`Remover a divisão "${alvo.nome}"? As equipes dela ficarão na primeira divisão.`)) return;
+    const resto = draftDivisoes.filter((_, idx) => idx !== i);
+    const fallback = resto[0]?.id || "divisao_central";
+    setDraftDivisoes(resto.length ? resto : DEFAULT_DIVISOES);
+    setDraftEquipes(ts => ts.map(t => t.divisaoId === alvo.id ? { ...t, divisaoId: fallback } : t));
+  };
+  const addEquipe = divisaoId => setDraftEquipes(ts => [...ts, { id: "equipe_" + uid(), nome: "Nova Equipe", desc: "Equipe operacional.", cor: "#D85A30", divisaoId: divisaoId || divisoesGerenciadas[0] || draftDivisoes[0]?.id || "divisao_central", tipo: "Ataque", status: "Em formação", liderUsername: "", membros: [] }]);
+  const updateEquipe = (id, patch) => setDraftEquipes(ts => ts.map(t => t.id === id ? { ...t, ...patch } : t));
+  const removeEquipe = id => {
+    const alvo = draftEquipes.find(t => t.id === id);
+    if (!alvo || !confirm(`Arquivar/remover a equipe "${alvo.nome}"?`)) return;
+    setDraftEquipes(ts => ts.filter(t => t.id !== id));
+  };
+  const addMembro = equipeId => updateEquipe(equipeId, { membros: [...(draftEquipes.find(t => t.id === equipeId)?.membros || []), { username: "", papel: "Soldado" }] });
+  const updateMembro = (equipeId, mi, patch) => updateEquipe(equipeId, { membros: (draftEquipes.find(t => t.id === equipeId)?.membros || []).map((m, idx) => idx === mi ? { ...m, ...patch } : m) });
+  const removeMembro = (equipeId, mi) => updateEquipe(equipeId, { membros: (draftEquipes.find(t => t.id === equipeId)?.membros || []).filter((_, idx) => idx !== mi) });
+  const toggle = id => setAbertas(a => ({ ...a, [id]: !a[id] }));
+
+  const divisaoIndex = id => draftDivisoes.findIndex(d => d.id === id);
+  const updateDivisaoById = (id, patch) => {
+    const i = divisaoIndex(id);
+    if (i >= 0) updateDivisao(i, patch);
+  };
+  const criarEquipeComando = divisaoId => {
+    const id = "equipe_" + uid();
+    const baseDiv = divisaoId || divisaoAtiva?.id || divisoesComando[0]?.id || draftDivisoes[0]?.id || "divisao_central";
+    const nova = { id, nome: "Nova Equipe", desc: "Equipe operacional.", cor: divisaoAtiva?.cor || "#D85A30", divisaoId: baseDiv, tipo: "Ataque", status: "Em formação", liderUsername: "", membros: [] };
+    setDraftEquipes(ts => [...ts, nova]);
+    setDivisaoAtivaId(baseDiv);
+    setEquipeAtivaId(id);
+    setAbertas(a => ({ ...a, [baseDiv]: true }));
+  };
+  const adicionarOuMoverMembro = (equipeId, username, papel = "Soldado") => {
+    if (!equipeId || !username) return;
+    setDraftEquipes(ts => ts.map(t => {
+      const membrosSemUsuario = (t.membros || []).filter(m => m.username !== username);
+      if (t.id !== equipeId) return { ...t, membros: membrosSemUsuario };
+      return { ...t, membros: [...membrosSemUsuario, { username, papel }] };
+    }));
+  };
+  const removerUsuarioDaEquipe = (equipeId, username) => {
+    if (!equipeId || !username) return;
+    updateEquipe(equipeId, { membros: (draftEquipes.find(t => t.id === equipeId)?.membros || []).filter(m => m.username !== username) });
+  };
+  const definirLiderEquipe = (equipeId, username) => {
+    updateEquipe(equipeId, { liderUsername: username });
+    if (username) adicionarOuMoverMembro(equipeId, username, "Líder de equipe");
+  };
+  const ondeUsuarioEsta = username => draftEquipes.filter(t => (t.membros || []).some(m => m.username === username)).map(t => t.nome).join(" · ");
+
+  const renderMembroChip = (m, equipe) => {
+    const u = usuarios.find(x => x.username === m.username) || usuarioPorIdentidade(usuarios, m.nome);
+    const grupo = papelEquipeGrupo(m.papel);
+    return u ? <div key={m.username || m.nome} className={`flex items-center gap-2 rounded-lg border px-2 py-2 ${grupo === "base" ? "border-zinc-800 bg-zinc-950/70" : "border-orange-900/30 bg-black/35"}`}>
+      <MemberAvatar user={u} size="sm" />
+      <div className="min-w-0"><div className="text-orange-50 text-xs font-black truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider truncate" style={{ color: grupo === "base" ? "#71717a" : equipe.cor }}>{m.papel || "Soldado"}</div></div>
+    </div> : <div key={m.nome} className="text-zinc-600 text-xs border border-zinc-800 rounded p-2">{m.nome || "Membro não vinculado"} · {m.papel || "Soldado"}</div>;
+  };
+
   return (
-    <div className="fadein">
-      <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
-        <p className="text-zinc-500 text-sm italic">Integrantes ligados aos dossiês por identificação única.</p>
-        {podeEditar && (editando ? <div className="flex gap-2"><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></div> : <Btn onClick={() => setEditando(true)} variant="default"><IEdit className="w-3 h-3" /> Editar</Btn>)}
-      </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {trios.map((t, ti) => (
-          <div key={t.id || ti} className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950/60">
-            <div className="p-4" style={{ background: `linear-gradient(135deg, ${t.cor}, #000)` }}>
-              {editando ? <div className="space-y-2"><input value={t.nome} onChange={e => updateTrio(ti, { nome: e.target.value })} className="fox-input" placeholder="Nome" /><input value={t.desc} onChange={e => updateTrio(ti, { desc: e.target.value })} className="fox-input" placeholder="Descrição" /><div className="flex items-center gap-2"><label className="fox-label mb-0">Cor</label><input type="color" value={t.cor} onChange={e => updateTrio(ti, { cor: e.target.value })} className="h-8 w-14 rounded bg-transparent border border-zinc-700" /><button onClick={() => removeTrio(ti)} className="mobile-tap col-span-2 sm:col-span-1 sm:ml-auto text-red-300 bg-red-950/80 p-2 rounded flex items-center justify-center"><ITrash className="w-4 h-4" /></button></div></div> : <><h3 className="text-white font-bold text-lg">{t.nome}</h3><p className="text-white/70 text-xs uppercase tracking-wider">{t.desc}</p></>}
-            </div>
-            <div className="p-4 space-y-3">
-              {(t.membros || []).map((m, mi) => {
-                const u = data.users.find(x => x.username === m.username) || usuarioPorIdentidade(data.users, m.nome);
-                return editando ? (
-                  <div key={mi} className="border-l-2 pl-3 py-2 space-y-2" style={{ borderColor: t.cor }}>
-                    <select value={m.username || ""} onChange={e => updateMembro(ti, mi, { username: e.target.value, nome: "", elemento: "" })} className="fox-input"><option value="">— Selecionar membro —</option>{usuarios.map(user => <option key={user.username} value={user.username}>{getCodinome(user)} · @{user.username}</option>)}</select>
-                    <div className="flex gap-1"><input value={m.papel || ""} onChange={e => updateMembro(ti, mi, { papel: e.target.value })} placeholder="Papel no trio" className="fox-input" /><button onClick={() => removeMembro(ti, mi)} className="text-red-500 bg-red-950/50 px-2 rounded"><ITrash className="w-3 h-3" /></button></div>
-                  </div>
-                ) : u ? (
-                  <div key={m.username || mi} className="flex items-center gap-3 border-l-2 pl-3 py-1" style={{ borderColor: t.cor }}><MemberAvatar user={u} size="sm" /><div className="min-w-0"><div className="text-orange-50 font-bold text-sm truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs truncate">{u.elemento || "Elemento não definido"}{u.linhagem ? ` · ${u.linhagem}` : ""}</div><div className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.cor }}>{m.papel || "Operador"}</div></div></div>
-                ) : <div key={mi} className="text-zinc-600 text-xs border-l-2 pl-3" style={{ borderColor: t.cor }}>{m.nome || "Membro não vinculado"}</div>;
-              })}
-              {editando && <Btn onClick={() => addMembro(ti)} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Membro</Btn>}
-            </div>
+    <div className="fadein space-y-5">
+      <div className="relative overflow-hidden rounded-2xl border border-orange-900/40 bg-gradient-to-br from-black via-zinc-950 to-red-950/20 p-5">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 relative">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Divisões & Equipes</div>
+            <h3 className="text-2xl sm:text-3xl font-black text-orange-50 serif mt-1">Comando operacional</h3>
+            <p className="text-zinc-500 text-sm mt-2 max-w-3xl">Capitães constroem equipes dentro da própria divisão. Soldados executam. Recrutas e associados ficam abaixo, com acesso e responsabilidade menores.</p>
           </div>
-        ))}
-        {editando && <button onClick={addTrio} className="rounded-lg border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 py-16 flex flex-col items-center gap-2 transition-colors"><IPlus className="w-8 h-8" /><span className="uppercase tracking-wider text-xs font-bold">Novo Trio</span></button>}
+          <div className="flex flex-wrap gap-2">
+            {podeEditar && !editando && <Btn onClick={() => setEditando(true)} variant="primary"><IEdit className="w-3 h-3" /> Editar estrutura</Btn>}
+            {editando && <><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></>}
+          </div>
+        </div>
       </div>
+
+      {editando && podeEditar && <section className="rounded-2xl border border-orange-900/45 bg-gradient-to-br from-zinc-950 via-black to-red-950/10 overflow-hidden">
+        <div className="p-4 border-b border-zinc-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.32em] text-orange-600">Painel de comando</div>
+            <h4 className="text-xl font-black text-orange-50 serif">Montagem de divisões, capitães e equipes</h4>
+            <p className="text-zinc-500 text-xs mt-1 max-w-3xl">O líder organiza todas as divisões. O capitão visualiza e edita somente a própria divisão, criando equipes e alocando soldados, recrutas e associados.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-wider text-zinc-500">
+            <span className="px-2 py-1 rounded border border-zinc-800 bg-black/50">{fullAdmin ? "Comando total" : "Comando da divisão"}</span>
+            {divisaoAtiva && <span className="px-2 py-1 rounded border border-orange-900/40 bg-orange-950/10 text-orange-300">{divisaoAtiva.nome}</span>}
+          </div>
+        </div>
+        <div className="grid xl:grid-cols-[280px_360px_1fr] gap-0 divide-y xl:divide-y-0 xl:divide-x divide-zinc-800">
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[9px] uppercase tracking-[0.25em] text-zinc-500 font-black">Divisões</div>
+              {fullAdmin && <button onClick={addDivisao} className="px-2 py-1 rounded border border-orange-900/40 bg-orange-950/20 text-orange-300 text-[10px] font-black uppercase tracking-wider">+ Divisão</button>}
+            </div>
+            <div className="space-y-2 max-h-[330px] overflow-auto pr-1">
+              {divisoesComando.map(d => {
+                const capitao = usuarios.find(u => u.username === d.capitaoUsername);
+                const ativa = divisaoAtiva?.id === d.id;
+                const equipesQtd = draftEquipes.filter(t => t.divisaoId === d.id).length;
+                return <button key={d.id} onClick={() => { setDivisaoAtivaId(d.id); const primeira = draftEquipes.find(t => t.divisaoId === d.id); setEquipeAtivaId(primeira?.id || ""); }} className={`w-full text-left rounded-xl border p-3 transition-all ${ativa ? "border-orange-700 bg-orange-950/20" : "border-zinc-800 bg-black/35 hover:border-zinc-600"}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.cor || "#D85A30" }}></span>
+                    <span className="font-black text-orange-50 truncate">{d.nome}</span>
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-600 mt-1 truncate">Capitão: {capitao ? getCodinome(capitao) : "não definido"}</div>
+                  <div className="text-[10px] text-zinc-500 mt-1">{equipesQtd} equipes · {d.status || "ativa"}</div>
+                </button>;
+              })}
+              {!divisoesComando.length && <div className="rounded-xl border border-dashed border-zinc-800 p-4 text-zinc-600 text-xs text-center">Nenhuma divisão liberada para seu cargo.</div>}
+            </div>
+            {fullAdmin && divisaoAtiva && <div className="pt-3 border-t border-zinc-800 space-y-2">
+              <div><label className="fox-label">Capitão da divisão</label><select value={divisaoAtiva.capitaoUsername || ""} onChange={e => updateDivisaoById(divisaoAtiva.id, { capitaoUsername: e.target.value })} className="fox-input"><option value="">— Sem capitão —</option>{usuarios.map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · @{u.username}</option>)}</select></div>
+              <div className="grid grid-cols-[1fr_70px] gap-2"><input value={divisaoAtiva.nome || ""} onChange={e => updateDivisaoById(divisaoAtiva.id, { nome: e.target.value })} className="fox-input font-black" /><input type="color" value={divisaoAtiva.cor || "#D85A30"} onChange={e => updateDivisaoById(divisaoAtiva.id, { cor: e.target.value })} className="h-10 w-full bg-black border border-zinc-700 rounded" /></div>
+            </div>}
+          </div>
+
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[9px] uppercase tracking-[0.25em] text-zinc-500 font-black">Equipes da divisão</div>
+              {podeEditarDivisaoAtiva && <button onClick={() => criarEquipeComando(divisaoAtiva?.id)} className="px-2 py-1 rounded border border-orange-900/40 bg-orange-950/20 text-orange-300 text-[10px] font-black uppercase tracking-wider">+ Equipe</button>}
+            </div>
+            <div className="space-y-2 max-h-[260px] overflow-auto pr-1">
+              {equipesDaDivisaoAtiva.map(t => {
+                const ativa = equipeAtiva?.id === t.id;
+                const lider = usuarios.find(u => u.username === t.liderUsername);
+                return <button key={t.id} onClick={() => setEquipeAtivaId(t.id)} className={`w-full text-left rounded-xl border p-3 transition-all ${ativa ? "border-orange-700 bg-orange-950/20" : "border-zinc-800 bg-black/35 hover:border-zinc-600"}`}>
+                  <div className="flex items-center justify-between gap-2"><span className="font-black text-orange-50 truncate">{t.nome}</span><span className="text-[9px] px-2 py-0.5 rounded border border-zinc-700 text-zinc-500 uppercase">{t.status || "Ativa"}</span></div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-600 mt-1 truncate">{t.tipo || "Equipe"} · Líder: {lider ? getCodinome(lider) : "não definido"}</div>
+                  <div className="text-[10px] text-zinc-500 mt-1">{(t.membros || []).length} integrantes</div>
+                </button>;
+              })}
+              {!equipesDaDivisaoAtiva.length && <div className="rounded-xl border border-dashed border-zinc-800 p-4 text-zinc-600 text-xs text-center">Esta divisão ainda não possui equipes.</div>}
+            </div>
+            {equipeAtiva && canEditEquipe(equipeAtiva) && <div className="pt-3 border-t border-zinc-800 space-y-2">
+              <input value={equipeAtiva.nome || ""} onChange={e => updateEquipe(equipeAtiva.id, { nome: e.target.value })} className="fox-input font-black" placeholder="Nome da equipe" />
+              <div className="grid grid-cols-2 gap-2"><select value={equipeAtiva.tipo || "Ataque"} onChange={e => updateEquipe(equipeAtiva.id, { tipo: e.target.value })} className="fox-input">{EQUIPE_TIPOS.map(x => <option key={x}>{x}</option>)}</select><select value={equipeAtiva.status || "Ativa"} onChange={e => updateEquipe(equipeAtiva.id, { status: e.target.value })} className="fox-input">{EQUIPE_STATUS.map(x => <option key={x}>{x}</option>)}</select></div>
+              <div><label className="fox-label">Líder da equipe</label><select value={equipeAtiva.liderUsername || ""} onChange={e => definirLiderEquipe(equipeAtiva.id, e.target.value)} className="fox-input"><option value="">— Sem líder —</option>{usuarios.map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · @{u.username}</option>)}</select></div>
+              <textarea value={equipeAtiva.desc || ""} onChange={e => updateEquipe(equipeAtiva.id, { desc: e.target.value })} rows="2" className="fox-input" placeholder="Função da equipe, território, estilo de operação..." />
+            </div>}
+          </div>
+
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div><div className="text-[9px] uppercase tracking-[0.25em] text-zinc-500 font-black">Alocação</div><div className="text-orange-50 font-black serif">{equipeAtiva ? equipeAtiva.nome : "Selecione uma equipe"}</div></div>
+              {equipeAtiva && canEditEquipe(equipeAtiva) && <button onClick={() => removeEquipe(equipeAtiva.id)} className="px-2 py-1 rounded border border-red-900 bg-red-950/30 text-red-300 text-[10px] uppercase tracking-wider font-black">Arquivar</button>}
+            </div>
+            {equipeAtiva ? <div className="grid lg:grid-cols-2 gap-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 font-black mb-2">Na equipe</div>
+                <div className="space-y-2 max-h-[300px] overflow-auto pr-1">
+                  {(equipeAtiva.membros || []).map(m => {
+                    const u = usuarios.find(x => x.username === m.username) || usuarioPorIdentidade(usuarios, m.nome);
+                    return <div key={m.username || m.nome} className="rounded-xl border border-zinc-800 bg-black/45 p-2 flex items-center gap-2">
+                      {u && <MemberAvatar user={u} size="sm" />}
+                      <div className="min-w-0 flex-1"><div className="text-orange-50 text-xs font-black truncate">{u ? getCodinome(u) : (m.nome || "Membro")}</div>{canEditEquipe(equipeAtiva) ? <select value={m.papel || "Soldado"} onChange={e => adicionarOuMoverMembro(equipeAtiva.id, m.username, e.target.value)} className="mt-1 w-full bg-black border border-zinc-800 rounded px-2 py-1 text-[10px] text-zinc-300">{EQUIPE_PAPEIS.map(p => <option key={p}>{p}</option>)}</select> : <div className="text-[9px] uppercase tracking-wider text-zinc-500">{m.papel || "Soldado"}</div>}</div>
+                      {canEditEquipe(equipeAtiva) && <button onClick={() => removerUsuarioDaEquipe(equipeAtiva.id, m.username)} className="p-2 rounded bg-red-950/40 text-red-400"><ITrash className="w-3 h-3" /></button>}
+                    </div>;
+                  })}
+                  {!(equipeAtiva.membros || []).length && <div className="rounded-xl border border-dashed border-zinc-800 p-4 text-center text-zinc-700 text-xs">Nenhum integrante alocado.</div>}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wider text-zinc-600 font-black mb-2">Adicionar / mover membro</div>
+                <div className="space-y-2 max-h-[300px] overflow-auto pr-1">
+                  {usuarios.filter(u => !(equipeAtiva.membros || []).some(m => m.username === u.username)).map(u => {
+                    const atual = ondeUsuarioEsta(u.username);
+                    return <div key={u.username} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-2 flex items-center gap-2">
+                      <MemberAvatar user={u} size="sm" />
+                      <div className="min-w-0 flex-1"><div className="text-zinc-200 text-xs font-black truncate">{getCodinome(u)}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 truncate">{atual ? "em " + atual : "sem equipe"}</div></div>
+                      {canEditEquipe(equipeAtiva) && <div className="flex gap-1"><button onClick={() => adicionarOuMoverMembro(equipeAtiva.id, u.username, "Soldado")} className="px-2 py-1 rounded bg-orange-950/30 border border-orange-900/40 text-orange-300 text-[9px] font-black uppercase">Soldado</button><button onClick={() => adicionarOuMoverMembro(equipeAtiva.id, u.username, "Associado")} className="px-2 py-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 text-[9px] font-black uppercase">Assoc.</button></div>}
+                    </div>;
+                  })}
+                </div>
+              </div>
+            </div> : <div className="rounded-xl border border-dashed border-zinc-800 p-8 text-center text-zinc-600 text-sm">Escolha uma divisão e uma equipe para alocar soldados, recrutas e associados.</div>}
+          </div>
+        </div>
+      </section>}
+
+      {editando && fullAdmin && <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3"><div><div className="text-[10px] uppercase tracking-[0.28em] text-orange-600">Administração</div><h4 className="font-black text-orange-50 serif">Divisões da Jikkai</h4></div><Btn onClick={addDivisao} variant="ghost"><IPlus className="w-3 h-3" /> Divisão</Btn></div>
+        <div className="grid lg:grid-cols-2 gap-3">{draftDivisoes.map((d, i) => <div key={d.id || i} className="rounded-xl border border-zinc-800 bg-black/35 p-3 grid sm:grid-cols-2 gap-2">
+          <div><label className="fox-label">Nome</label><input value={d.nome} onChange={e => updateDivisao(i, { nome: e.target.value })} className="fox-input" /></div>
+          <div><label className="fox-label">Capitão</label><select value={d.capitaoUsername || ""} onChange={e => updateDivisao(i, { capitaoUsername: e.target.value })} className="fox-input"><option value="">— Sem capitão —</option>{usuarios.map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · @{u.username}</option>)}</select></div>
+          <div><label className="fox-label">Status</label><select value={d.status || "ativa"} onChange={e => updateDivisao(i, { status: e.target.value })} className="fox-input"><option value="ativa">Ativa</option><option value="formacao">Em formação</option><option value="suspensa">Suspensa</option><option value="arquivada">Arquivada</option></select></div>
+          <div className="flex items-end gap-2"><div className="flex-1"><label className="fox-label">Cor</label><input type="color" value={d.cor || "#D85A30"} onChange={e => updateDivisao(i, { cor: e.target.value })} className="h-10 w-full bg-black border border-zinc-700 rounded" /></div><button onClick={() => removeDivisao(i)} className="h-10 px-3 rounded bg-red-950/60 border border-red-900 text-red-300"><ITrash className="w-4 h-4" /></button></div>
+          <div className="sm:col-span-2"><label className="fox-label">Descrição</label><textarea value={d.desc || ""} onChange={e => updateDivisao(i, { desc: e.target.value })} rows="2" className="fox-input" /></div>
+        </div>)}</div>
+      </section>}
+
+      {!fullAdmin && pos === "capitao_ramo" && divisoesGerenciadas.length === 0 && <div className="rounded-xl border border-yellow-900/40 bg-yellow-950/10 p-4 text-yellow-200 text-sm">Você é Capitão, mas ainda não foi designado como capitão de nenhuma divisão. A liderança precisa vincular seu usuário a uma divisão para você criar equipes.</div>}
+
+      <section className="space-y-4">
+        {draftDivisoes.map(divisao => {
+          const equipes = draftEquipes.filter(t => t.divisaoId === divisao.id);
+          const capitao = usuarios.find(u => u.username === divisao.capitaoUsername);
+          const podeCriarAqui = podeCriarEquipe && (fullAdmin || divisoesGerenciadas.includes(divisao.id));
+          return <div key={divisao.id} className="rounded-2xl border bg-zinc-950/55 overflow-hidden" style={{ borderColor: (divisao.cor || "#7C2D12") + "80" }}>
+            <button onClick={() => toggle(divisao.id)} className="w-full p-4 text-left flex items-center justify-between gap-3" style={{ background: `linear-gradient(135deg, ${(divisao.cor || "#7C2D12")}22, #050505)` }}>
+              <div className="min-w-0"><div className="text-[9px] uppercase tracking-[0.28em] text-orange-200/70">Divisão</div><div className="text-xl font-black text-white serif truncate">{divisao.nome}</div><div className="text-zinc-500 text-xs mt-1 truncate">Capitão: {capitao ? getCodinome(capitao) : "não designado"} · {equipes.length} equipes</div></div>
+              <div className="flex items-center gap-2"><span className="hidden sm:inline text-[9px] uppercase tracking-wider px-2 py-1 rounded-full border" style={{ borderColor: divisao.cor, color: divisao.cor }}>{divisao.status || "ativa"}</span><span className={`text-zinc-500 transition-transform ${abertas[divisao.id] === false ? "" : "rotate-180"}`}>⌄</span></div>
+            </button>
+            {abertas[divisao.id] !== false && <div className="p-4 space-y-3">
+              <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                {equipes.map(t => {
+                  const lider = usuarios.find(u => u.username === t.liderUsername);
+                  const soldados = (t.membros || []).filter(m => papelEquipeGrupo(m.papel) === "soldado");
+                  const base = (t.membros || []).filter(m => papelEquipeGrupo(m.papel) === "base");
+                  const editavel = editando && canEditEquipe(t);
+                  return <div key={t.id} className="rounded-xl border border-zinc-800 bg-black/45 overflow-hidden">
+                    <div className="p-3" style={{ background: `linear-gradient(135deg, ${t.cor || divisao.cor || "#7C2D12"}30, #050505)` }}>
+                      {editavel ? <div className="grid gap-2">
+                        <input value={t.nome} onChange={e => updateEquipe(t.id, { nome: e.target.value })} className="fox-input font-black" />
+                        <div className="grid grid-cols-2 gap-2"><select value={t.tipo || "Ataque"} onChange={e => updateEquipe(t.id, { tipo: e.target.value })} className="fox-input">{EQUIPE_TIPOS.map(x => <option key={x}>{x}</option>)}</select><select value={t.status || "Ativa"} onChange={e => updateEquipe(t.id, { status: e.target.value })} className="fox-input">{EQUIPE_STATUS.map(x => <option key={x}>{x}</option>)}</select></div>
+                        <div className="grid grid-cols-[1fr_auto] gap-2 items-center"><input type="color" value={t.cor || "#D85A30"} onChange={e => updateEquipe(t.id, { cor: e.target.value })} className="h-9 w-full bg-black border border-zinc-700 rounded" /><button onClick={() => removeEquipe(t.id)} className="h-9 px-3 rounded bg-red-950/60 border border-red-900 text-red-300"><ITrash className="w-4 h-4" /></button></div>
+                        {fullAdmin && <select value={t.divisaoId || divisao.id} onChange={e => updateEquipe(t.id, { divisaoId: e.target.value })} className="fox-input">{draftDivisoes.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}</select>}
+                      </div> : <><div className="flex items-center justify-between gap-2"><h4 className="text-orange-50 font-black truncate">{t.nome}</h4><span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded border border-zinc-700 text-zinc-400">{t.status}</span></div><div className="text-[10px] uppercase tracking-wider text-zinc-500 mt-1">{t.tipo} · Líder: {lider ? getCodinome(lider) : "não definido"}</div>{t.desc && <p className="text-zinc-600 text-xs mt-2 line-clamp-2">{t.desc}</p>}</>}
+                    </div>
+                    <div className="p-3 space-y-3">
+                      {editavel && <><div><label className="fox-label">Líder da equipe</label><select value={t.liderUsername || ""} onChange={e => updateEquipe(t.id, { liderUsername: e.target.value })} className="fox-input"><option value="">— Sem líder —</option>{usuarios.map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div><div><label className="fox-label">Descrição</label><textarea value={t.desc || ""} onChange={e => updateEquipe(t.id, { desc: e.target.value })} rows="2" className="fox-input" /></div></>}
+                      {!editavel && <div className="grid grid-cols-2 gap-2"><div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-2"><div className="font-black text-orange-200">{soldados.length}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Soldados</div></div><div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-2"><div className="font-black text-zinc-300">{base.length}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Recrutas/Associados</div></div></div>}
+                      <div className="space-y-2">
+                        {editavel ? (t.membros || []).map((m, mi) => <div key={mi} className="grid grid-cols-[1fr_130px_auto] gap-2 items-center"><select value={m.username || ""} onChange={e => updateMembro(t.id, mi, { username: e.target.value, nome: "" })} className="fox-input"><option value="">— Membro —</option>{usuarios.map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · @{u.username}</option>)}</select><select value={m.papel || "Soldado"} onChange={e => updateMembro(t.id, mi, { papel: e.target.value })} className="fox-input">{EQUIPE_PAPEIS.map(p => <option key={p}>{p}</option>)}</select><button onClick={() => removeMembro(t.id, mi)} className="text-red-500 bg-red-950/50 p-2 rounded"><ITrash className="w-3 h-3" /></button></div>) : <div className="grid sm:grid-cols-2 gap-2">{(t.membros || []).map(m => renderMembroChip(m, t))}</div>}
+                        {editavel && <Btn onClick={() => addMembro(t.id)} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Integrante</Btn>}
+                        {!editavel && !(t.membros || []).length && <div className="text-zinc-700 text-xs italic rounded border border-dashed border-zinc-800 p-3 text-center">Equipe sem integrantes.</div>}
+                      </div>
+                    </div>
+                  </div>;
+                })}
+                {editando && podeCriarAqui && <button onClick={() => addEquipe(divisao.id)} className="rounded-xl border-2 border-dashed border-zinc-800 hover:border-orange-700 text-zinc-600 hover:text-orange-500 min-h-[220px] flex flex-col items-center justify-center gap-2 transition-colors"><IPlus className="w-8 h-8" /><span className="uppercase tracking-wider text-xs font-bold">Nova equipe nesta divisão</span></button>}
+              </div>
+              {!equipes.length && !editando && <div className="text-zinc-700 text-xs italic rounded-xl border border-dashed border-zinc-800 p-5 text-center">Nenhuma equipe criada nesta divisão.</div>}
+            </div>}
+          </div>;
+        })}
+      </section>
     </div>
   );
 }
@@ -2669,6 +3289,7 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
   const [titulo, setTitulo] = useState(relatorio?.titulo || "");
   const [local, setLocal] = useState(relatorio?.local || "");
   const [descricao, setDescricao] = useState(relatorio?.descricao || "");
+  const [tipoRelatorio, setTipoRelatorio] = useState(relatorio?.tipo || "Ocorrência sem missão");
   const [confidencialidade, setConfid] = useState(normalizarSigilo(relatorio?.confidencialidade || niveisPermitidos[Math.min(1, niveisPermitidos.length - 1)] || "Público"));
   const [alertaJikkai, setAlertaJikkai] = useState(Boolean(relatorio?.alertaJikkai));
   const [riscoJikkai, setRiscoJikkai] = useState(relatorio?.riscoJikkai || "Moderado");
@@ -2676,7 +3297,103 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
   const [faseId, setFaseId] = useState(relatorio?.faseId || "");
   const [objetivoId, setObjetivoId] = useState(relatorio?.objetivoId || "");
   const [resumoEstrategico, setResumoEstrategico] = useState(relatorio?.resumoEstrategico || "");
+  const [contratoId, setContratoId] = useState(relatorio?.contratoId || "");
+  const [opcoesAvancadas, setOpcoesAvancadas] = useState(Boolean(relatorio?.alertaJikkai || relatorio?.faseId || relatorio?.objetivoId || editando));
+
+  const mapaLocais = [
+    ...(data?.mapaPontos || []).map(p => ({ ...p, mapaTipo: "ponto", mapaEtiqueta: p.type || p.kind || "local" })),
+    ...(data?.mapaRotas || []).map(r => ({ ...r, mapaTipo: "rota", mapaEtiqueta: r.type || r.kind || "rota" })),
+  ]
+    .filter(item => item?.id && item?.name)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
+
+  const mapaRefInicial = (() => {
+    if (!relatorio?.mapaId) return "";
+    const tipoSalvo = relatorio.mapaTipo || relatorio.mapaKind || "";
+    if (tipoSalvo) return `${tipoSalvo}:${relatorio.mapaId}`;
+    const ponto = (data?.mapaPontos || []).find(p => p.id === relatorio.mapaId);
+    if (ponto) return `ponto:${relatorio.mapaId}`;
+    const rota = (data?.mapaRotas || []).find(r => r.id === relatorio.mapaId);
+    if (rota) return `rota:${relatorio.mapaId}`;
+    return "";
+  })();
+  const [mapaRef, setMapaRef] = useState(mapaRefInicial);
+  const mapaSelecionado = mapaLocais.find(item => `${item.mapaTipo}:${item.id}` === mapaRef);
+
+  const contratosDisponiveis = (data?.contratos || [])
+    .filter(c => c.status !== "Recusado")
+    .slice()
+    .sort((a, b) => {
+      const peso = { "Em Andamento": 0, "Aberto": 1, "Proposta": 2, "Concluído": 3, "Falhou": 4 };
+      return (peso[a.status] ?? 9) - (peso[b.status] ?? 9) || new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0);
+    });
+  const contratoSelecionado = contratosDisponiveis.find(c => c.id === contratoId);
+  const contratoCfgSelecionado = contratoSelecionado ? (CONTRATO_STATUS_CFG[contratoSelecionado.status] || CONTRATO_STATUS_CFG["Aberto"]) : null;
   const faseSelecionada = (data?.fases || []).find(f => f.id === faseId);
+
+  const tiposRelatorio = [
+    { id: "Relatório de missão", titulo: "Missão", desc: "Operação" },
+    { id: "Relatório de contrato", titulo: "Contrato", desc: "Contrato" },
+    { id: "Ocorrência sem missão", titulo: "Ocorrência", desc: "Sem missão" },
+    { id: "Inteligência", titulo: "Inteligência", desc: "Informação" },
+    { id: "Risco / alerta", titulo: "Risco", desc: "Alerta" },
+    { id: "Registro narrativo", titulo: "Narrativo", desc: "RP" },
+  ];
+
+  const selecionarTipo = (tipo) => {
+    setTipoRelatorio(tipo);
+    if (tipo === "Risco / alerta") {
+      setAlertaJikkai(true);
+      setOpcoesAvancadas(true);
+    }
+    if (tipo !== "Relatório de contrato") setContratoId("");
+  };
+
+  const selecionarLocalMapa = (ref) => {
+    setMapaRef(ref);
+    const item = mapaLocais.find(x => `${x.mapaTipo}:${x.id}` === ref);
+    if (item) setLocal(item.name || "");
+  };
+
+  const snapshotRelatorioAtual = () => ({
+    ...(relatorio || {}),
+    titulo,
+    local,
+    descricao,
+    tipo: tipoRelatorio,
+    confidencialidade,
+    alertaJikkai,
+    riscoJikkai,
+    categoriaJikkai,
+    faseId,
+    objetivoId,
+    resumoEstrategico,
+    contratoId,
+    mapaId: mapaSelecionado?.id || "",
+    mapaTipo: mapaSelecionado?.mapaTipo || "",
+    mapaNome: mapaSelecionado?.name || "",
+    mapaCategoria: mapaSelecionado?.mapaEtiqueta || "",
+  });
+
+  const escolherLocalNoMapa = () => {
+    try {
+      localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(snapshotRelatorioAtual()));
+    } catch {}
+    if (typeof window.foxOpenStrategicMap === "function") {
+      window.foxOpenStrategicMap({ pickLocation: true });
+    } else {
+      try {
+        localStorage.setItem(MAP_PICK_REQUEST_KEY, JSON.stringify({
+          origem: "relatorio",
+          returnTab: "jikkai",
+          returnSubTab: "relatorios",
+          returnAction: "retomar-relatorio-mapa",
+          createdAt: new Date().toISOString(),
+        }));
+      } catch {}
+      window.location.href = "./mapa.html?pick=relatorio";
+    }
+  };
 
   const valido = titulo.trim() && descricao.trim();
 
@@ -2686,6 +3403,13 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
       titulo: titulo.trim(),
       local: local.trim(),
       descricao: descricao.trim(),
+      tipo: tipoRelatorio,
+      mapaId: mapaSelecionado?.id || "",
+      mapaTipo: mapaSelecionado?.mapaTipo || "",
+      mapaNome: mapaSelecionado?.name || "",
+      mapaCategoria: mapaSelecionado?.mapaEtiqueta || "",
+      contratoId,
+      contratoTitulo: contratoSelecionado?.titulo || "",
       confidencialidade,
       alertaJikkai,
       riscoJikkai: alertaJikkai ? riscoJikkai : "",
@@ -2698,71 +3422,187 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
-      <div className="bg-zinc-950 border border-orange-700 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="p-5 border-b border-orange-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
-          <div className="flex items-center gap-3">
-            <IFile className="w-6 h-6 text-orange-500" />
-            <h3 className="text-xl font-bold text-orange-50 serif">{editando ? "Editar Relatório" : "Novo Relatório de Inteligência"}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="bg-zinc-950 border border-orange-700 rounded-xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 py-3 border-b border-orange-900/50 flex items-center justify-between gap-3 bg-zinc-950 flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <IFile className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-orange-50 serif leading-tight">{editando ? "Editar Relatório" : "Novo Relatório"}</h3>
+              <div className="text-zinc-600 text-[10px] truncate">Essencial na tela. Avançado só quando necessário.</div>
+            </div>
           </div>
-          <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-2"><IX className="w-5 h-5" /></button>
         </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <label className="fox-label">Título *</label>
-            <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: Movimentação suspeita em Kirigakure" autoFocus />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="fox-label">Local / Vila</label>
-              <input value={local} onChange={(e) => setLocal(e.target.value)} className="fox-input" placeholder="Ex: Konohagakure, Fronteira Sul..." />
-            </div>
-            <div>
-              <label className="fox-label">Confidencialidade</label>
-              <select value={confidencialidade} onChange={(e) => setConfid(e.target.value)} className="fox-input">
-                {niveisPermitidos.map(n => <option key={n}>{n}</option>)}
-              </select>
-              <div className="mt-2 text-[10px] text-zinc-600 leading-relaxed">
-                {sigiloConfig(confidencialidade).codigo} — {sigiloConfig(confidencialidade).desc}
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="fox-label">Descrição completa *</label>
-            <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="8" className="fox-input" placeholder="Detalhes da observação, contexto, possíveis implicações..." />
+
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+            {tiposRelatorio.map(t => {
+              const ativo = tipoRelatorio === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => selecionarTipo(t.id)}
+                  className={`min-h-[58px] text-center rounded-lg border px-2 py-2 transition-all ${ativo ? "border-orange-500 bg-orange-950/35 shadow-[0_0_18px_rgba(234,88,12,.16)]" : "border-zinc-800 bg-black/35 hover:border-orange-800"}`}
+                >
+                  <div className={`text-xs sm:text-sm font-black serif leading-tight ${ativo ? "text-orange-200" : "text-orange-50"}`}>{t.titulo}</div>
+                  <div className="text-[9px] text-zinc-600 uppercase tracking-wider mt-1">{t.desc}</div>
+                </button>
+              );
+            })}
           </div>
 
-          <div className={`rounded-lg border p-4 transition-colors ${alertaJikkai ? "border-red-800 bg-red-950/20" : "border-zinc-800 bg-black/30"}`}>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={alertaJikkai} onChange={e => setAlertaJikkai(e.target.checked)} className="mt-1 w-4 h-4 accent-red-600" />
-              <div><div className="text-orange-50 font-bold text-sm">Gerar alerta no Painel JIKKAI</div><div className="text-zinc-600 text-xs mt-1">O painel exibirá este relatório como uma fonte rastreável de risco. Não marque relatórios comuns.</div></div>
-            </label>
-            {alertaJikkai && (
-              <div className="grid sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-red-900/40 fadein">
-                <div><label className="fox-label">Nível de risco</label><select value={riscoJikkai} onChange={e => setRiscoJikkai(e.target.value)} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
-                <div><label className="fox-label">Categoria</label><select value={categoriaJikkai} onChange={e => setCategoriaJikkai(e.target.value)} className="fox-input"><option>Inteligência</option><option>Operacional</option><option>Político</option><option>Diplomático</option><option>Exposição</option><option>Financeiro</option><option>Pessoal</option><option>Desconhecido</option></select></div>
-                <div><label className="fox-label">Fase afetada</label><select value={faseId} onChange={e => { setFaseId(e.target.value); setObjetivoId(""); }} className="fox-input"><option value="">— Plano geral —</option>{(data?.fases || []).map(f => <option key={f.id} value={f.id}>Fase {f.n} · {f.titulo}</option>)}</select></div>
-                <div><label className="fox-label">Objetivo afetado</label><select value={objetivoId} onChange={e => setObjetivoId(e.target.value)} className="fox-input" disabled={!faseSelecionada}><option value="">— Toda a fase —</option>{(faseSelecionada?.objetivos || []).map(o => <option key={o.id} value={o.id}>{o.titulo}</option>)}</select></div>
-                <div className="sm:col-span-2"><label className="fox-label">Resumo para a central de comando</label><textarea rows="3" value={resumoEstrategico} onChange={e => setResumoEstrategico(e.target.value)} className="fox-input" placeholder="Ex: Informante em Suna comprometido; interromper contato e revisar a rota de infiltração." /></div>
+          <div className="grid lg:grid-cols-[0.9fr_1.25fr] gap-4 items-start">
+            <div className="space-y-3">
+              {tipoRelatorio === "Relatório de contrato" && (
+                <section className="rounded-xl border border-orange-900/40 bg-orange-950/10 p-3">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="text-[9px] uppercase tracking-[0.22em] text-orange-500 font-black">Contrato</div>
+                    {contratoSelecionado && <span className={`text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-wider ${contratoCfgSelecionado?.badge || "bg-zinc-900 text-zinc-400 border-zinc-800"}`}>{contratoSelecionado.status}</span>}
+                  </div>
+                  <select value={contratoId} onChange={(e) => setContratoId(e.target.value)} className="fox-input">
+                    <option value="">Nenhum contrato vinculado</option>
+                    {contratosDisponiveis.map(c => <option key={c.id} value={c.id}>[{c.status}] {c.titulo}</option>)}
+                  </select>
+                  {contratoSelecionado && (
+                    <div className="mt-2 p-2 rounded-lg border border-zinc-800 bg-black/40 text-[11px] text-zinc-400 leading-relaxed">
+                      <div className="text-orange-300 font-black serif truncate">{contratoSelecionado.titulo}</div>
+                      <div className="mt-1">Recompensa: <strong className="text-orange-400">{Number(contratoSelecionado.valorRecompensa || 0).toLocaleString("pt-BR")} {contratoSelecionado.tipoRecompensa}</strong></div>
+                      {contratoSelecionado.missaoId && <div className="mt-1 text-purple-400">Não altera equipe, missão, responsável ou status.</div>}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              <section className="rounded-xl border border-zinc-800 bg-black/30 p-3">
+                <div className="text-[9px] uppercase tracking-[0.22em] text-orange-600 mb-2 font-black">Local</div>
+                <div className="space-y-2">
+                  <div className="grid sm:grid-cols-[1fr_auto] gap-2">
+                    <select value={mapaRef} onChange={(e) => selecionarLocalMapa(e.target.value)} className="fox-input">
+                      <option value="">Nenhum local do mapa</option>
+                      {mapaLocais.map(item => <option key={`${item.mapaTipo}:${item.id}`} value={`${item.mapaTipo}:${item.id}`}>[{item.mapaTipo === "rota" ? "Rota" : "Local"}] {item.name}</option>)}
+                    </select>
+                    <Btn onClick={escolherLocalNoMapa} variant="default" className="whitespace-nowrap justify-center">
+                      <ITarget className="w-3 h-3" /> Escolher no mapa
+                    </Btn>
+                  </div>
+                  <input value={local} onChange={(e) => setLocal(e.target.value)} className="fox-input" placeholder="Local manual, se não estiver no mapa" />
+                  {mapaSelecionado && <div className="text-[10px] text-sky-400 leading-relaxed">Mapa: {mapaSelecionado.name}</div>}
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-black/30 p-3">
+                <div className="text-[9px] uppercase tracking-[0.22em] text-orange-600 mb-2 font-black">Título *</div>
+                <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: Movimento suspeito em Kiri" autoFocus />
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-black/30 overflow-hidden">
+                <button onClick={() => setOpcoesAvancadas(!opcoesAvancadas)} className="w-full flex items-center justify-between gap-3 p-3 text-left hover:bg-zinc-900/50">
+                  <div>
+                    <div className="text-orange-50 font-black serif text-sm">Opções avançadas</div>
+                    <div className="text-zinc-600 text-[10px] mt-0.5">Sigilo, alerta, risco, fase e objetivo.</div>
+                  </div>
+                  <span className="text-orange-500 text-xl leading-none">{opcoesAvancadas ? "−" : "+"}</span>
+                </button>
+
+                {opcoesAvancadas && (
+                  <div className="p-3 pt-0 space-y-3 fadein">
+                    <div className="grid sm:grid-cols-2 gap-2 pt-3 border-t border-zinc-800">
+                      <div>
+                        <label className="fox-label">Confidencialidade</label>
+                        <select value={confidencialidade} onChange={(e) => setConfid(e.target.value)} className="fox-input">
+                          {niveisPermitidos.map(n => <option key={n}>{n}</option>)}
+                        </select>
+                      </div>
+                      <label className={`rounded-lg border p-3 cursor-pointer transition-colors ${alertaJikkai ? "border-red-800 bg-red-950/20" : "border-zinc-800 bg-black/30"}`}>
+                        <div className="flex items-start gap-3">
+                          <input type="checkbox" checked={alertaJikkai} onChange={e => setAlertaJikkai(e.target.checked)} className="mt-1 w-4 h-4 accent-red-600" />
+                          <div><div className="text-orange-50 font-bold text-sm">Gerar alerta JIKKAI</div><div className="text-zinc-600 text-[10px] mt-0.5">Só se a liderança precisa agir.</div></div>
+                        </div>
+                      </label>
+                    </div>
+
+                    {alertaJikkai && (
+                      <div className="grid sm:grid-cols-2 gap-2 pt-3 border-t border-red-900/40 fadein">
+                        <div><label className="fox-label">Risco</label><select value={riscoJikkai} onChange={e => setRiscoJikkai(e.target.value)} className="fox-input">{Object.keys(RISCO_CFG).map(r => <option key={r}>{r}</option>)}</select></div>
+                        <div><label className="fox-label">Categoria</label><select value={categoriaJikkai} onChange={e => setCategoriaJikkai(e.target.value)} className="fox-input"><option>Inteligência</option><option>Operacional</option><option>Político</option><option>Diplomático</option><option>Exposição</option><option>Financeiro</option><option>Pessoal</option><option>Desconhecido</option></select></div>
+                        <div><label className="fox-label">Fase</label><select value={faseId} onChange={e => { setFaseId(e.target.value); setObjetivoId(""); }} className="fox-input"><option value="">Plano geral</option>{(data?.fases || []).map(f => <option key={f.id} value={f.id}>Fase {f.n} · {f.titulo}</option>)}</select></div>
+                        <div><label className="fox-label">Objetivo</label><select value={objetivoId} onChange={e => setObjetivoId(e.target.value)} className="fox-input" disabled={!faseSelecionada}><option value="">Toda a fase</option>{(faseSelecionada?.objetivos || []).map(o => <option key={o.id} value={o.id}>{o.titulo}</option>)}</select></div>
+                        <div className="sm:col-span-2"><label className="fox-label">Resumo para comando</label><textarea rows="2" value={resumoEstrategico} onChange={e => setResumoEstrategico(e.target.value)} className="fox-input" placeholder="Ex: revisar rota, interromper contato, convocar equipe." /></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <section className="rounded-xl border border-orange-900/40 bg-gradient-to-br from-red-950/10 to-black p-3 h-full flex flex-col min-h-[420px] lg:min-h-[520px]">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div>
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-orange-600 font-black">Relato completo *</div>
+                  <div className="text-zinc-600 text-[10px] mt-0.5">Escreva como ocorrência: fato, envolvidos, local, consequência e pedido à liderança.</div>
+                </div>
+                <span className={`text-[9px] px-2 py-1 rounded border uppercase tracking-wider font-black ${valido ? "border-green-800 text-green-400 bg-green-950/20" : "border-zinc-800 text-zinc-500 bg-black/30"}`}>{valido ? "Pronto" : "Pendente"}</span>
               </div>
-            )}
+              <textarea
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                className="fox-input flex-1 min-h-[300px] lg:min-h-0 resize-none leading-relaxed"
+                placeholder="O que aconteceu? Quem estava envolvido? Onde aconteceu? Qual foi a consequência? A liderança precisa agir?"
+              />
+            </section>
           </div>
         </div>
-        <div className="p-5 border-t border-zinc-800 flex gap-2 justify-end sticky bottom-0 bg-zinc-950">
-          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
-          <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> {editando ? "Salvar Alterações" : "Enviar Relatório"}</Btn>
+
+        <div className="px-4 py-3 border-t border-zinc-800 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between bg-zinc-950 flex-shrink-0">
+          <div className="text-[10px] text-zinc-600 uppercase tracking-wider">Obrigatório: título e relato. O resto pode ficar para depois.</div>
+          <div className="flex gap-2 justify-end">
+            <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+            <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> {editando ? "Salvar" : "Enviar Relatório"}</Btn>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-function RelatoriosSection({ data, setData, isLider, usuario, role }) {
+function RelatoriosSection({ data, setData, isLider, usuario, role, navigationRequest }) {
   const [modal, setModal] = useState(null); // null | {} (criar) | {id, ...} (editar)
   const niveisPermitidos = niveisPermitidosPara(data, usuario, role);
 
   const relatorios = (data.relatorios || []).slice().sort((a, b) => new Date(b.data) - new Date(a.data));
   const relatoriosLiberados = relatorios.filter(r => podeVerItemSigiloso(r, data, usuario, role));
+
+  useEffect(() => {
+    if (navigationRequest?.tab !== "jikkai" || navigationRequest?.subTab !== "relatorios") return;
+    if (navigationRequest?.action === "novo-relatorio-avulso") setModal({ tipo: "Ocorrência sem missão" });
+    if (navigationRequest?.action === "novo-relatorio-contrato") setModal({ tipo: "Relatório de contrato" });
+    if (navigationRequest?.action === "novo-relatorio-risco") setModal({ tipo: "Risco / alerta", alertaJikkai: true, riscoJikkai: "Elevado" });
+  }, [navigationRequest?.token]);
+
+  useEffect(() => {
+    if (navigationRequest?.tab !== "jikkai" || navigationRequest?.subTab !== "relatorios") return;
+    let draft = null;
+    let picked = null;
+    try { draft = JSON.parse(localStorage.getItem(REPORT_DRAFT_KEY) || "null"); } catch {}
+    try { picked = JSON.parse(localStorage.getItem(MAP_PICK_RESULT_KEY) || "null"); } catch {}
+    if (!draft && !picked) return;
+
+    const proximo = { ...(draft || { tipo: "Ocorrência sem missão" }) };
+    if (picked) {
+      proximo.mapaId = picked.id || "";
+      proximo.mapaTipo = picked.mapaTipo || "";
+      proximo.mapaNome = picked.name || "";
+      proximo.mapaCategoria = picked.mapaCategoria || "";
+      proximo.local = picked.name || proximo.local || "";
+    }
+
+    setModal(proximo);
+    try {
+      localStorage.removeItem(REPORT_DRAFT_KEY);
+      localStorage.removeItem(MAP_PICK_RESULT_KEY);
+      localStorage.removeItem(MAP_PICK_REQUEST_KEY);
+    } catch {}
+  }, [navigationRequest?.token, relatorios.length]);
 
   const criar = (form) => {
     const novo = {
@@ -2795,19 +3635,42 @@ function RelatoriosSection({ data, setData, isLider, usuario, role }) {
         <div className="border-l-4 border-orange-600 pl-4">
           <div className="flex items-center gap-3">
             <IFile className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Relatórios de Inteligência</h2>
+            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Relatórios da Jikkai</h2>
           </div>
           <p className="text-zinc-500 text-sm mt-1 italic">{relatoriosLiberados.length} liberados · {relatorios.length} registros no arquivo</p>
           <p className="text-sky-400 text-xs mt-2 max-w-2xl">Use relatórios para concluir missões e também para registrar acontecimentos relevantes que não nasceram de uma missão formal.</p>
         </div>
-        <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> Novo Relatório</Btn>
+        <Btn onClick={() => setModal({ tipo: "Ocorrência sem missão" })} variant="primary"><IPlus className="w-3 h-3" /> Criar Relatório</Btn>
+      </div>
+
+      <div className="grid md:grid-cols-4 gap-3 mb-5">
+        <button onClick={() => setModal({ tipo: "Ocorrência sem missão" })} className="p-4 rounded-xl border border-sky-900/40 bg-sky-950/10 text-left hover:border-sky-500 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-sky-400">Sem missão</div>
+          <div className="text-orange-50 font-black serif mt-1">Criar relatório avulso</div>
+          <p className="text-zinc-500 text-xs mt-2 leading-relaxed">Use quando algo importante aconteceu, mesmo sem operação formal.</p>
+        </button>
+        <button onClick={() => setModal({ tipo: "Relatório de contrato" })} className="p-4 rounded-xl border border-orange-900/40 bg-orange-950/10 text-left hover:border-orange-500 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-orange-400">Contrato</div>
+          <div className="text-orange-50 font-black serif mt-1">Relatar contrato</div>
+          <p className="text-zinc-500 text-xs mt-2 leading-relaxed">Vincule o relatório a um contrato ativo sem alterar equipe ou status.</p>
+        </button>
+        <button onClick={() => setModal({ tipo: "Inteligência" })} className="p-4 rounded-xl border border-purple-900/40 bg-purple-950/10 text-left hover:border-purple-500 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-purple-400">Informação</div>
+          <div className="text-orange-50 font-black serif mt-1">Registrar inteligência</div>
+          <p className="text-zinc-500 text-xs mt-2 leading-relaxed">Boatos, movimentações, encontros, rotas, riscos ou observações.</p>
+        </button>
+        <button onClick={() => setModal({ tipo: "Risco / alerta", alertaJikkai: true, riscoJikkai: "Elevado" })} className="p-4 rounded-xl border border-red-900/40 bg-red-950/10 text-left hover:border-red-500 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-red-400">Urgente</div>
+          <div className="text-orange-50 font-black serif mt-1">Gerar alerta</div>
+          <p className="text-zinc-500 text-xs mt-2 leading-relaxed">Use quando a informação deve aparecer no Painel JIKKAI.</p>
+        </button>
       </div>
 
       {relatorios.length === 0 && (
         <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg">
           <IFile className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500">Nenhum relatório de inteligência ainda.</p>
-          <p className="text-zinc-700 text-xs italic mt-2">Seja o primeiro a reportar.</p>
+          <p className="text-zinc-500">Nenhum relatório registrado ainda.</p>
+          <p className="text-zinc-700 text-xs italic mt-2">Crie um relatório quando uma missão terminar ou quando algo importante acontecer.</p>
         </div>
       )}
 
@@ -2825,16 +3688,22 @@ function RelatoriosSection({ data, setData, isLider, usuario, role }) {
                     <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: c.cor, borderColor: c.cor + "80", background: c.cor + "20" }}>
                       {c.codigo} · {sigilo}
                     </span>
-                    {r.tipo === "Operacional" && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-950 text-purple-300 border border-purple-800">Operacional</span>}
+                    {r.tipo && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-purple-950 text-purple-300 border border-purple-800">{r.tipo}</span>}
                     {r.statusAprovacao && <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-zinc-800">{r.statusAprovacao}</span>}
                     {r.alertaJikkai && <><FonteEstrategicaBadge tipo="relatorio" /><RiscoBadge risco={r.riscoJikkai} compacto /></>}
-                    {r.local && <span className="text-zinc-500 text-xs uppercase tracking-wider">{r.local}</span>}
+                    {r.mapaNome && <span className="text-sky-400 text-xs uppercase tracking-wider">Mapa: {r.mapaNome}</span>}
+                    {!r.mapaNome && r.local && <span className="text-zinc-500 text-xs uppercase tracking-wider">{r.local}</span>}
                   </div>
                   <h3 className="text-orange-50 font-bold text-lg serif leading-tight">{r.titulo}</h3>
                   {r.missaoId && (() => {
                     const missao = (data.missoes || []).find(m => m.id === r.missaoId);
                     return missao ? <div className="text-purple-400 text-xs mt-1">Missão vinculada: {missao.titulo}</div> : null;
                   })()}
+                  {r.contratoId && (() => {
+                    const contrato = (data.contratos || []).find(c => c.id === r.contratoId);
+                    return contrato ? <div className="text-orange-400 text-xs mt-1">Contrato vinculado: {contrato.titulo} · {contrato.status}</div> : null;
+                  })()}
+                  {r.mapaNome && <div className="text-sky-400 text-xs mt-1">Local do mapa: {r.mapaNome}{r.local && r.local !== r.mapaNome ? ` · ${r.local}` : ""}</div>}
                 </div>
                 {isLider && (
                   <div className="flex gap-1 flex-shrink-0">
@@ -2856,7 +3725,7 @@ function RelatoriosSection({ data, setData, isLider, usuario, role }) {
 
       {modal && (
         <RelatorioModal
-          relatorio={modal.id ? modal : null}
+          relatorio={modal}
           onSave={modal.id ? editar : criar}
           onClose={() => setModal(null)}
           niveisPermitidos={niveisPermitidos}
@@ -3006,11 +3875,13 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   );
 }
 
-function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante }) {
+function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContratante }) {
   const [modal, setModal] = useState(null);
+  const [relatorioContrato, setRelatorioContrato] = useState(null);
   const [filtro, setFiltro] = useState("Todos");
   const [expandido, setExpandido] = useState(null);
   const [novaMsgPorContrato, setNovaMsgPorContrato] = useState({});
+  const niveisPermitidosContrato = niveisPermitidosPara(data, usuario, role);
 
   // Helper local: nome a exibir respeitando o viewer
   const exibirNome = (username, nomeArmazenado) => {
@@ -3095,6 +3966,18 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
       contratos: d.contratos.map(c => c.id === contratoId ? { ...c, negociacoes: [...(c.negociacoes || []), nova] } : c),
     }));
     setNovaMsgPorContrato(s => ({ ...s, [contratoId]: "" }));
+  };
+
+  const criarRelatorioContrato = (form) => {
+    const novo = {
+      id: uid(),
+      ...form,
+      autorUsername: usuario?.username || "?",
+      autorNome: usuario?.displayName || usuario?.username || "Desconhecido",
+      data: new Date().toISOString(),
+    };
+    setData(d => ({ ...d, relatorios: [...(d.relatorios || []), novo] }));
+    setRelatorioContrato(null);
   };
 
   const aceitar = (contrato) => {
@@ -3192,6 +4075,8 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
           const negociacoes = c.negociacoes || [];
           const missaoVinculada = c.missaoId ? data.missoes?.find(m => m.id === c.missaoId) : null;
           const missaoCfg = missaoVinculada ? statusMissaoConfig(missaoVinculada.status) : null;
+          const relatoriosVinculados = (data.relatorios || []).filter(r => r.contratoId === c.id && podeVerItemSigiloso(r, data, usuario, role));
+          const podeRelatarContrato = !viewerIsContratante && ["Aberto", "Em Andamento", "Concluído", "Falhou"].includes(c.status);
 
           return (
             <div key={c.id} className={`relative rounded-lg border-2 ${sc.border} ${sc.bg} p-5 fadein hover:border-red-500 transition-colors`}
@@ -3304,6 +4189,21 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                   </div>
                 )}
 
+                {relatoriosVinculados.length > 0 && (
+                  <div className="mb-3 p-3 rounded border border-orange-900/40 bg-orange-950/10">
+                    <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-2">Relatórios vinculados ({relatoriosVinculados.length})</div>
+                    <div className="space-y-1">
+                      {relatoriosVinculados.slice(0, 3).map(r => (
+                        <div key={r.id} className="text-xs text-zinc-400 flex items-center justify-between gap-2">
+                          <span className="truncate">{r.titulo}</span>
+                          <span className="text-zinc-700 flex-shrink-0">{new Date(r.data).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                      ))}
+                      {relatoriosVinculados.length > 3 && <div className="text-[10px] text-zinc-700 italic">+ {relatoriosVinculados.length - 3} relatório(s) no arquivo</div>}
+                    </div>
+                  </div>
+                )}
+
                 {c.aceitoPor && (
                   <div className="text-xs text-zinc-600 mb-3">
                     Aceito por <strong className="text-orange-500">{exibirNome(c.aceitoPor, c.aceitoPorNome)}</strong>
@@ -3315,6 +4215,20 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
                   <Btn onClick={() => setExpandido(expanded ? null : c.id)} variant="ghost">
                     {expanded ? "Recolher" : "Detalhes"}
                   </Btn>
+                  {podeRelatarContrato && (
+                    <Btn
+                      onClick={() => setRelatorioContrato({
+                        tipo: "Relatório de contrato",
+                        contratoId: c.id,
+                        titulo: `Relatório — ${c.titulo}`,
+                        local: "",
+                        confidencialidade: c.status === "Aberto" ? "Restrito" : "Confidencial",
+                      })}
+                      variant="default"
+                    >
+                      <IFile className="w-3 h-3" /> Relatório deste contrato
+                    </Btn>
+                  )}
                   {podeAprovar && (
                     <>
                       <Btn onClick={() => aprovarProposta(c.id)} variant="primary"><ICheck className="w-3 h-3" /> Aprovar</Btn>
@@ -3347,6 +4261,16 @@ function ContratosSection({ data, setData, isLider, usuario, viewerIsContratante
           );
         })}
       </div>
+
+      {relatorioContrato && (
+        <RelatorioModal
+          relatorio={relatorioContrato}
+          onSave={criarRelatorioContrato}
+          onClose={() => setRelatorioContrato(null)}
+          niveisPermitidos={niveisPermitidosContrato}
+          data={data}
+        />
+      )}
 
       {modal && (
         <ContratoModal
@@ -3587,7 +4511,7 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
   if (viewerIsContratante) {
     return (
       <div>
-        <SectionTitle icon={ISwords} sub="Contratos disponíveis para aquisição">Contratos F.O.X.</SectionTitle>
+        <SectionTitle icon={ISwords} sub="Contratos disponíveis para aquisição">Contratos Jikkai</SectionTitle>
         <div className="mb-6 p-4 bg-zinc-950/60 border border-orange-900/30 rounded-lg flex items-start gap-3">
           <IBriefcase className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-400 leading-relaxed">
@@ -3595,14 +4519,14 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
             Para aceitar ou negociar termos, entre em contato direto com a liderança através dos canais combinados.
           </div>
         </div>
-        <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} viewerIsContratante={true} />
+        <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={true} />
       </div>
     );
   }
 
   return (
     <div>
-      <SectionTitle icon={ITarget} sub="O grande plano para fundar Kumogakure">JIKKAI</SectionTitle>
+      <SectionTitle icon={ITarget}>JIKKAI</SectionTitle>
 
       {/* Sub-navegação */}
       <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
@@ -3626,8 +4550,8 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
       </div>
 
       {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} />}
-      {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} viewerIsContratante={false} />}
-      {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} />}
+      {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={false} />}
+      {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} navigationRequest={navigationRequest} />}
     </div>
   );
 }
@@ -4000,7 +4924,7 @@ function IntroducaoEstruturaAtual({ data, usuario }) {
           return <div key={ramo.id} className="rounded-xl border p-4" style={{ borderColor: (ramo.cor || "#7C2D12") + "80", background: "linear-gradient(145deg," + (ramo.cor || "#7C2D12") + "14,#050505)" }}><div className="text-[9px] uppercase tracking-wider text-zinc-600">{ramo.tipo || "Ramo"}</div><div className="font-black text-lg serif mb-3" style={{ color: ramo.cor || "#D85A30" }}>{ramo.nome}</div><div className="mb-3 p-3 rounded border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-600 mb-2">Capitão</div>{capitaes.length ? capitaes.map(u => <div key={u.username} className="flex items-center gap-2"><MemberAvatar user={u} size="xs" /><span className="text-orange-300 text-[10px] font-black">{getCodinome(u)}</span></div>) : <div className="text-zinc-700 text-[10px] italic">Não designado</div>}</div><div className="flex flex-wrap gap-2">{operadores.map(u => <div key={u.username} className={"flex items-center gap-2 rounded-full border pr-3 " + (u.username === usuario.username ? "border-orange-500 bg-orange-950/30" : "border-zinc-800 bg-black/40")}><MemberAvatar user={u} size="xs" /><span className={"text-[10px] " + (u.username === usuario.username ? "text-orange-300 font-black" : "text-zinc-400")}>{getCodinome(u)}{u.username === usuario.username ? " · VOCÊ" : ""}</span></div>)}</div></div>;
         })}
       </div>
-      {(data.trios || []).length > 0 && <div className="pt-5 border-t border-zinc-800"><div className="text-center text-[9px] uppercase tracking-[0.3em] text-orange-700 mb-4">Células operacionais</div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{data.trios.map(t => <div key={t.id || t.nome} className="p-3 rounded-lg border border-zinc-800 bg-zinc-950/60"><div className="font-bold text-orange-50 text-sm">{t.nome}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 mb-2">{t.desc}</div><div className="flex -space-x-2">{(t.membros || []).map((m, i) => { const u = data.users.find(x => x.username === m.username); return u ? <MemberAvatar key={m.username || i} user={u} size="sm" className="border-black" /> : null; })}</div></div>)}</div></div>}
+      {(data.trios || []).length > 0 && <div className="pt-5 border-t border-zinc-800"><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{data.trios.map(t => <div key={t.id || t.nome} className="p-3 rounded-lg border border-zinc-800 bg-zinc-950/60"><div className="font-bold text-orange-50 text-sm">{t.nome}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600 mb-2">{t.desc}</div><div className="flex -space-x-2">{(t.membros || []).map((m, i) => { const u = data.users.find(x => x.username === m.username); return u ? <MemberAvatar key={m.username || i} user={u} size="sm" className="border-black" /> : null; })}</div></div>)}</div></div>}
     </div>
   );
 }
@@ -4097,7 +5021,7 @@ function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onAt
 
           {etapa === 2 && <div className="fadein"><IntroducaoEstruturaAtual data={data} usuario={usuario} /><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Entendi meu lugar</Btn></div></div>}
 
-          {etapa === 3 && <div className="fadein"><div className="text-center mb-7"><IShield className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Conduta</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O peso do seu acesso</h2></div><div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">{[["Respeitar a hierarquia","Ordens, decisões e conflitos seguem a cadeia de comando registrada."],["Preservar informações","Dados internos não devem ser levados para fora da organização sem autorização."],["Responder pelos próprios atos","Toda ação realizada em nome da Jikkai possui consequências no RP."],["Registrar acontecimentos","Missões, relatórios e fatos relevantes mantêm a história oficial viva."],["Não usar o nome sem autorização","A reputação da F.O.X. não pode ser empenhada em decisões pessoais."],["Honrar o pacto","O juramento formaliza sua entrada e sua lealdade interna."]].map(([t,d]) => <div key={t} className="p-4 rounded-lg border border-zinc-800 bg-black/40"><div className="text-orange-300 font-bold text-sm">{t}</div><p className="text-zinc-500 text-xs leading-relaxed mt-2">{d}</p></div>)}</div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir ao juramento</Btn></div></div>}
+          {etapa === 3 && <div className="fadein"><div className="text-center mb-7"><IShield className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Conduta</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O peso do seu acesso</h2></div><div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">{[["Respeitar a hierarquia","Ordens, decisões e conflitos seguem a cadeia de comando registrada."],["Preservar informações","Dados internos não devem ser levados para fora da organização sem autorização."],["Responder pelos próprios atos","Toda ação realizada em nome da Jikkai possui consequências no RP."],["Registrar acontecimentos","Missões, relatórios e fatos relevantes mantêm a história oficial viva."],["Não usar o nome sem autorização","A reputação da Jikkai não pode ser empenhada em decisões pessoais."],["Honrar o pacto","O juramento formaliza sua entrada e sua lealdade interna."]].map(([t,d]) => <div key={t} className="p-4 rounded-lg border border-zinc-800 bg-black/40"><div className="text-orange-300 font-bold text-sm">{t}</div><p className="text-zinc-500 text-xs leading-relaxed mt-2">{d}</p></div>)}</div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir ao juramento</Btn></div></div>}
 
           {etapa === 4 && <div className="fadein">{juramentado ? <div className="space-y-5"><div className="p-4 rounded-lg border border-green-900/50 bg-green-950/10 flex items-start gap-3"><ICheck className="w-5 h-5 text-green-500 mt-0.5" /><div><div className="text-green-300 font-bold">Juramento anterior localizado</div><p className="text-zinc-500 text-sm mt-1">Seu registro foi preservado. Não será necessário repetir o pacto.</p></div></div><JuramentadoView juramentado={juramentado} modoIniciacao /><div className="flex gap-2"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={() => setEtapa(5)} variant="primary" className="flex-1 justify-center">Validar registro e continuar</Btn></div></div> : <JuramentoPage usuario={usuario} juramentado={null} juramentar={juramentar} data={data} modoIniciacao onConcluido={() => setEtapa(5)} />}</div>}
 
@@ -4139,7 +5063,7 @@ function RegistroJuramentosManager({ data, setData, usuario }) {
 }
 
 // ============ MINHAS MISSÕES ============
-function MinhasMissoesPage({ data, setData, usuario, role }) {
+function MinhasMissoesPage({ data, setData, usuario, role, onNavigate }) {
   const [filtro, setFiltro] = useState("Ativas");
   const [relatorioMissao, setRelatorioMissao] = useState(null);
 
@@ -4201,7 +5125,7 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
       resultado: form.resultado,
       evidencias: form.evidencias,
       confidencialidade: normalizarSigilo(m.sigilo || "Restrito"),
-      tipo: "Operacional",
+      tipo: "Relatório de missão",
       statusAprovacao: "Pendente",
       missaoId: m.id,
       contratoId: m.contratoId || null,
@@ -4231,8 +5155,9 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
         <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg">
           <IClipboard className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
           <p className="text-zinc-500">Nenhuma missão atribuída no momento.</p>
-          <p className="text-zinc-700 text-xs italic mt-2">Aguarde designação da liderança, conselheiro ou capitão de ramo.</p>
+          <p className="text-zinc-700 text-xs italic mt-2">Aguarde designação da liderança, conselheiro ou capitão da divisão.</p>
           <p className="text-purple-400 text-xs mt-3 max-w-xl mx-auto">Se algo relevante acontecer mesmo sem missão, registre em JIKKAI → Relatórios.</p>
+          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="primary" className="mx-auto mt-5"><IFile className="w-3 h-3" /> Criar relatório avulso</Btn>
         </div>
       </div>
     );
@@ -4244,6 +5169,9 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
 
       <div className="mb-5 p-4 rounded-lg border border-purple-900/40 bg-purple-950/10 text-sm text-zinc-300 leading-relaxed">
         <strong className="text-purple-300 uppercase tracking-wider text-xs">Lembrete:</strong> missões designadas pela liderança, conselheiros ou capitães de ramo devem ser acompanhadas aqui. Ao concluir, envie o relatório final. Se um acontecimento importante ocorrer fora de missão, registre em <span className="text-sky-300 font-bold">JIKKAI → Relatórios</span>.
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="ghost"><IFile className="w-3 h-3" /> Criar relatório avulso</Btn>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -4258,7 +5186,10 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
       </div>
 
       {minhas.length === 0 && (
-        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">Nenhuma missão neste filtro.</div>
+        <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">
+          <div>Nenhuma missão neste filtro.</div>
+          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="ghost" className="mx-auto mt-4"><IFile className="w-3 h-3" /> Criar relatório avulso</Btn>
+        </div>
       )}
 
       <div className="space-y-4">
@@ -4361,7 +5292,7 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
                       <Btn onClick={() => iniciarMissao(m)} variant="primary"><IEdit className="w-3 h-3" /> Retomar ajustes</Btn>
                     )}
                     {m.status === "andamento" && (
-                      <Btn onClick={() => setRelatorioMissao(m)} variant="primary" className="ml-auto"><IFile className="w-3 h-3" /> Enviar relatório final</Btn>
+                      <Btn onClick={() => setRelatorioMissao(m)} variant="primary" className="ml-auto"><IFile className="w-3 h-3" /> Enviar relatório da missão</Btn>
                     )}
                     {m.status === "revisao" && (
                       <span className="text-xs uppercase tracking-wider text-purple-400 self-center">Relatório enviado. Aguardando decisão da liderança.</span>
@@ -4380,7 +5311,7 @@ function MinhasMissoesPage({ data, setData, usuario, role }) {
 }
 
 // ============ GERENCIAR (Admin) ============
-function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
+function GerenciarPage({ data, setData, usuario, role, exportar, importar, navigationRequest }) {
   const isLider = role?.hasLeaderPerms === true;
   const podeUsuarios = isLider || hasPerm(role,"manage_users");
   const podeMissoes = isLider || hasPerm(role,"manage_missions");
@@ -4390,6 +5321,11 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
   const podeBackup = isLider;
   const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
   const [aba, setAba] = useState(primeiraAba);
+  useEffect(() => {
+    if (navigationRequest?.tab !== "gerenciar") return;
+    if (navigationRequest.action === "iniciacoes-pendentes" && podeUsuarios) { setAba("usuarios"); return; }
+    if (["usuarios", "cargos", "ramos", "juramentos", "missoes", "backup"].includes(navigationRequest.subTab)) setAba(navigationRequest.subTab);
+  }, [navigationRequest?.token]);
 
   return (
     <div>
@@ -4413,7 +5349,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
         })}
       </div>
 
-      {aba === "usuarios" && <UsuariosManager data={data} setData={setData} usuario={usuario} />}
+      {aba === "usuarios" && <UsuariosManager data={data} setData={setData} usuario={usuario} navigationAction={navigationRequest?.tab === "gerenciar" ? navigationRequest.action : ""} />}
       {aba === "cargos" && <CargosManager data={data} setData={setData} />}
       {aba === "ramos" && <RamosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "juramentos" && <RegistroJuramentosManager data={data} setData={setData} usuario={usuario} />}
@@ -4423,17 +5359,24 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
   );
 }
 
-function UsuariosManager({ data, setData, usuario }) {
+function UsuariosManager({ data, setData, usuario, navigationAction }) {
   const vazio = () => ({
     username: "", password: "", displayName: "", nomeRP: "", codinome: "", role: "member",
     status: "Novo", level: 0, cla: "", elemento: "", linhagem: "", vilaOrigem: "",
     patente: "", especialidade: "", bio: "", estruturaNivel: "operador", respondeA: "",
     nivelAcesso: 1, iniciacaoStatus: "pendente", avatarUrl: "", avatarStoragePath: "",
-    reputacao: "Desconhecido", lealdade: "Observado", reputacaoNota: "", lealdadeNota: "",
+    reputacao: "Baixo perfil", lealdade: "Observado", conduta: "Limpo", reputacaoNota: "", lealdadeNota: "", condutaNota: "", condutaRegistros: [],
   });
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(vazio());
   const [erro, setErro] = useState("");
+  const pendentesIniciacao = (data.users || []).filter(u => u.role !== "contratante" && u.iniciacaoStatus === "pendente");
+  const focoIniciacoes = navigationAction === "iniciacoes-pendentes";
+  useEffect(() => {
+    if (!focoIniciacoes) return;
+    setEditando(null);
+    setTimeout(() => document.getElementById("iniciacoes-pendentes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }, [navigationAction, pendentesIniciacao.length]);
   const iniciarEdit = u => { setEditando(u.username); setForm({ ...normalizarMembro(u), password: "" }); setErro(""); };
   const iniciarNovo = () => { setEditando("__novo__"); setForm(vazio()); setErro(""); };
   const cancelar = () => { setEditando(null); setErro(""); };
@@ -4467,6 +5410,23 @@ function UsuariosManager({ data, setData, usuario }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, acesso e posição hierárquica.</p></div>{editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro</Btn>}</div>
+      {focoIniciacoes && pendentesIniciacao.length > 0 && (
+        <section id="iniciacoes-pendentes" className="rounded-xl border border-amber-800/70 bg-amber-950/10 p-4 fadein">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div><div className="text-[9px] uppercase tracking-[0.28em] text-amber-500">Ação pendente</div><h4 className="text-orange-50 font-black serif">Iniciações pendentes</h4></div>
+            <span className="text-[10px] px-2 py-1 rounded-full border border-amber-700 bg-black/50 text-amber-300 font-black uppercase tracking-wider">{pendentesIniciacao.length}</span>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {pendentesIniciacao.map(u => {
+              const role = data.roles.find(r => r.id === u.role);
+              return <button key={u.username} onClick={() => iniciarEdit(u)} className="p-3 rounded-lg border border-zinc-800 bg-black/50 hover:border-amber-600 text-left flex items-center gap-3">
+                <MemberAvatar user={u} size="sm" />
+                <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-[10px] text-zinc-500 truncate">@{u.username} · {role?.nome || "Membro"}</div><div className="text-[9px] uppercase tracking-wider text-amber-400 mt-1">Abrir dossiê administrativo</div></div>
+              </button>;
+            })}
+          </div>
+        </section>
+      )}
       {editando !== null && (
         <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-4 fadein">
           <h4 className="text-orange-50 font-bold">{editando === "__novo__" ? "Novo membro da Jikkai" : `Editando ${editando}`}</h4>
@@ -4480,8 +5440,9 @@ function UsuariosManager({ data, setData, usuario }) {
             <div><label className="fox-label">Patente</label><input value={form.patente || ""} onChange={e => setForm({ ...form, patente: e.target.value })} className="fox-input" placeholder="Ex: Executor, Capitão..." /></div>
             <div><label className="fox-label">Status</label><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="fox-input"><option>Ativo</option><option>Oculto</option><option>Renegado</option><option>Procurado</option><option>Novo</option><option>Líder</option></select></div>
             <div><label className="fox-label">Ramo</label><select value={form.cla || ""} onChange={e => setForm({ ...form, cla: e.target.value })} className="fox-input"><option value="">— Sem ramo —</option>{(data.clas || []).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
-            <div><label className="fox-label">Reputação externa</label><select value={form.reputacao || "Desconhecido"} onChange={e => setForm({ ...form, reputacao: e.target.value, reputacaoAtualizadaEm: new Date().toISOString() })} className="fox-input">{REPUTACAO_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
-            <div><label className="fox-label">Lealdade interna</label><select value={form.lealdade || "Observado"} onChange={e => setForm({ ...form, lealdade: e.target.value, lealdadeAtualizadaEm: new Date().toISOString() })} className="fox-input">{LEALDADE_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
+            <div><label className="fox-label">Impacto externo</label><select value={converterReputacaoLegada(form.reputacao || "Baixo perfil")} onChange={e => setForm({ ...form, reputacao: e.target.value, reputacaoAtualizadaEm: new Date().toISOString() })} className="fox-input">{REPUTACAO_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
+            <div><label className="fox-label">Lealdade interna</label><select value={form.lealdade === "Pilar da F.O.X." ? "Pilar da Jikkai" : (form.lealdade || "Observado")} onChange={e => setForm({ ...form, lealdade: e.target.value, lealdadeAtualizadaEm: new Date().toISOString() })} className="fox-input">{LEALDADE_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
+            <div><label className="fox-label">Conduta</label><select value={form.conduta || "Limpo"} onChange={e => setForm({ ...form, conduta: e.target.value, condutaAtualizadaEm: new Date().toISOString() })} className="fox-input">{CONDUTA_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
             <div><label className="fox-label">Posição herdada do cargo</label><div className="min-h-11 px-3 py-2.5 rounded border border-zinc-800 bg-black text-orange-300 text-sm">{estruturaPosicaoLabel(data.roles.find(r => r.id === form.role))}</div><div className="text-zinc-700 text-[10px] mt-1">Altere a posição na aba Cargos.</div></div>
             <div><label className="fox-label">Responde a</label><select value={form.respondeA || ""} onChange={e => setForm({ ...form, respondeA: e.target.value })} className="fox-input"><option value="">— Comando geral —</option>{data.users.filter(u => u.username !== editando && u.role !== "contratante").map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
             <div><label className="fox-label">Nível de acesso</label><select value={form.nivelAcesso || 1} onChange={e => setForm({ ...form, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
@@ -4491,8 +5452,9 @@ function UsuariosManager({ data, setData, usuario }) {
             <div><label className="fox-label">Especialidade</label><input value={form.especialidade || ""} onChange={e => setForm({ ...form, especialidade: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Level</label><input type="number" value={form.level || 0} onChange={e => setForm({ ...form, level: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Iniciação</label><select value={form.iniciacaoStatus || "pendente"} onChange={e => setForm({ ...form, iniciacaoStatus: e.target.value })} className="fox-input"><option value="pendente">Pendente</option><option value="concluida">Concluída</option></select></div>
-            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Justificativa da reputação</label><textarea rows="2" value={form.reputacaoNota || ""} onChange={e => setForm({ ...form, reputacaoNota: e.target.value })} className="fox-input" placeholder="Motivo da classificação externa" /></div>
+            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Motivo do impacto externo</label><textarea rows="2" value={form.reputacaoNota || ""} onChange={e => setForm({ ...form, reputacaoNota: e.target.value })} className="fox-input" placeholder="Só use quando algo realmente ocorreu no RP" /></div>
             <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Justificativa da lealdade</label><textarea rows="2" value={form.lealdadeNota || ""} onChange={e => setForm({ ...form, lealdadeNota: e.target.value })} className="fox-input" placeholder="Motivo da classificação interna" /></div>
+            <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Observação de conduta</label><textarea rows="2" value={form.condutaNota || ""} onChange={e => setForm({ ...form, condutaNota: e.target.value })} className="fox-input" placeholder="Advertência, mérito, observação ou revisão disciplinar" /></div>
             <div className="sm:col-span-2 lg:col-span-3"><label className="fox-label">Descrição / observação de dossiê</label><textarea rows="3" value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} className="fox-input" /></div>
           </div>
           {erro && <div className="text-red-500 text-xs">{erro}</div>}
@@ -4503,7 +5465,7 @@ function UsuariosManager({ data, setData, usuario }) {
         {data.users.map(u => { const role = data.roles.find(r => r.id === u.role); const cla = data.clas.find(c => c.id === u.cla); return (
           <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg flex gap-3">
             <MemberAvatar user={u} size="md" />
-            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="reputacao" valor={u.reputacao} compacto /><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /></div></div>
+            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /><ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto /><ReputacaoBadge tipo="impacto" valor={u.reputacao} compacto /></div></div>
             <div className="flex gap-1"><button onClick={() => iniciarEdit(u)} className="p-1.5 text-orange-400 hover:text-orange-300"><IEdit className="w-3.5 h-3.5" /></button>{u.username !== "leader" && <button onClick={() => remover(u.username)} className="p-1.5 text-red-500 hover:text-red-400"><ITrash className="w-3.5 h-3.5" /></button>}</div>
           </div>
         ); })}
@@ -4536,7 +5498,7 @@ function RamosManager({ data, setData, usuario }) {
   };
 
   const definirCapitao = (ramoId, username) => {
-    if (!cargoCapitao) { alert("Crie ou configure um cargo na posição Capitão de ramo antes de designar o comando."); return; }
+    if (!cargoCapitao) { alert("Crie ou configure um cargo na posição Capitão da Divisão antes de designar o comando."); return; }
     setData(d => ({
       ...d,
       users: d.users.map(u => {
@@ -4586,12 +5548,12 @@ function RamosManager({ data, setData, usuario }) {
             <div className="flex justify-between gap-3"><div className="flex-1"><div className="text-[9px] uppercase tracking-wider text-zinc-600">{ramo.tipo || "Divisão"} · {integrantes.length} membros</div><div className="font-black text-lg serif" style={{color:ramo.cor}}>{ramo.nome}</div><p className="text-zinc-500 text-xs mt-2">{ramo.descricao || "Sem descrição."}</p></div>
             {!protegido && <button onClick={() => remover(ramo)} className="text-red-500"><ITrash className="w-4 h-4" /></button>}</div>
             <div className="mt-4 pt-4 border-t border-zinc-800">
-              <label className="fox-label">Capitão do ramo</label>
+              <label className="fox-label">Capitão da Divisão</label>
               <select value={capitao?.username || ""} onChange={e => definirCapitao(ramo.id, e.target.value)} className="fox-input">
                 <option value="">— Capitão não designado —</option>
                 {(data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto").map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · {u.cla === ramo.id ? "neste ramo" : "transferir para cá"}</option>)}
               </select>
-              {!cargoCapitao && <div className="text-yellow-500 text-[10px] mt-2">Nenhum cargo está posicionado como Capitão de ramo.</div>}
+              {!cargoCapitao && <div className="text-yellow-500 text-[10px] mt-2">Nenhum cargo está posicionado como Capitão da Divisão.</div>}
               {capitaes.length > 1 && <div className="text-yellow-500 text-[10px] mt-2">Existem {capitaes.length} capitães neste ramo. Escolha um para regularizar.</div>}
             </div>
           </div>;
@@ -5076,6 +6038,9 @@ function LoginScreen({ data, onLogin }) {
 const PORTAL_SESSION_KEY = "fox-portal-session-v2";
 const MAP_RETURN_KEY = "fox-map-return-v2";
 const PORTAL_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+const REPORT_DRAFT_KEY = "fox-report-draft-v2";
+const MAP_PICK_REQUEST_KEY = "fox-map-pick-request-v1";
+const MAP_PICK_RESULT_KEY = "fox-map-pick-result-v1";
 
 function parseSessaoPortal(raw) {
   if (!raw) return null;
@@ -5122,6 +6087,9 @@ function limparSessaoPortal() {
     sessionStorage.removeItem(PORTAL_SESSION_KEY);
     localStorage.removeItem(PORTAL_SESSION_KEY);
     localStorage.removeItem(MAP_RETURN_KEY);
+    localStorage.removeItem(REPORT_DRAFT_KEY);
+    localStorage.removeItem(MAP_PICK_REQUEST_KEY);
+    localStorage.removeItem(MAP_PICK_RESULT_KEY);
     localStorage.removeItem("fox-map-viewer");
   } catch {}
 }
@@ -5138,6 +6106,7 @@ const DEFAULT_DATA = {
   roles: DEFAULT_ROLES,
   missoes: [],
   trios: DEFAULT_TRIOS,
+  divisoes: DEFAULT_DIVISOES,
   fases: DEFAULT_FASES,
   armas: DEFAULT_ARMAS,
   clas: DEFAULT_CLAS,
@@ -5153,7 +6122,7 @@ const DEFAULT_DATA = {
   visaoGeralContratantes: {
     titulo: "F.O.X. — Mercenários das Sombras",
     subtitulo: "Discrição. Letalidade. Resultado.",
-    descricao: "A F.O.X. opera nas margens do mundo shinobi, executando contratos que vilas oficiais não podem aceitar. Cada operação é conduzida com sigilo absoluto, executores de elite e zero rastros.\n\nNossos serviços incluem: extração, eliminação, sabotagem, espionagem, escolta, recuperação de relíquias e operações especiais sob demanda.\n\nPara contratar nossos serviços, navegue até a aba JIKKAI e analise os contratos disponíveis ou aguarde contato direto com nossa liderança.",
+    descricao: "A Jikkai opera nas margens do mundo shinobi, executando contratos que vilas oficiais não podem aceitar. Cada operação é conduzida com sigilo absoluto, executores de elite e zero rastros.\n\nNossos serviços incluem: extração, eliminação, sabotagem, espionagem, escolta, recuperação de relíquias e operações especiais sob demanda.\n\nPara contratar nossos serviços, navegue até a aba JIKKAI e analise os contratos disponíveis ou aguarde contato direto com nossa liderança.",
   },
 };
 
@@ -5223,15 +6192,35 @@ function migrate(raw) {
       lealdadeNota: u.lealdadeNota || "Juramento anterior reconhecido e preservado pelo Protocolo de Iniciação.",
     };
   });
-  // Liga integrantes antigos dos trios a usernames reais e cria IDs estáveis.
-  migrated.trios = (raw.trios || DEFAULT_TRIOS).map((t, i) => ({
-    ...t,
-    id: t.id || `trio_${slugEstrutura(t.nome) || i}`,
-    membros: (t.membros || []).map(m => {
-      const encontrado = m.username ? migrated.users.find(u => u.username === m.username) : usuarioPorIdentidade(migrated.users, m.nome);
-      return { ...m, username: m.username || encontrado?.username || "" };
-    }),
+  // A partir desta versão, Soke/Bunke são famílias. Divisões são a estrutura operacional da Jikkai.
+  const divisoesBase = Array.isArray(raw.divisoes) && raw.divisoes.length ? raw.divisoes : DEFAULT_DIVISOES;
+  migrated.divisoes = divisoesBase.map((d, i) => ({
+    id: d.id || "divisao_" + (slugEstrutura(d.nome) || i),
+    nome: d.nome || "Divisão " + (i + 1),
+    desc: d.desc || d.descricao || "Divisão operacional da Jikkai.",
+    cor: d.cor || ["#D85A30", "#B91C1C", "#7C2D12", "#EA580C"][i % 4],
+    status: d.status || "ativa",
+    capitaoUsername: d.capitaoUsername || d.capitao || "",
+    ordem: Number.isFinite(Number(d.ordem)) ? Number(d.ordem) : i,
   }));
+  const divisaoPadrao = migrated.divisoes[0]?.id || "divisao_central";
+  // Liga integrantes antigos dos trios a usernames reais e converte trios/duplas em equipes operacionais.
+  migrated.trios = (raw.trios || DEFAULT_TRIOS).map((t, i) => {
+    const membros = (t.membros || []).map(m => {
+      const encontrado = m.username ? migrated.users.find(u => u.username === m.username) : usuarioPorIdentidade(migrated.users, m.nome);
+      return { ...m, username: m.username || encontrado?.username || "", papel: m.papel || "Soldado" };
+    });
+    const liderPorPapel = membros.find(m => String(m.papel || "").toLowerCase().includes("líder") || String(m.papel || "").toLowerCase().includes("lider"));
+    return {
+      ...t,
+      id: t.id || `equipe_${slugEstrutura(t.nome) || i}`,
+      divisaoId: t.divisaoId || t.ramoId || divisaoPadrao,
+      tipo: t.tipo || "Ataque",
+      status: t.status || "Ativa",
+      liderUsername: t.liderUsername || liderPorPapel?.username || "",
+      membros,
+    };
+  });
   // Garante cargos protegidos, permissões e posições estruturais sincronizadas.
   const defaultsById = Object.fromEntries(DEFAULT_ROLES.map(r => [r.id, r]));
   let rolesOut = (raw.roles || DEFAULT_ROLES).map(r => ({
@@ -5345,7 +6334,7 @@ function VisaoGeralContratantes({ data, setData, isLider }) {
         <div className="text-xs text-zinc-400 leading-relaxed">
           <strong className="text-red-300 uppercase tracking-wider">Discrição absoluta.</strong>{" "}
           Operamos sob sigilo. A identidade dos operadores é protegida por codinomes — nenhum nome real é compartilhado com contratantes.
-          Para discutir um contrato, navegue até a aba <strong className="text-orange-400">Contratos F.O.X.</strong>
+          Para discutir um contrato, navegue até a aba <strong className="text-orange-400">Contratos Jikkai</strong>
         </div>
       </div>
     </div>
@@ -5410,7 +6399,7 @@ function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-20 right-3 sm:bottom-4 sm:right-4 z-40 bg-black/90 backdrop-blur border border-orange-700/60 rounded-full shadow-2xl flex items-center gap-2 px-3 py-2 max-w-[calc(100vw-1.5rem)]">
+    <div className="fixed bottom-5 right-3 sm:bottom-4 sm:right-4 z-40 bg-black/90 backdrop-blur border border-orange-700/60 rounded-md shadow-2xl flex items-center gap-1 px-1.5 py-1 max-w-[calc(100vw-1rem)]">
       <audio
         ref={audioRef}
         src="https://jikkai.vercel.app/themesong.mp3"
@@ -5419,13 +6408,26 @@ function MusicPlayer() {
         crossOrigin="anonymous"
         onError={(e) => console.error("erro audio:", e)}
       />
-      <button onClick={toggle} className="text-orange-400 hover:text-orange-300 p-1 text-sm" title={playing ? "Pausar" : "Tocar"}>
+      <button onClick={toggle} className="text-orange-400 hover:text-orange-300 p-0.5 text-[10px] leading-none" title={playing ? "Pausar" : "Tocar"}>
         {playing ? "⏸" : "▶"}
       </button>
-      <button onClick={toggleMute} className="text-orange-400 hover:text-orange-300 p-1 text-sm" title={muted ? "Ativar som" : "Mudo"}>
+      <button onClick={toggleMute} className="text-orange-400 hover:text-orange-300 p-0.5 text-[10px] leading-none" title={muted ? "Ativar som" : "Mudo"}>
         {muted ? "🔇" : "🔊"}
       </button>
-      <span className="text-[9px] uppercase tracking-wider text-orange-600 pr-1 hidden sm:inline">F.O.X. Theme</span>
+      <span className="text-[7px] uppercase tracking-[0.06em] text-orange-600 pr-0.5 hidden sm:inline leading-none">F.O.X. Theme</span>
+    </div>
+  );
+}
+
+
+function PortalQuickActions({ onNavigate, isContratante }) {
+  if (isContratante) return null;
+  return (
+    <div className="portal-quick-actions" aria-label="Atalhos rápidos do portal">
+      <button title="Missões" onClick={() => onNavigate("missoes")}><IClipboard className="w-5 h-5" /></button>
+      <button title="Criar relatório" onClick={() => onNavigate("jikkai", "relatorios", "novo-relatorio-avulso")}><IFile className="w-5 h-5" /></button>
+      <button title="Mapa estratégico" onClick={() => onNavigate("mapa")}><ITarget className="w-5 h-5" /></button>
+      <button title="Voltar ao topo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span className="text-sm font-black">↑</span></button>
     </div>
   );
 }
@@ -5509,9 +6511,28 @@ function App() {
   }, [usuarioAtual?.username, tab, navigationRequest?.token]);
 
   useEffect(() => {
-    window.foxOpenStrategicMap = () => {
-      if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
-      window.location.href = "./mapa.html";
+    window.foxOpenStrategicMap = (options = {}) => {
+      const pickLocation = Boolean(options.pickLocation);
+      const returnTab = pickLocation ? "jikkai" : tab;
+      const returnNavigation = pickLocation
+        ? { subTab: "relatorios", action: "retomar-relatorio-mapa" }
+        : navigationRequest;
+
+      if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab: returnTab, navigationRequest: returnNavigation });
+
+      if (pickLocation) {
+        try {
+          localStorage.setItem(MAP_PICK_REQUEST_KEY, JSON.stringify({
+            origem: "relatorio",
+            returnTab: "jikkai",
+            returnSubTab: "relatorios",
+            returnAction: "retomar-relatorio-mapa",
+            createdAt: new Date().toISOString(),
+          }));
+        } catch {}
+      }
+
+      window.location.href = pickLocation ? "./mapa.html?pick=relatorio" : "./mapa.html";
     };
     return () => {
       if (window.foxOpenStrategicMap) delete window.foxOpenStrategicMap;
@@ -5650,7 +6671,7 @@ function App() {
 
   const TABS = isContratante ? [
     { id: "visaogeral", label: "Visão Geral", icon: IBriefcase },
-    { id: "jikkai", label: "Contratos F.O.X.", icon: ITarget },
+    { id: "jikkai", label: "Contratos Jikkai", icon: ITarget },
     { id: "arquivos", label: "Arquivo Público", icon: ILock },
   ] : [
     { id: "home", label: "Visão Geral", icon: IFlame },
@@ -5702,7 +6723,7 @@ function App() {
   })();
 
   return (
-    <div className="min-h-screen bg-black text-zinc-200">
+    <div className="jikkai-compact min-h-screen bg-black text-zinc-200">
       <header className="border-b border-orange-900/30 bg-black/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -5752,11 +6773,11 @@ function App() {
         {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} />}
+        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} onNavigate={navegarPara} />}
         {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
         {tab === "visaogeral" && <VisaoGeralContratantes data={data} setData={setData} isLider={isLider} />}
         {tab === "arquivos" && isContratante && <ArquivoPublicoPage data={data} />}
-        {tab === "gerenciar" && podeGerenciar && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} role={role} exportar={exportar} importar={importar} />}
+        {tab === "gerenciar" && podeGerenciar && <GerenciarPage data={data} setData={setData} usuario={usuarioAtual} role={role} exportar={exportar} importar={importar} navigationRequest={navigationRequest} />}
       </main>
 
       {mobileMoreOpen && (
@@ -5793,6 +6814,8 @@ function App() {
         </div>
       </nav>
 
+      <PortalQuickActions onNavigate={navegarPara} isContratante={isContratante} />
+
       <footer className="border-t border-zinc-900 mt-10 sm:mt-16 pt-6 pb-28 sm:py-6 text-center text-zinc-700 text-xs">
         <p className="uppercase tracking-widest">Grupo F.O.X. · Organização Jikkai · Legado Lamona · {new Date().getFullYear()}</p>
         <p className="italic mt-1">"Mais forte, mais livre, mais letal do que nunca."</p>
@@ -5804,5 +6827,5 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-<script data-jikkai-map-link>(function(){function s(){try{var k='fox-portal-session-v2',m='fox-map-return-v2';var raw=sessionStorage.getItem(k)||localStorage.getItem(k);if(raw)localStorage.setItem(m,raw)}catch(e){}}function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.addEventListener('click',s);a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:10px;padding:11px 14px;font:800 11px/1 system-ui;letter-spacing:.09em;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.55)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
+<script data-jikkai-map-link>(function(){function s(){try{var k='fox-portal-session-v2',m='fox-map-return-v2';var raw=sessionStorage.getItem(k)||localStorage.getItem(k);if(raw)localStorage.setItem(m,raw)}catch(e){}}function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.addEventListener('click',s);a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:6px;padding:6px 7px;font:800 8px/1 system-ui;letter-spacing:.07em;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.45)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
 </html>
