@@ -1,0 +1,292 @@
+name: Aplicar limpeza visual da Central do Membro
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-cleanup:
+    if: ${{ !contains(github.event.head_commit.message, 'bot: aplicar limpeza visual da central do membro') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Aplicar ajustes no index.html
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          text = text.replace(
+              '// IDENTIDADE FOX LAMONA JIKKAI v1',
+              '// IDENTIDADE FOX LAMONA JIKKAI v1\n// CENTRAL DO MEMBRO LIMPA v1 (ações claras, missões, relatórios e atalhos)'
+          )
+
+          text = text.replace(
+              '{ id: "capitao", nome: "Capitão", hasLeaderPerms: false, protected: true, cor: "#C2410C", permissions: [], estruturaPosicao: "capitao_ramo", ordemEstrutura: 30 },',
+              '{ id: "capitao", nome: "Capitão", hasLeaderPerms: false, protected: true, cor: "#C2410C", permissions: ["manage_missions"], estruturaPosicao: "capitao_ramo", ordemEstrutura: 30 },'
+          )
+
+          text = text.replace(
+              'if (r.id === "capitao") return { ...r, protected: true, estruturaPosicao: "capitao_ramo", ordemEstrutura: Number(r.ordemEstrutura) || 30 };',
+              'if (r.id === "capitao") return { ...r, protected: true, estruturaPosicao: "capitao_ramo", ordemEstrutura: Number(r.ordemEstrutura) || 30, permissions: Array.from(new Set([...(r.permissions || []), "manage_missions"])) };'
+          )
+
+          text = text.replace(
+              ': ["home", "historia", "membros", "jikkai"];',
+              ': ["home", "missoes", "membros", "jikkai"];'
+          )
+
+          new_home = r'''function HomePage({ data, usuario, role, isLider, onNavigate }) {
+  const membrosFox = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
+  const roleOf = u => (data.roles || []).find(r => r.id === u.role);
+  const ramoUsuario = (data.clas || []).find(c => c.id === usuario?.cla);
+  const trioUsuario = trioDoUsuario(data, usuario?.username);
+  const cargoUsuario = roleOf(usuario);
+  const lideresJikkai = membrosFox.filter(u => estruturaPosicaoRole(roleOf(u)) === "lider");
+  const nomesLideranca = lideresJikkai.length ? lideresJikkai.map(getCodinome).join(" · ") : "Não designada";
+  const juramentoUsuario = juramentoDoUsuario(data.juramentados, usuario);
+
+  const faseAtiva = (data.fases || []).find(f => f.status === "andamento") || (data.fases || []).find(f => f.status !== "concluida") || (data.fases || [])[0];
+  const progressoGeral = progressoGeralJikkai(data.fases || []);
+  const progressoAtual = faseAtiva ? progressoFase(faseAtiva) : 0;
+  const objetivosAtuais = faseAtiva?.objetivos || [];
+  const objetivosConcluidos = objetivosAtuais.filter(o => o.status === "concluido").length;
+  const objetivosBloqueados = objetivosAtuais.filter(o => o.status === "bloqueado").length;
+  const objetivosAndamento = objetivosAtuais.filter(o => ["preparacao", "andamento", "parcial"].includes(o.status)).length;
+
+  const statusInativos = ["concluida", "falhou", "recusada", "arquivada"];
+  const minhasMissoes = (data.missoes || []).filter(m => {
+    const participa = m.assignedTo === usuario?.username || (m.participants || []).includes(usuario?.username);
+    return participa && !statusInativos.includes(m.status) && podeVerItemSigiloso(m, data, usuario, role);
+  });
+  const missoesAguardando = minhasMissoes.filter(m => ["atribuida", "pendente", "devolvida"].includes(m.status));
+  const missoesEmAndamento = minhasMissoes.filter(m => ["aceita", "andamento"].includes(m.status));
+  const missoesRevisaoMinhas = minhasMissoes.filter(m => m.status === "revisao");
+  const relatoriosMeus = (data.relatorios || []).filter(r => r.autorUsername === usuario?.username && podeVerItemSigiloso(r, data, usuario, role));
+
+  const sinaisTodos = coletarSinaisEstrategicos(data);
+  const sinaisVisiveis = sinaisTodos.filter(s => sinalAutorizadoNaVisaoGeral(s, data, usuario, role));
+  const sinaisOcultos = Math.max(0, sinaisTodos.length - sinaisVisiveis.length);
+  const maiorRisco = sinaisVisiveis[0]?.risco || (objetivosBloqueados ? "Elevado" : "Baixo");
+  const riscoCfg = RISCO_CFG[normalizarRisco(maiorRisco)] || RISCO_CFG.Baixo;
+
+  const capitaesDesignados = (data.clas || []).filter(ramo => membrosFox.some(u => u.cla === ramo.id && estruturaPosicaoRole(roleOf(u)) === "capitao_ramo")).length;
+  const ramosSemCapitao = Math.max(0, (data.clas || []).length - capitaesDesignados);
+  const membrosPendentes = membrosFox.filter(u => u.iniciacaoStatus === "pendente").length;
+  const dossiesIncompletos = membrosFox.filter(u => !perfilCompletoUsuario(u)).length;
+  const missoesRevisao = (data.missoes || []).filter(m => m.status === "revisao").length;
+  const propostas = (data.contratos || []).filter(c => c.status === "Proposta").length;
+
+  const prioridades = [];
+  const addPrioridade = item => {
+    if (!item?.titulo || prioridades.some(p => p.titulo === item.titulo)) return;
+    prioridades.push(item);
+  };
+
+  if (missoesAguardando.length) addPrioridade({ titulo: "Missão aguardando sua confirmação", desc: missoesAguardando[0].titulo, tab: "missoes", cor: "#EA580C" });
+  if (missoesEmAndamento.length) addPrioridade({ titulo: "Operação em andamento", desc: "Atualize objetivos e prepare o relatório final quando concluir.", tab: "missoes", cor: "#A855F7" });
+  if (!perfilCompletoUsuario(usuario)) addPrioridade({ titulo: "Concluir seu dossiê", desc: "Complete foto, identidade, elemento, linhagem e vila para facilitar designações.", tab: "membros", subTab: "lista", action: "meu-dossie", cor: "#CA8A04" });
+
+  if (isLider) {
+    if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Relatórios operacionais esperando decisão da liderança.", tab: "missoes", cor: "#A855F7" });
+    if (propostas) addPrioridade({ titulo: `${propostas} ${propostas === 1 ? "proposta externa" : "propostas externas"}`, desc: "Contratos enviados aguardam análise.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
+    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", cor: "#F59E0B" });
+    if (ramosSemCapitao) addPrioridade({ titulo: `${ramosSemCapitao} ${ramosSemCapitao === 1 ? "ramo está" : "ramos estão"} sem Capitão`, desc: "Designe o responsável por cada ramo.", tab: "gerenciar", cor: "#DC2626" });
+    if (dossiesIncompletos) addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", cor: "#CA8A04" });
+  }
+
+  sinaisVisiveis.slice(0, isLider ? 3 : 1).forEach(s => {
+    const destino = destinoSinalVisaoGeral(s);
+    addPrioridade({ titulo: s.titulo, desc: s.descricao || `${fonteLabel(s.fonteTipo).label} estratégico`, ...destino, cor: RISCO_CFG[normalizarRisco(s.risco)]?.cor || "#EA580C" });
+  });
+
+  const atividadesBloqueadas = /senha|backup|membro_editado|membro_removido|perfil_atualizado|foto_iniciacao|cargo_removido/i;
+  const atividadesRecentes = (data.activityLog || [])
+    .filter(a => a.descricao && !atividadesBloqueadas.test(`${a.tipo} ${a.descricao}`))
+    .slice()
+    .sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0))
+    .slice(0, 3);
+
+  const acaoPrincipal = prioridades[0] || (minhasMissoes.length ? {
+    titulo: "Acompanhar suas operações",
+    desc: "Veja missões designadas, aceite participação e registre o resultado.",
+    tab: "missoes",
+    cor: "#EA580C"
+  } : {
+    titulo: "Aguardando designação",
+    desc: "Nenhuma missão ativa. Explore o mapa, mantenha o dossiê em dia e registre acontecimentos relevantes.",
+    tab: "jikkai",
+    subTab: "relatorios",
+    cor: "#16A34A"
+  });
+
+  const navegar = item => onNavigate(item.tab, item.subTab || "", item.action || "");
+
+  const QuickCard = ({ icon: Icone, titulo, desc, badge, onClick, accent = "#EA580C" }) => (
+    <button onClick={onClick} className="group rounded-xl border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900/80 hover:border-orange-700 transition-all p-4 text-left min-h-[118px] flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-3">
+        <div className="w-10 h-10 rounded-lg border flex items-center justify-center" style={{ borderColor: accent + "80", background: accent + "15", color: accent }}><Icone className="w-5 h-5" /></div>
+        {badge && <span className="text-[9px] uppercase tracking-wider px-2 py-1 rounded border border-orange-900 bg-black/60 text-orange-300 font-black">{badge}</span>}
+      </div>
+      <div>
+        <div className="text-orange-50 font-black serif mt-4 group-hover:text-orange-300">{titulo}</div>
+        <p className="text-zinc-600 text-xs leading-relaxed mt-1">{desc}</p>
+      </div>
+    </button>
+  );
+
+  return (
+    <div className="space-y-5 sm:space-y-7 fadein">
+      <section className="relative overflow-hidden rounded-2xl border border-orange-900/40 bg-gradient-to-br from-black via-red-950/20 to-black p-5 sm:p-7">
+        <div className="absolute -right-20 -top-20 w-72 h-72 rounded-full bg-orange-900/10 blur-3xl" />
+        <div className="relative grid lg:grid-cols-[1fr_360px] gap-5 items-stretch">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Central do Membro · F.O.X.</div>
+            <h1 className="text-3xl sm:text-4xl font-black text-orange-50 serif mt-2">Bem-vindo, {getCodinome(usuario)}</h1>
+            <p className="text-zinc-500 leading-relaxed mt-3 max-w-2xl">Veja primeiro o que exige sua ação: missões designadas, dossiê, relatórios e registros importantes.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="px-3 py-1.5 rounded-full border border-orange-800 bg-orange-950/20 text-orange-300 text-[10px] uppercase tracking-wider font-black">{cargoUsuario?.nome || usuario?.patente || "Membro"}</span>
+              <span className="px-3 py-1.5 rounded-full border border-zinc-700 bg-zinc-950 text-zinc-400 text-[10px] uppercase tracking-wider font-black">{ramoUsuario?.nome || "Sem ramo"}{trioUsuario ? ` · ${trioUsuario.nome}` : ""}</span>
+              <span className="px-3 py-1.5 rounded-full border border-red-800 bg-red-950/20 text-red-300 text-[10px] uppercase tracking-wider font-black">Acesso nível {usuario?.nivelAcesso || 1}</span>
+              {juramentoUsuario && <span className="px-3 py-1.5 rounded-full border border-green-900 bg-green-950/20 text-green-300 text-[10px] uppercase tracking-wider font-black">Juramento selado</span>}
+            </div>
+          </div>
+
+          <button onClick={() => navegar(acaoPrincipal)} className="rounded-xl border p-5 text-left hover:scale-[1.01] transition-all" style={{ borderColor: (acaoPrincipal.cor || "#EA580C") + "90", background: (acaoPrincipal.cor || "#EA580C") + "12" }}>
+            <div className="text-[9px] uppercase tracking-[0.28em] text-zinc-500">O que fazer agora</div>
+            <div className="flex items-center gap-3 mt-3">
+              <div className="w-3 h-3 rounded-full pulse-fire" style={{ background: acaoPrincipal.cor || "#EA580C", boxShadow: `0 0 18px ${acaoPrincipal.cor || "#EA580C"}` }} />
+              <div className="text-2xl font-black serif" style={{ color: acaoPrincipal.cor || "#EA580C" }}>{acaoPrincipal.titulo}</div>
+            </div>
+            <p className="text-zinc-500 text-sm mt-3 leading-relaxed">{acaoPrincipal.desc}</p>
+            <div className="mt-5 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-orange-700 text-white text-xs uppercase tracking-wider font-black">Abrir agora →</div>
+          </button>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <QuickCard icon={IClipboard} titulo="Minhas Missões" desc="Aceite, acompanhe objetivos e envie relatório final." badge={minhasMissoes.length ? `${minhasMissoes.length} ativa${minhasMissoes.length === 1 ? "" : "s"}` : "0 ativa"} onClick={() => onNavigate("missoes")} accent="#A855F7" />
+        <QuickCard icon={IFile} titulo="Relatórios" desc="Registre resultado de missão ou acontecimento relevante do RP." badge={relatoriosMeus.length ? `${relatoriosMeus.length} meu${relatoriosMeus.length === 1 ? "" : "s"}` : "Criar"} onClick={() => onNavigate("jikkai", "relatorios")} accent="#38BDF8" />
+        <QuickCard icon={IUsers} titulo="Meu Dossiê" desc="Foto, elemento, linhagem, ramo, patente e especialidade." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("membros", "lista", "meu-dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
+        <QuickCard icon={ITarget} titulo="Mapa Estratégico" desc="Locais, rotas e pontos importantes da organização." badge="Mapa" onClick={() => onNavigate("mapa")} accent="#EA580C" />
+      </section>
+
+      <section className="grid lg:grid-cols-[1.25fr_0.75fr] gap-4">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Missões e relatórios</div><h2 className="text-xl font-black text-orange-50 serif">Operações designadas</h2></div>
+            <button onClick={() => onNavigate("missoes")} className="text-orange-400 text-[10px] uppercase tracking-wider font-black">Abrir missões</button>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-2 mb-4">
+            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700">Aguardando</div><div className="text-orange-300 text-xl font-black mt-1">{missoesAguardando.length}</div></div>
+            <div className="p-3 rounded-lg border border-purple-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-purple-700">Em andamento</div><div className="text-purple-300 text-xl font-black mt-1">{missoesEmAndamento.length}</div></div>
+            <div className="p-3 rounded-lg border border-sky-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-sky-700">Em revisão</div><div className="text-sky-300 text-xl font-black mt-1">{missoesRevisaoMinhas.length}</div></div>
+          </div>
+          <div className="p-4 rounded-lg border border-purple-900/40 bg-purple-950/10 text-sm text-zinc-300 leading-relaxed">
+            <strong className="text-purple-300 uppercase tracking-wider text-xs">Regra operacional:</strong> missões podem ser designadas pela liderança, conselheiros e capitães de ramo autorizados. Ao concluir uma missão, envie o relatório final. Se algo importante acontecer fora de missão, registre também em <button onClick={() => onNavigate("jikkai", "relatorios")} className="text-sky-300 font-bold hover:text-sky-200">Relatórios</button>.
+          </div>
+          <div className="space-y-2 mt-4">
+            {minhasMissoes.slice(0, 3).map(m => <button key={m.id} onClick={() => onNavigate("missoes")} className="w-full text-left p-3 rounded-lg border border-zinc-800 bg-black/40 hover:border-orange-800"><div className="flex items-center gap-2 flex-wrap"><span className="text-[10px] px-2 py-0.5 rounded border border-orange-900 text-orange-300 uppercase tracking-wider font-bold">{statusMissaoConfig(m.status).label}</span><SigiloBadge sigilo={m.sigilo} compacto /></div><div className="text-orange-50 font-bold text-sm mt-2">{m.titulo}</div><div className="text-zinc-600 text-xs mt-1 line-clamp-2">{m.desc || "Operação designada."}</div></button>)}
+            {minhasMissoes.length === 0 && <div className="p-6 text-center rounded-lg border border-zinc-800 bg-black/30 text-zinc-600 text-sm italic">Nenhuma missão ativa no momento. Aguarde designação ou registre acontecimentos relevantes em Relatórios.</div>}
+          </div>
+        </div>
+
+        <button onClick={() => onNavigate("membros", "lista", "meu-dossie")} className="rounded-xl border border-orange-900/50 bg-gradient-to-br from-red-950/20 to-black p-5 text-left hover:border-orange-600 transition-colors">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Meu registro</div>
+          <div className="flex items-center gap-4 mt-4">
+            <MemberAvatar user={usuario} size="lg" />
+            <div className="min-w-0">
+              <div className="text-xl font-black text-orange-50 serif truncate">{getCodinome(usuario)}</div>
+              <div className="text-zinc-500 text-xs mt-1 truncate">{usuario?.patente || cargoUsuario?.nome || "Operador"}</div>
+              <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-1">{ramoUsuario?.nome || "Sem ramo"}{trioUsuario ? ` · ${trioUsuario.nome}` : ""}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-5">
+            <div className="p-3 rounded-lg border border-red-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-red-700">Reputação</div><div className="text-red-300 text-xs font-bold mt-1">{usuario?.reputacao || "Desconhecido"}</div></div>
+            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40"><div className="text-[8px] uppercase tracking-wider text-orange-700">Lealdade</div><div className="text-orange-300 text-xs font-bold mt-1">{usuario?.lealdade || "Observado"}</div></div>
+          </div>
+          <div className={`mt-4 text-xs font-bold ${perfilCompletoUsuario(usuario) ? "text-green-500" : "text-yellow-500"}`}>{perfilCompletoUsuario(usuario) ? "Dossiê completo" : "Dossiê incompleto · toque para atualizar"}</div>
+        </button>
+      </section>
+
+      <section className="grid lg:grid-cols-[1fr_0.95fr] gap-4">
+        {faseAtiva && (
+          <div className="rounded-xl border border-orange-900/40 bg-gradient-to-r from-red-950/15 to-black p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div><div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Plano Jikkai</div><h2 className="text-2xl font-black text-orange-50 serif mt-1">Fase {faseAtiva.n} — {faseAtiva.titulo}</h2><p className="text-zinc-500 text-sm mt-2 line-clamp-2">{faseAtiva.desc}</p></div>
+              <div className="text-3xl font-black text-orange-400 serif">{progressoAtual}%</div>
+            </div>
+            <div className="h-2 bg-black border border-zinc-800 rounded-full overflow-hidden mt-5"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: `${progressoAtual}%` }} /></div>
+            <div className="flex flex-wrap gap-2 mt-4 text-[10px] uppercase tracking-wider font-bold">
+              <span className="px-2 py-1 rounded border border-green-900 text-green-500 bg-green-950/20">{objetivosConcluidos} concluídos</span>
+              <span className="px-2 py-1 rounded border border-orange-900 text-orange-500 bg-orange-950/20">{objetivosAndamento} em movimento</span>
+              <span className="px-2 py-1 rounded border border-red-900 text-red-500 bg-red-950/20">{objetivosBloqueados} bloqueados</span>
+            </div>
+            <button onClick={() => onNavigate("jikkai", "plano")} className="mt-4 text-orange-400 text-xs uppercase tracking-wider font-black hover:text-orange-300">Ver fase completa →</button>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-5">
+          <div className="flex items-center justify-between gap-3 mb-4"><div><div className="text-[9px] uppercase tracking-[0.28em] text-red-600">Novidades</div><h2 className="text-xl font-black text-orange-50 serif">Movimentações recentes</h2></div>{isLider && <button onClick={() => onNavigate("gerenciar")} className="text-zinc-500 text-[10px] uppercase tracking-wider font-black">Registro completo</button>}</div>
+          <div className="space-y-3">
+            {atividadesRecentes.map(a => <div key={a.id} className="flex gap-3"><div className="w-px bg-gradient-to-b from-orange-700 to-transparent flex-shrink-0" /><div><div className="text-zinc-300 text-sm leading-relaxed">{a.descricao}</div><div className="text-zinc-700 text-[10px] mt-1">{a.ator ? `Por ${a.ator} · ` : ""}{a.data ? new Date(a.data).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "Registro interno"}</div></div></div>)}
+            {atividadesRecentes.length === 0 && <div className="p-7 text-center text-zinc-600 text-sm italic border border-zinc-800 rounded-lg">Nenhuma movimentação narrativa registrada.</div>}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid md:grid-cols-3 gap-3">
+        <button onClick={() => onNavigate("historia", "cla")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><ICrown className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Clã Lamona</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Conheça a origem, Archie e o legado familiar.</p></button>
+        <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><IUsers className="w-6 h-6 text-red-500 mb-3" /><div className="text-orange-50 font-black serif">Organização</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Ramos, estrutura, trios e dossiês dos membros.</p></button>
+        <button onClick={() => onNavigate("jikkai", "plano")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-red-950/15 to-black text-left hover:border-orange-700 transition-colors"><ITarget className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Painel Jikkai</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Plano, contratos, relatórios e situação estratégica. {sinaisOcultos > 0 ? `${sinaisOcultos} registros acima do seu acesso.` : ""}</p></button>
+      </section>
+    </div>
+  );
+}'''
+
+          pattern = re.compile(r'function HomePage\(\{ data, usuario, role, isLider, onNavigate \}\) \{.*?\n\}\n\n// ============ GALERIA DE SOMBRAS ============', re.S)
+          text, count = pattern.subn(new_home + '\n\n// ============ GALERIA DE SOMBRAS ============', text, count=1)
+          if count != 1:
+              raise SystemExit('HomePage não encontrada para substituição segura.')
+
+          text = text.replace(
+              '<p className="text-zinc-500">Nenhuma missão atribuída no momento.</p>\n          <p className="text-zinc-700 text-xs italic mt-2">Aguarde ordens da liderança.</p>',
+              '<p className="text-zinc-500">Nenhuma missão atribuída no momento.</p>\n          <p className="text-zinc-700 text-xs italic mt-2">Aguarde designação da liderança, conselheiro ou capitão de ramo.</p>\n          <p className="text-purple-400 text-xs mt-3 max-w-xl mx-auto">Se algo relevante acontecer mesmo sem missão, registre em JIKKAI → Relatórios.</p>'
+          )
+
+          text = text.replace(
+              '<SectionTitle icon={IClipboard} sub={`${ativas.length} ${ativas.length === 1 ? "operação ativa" : "operações ativas"}`}>Minhas Missões</SectionTitle>',
+              '<SectionTitle icon={IClipboard} sub={`${ativas.length} ${ativas.length === 1 ? "operação ativa" : "operações ativas"} · acompanhe e relate o resultado`}>Minhas Missões</SectionTitle>\n\n      <div className="mb-5 p-4 rounded-lg border border-purple-900/40 bg-purple-950/10 text-sm text-zinc-300 leading-relaxed">\n        <strong className="text-purple-300 uppercase tracking-wider text-xs">Lembrete:</strong> missões designadas pela liderança, conselheiros ou capitães de ramo devem ser acompanhadas aqui. Ao concluir, envie o relatório final. Se um acontecimento importante ocorrer fora de missão, registre em <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-sky-300 font-bold">JIKKAI → Relatórios</button>.\n      </div>'
+          )
+
+          if text == original:
+              raise SystemExit('Nenhuma alteração aplicada.')
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Validar HTML/JS básico
+        run: |
+          grep -q "CENTRAL DO MEMBRO LIMPA" index.html
+          grep -q "function HomePage" index.html
+          grep -q "Missões e relatórios" index.html
+          grep -q "manage_missions" index.html
+      - name: Commitar alterações
+        run: |
+          if git diff --quiet; then
+            echo "Nada para commitar"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "bot: aplicar limpeza visual da central do membro"
+          git push
