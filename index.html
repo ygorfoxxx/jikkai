@@ -1027,6 +1027,42 @@ async function enviarDmDiscordParaUsuario(usuario, content) {
   return { ok: true, user: usuario.username, discordId: usuario.discordId, channelId: payload.channelId };
 }
 
+async function notificarDiscordUsuarios(data, usernames = [], tipo = "missao", content = "") {
+  const nomes = Array.from(new Set((usernames || []).filter(Boolean)));
+  const resultados = [];
+
+  if (!nomes.length) {
+    return [{ ok: false, skipped: true, reason: "Nenhum destinatário informado" }];
+  }
+
+  for (const username of nomes) {
+    const alvo = (data?.users || []).find(u => u.username === username);
+    if (!alvo) {
+      resultados.push({ ok: false, skipped: true, user: username, reason: "Usuário não encontrado no portal" });
+      continue;
+    }
+
+    if (!alvo.discordVerificado || !alvo.discordId) {
+      resultados.push({ ok: false, skipped: true, user: username, reason: `${getCodinome(alvo)} não tem Discord verificado no dossiê` });
+      continue;
+    }
+
+    if (!podeReceberDmDiscord(alvo, tipo)) {
+      resultados.push({ ok: false, skipped: true, user: username, reason: `${getCodinome(alvo)} desativou este tipo de aviso` });
+      continue;
+    }
+
+    try {
+      const enviado = await enviarDmDiscordParaUsuario(alvo, content);
+      resultados.push({ ...enviado, user: username, ok: true });
+    } catch (e) {
+      resultados.push({ ok: false, user: username, reason: e?.message || String(e) });
+    }
+  }
+
+  return resultados;
+}
+
 function mensagemDiscordMissao(data, missao, origem = "missao") {
   const contrato = missao?.contratoId ? (data.contratos || []).find(c => c.id === missao.contratoId) : null;
   const key = origem === "contrato" ? "contrato_designado" : "missao_atribuida";
@@ -7369,8 +7405,9 @@ function DiscordManager({ data, setData, usuario }) {
       const resultado = await notificarDiscordUsuarios(data, selecionados, "convocacao", content);
       const ok = resultado.filter(r => r.ok).length;
       const falhas = resultado.length - ok;
+      const detalhesFalhas = resultado.filter(r => !r.ok).map(r => r.reason).filter(Boolean).slice(0, 3).join(" | ");
       setData(d => ({ ...d, activityLog: [...(d.activityLog || []), atividade("discord_convocacao", usuario?.username, selecionados.join(","), `Convocou ${ok} membro(s) pelo Discord${falhas ? ` · ${falhas} falha(s)` : ""}`)] }));
-      setStatus(`Convocação enviada para ${ok} membro(s).${falhas ? ` Falhas: ${falhas}.` : ""}`);
+      setStatus(`Convocação enviada para ${ok} membro(s).${falhas ? ` Falhas: ${falhas}${detalhesFalhas ? ` — ${detalhesFalhas}` : ""}.` : ""}`);
     } catch (e) {
       setStatus("Falha ao enviar convocação: " + (e.message || e));
     } finally {
