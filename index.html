@@ -1002,72 +1002,29 @@ function renderDiscordTemplate(data, key, vars = {}) {
   return String(base).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, chave) => mapa[chave] != null ? String(mapa[chave]) : "");
 }
 
-async function abrirDmDiscord(discordId) {
-  const resp = await fetch(`${DISCORD_DM_API}/users/@me/channels`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bot ${discordBotTokenAtual()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ recipient_id: String(discordId) }),
-  });
-  if (!resp.ok) {
-    const detalhe = await resp.text().catch(() => "");
-    throw new Error(`Falha ao abrir DM (${resp.status}) ${detalhe}`);
-  }
-  return resp.json();
-}
-
-async function enviarMensagemDiscord(channelId, content) {
-  const resp = await fetch(`${DISCORD_DM_API}/channels/${channelId}/messages`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bot ${discordBotTokenAtual()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: String(content || "").slice(0, 1900),
-      allowed_mentions: { parse: [] },
-    }),
-  });
-  if (!resp.ok) {
-    const detalhe = await resp.text().catch(() => "");
-    throw new Error(`Falha ao enviar DM (${resp.status}) ${detalhe}`);
-  }
-  return resp.json();
-}
-
 async function enviarDmDiscordParaUsuario(usuario, content) {
   if (!discordBotConfigurado()) return { ok: false, skipped: true, reason: "Bot token não configurado" };
   if (!usuario?.discordId) return { ok: false, skipped: true, reason: "Usuário sem Discord ID" };
-  const dm = await abrirDmDiscord(usuario.discordId);
-  await enviarMensagemDiscord(dm.id, content);
-  return { ok: true, user: usuario.username, discordId: usuario.discordId };
-}
 
-async function notificarDiscordUsuarios(data, usernames, tipo, content) {
-  const lista = Array.from(new Set((usernames || []).filter(Boolean)))
-    .map(username => (data.users || []).find(u => u.username === username))
-    .filter(u => podeReceberDmDiscord(u, tipo));
-  if (!lista.length) {
-    console.info("[Jikkai Discord] Nenhum usuário elegível para DM.");
-    return [];
+  const resp = await fetch("/api/discord-dm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      discordId: String(usuario.discordId),
+      content: String(content || "").slice(0, 1900),
+      // Mantido porque você pediu token configurável pelo portal.
+      // O ideal é usar variável de ambiente DISCORD_BOT_TOKEN na Vercel.
+      botToken: discordBotTokenAtual(),
+    }),
+  });
+
+  let payload = null;
+  try { payload = await resp.json(); } catch {}
+  if (!resp.ok || !payload?.ok) {
+    const detalhe = payload?.error || payload?.detail || resp.statusText || "Falha desconhecida";
+    throw new Error(`Falha ao enviar DM (${resp.status}) ${detalhe}`);
   }
-  if (!discordBotConfigurado()) {
-    console.warn("[Jikkai Discord] Bot token não configurado. DMs ignoradas.");
-    return lista.map(u => ({ ok: false, skipped: true, user: u.username }));
-  }
-  const resultados = [];
-  for (const alvo of lista) {
-    try {
-      resultados.push(await enviarDmDiscordParaUsuario(alvo, content));
-      await new Promise(resolve => setTimeout(resolve, 750));
-    } catch (err) {
-      console.error("[Jikkai Discord] Falha ao enviar DM para", alvo.username, err);
-      resultados.push({ ok: false, user: alvo.username, error: err.message });
-    }
-  }
-  return resultados;
+  return { ok: true, user: usuario.username, discordId: usuario.discordId, channelId: payload.channelId };
 }
 
 function mensagemDiscordMissao(data, missao, origem = "missao") {
