@@ -272,6 +272,20 @@
   body[data-jikkai-mode="discrete"] .jikkai-terminal-card{box-shadow:0 18px 50px rgba(0,0,0,.45)!important}
   @media(max-width:640px){.jikkai-terminal-toast{top:72px;right:10px;width:calc(100vw - 20px)}.jikkai-code-badge{font-size:8px;padding:6px 8px}}
 
+
+  /* jikkai-discord-seal-v1 */
+  .discord-seal-card { position: relative; overflow: hidden; }
+  .discord-seal-card::before {
+    content:""; position:absolute; inset:-1px; pointer-events:none;
+    background: radial-gradient(circle at 20% 10%, rgba(88,101,242,.18), transparent 28%), radial-gradient(circle at 85% 80%, rgba(234,88,12,.12), transparent 32%);
+  }
+  .discord-rune {
+    width: 42px; height: 42px; border-radius: 14px;
+    display:grid; place-items:center; font-weight: 900;
+    color:#c7d2fe; background:rgba(49,46,129,.25); border:1px solid rgba(129,140,248,.55);
+    box-shadow:0 0 28px rgba(88,101,242,.20);
+  }
+
 </style>
 </head>
 <body>
@@ -676,6 +690,7 @@ function normalizarMembro(u, existente = true) {
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
     reputacao: "Baixo perfil", lealdade: "", conduta: "Limpo", reputacaoNota: "", lealdadeNota: "", condutaNota: "", condutaRegistros: [],
+    discordId: "", discordUsername: "", discordGlobalName: "", discordTag: "", discordAvatar: "", discordVerificado: false, discordVerificadoEm: "", discordDmMissoes: true, discordDmContratos: true, discordDmRelatorios: true,
     reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "", condutaAtualizadaEm: "",
   };
   const out = { ...base, ...u };
@@ -823,6 +838,270 @@ const DEFAULT_CLAS = [
 ];
 
 const FRASE_JURAMENTO = "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este juramento";
+
+
+const DISCORD_CLIENT_ID = "1519450321947070474";
+const DISCORD_OAUTH_STORAGE_KEY = "jikkai-discord-oauth-pending";
+
+function discordRedirectUri() {
+  try {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    return url.origin + url.pathname;
+  } catch {
+    return window.location.href.split("#")[0];
+  }
+}
+
+function discordAvatarUrl(user) {
+  if (!user?.id || !user?.avatar) return "";
+  const ext = String(user.avatar).startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=128`;
+}
+
+function iniciarVerificacaoDiscord(username) {
+  const state = uid();
+  const redirect = discordRedirectUri();
+  try {
+    localStorage.setItem(DISCORD_OAUTH_STORAGE_KEY, JSON.stringify({ state, username, redirect, createdAt: new Date().toISOString() }));
+  } catch {}
+  const params = new URLSearchParams({
+    response_type: "token",
+    client_id: DISCORD_CLIENT_ID,
+    scope: "identify",
+    state,
+    redirect_uri: redirect,
+    prompt: "consent",
+  });
+  window.location.href = "https://discord.com/oauth2/authorize?" + params.toString();
+}
+
+function discordNomeExibicao(info) {
+  if (!info) return "Discord não verificado";
+  return info.discordGlobalName || info.discordUsername || info.discordTag || info.discordId || "Discord verificado";
+}
+
+function DiscordSealStatus({ usuario, compact = false, showButton = false }) {
+  const verificado = Boolean(usuario?.discordVerificado && usuario?.discordId);
+  const podeAbrir = typeof window !== "undefined" && window.location.protocol !== "file:";
+  return (
+    <div className={`discord-seal-card relative rounded-xl border ${verificado ? "border-indigo-700/60 bg-indigo-950/15" : "border-zinc-800 bg-black/45"} ${compact ? "p-3" : "p-4"}`}>
+      <div className="relative flex items-start gap-3">
+        <div className="discord-rune flex-shrink-0">符</div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[9px] uppercase tracking-[0.24em] text-indigo-300/80">Selo Discord</div>
+          <div className={`font-black mt-1 ${verificado ? "text-indigo-100" : "text-zinc-400"}`}>{verificado ? "Marca vinculada" : "Marca não vinculada"}</div>
+          {verificado ? (
+            <div className="text-zinc-500 text-xs mt-1 leading-relaxed">
+              {discordNomeExibicao(usuario)} · ID {usuario.discordId}
+              {usuario.discordVerificadoEm && <span> · {new Date(usuario.discordVerificadoEm).toLocaleDateString("pt-BR")}</span>}
+            </div>
+          ) : (
+            <div className="text-zinc-600 text-xs mt-1 leading-relaxed">Necessário para selar o juramento e receber chamados importantes no Discord futuramente.</div>
+          )}
+          {showButton && !verificado && (
+            <>
+              <Btn onClick={() => iniciarVerificacaoDiscord(usuario?.username)} variant="default" disabled={!podeAbrir} className="mt-3 justify-center w-full sm:w-auto"><IShield className="w-3 h-3" /> Verificar Discord</Btn>
+              {!podeAbrir && <div className="text-[10px] text-yellow-500 mt-2 leading-relaxed">A verificação real só funciona no domínio do portal, não abrindo o arquivo direto por file://.</div>}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============ DISCORD DM — BOT DA JIKKAI ============
+// ATENÇÃO: token em HTML público fica visível para quem abrir o código.
+// Como solicitado, deixei um fallback no arquivo e também um campo no Gerenciar para alterar depois.
+const DISCORD_BOT_TOKEN = "COLE_AQUI_O_TOKEN_NOVO_DO_BOT";
+const DISCORD_BOT_TOKEN_FALLBACK = "MTUxOTQ1MDMyMTk0NzA3MDQ3NA.GXn6xB.Y5DFcJczzb1-VRKumZTe6NAdE0uk2EexUhbwCw";
+const DISCORD_BOT_TOKEN_STORAGE_KEY = "jikkai-discord-bot-token";
+const DISCORD_DM_API = "https://discord.com/api/v10";
+
+const DEFAULT_DISCORD_DM_TEMPLATES = {
+  missao_atribuida: "⛩️ SELO JIKKAI — MISSÃO ATRIBUÍDA\n\nUm pergaminho foi marcado em seu nome.\n\nMissão: {missao}\nSigilo: {sigilo}\nDesignação: {designacao}\n\nEntre no portal para aceitar ou recusar a missão.\n{portal}",
+  missao_devolvida: "📜 SELO JIKKAI — MISSÃO DEVOLVIDA PARA AJUSTES\n\nO pergaminho retornou para correção.\n\nMissão: {missao}\nMensagem da liderança: {feedback}\n\nEntre no portal para ajustar o relatório e reenviar.",
+  contrato_designado: "⛩️ SELO JIKKAI — CONTRATO DESIGNADO\n\nUm contrato foi marcado para sua célula.\n\nContrato: {contrato}\nMissão: {missao}\nSigilo: {sigilo}\nDesignação: {designacao}\nRecompensa: {recompensa}\n\nEntre no portal para confirmar participação e acompanhar os objetivos.",
+  relatorio_aprovado: "📜 SELO JIKKAI — RELATÓRIO APROVADO\n\nO pergaminho foi aceito pela liderança.\n\nMissão: {missao}\nResultado: {resultado}\n\nHistórico atualizado. A sombra permanece em movimento.",
+  relatorio_recusado: "📜 SELO JIKKAI — RELATÓRIO RECUSADO\n\nA liderança recusou o pergaminho enviado.\n\nMissão: {missao}\nMotivo: {feedback}\n\nEntre no portal para corrigir ou aguardar nova orientação.",
+  convocacao_lideranca: "⚠️ SELO JIKKAI — CONVOCAÇÃO DA LIDERANÇA\n\nVocê foi chamado pela liderança.\n\nAssunto: {assunto}\nMensagem: {mensagem}\n\nResponda assim que possível e verifique o portal.\n{portal}",
+};
+
+const DISCORD_TEMPLATE_LABELS = {
+  missao_atribuida: "Missão atribuída",
+  missao_devolvida: "Missão devolvida para ajustes",
+  contrato_designado: "Contrato designado para equipe",
+  relatorio_aprovado: "Relatório aprovado",
+  relatorio_recusado: "Relatório recusado",
+  convocacao_lideranca: "Convocação da liderança",
+};
+
+function discordBotTokenAtual() {
+  try {
+    const salvo = localStorage.getItem(DISCORD_BOT_TOKEN_STORAGE_KEY);
+    if (salvo && salvo.trim()) return salvo.trim();
+  } catch {}
+  if (DISCORD_BOT_TOKEN && !DISCORD_BOT_TOKEN.includes("COLE_AQUI")) return DISCORD_BOT_TOKEN;
+  return DISCORD_BOT_TOKEN_FALLBACK || "";
+}
+
+function salvarDiscordBotToken(token) {
+  try {
+    if (token && token.trim()) localStorage.setItem(DISCORD_BOT_TOKEN_STORAGE_KEY, token.trim());
+    else localStorage.removeItem(DISCORD_BOT_TOKEN_STORAGE_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function discordBotConfigurado() {
+  const token = discordBotTokenAtual();
+  return Boolean(token && !token.includes("COLE_AQUI") && token.length > 40);
+}
+
+function podeReceberDmDiscord(usuario, tipo) {
+  if (!usuario?.discordVerificado || !usuario?.discordId) return false;
+  if (tipo === "missao" && usuario.discordDmMissoes === false) return false;
+  if (tipo === "contrato" && usuario.discordDmContratos === false) return false;
+  if (tipo === "relatorio" && usuario.discordDmRelatorios === false) return false;
+  return true;
+}
+
+function portalUrlDiscord() {
+  try {
+    const url = new URL(window.location.href);
+    return url.origin && url.origin !== "null" ? url.origin + url.pathname : "https://jikkai.vercel.app/";
+  } catch {
+    return "https://jikkai.vercel.app/";
+  }
+}
+
+function discordDmTemplates(data) {
+  return { ...DEFAULT_DISCORD_DM_TEMPLATES, ...(data?.discordDmTemplates || {}) };
+}
+
+function renderDiscordTemplate(data, key, vars = {}) {
+  const templates = discordDmTemplates(data);
+  const base = templates[key] || DEFAULT_DISCORD_DM_TEMPLATES[key] || "{mensagem}";
+  const mapa = {
+    portal: portalUrlDiscord(),
+    missao: vars.missao || vars.titulo || "Missão não informada",
+    contrato: vars.contrato || vars.missao || "Contrato não informado",
+    sigilo: vars.sigilo || "Restrito",
+    designacao: vars.designacao || "Operadores selecionados",
+    recompensa: vars.recompensa || "Yens definidos no contrato",
+    feedback: vars.feedback || "Sem observações adicionais.",
+    resultado: vars.resultado || "Registrado",
+    assunto: vars.assunto || "Convocação",
+    mensagem: vars.mensagem || "A liderança solicitou sua presença.",
+    lider: vars.lider || "Liderança Jikkai",
+    categoria: vars.categoria || "Contrato",
+  };
+  return String(base).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, chave) => mapa[chave] != null ? String(mapa[chave]) : "");
+}
+
+async function abrirDmDiscord(discordId) {
+  const resp = await fetch(`${DISCORD_DM_API}/users/@me/channels`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bot ${discordBotTokenAtual()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ recipient_id: String(discordId) }),
+  });
+  if (!resp.ok) {
+    const detalhe = await resp.text().catch(() => "");
+    throw new Error(`Falha ao abrir DM (${resp.status}) ${detalhe}`);
+  }
+  return resp.json();
+}
+
+async function enviarMensagemDiscord(channelId, content) {
+  const resp = await fetch(`${DISCORD_DM_API}/channels/${channelId}/messages`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bot ${discordBotTokenAtual()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content: String(content || "").slice(0, 1900),
+      allowed_mentions: { parse: [] },
+    }),
+  });
+  if (!resp.ok) {
+    const detalhe = await resp.text().catch(() => "");
+    throw new Error(`Falha ao enviar DM (${resp.status}) ${detalhe}`);
+  }
+  return resp.json();
+}
+
+async function enviarDmDiscordParaUsuario(usuario, content) {
+  if (!discordBotConfigurado()) return { ok: false, skipped: true, reason: "Bot token não configurado" };
+  if (!usuario?.discordId) return { ok: false, skipped: true, reason: "Usuário sem Discord ID" };
+  const dm = await abrirDmDiscord(usuario.discordId);
+  await enviarMensagemDiscord(dm.id, content);
+  return { ok: true, user: usuario.username, discordId: usuario.discordId };
+}
+
+async function notificarDiscordUsuarios(data, usernames, tipo, content) {
+  const lista = Array.from(new Set((usernames || []).filter(Boolean)))
+    .map(username => (data.users || []).find(u => u.username === username))
+    .filter(u => podeReceberDmDiscord(u, tipo));
+  if (!lista.length) {
+    console.info("[Jikkai Discord] Nenhum usuário elegível para DM.");
+    return [];
+  }
+  if (!discordBotConfigurado()) {
+    console.warn("[Jikkai Discord] Bot token não configurado. DMs ignoradas.");
+    return lista.map(u => ({ ok: false, skipped: true, user: u.username }));
+  }
+  const resultados = [];
+  for (const alvo of lista) {
+    try {
+      resultados.push(await enviarDmDiscordParaUsuario(alvo, content));
+      await new Promise(resolve => setTimeout(resolve, 750));
+    } catch (err) {
+      console.error("[Jikkai Discord] Falha ao enviar DM para", alvo.username, err);
+      resultados.push({ ok: false, user: alvo.username, error: err.message });
+    }
+  }
+  return resultados;
+}
+
+function mensagemDiscordMissao(data, missao, origem = "missao") {
+  const contrato = missao?.contratoId ? (data.contratos || []).find(c => c.id === missao.contratoId) : null;
+  const key = origem === "contrato" ? "contrato_designado" : "missao_atribuida";
+  return renderDiscordTemplate(data, key, {
+    missao: missao?.titulo || "Missão sem título",
+    contrato: contrato?.titulo || missao?.titulo || "Contrato designado",
+    sigilo: missao?.sigilo || "Restrito",
+    designacao: missao?.assignmentLabel || "Operadores selecionados",
+    recompensa: missao?.recompensa || (contrato ? `${contrato.valorRecompensa || ""} ${moedaContrato(contrato.tipoRecompensa)}`.trim() : "Yens definidos no contrato"),
+    categoria: contrato?.categoria || contrato?.tipo || "Contrato",
+  });
+}
+
+function mensagemDiscordRelatorio(data, missao, status, feedback = "") {
+  const relatorio = missao?.relatorioFinalId ? (data.relatorios || []).find(r => r.id === missao.relatorioFinalId) : null;
+  const key = status === "ajustes" ? "missao_devolvida" : status === "recusado" ? "relatorio_recusado" : "relatorio_aprovado";
+  return renderDiscordTemplate(data, key, {
+    missao: missao?.titulo || "Missão sem título",
+    sigilo: missao?.sigilo || "Restrito",
+    designacao: missao?.assignmentLabel || "Operadores selecionados",
+    feedback,
+    resultado: relatorio?.resultado || (status === "recusado" ? "Recusado" : "Aprovado"),
+  });
+}
+
+function mensagemDiscordConvocacao(data, assunto, mensagem, lider) {
+  return renderDiscordTemplate(data, "convocacao_lideranca", {
+    assunto: assunto || "Convocação da liderança",
+    mensagem: mensagem || "A liderança solicitou sua presença.",
+    lider: lider || "Liderança Jikkai",
+  });
+}
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
@@ -2155,6 +2434,7 @@ function DossieModal({ membro, data, onClose }) {
     ["Equipamento principal", membro.equipamentoPrincipal || "Não definido"],
     ["Responde a", superior ? getCodinome(superior) : "Comando da Jikkai"],
     ["Selo de acesso", `Nível ${membro.nivelAcesso || 1}`],
+    ["Discord", membro.discordVerificado && membro.discordId ? `${discordNomeExibicao(membro)} · ${membro.discordId}` : "Não verificado"],
   ];
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
@@ -2212,6 +2492,7 @@ function DossieModal({ membro, data, onClose }) {
               <div className="grid sm:grid-cols-2 gap-2">{camposOperacionais.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
             </div>
           </div>
+          <DiscordSealStatus usuario={membro} />
           <TimelineAutomaticaMembro data={data} membro={membro} />
         </div>
       </div>
@@ -2272,6 +2553,9 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     funcaoPreferida: membro.funcaoPreferida || vinculo?.papel || "",
     estiloCombate: membro.estiloCombate || "",
     equipamentoPrincipal: membro.equipamentoPrincipal || "",
+    discordDmMissoes: membro.discordDmMissoes !== false,
+    discordDmContratos: membro.discordDmContratos !== false,
+    discordDmRelatorios: membro.discordDmRelatorios !== false,
   });
   const [arquivo, setArquivo] = useState(null);
   const [preview, setPreview] = useState(membro.avatarUrl || "");
@@ -2392,6 +2676,24 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               <div className="h-2 rounded-full bg-zinc-900 overflow-hidden"><div className="h-full bg-gradient-to-r from-orange-900 to-orange-400" style={{ width: progresso.pct + "%" }} /></div>
               <div className="mt-3 text-xs text-zinc-500 leading-relaxed">{camposFaltando.length ? <>Falta: <span className="text-yellow-500">{camposFaltando.join(", ")}</span></> : <span className="text-green-500">Pronto para operações.</span>}</div>
             </div>
+            <DiscordSealStatus usuario={membro} compact showButton />
+            {membro.discordVerificado && (
+              <div className="p-4 rounded-xl bg-indigo-950/10 border border-indigo-900/35">
+                <div className="text-[9px] uppercase tracking-[0.2em] text-indigo-300 mb-2">Avisos por DM</div>
+                <div className="space-y-2 text-xs text-zinc-400">
+                  {[
+                    ["discordDmMissoes", "Receber aviso de missão"],
+                    ["discordDmContratos", "Receber aviso de contrato"],
+                    ["discordDmRelatorios", "Receber aviso de relatório"],
+                  ].map(([campo, label]) => (
+                    <label key={campo} className="flex items-center gap-2 p-2 rounded border border-zinc-800 bg-black/35">
+                      <input type="checkbox" checked={form[campo] !== false} onChange={e => setCampo(campo, e.target.checked)} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="p-4 rounded-xl bg-sky-950/10 border border-sky-900/35">
               <div className="text-[9px] uppercase tracking-[0.2em] text-sky-500 mb-2">Automático</div>
               <div className="text-zinc-500 text-xs leading-relaxed">Usa cargo, equipe e divisão para preencher função e especialidade quando estiverem vazias.</div>
@@ -4945,6 +5247,7 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
       } : c),
       activityLog: [...(d.activityLog || []), atividade("contrato_designado", usuario?.username, contrato.id, "Designou contrato para " + novaMissao.assignmentLabel)],
     }));
+    notificarDiscordUsuarios(data, participantes, "contrato", mensagemDiscordMissao(data, novaMissao, "contrato"));
     setDesignarContrato(null);
     alert("Contrato convertido em missão. A equipe deverá confirmar participação e enviar relatório final para encerrar.");
   };
@@ -5769,6 +6072,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
   const todosAceitos = aceitos.every(Boolean);
   const formValido = form.nome.trim() && form.motivacao.trim();
   const fraseOk = fraseJuramentoAceita(fraseTypo);
+  const discordOk = Boolean(usuario?.discordVerificado && usuario?.discordId);
 
   const iniciarSelo = async () => {
     setSelando(true);
@@ -5782,6 +6086,12 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
       fotoUrl,
       versao: 2,
       origem: modoIniciacao ? "primeiro_acesso" : "portal",
+      discordId: usuario?.discordId || "",
+      discordUsername: usuario?.discordUsername || "",
+      discordGlobalName: usuario?.discordGlobalName || "",
+      discordTag: usuario?.discordTag || "",
+      discordVerificado: Boolean(usuario?.discordVerificado && usuario?.discordId),
+      discordVerificadoEm: usuario?.discordVerificadoEm || "",
     });
     setSelando(false);
     if (onConcluido) onConcluido();
@@ -5871,12 +6181,15 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
           <div className="p-6 bg-gradient-to-br from-red-950/30 to-black border-2 border-orange-900/60 rounded-lg text-center">
             <ISkull className="w-12 h-12 text-orange-500 mx-auto mb-3" />
             <h3 className="text-orange-50 font-bold text-xl serif mb-2">O Juramento Final</h3>
-            <p className="text-zinc-400 text-sm mb-6">Digite a frase abaixo. Pequenos erros de acentuação, pontuação ou digitação são tolerados:</p>
+            <p className="text-zinc-400 text-sm mb-5">Antes de selar o pacto, vincule sua marca do Discord. O ID ficará gravado no dossiê para chamados futuros da Jikkai.</p>
+            <div className="max-w-xl mx-auto mb-5 text-left"><DiscordSealStatus usuario={usuario} showButton /></div>
+            <p className="text-zinc-400 text-sm mb-6">Depois, digite a frase abaixo. Pequenos erros de acentuação, pontuação ou digitação são tolerados:</p>
             <div className="bg-black/60 border border-orange-700 rounded py-4 px-6 mb-6 inline-block"><code className="text-orange-400 text-lg serif italic">“{FRASE_JURAMENTO}”</code></div>
             <input value={fraseTypo} onChange={(e) => setFraseTypo(e.target.value)} className="fox-input text-center text-lg" placeholder="Digite a frase..." autoFocus />
             {fraseTypo && !fraseOk && <div className="text-red-500 text-xs mt-2">A frase ainda está diferente demais do juramento.</div>}
+            {!discordOk && <div className="text-indigo-300 text-xs mt-3 uppercase tracking-wider font-bold">Vincule o Discord para liberar o selo final.</div>}
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
+          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk || !discordOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
         </div>
       )}
     </div>
@@ -6317,12 +6630,13 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar, navig
   const podeRamos = isLider;
   const podeJuramentos = isLider;
   const podeBackup = isLider;
+  const podeDiscord = isLider;
   const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
   const [aba, setAba] = useState(primeiraAba);
   useEffect(() => {
     if (navigationRequest?.tab !== "gerenciar") return;
     if (navigationRequest.action === "iniciacoes-pendentes" && podeUsuarios) { setAba("usuarios"); return; }
-    if (["usuarios", "cargos", "ramos", "juramentos", "missoes", "backup"].includes(navigationRequest.subTab)) setAba(navigationRequest.subTab);
+    if (["usuarios", "cargos", "ramos", "juramentos", "missoes", "discord", "backup"].includes(navigationRequest.subTab)) setAba(navigationRequest.subTab);
   }, [navigationRequest?.token]);
 
   return (
@@ -6336,6 +6650,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar, navig
           podeRamos && { id: "ramos", label: "Divisões", icon: IShield },
           podeJuramentos && { id: "juramentos", label: "Juramentos", icon: ISkull },
           podeMissoes && { id: "missoes", label: "Missões", icon: IClipboard },
+          podeDiscord && { id: "discord", label: "Discord", icon: IShield },
           podeBackup && { id: "backup", label: "Backup", icon: IDownload },
         ].filter(Boolean).map(t => {
           const I = t.icon;
@@ -6352,6 +6667,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar, navig
       {aba === "ramos" && <RamosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "juramentos" && <RegistroJuramentosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
+      {aba === "discord" && <DiscordManager data={data} setData={setData} usuario={usuario} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
     </div>
   );
@@ -6726,6 +7042,7 @@ function MissoesManager({ data, setData, usuario, role }) {
       fluxoObrigatorio: true,
     };
     setData(d => ({ ...d, missoes: [...d.missoes, nova], activityLog: [...(d.activityLog || []), atividade("missao_criada", usuario?.username, nova.id, "Criou missão para " + nova.assignmentLabel)] }));
+    notificarDiscordUsuarios(data, participantes, "missao", mensagemDiscordMissao(data, nova, "missao"));
     setForm({ titulo: "", desc: "", attributionType: tipoInicial, targetId: alvoInicial, participants: [], objetivosText: "", sigilo: sigiloInicial });
     setCriando(false);
   };
@@ -6766,6 +7083,31 @@ function MissoesManager({ data, setData, usuario, role }) {
         revisadoEm: new Date().toISOString(),
       } : r),
     }));
+    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "ajustes", feedback.trim()));
+  };
+
+  const recusarRelatorio = (m) => {
+    const feedback = prompt("Informe o motivo da recusa do relatório:", m.feedbackRevisao || "");
+    if (feedback == null || !feedback.trim()) return;
+    setData(d => ({
+      ...d,
+      missoes: d.missoes.map(x => x.id === m.id ? {
+        ...x,
+        status: "devolvida",
+        feedbackRevisao: feedback.trim(),
+        devolvidaEm: new Date().toISOString(),
+        devolvidaPor: usuario.username,
+      } : x),
+      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+        ...r,
+        statusAprovacao: "Recusado",
+        feedbackAprovacao: feedback.trim(),
+        revisadoPor: usuario.username,
+        revisadoEm: new Date().toISOString(),
+      } : r),
+      activityLog: [...(d.activityLog || []), atividade("relatorio_recusado", usuario?.username, m.id, "Recusou o relatório final de " + m.titulo)],
+    }));
+    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "recusado", feedback.trim()));
   };
 
   const aprovarResultado = (m) => {
@@ -6801,6 +7143,7 @@ function MissoesManager({ data, setData, usuario, role }) {
       } : c),
       activityLog: [...(d.activityLog || []), atividade("missao_aprovada", usuario?.username, m.id, "Aprovou o relatório final de " + m.titulo)],
     }));
+    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "aprovado"));
   };
 
   const arquivar = (m) => {
@@ -7008,6 +7351,7 @@ function MissoesManager({ data, setData, usuario, role }) {
                       <>
                         <Btn onClick={() => aprovarResultado(m)} variant="success"><ICheck className="w-3 h-3" /> Aprovar resultado</Btn>
                         <Btn onClick={() => devolverParaAjustes(m)} variant="default"><IEdit className="w-3 h-3" /> Solicitar ajustes</Btn>
+                        <Btn onClick={() => recusarRelatorio(m)} variant="danger"><IX className="w-3 h-3" /> Recusar relatório</Btn>
                       </>
                     )}
                     {["concluida", "falhou", "recusada"].includes(m.status) && (
@@ -7020,6 +7364,159 @@ function MissoesManager({ data, setData, usuario, role }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+
+function DiscordManager({ data, setData, usuario }) {
+  const [templates, setTemplates] = useState(() => discordDmTemplates(data));
+  const [modelo, setModelo] = useState("missao_atribuida");
+  const [token, setToken] = useState(() => discordBotTokenAtual());
+  const [status, setStatus] = useState("");
+  const [selecionados, setSelecionados] = useState([]);
+  const [assunto, setAssunto] = useState("Convocação da liderança");
+  const [mensagem, setMensagem] = useState("Compareça ao chamado da liderança assim que possível.");
+  const [enviando, setEnviando] = useState(false);
+
+  useEffect(() => { setTemplates(discordDmTemplates(data)); }, [data.discordDmTemplates]);
+
+  const usuariosVerificados = (data.users || []).filter(u => u.role !== "contratante" && u.discordVerificado && u.discordId);
+  const toggleUsuario = (username) => setSelecionados(lista => lista.includes(username) ? lista.filter(x => x !== username) : [...lista, username]);
+  const selecionarTodos = () => setSelecionados(usuariosVerificados.map(u => u.username));
+  const limparSelecionados = () => setSelecionados([]);
+
+  const salvarModelos = () => {
+    setData(d => ({
+      ...d,
+      discordDmTemplates: { ...DEFAULT_DISCORD_DM_TEMPLATES, ...templates },
+      activityLog: [...(d.activityLog || []), atividade("discord_templates", usuario?.username, "discord", "Atualizou mensagens privadas do Discord")],
+    }));
+    setStatus("Mensagens privadas atualizadas.");
+  };
+
+  const restaurarModelo = (key) => setTemplates(t => ({ ...t, [key]: DEFAULT_DISCORD_DM_TEMPLATES[key] }));
+  const restaurarTodos = () => setTemplates(DEFAULT_DISCORD_DM_TEMPLATES);
+
+  const salvarTokenLocal = () => {
+    const ok = salvarDiscordBotToken(token);
+    setStatus(ok ? "Token do bot salvo neste navegador." : "Não foi possível salvar o token neste navegador.");
+  };
+
+  const enviarConvocacao = async () => {
+    if (!selecionados.length) { alert("Selecione pelo menos um membro verificado."); return; }
+    const content = mensagemDiscordConvocacao(data, assunto, mensagem, getCodinome(usuario));
+    setEnviando(true);
+    setStatus("Enviando convocação...");
+    try {
+      const resultado = await notificarDiscordUsuarios(data, selecionados, "convocacao", content);
+      const ok = resultado.filter(r => r.ok).length;
+      const falhas = resultado.length - ok;
+      setData(d => ({ ...d, activityLog: [...(d.activityLog || []), atividade("discord_convocacao", usuario?.username, selecionados.join(","), `Convocou ${ok} membro(s) pelo Discord${falhas ? ` · ${falhas} falha(s)` : ""}`)] }));
+      setStatus(`Convocação enviada para ${ok} membro(s).${falhas ? ` Falhas: ${falhas}.` : ""}`);
+    } catch (e) {
+      setStatus("Falha ao enviar convocação: " + (e.message || e));
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const preview = renderDiscordTemplate({ ...data, discordDmTemplates: templates }, modelo, {
+    missao: "Vigiar rota de Kirigakure",
+    contrato: "Busca de Item — Pergaminho raro",
+    sigilo: "Nível II",
+    designacao: "Equipe Corvos",
+    recompensa: "25.000 Yens",
+    feedback: "Corrija local, envolvidos e resultado da cena.",
+    resultado: "Sucesso",
+    assunto,
+    mensagem,
+    lider: getCodinome(usuario),
+  });
+
+  return (
+    <div className="space-y-5 fadein">
+      <div className="grid lg:grid-cols-[1fr_0.85fr] gap-4">
+        <section className="rounded-xl border border-indigo-900/45 bg-indigo-950/10 p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-orange-50 font-bold text-lg serif">Mensagens privadas do Discord</h3>
+              <p className="text-zinc-500 text-xs mt-1">O líder pode alterar o texto enviado em missão, contrato, relatório e convocação.</p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Btn onClick={salvarModelos} variant="primary"><ISave className="w-3 h-3" /> Salvar mensagens</Btn>
+              <Btn onClick={restaurarTodos} variant="ghost"><IX className="w-3 h-3" /> Restaurar padrões</Btn>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-[220px_1fr] gap-3">
+            <div className="space-y-2">
+              {Object.keys(DEFAULT_DISCORD_DM_TEMPLATES).map(key => (
+                <button key={key} onClick={() => setModelo(key)} className={`w-full text-left p-3 rounded-lg border text-xs uppercase tracking-wider font-black ${modelo === key ? "border-indigo-500 bg-indigo-950/35 text-indigo-100" : "border-zinc-800 bg-black/35 text-zinc-500 hover:text-zinc-200"}`}>
+                  {DISCORD_TEMPLATE_LABELS[key] || key}
+                </button>
+              ))}
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <label className="fox-label mb-0">{DISCORD_TEMPLATE_LABELS[modelo]}</label>
+                <Btn onClick={() => restaurarModelo(modelo)} variant="ghost">Restaurar esta</Btn>
+              </div>
+              <textarea value={templates[modelo] || ""} onChange={e => setTemplates(t => ({ ...t, [modelo]: e.target.value }))} rows="12" className="fox-input font-mono text-xs" />
+              <div className="mt-2 text-[10px] text-zinc-600 leading-relaxed">
+                Variáveis: <span className="text-indigo-300">{"{missao}"}</span>, <span className="text-indigo-300">{"{contrato}"}</span>, <span className="text-indigo-300">{"{sigilo}"}</span>, <span className="text-indigo-300">{"{designacao}"}</span>, <span className="text-indigo-300">{"{recompensa}"}</span>, <span className="text-indigo-300">{"{feedback}"}</span>, <span className="text-indigo-300">{"{resultado}"}</span>, <span className="text-indigo-300">{"{assunto}"}</span>, <span className="text-indigo-300">{"{mensagem}"}</span>, <span className="text-indigo-300">{"{portal}"}</span>.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <div className="rounded-xl border border-zinc-800 bg-black/45 p-4">
+            <div className="text-[9px] uppercase tracking-[0.24em] text-zinc-500 mb-2">Prévia</div>
+            <pre className="whitespace-pre-wrap text-xs text-zinc-300 bg-zinc-950/70 border border-zinc-800 rounded-lg p-3 max-h-72 overflow-auto">{preview}</pre>
+          </div>
+          <div className="rounded-xl border border-yellow-900/40 bg-yellow-950/10 p-4">
+            <div className="text-[9px] uppercase tracking-[0.24em] text-yellow-500 mb-2">Bot da Jikkai</div>
+            <label className="fox-label">Token do bot</label>
+            <input value={token} onChange={e => setToken(e.target.value)} className="fox-input font-mono" type="password" placeholder="Cole o token do bot" />
+            <Btn onClick={salvarTokenLocal} variant="default" className="mt-3 w-full justify-center"><ISave className="w-3 h-3" /> Salvar token neste navegador</Btn>
+            <div className="text-[10px] text-zinc-600 mt-2 leading-relaxed">O arquivo já possui um token de fallback conforme solicitado. Este campo permite trocar o token sem editar o HTML.</div>
+          </div>
+          {status && <div className="rounded-xl border border-indigo-900/40 bg-indigo-950/15 p-3 text-indigo-200 text-sm">{status}</div>}
+        </aside>
+      </div>
+
+      <section className="rounded-xl border border-red-900/40 bg-red-950/10 p-4 space-y-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h3 className="text-orange-50 font-bold text-lg serif">Convocação da liderança</h3>
+            <p className="text-zinc-500 text-xs mt-1">Envia uma DM direta para membros com Discord verificado. Convocação ignora preferências de missão/contrato/relatório.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Btn onClick={selecionarTodos} variant="ghost">Selecionar todos</Btn>
+            <Btn onClick={limparSelecionados} variant="ghost">Limpar</Btn>
+          </div>
+        </div>
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-4">
+          <div className="space-y-3">
+            <div><label className="fox-label">Assunto</label><input value={assunto} onChange={e => setAssunto(e.target.value)} className="fox-input" /></div>
+            <div><label className="fox-label">Mensagem</label><textarea value={mensagem} onChange={e => setMensagem(e.target.value)} rows="4" className="fox-input" /></div>
+            <Btn onClick={enviarConvocacao} variant="primary" disabled={enviando || !selecionados.length} className="w-full justify-center"><IShield className="w-3 h-3" /> {enviando ? "Enviando..." : `Enviar convocação (${selecionados.length})`}</Btn>
+          </div>
+          <div>
+            <div className="text-[9px] uppercase tracking-[0.24em] text-zinc-500 mb-2">Membros verificados</div>
+            <div className="grid sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+              {usuariosVerificados.map(u => (
+                <label key={u.username} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer ${selecionados.includes(u.username) ? "border-indigo-500 bg-indigo-950/30" : "border-zinc-800 bg-black/35"}`}>
+                  <input type="checkbox" checked={selecionados.includes(u.username)} onChange={() => toggleUsuario(u.username)} />
+                  <span className="min-w-0"><span className="block text-orange-50 text-sm font-bold truncate">{getCodinome(u)}</span><span className="block text-zinc-600 text-[10px] truncate">{discordNomeExibicao(u)}</span></span>
+                </label>
+              ))}
+              {!usuariosVerificados.length && <div className="col-span-2 p-4 rounded border border-zinc-800 bg-black/35 text-zinc-600 text-sm italic">Nenhum membro com Discord verificado ainda.</div>}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -7213,6 +7710,7 @@ const DEFAULT_DATA = {
   contratos: [],
   galeria: [],
   activityLog: [],
+  discordDmTemplates: DEFAULT_DISCORD_DM_TEMPLATES,
   visaoGeralContratantes: {
     titulo: "JIKKAI — Sombras",
     subtitulo: "Discrição. Letalidade. Resultado.",
@@ -7242,6 +7740,7 @@ function migrate(raw) {
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
   if (!raw.activityLog) migrated.activityLog = [];
+  migrated.discordDmTemplates = { ...DEFAULT_DISCORD_DM_TEMPLATES, ...(raw.discordDmTemplates || {}) };
   if (!raw.missoes) migrated.missoes = [];
   migrated.missoes = (raw.missoes || []).map(m => {
     const participants = Array.from(new Set([...(Array.isArray(m.participants) ? m.participants : []), m.assignedTo].filter(Boolean)));
@@ -7277,6 +7776,12 @@ function migrate(raw) {
     fotoUrl: j.fotoUrl || "",
     versao: Number(j.versao) || 1,
     origem: j.origem || "legado",
+    discordId: j.discordId || "",
+    discordUsername: j.discordUsername || "",
+    discordGlobalName: j.discordGlobalName || "",
+    discordTag: j.discordTag || "",
+    discordVerificado: Boolean(j.discordVerificado && j.discordId),
+    discordVerificadoEm: j.discordVerificadoEm || "",
   }));
   migrated.users = migrated.users.map(u => {
     const juramentoExistente = juramentoDoUsuario(migrated.juramentados, u);
@@ -7602,6 +8107,7 @@ function App() {
   const [terminalToast, setTerminalToast] = useState(null);
   const toastTimerRef = useRef(null);
   const transitionTimerRef = useRef(null);
+  const discordOAuthHandledRef = useRef(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState({ cloudOk: null, localOk: true, time: null, syncing: false });
@@ -7671,6 +8177,65 @@ function App() {
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
   const roleRegistrado = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
   const role = roleEfetivoUsuario(usuarioAtual, roleRegistrado);
+
+  useEffect(() => {
+    if (discordOAuthHandledRef.current || !data || loading) return;
+    const hash = window.location.hash || "";
+    if (!hash.includes("access_token=") && !hash.includes("error=")) return;
+    discordOAuthHandledRef.current = true;
+    const params = new URLSearchParams(hash.replace(/^#/, ""));
+    const erroDiscord = params.get("error");
+    const token = params.get("access_token");
+    let pending = {};
+    try { pending = JSON.parse(localStorage.getItem(DISCORD_OAUTH_STORAGE_KEY) || "{}"); } catch {}
+    const limparHash = () => {
+      try { window.history.replaceState(null, document.title, window.location.pathname + window.location.search); } catch {}
+      try { localStorage.removeItem(DISCORD_OAUTH_STORAGE_KEY); } catch {}
+    };
+    if (erroDiscord) {
+      setTerminalToast("SELO DISCORD RECUSADO · VÍNCULO NÃO GRAVADO");
+      limparHash();
+      return;
+    }
+    if (!token) return;
+    if (pending.state && params.get("state") && pending.state !== params.get("state")) {
+      setTerminalToast("SELO DISCORD INVÁLIDO · ESTADO DIVERGENTE");
+      limparHash();
+      return;
+    }
+    const alvoUsername = pending.username || usuarioAtual?.username || sessaoInicial?.username || "";
+    fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error("Falha na leitura do selo Discord"); return r.json(); })
+      .then(info => {
+        setData(d => ({
+          ...d,
+          users: (d.users || []).map(u => {
+            if (u.username !== alvoUsername) return u;
+            return normalizarMembro({
+              ...u,
+              discordId: info.id || "",
+              discordUsername: info.username || "",
+              discordGlobalName: info.global_name || "",
+              discordTag: info.discriminator && info.discriminator !== "0" ? `${info.username}#${info.discriminator}` : (info.username || ""),
+              discordAvatar: discordAvatarUrl(info),
+              discordVerificado: Boolean(info.id),
+              discordVerificadoEm: new Date().toISOString(),
+              discordDmMissoes: u.discordDmMissoes !== false,
+              discordDmContratos: u.discordDmContratos !== false,
+              discordDmRelatorios: u.discordDmRelatorios !== false,
+            });
+          }),
+          activityLog: [...(d.activityLog || []), atividade("discord_verificado", alvoUsername, alvoUsername, "Vinculou a marca Discord ao dossiê")],
+        }));
+        setTerminalToast("MARCA DISCORD RECONHECIDA · DOSSIÊ ATUALIZADO");
+        limparHash();
+      })
+      .catch(err => {
+        console.error(err);
+        setTerminalToast("FUUINJUTSU DISCORD FALHOU · TENTE NOVAMENTE");
+        limparHash();
+      });
+  }, [data, loading, usuarioAtual?.username]);
 
 
   // Compartilha a identidade e o cargo da sessão atual com o mapa estratégico.
@@ -7784,6 +8349,12 @@ function App() {
       fotoUrl: dados.fotoUrl || existente?.fotoUrl || "",
       versao: Number(dados.versao) || Number(existente?.versao) || 2,
       origem: dados.origem || existente?.origem || "portal",
+      discordId: dados.discordId || existente?.discordId || "",
+      discordUsername: dados.discordUsername || existente?.discordUsername || "",
+      discordGlobalName: dados.discordGlobalName || existente?.discordGlobalName || "",
+      discordTag: dados.discordTag || existente?.discordTag || "",
+      discordVerificado: Boolean(dados.discordVerificado || existente?.discordVerificado),
+      discordVerificadoEm: dados.discordVerificadoEm || existente?.discordVerificadoEm || "",
     };
     const juramentados = existente
       ? registros.map(j => j === existente ? registro : j)
@@ -7803,6 +8374,15 @@ function App() {
           lealdade: atual < juramentado ? "Juramentado" : u.lealdade,
           lealdadeAtualizadaEm: new Date().toISOString(),
           lealdadeNota: u.lealdadeNota || "Juramento formal registrado pelo portal.",
+          discordId: dados.discordId || u.discordId || "",
+          discordUsername: dados.discordUsername || u.discordUsername || "",
+          discordGlobalName: dados.discordGlobalName || u.discordGlobalName || "",
+          discordTag: dados.discordTag || u.discordTag || "",
+          discordVerificado: Boolean(dados.discordVerificado || u.discordVerificado),
+          discordVerificadoEm: dados.discordVerificadoEm || u.discordVerificadoEm || "",
+          discordDmMissoes: u.discordDmMissoes !== false,
+          discordDmContratos: u.discordDmContratos !== false,
+          discordDmRelatorios: u.discordDmRelatorios !== false,
         };
       }),
       activityLog: [...(d.activityLog || []), atividade(existente ? "juramento_atualizado" : "juramento_registrado", dados.username, dados.username, existente ? "Atualizou o próprio registro de juramento" : "Concluiu o juramento e alcançou a lealdade Juramentado")],
