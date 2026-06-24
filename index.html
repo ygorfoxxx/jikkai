@@ -82,6 +82,196 @@
   .portal-quick-actions button:hover { border-color: #fb923c; transform: translateX(-2px); color: #fff7ed; }
   @media (max-width: 1279px) { .portal-quick-actions { display: none; } }
 
+
+
+/* jikkai-mobile-polish-2 */
+@media (max-width: 640px){
+  .jikkai-compact main{padding-top:12px!important;}
+  .jikkai-compact section{scroll-margin-top:86px;}
+  .jikkai-compact .serif{letter-spacing:-.01em;}
+  .jikkai-compact h1,.jikkai-compact h2,.jikkai-compact h3{line-height:1.08;}
+  .jikkai-compact .rounded-2xl{border-radius:14px;}
+  .jikkai-compact .p-5{padding:14px;}
+  .jikkai-compact .p-6{padding:16px;}
+  .jikkai-compact .gap-6{gap:14px;}
+  .jikkai-compact .space-y-7 > :not([hidden]) ~ :not([hidden]){margin-top:1rem;}
+  .jikkai-compact .text-5xl{font-size:2.2rem;}
+  .jikkai-compact .text-6xl{font-size:2.55rem;}
+  .mobile-dossie-footer{position:sticky;bottom:0;z-index:25;box-shadow:0 -18px 35px rgba(0,0,0,.65)}
+}
+
+
+
+  /* jikkai-theme-system-v1: temas visuais opcionais sem apagar o tema atual */
+  body[data-jikkai-theme="shadow"] { background:#000; }
+  body[data-jikkai-theme="clean"],
+  body[data-jikkai-theme="paper"],
+  body[data-jikkai-theme="ice"],
+  body[data-jikkai-theme="violet"] { transition: background-color .2s ease, color .2s ease; }
+  body[data-jikkai-theme="clean"] { background:#f3efe7; color:#1c1917; }
+  body[data-jikkai-theme="paper"] { background:#f7f4ee; color:#1f2933; }
+  body[data-jikkai-theme="ice"] { background:#07111f; color:#e5eef8; }
+  body[data-jikkai-theme="violet"] { background:#070410; color:#ede9fe; }
+
+  body[data-jikkai-theme="clean"] [class*="bg-black"],
+  body[data-jikkai-theme="clean"] [class*="bg-zinc-950"],
+  body[data-jikkai-theme="clean"] [class*="bg-zinc-900"] { background-color: rgba(250,247,240,.94) !important; }
+  body[data-jikkai-theme="clean"] [class*="border-zinc-"],
+  body[data-jikkai-theme="clean"] [class*="border-orange-900"] { border-color: rgba(120,53,15,.22) !important; }
+  body[data-jikkai-theme="clean"] [class*="text-zinc-200"],
+  body[data-jikkai-theme="clean"] [class*="text-zinc-300"],
+  body[data-jikkai-theme="clean"] [class*="text-orange-50"] { color:#1c1917 !important; }
+  body[data-jikkai-theme="clean"] [class*="text-zinc-400"],
+  body[data-jikkai-theme="clean"] [class*="text-zinc-500"],
+  body[data-jikkai-theme="clean"] [class*="text-zinc-600"],
+  body[data-jikkai-theme="clean"] [class*="text-zinc-700"] { color:#6b5f56 !important; }
+  body[data-jikkai-theme="clean"] input.fox-input,
+  body[data-jikkai-theme="clean"] select.fox-input,
+  body[data-jikkai-theme="clean"] textarea.fox-input { background:#fffaf2 !important; color:#1c1917 !important; border-color:#d6c7b9 !important; }
+
+  body[data-jikkai-theme="paper"] [class*="bg-black"],
+  body[data-jikkai-theme="paper"] [class*="bg-zinc-950"],
+  body[data-jikkai-theme="paper"] [class*="bg-zinc-900"] { background-color: rgba(255,255,255,.92) !important; }
+  body[data-jikkai-theme="paper"] [class*="border-zinc-"],
+  body[data-jikkai-theme="paper"] [class*="border-orange-900"] { border-color: rgba(148,163,184,.35) !important; }
+  body[data-jikkai-theme="paper"] [class*="text-zinc-200"],
+  body[data-jikkai-theme="paper"] [class*="text-zinc-300"],
+  body[data-jikkai-theme="paper"] [class*="text-orange-50"] { color:#111827 !important; }
+  body[data-jikkai-theme="paper"] [class*="text-zinc-400"],
+  body[data-jikkai-theme="paper"] [class*="text-zinc-500"],
+  body[data-jikkai-theme="paper"] [class*="text-zinc-600"],
+  body[data-jikkai-theme="paper"] [class*="text-zinc-700"] { color:#64748b !important; }
+  body[data-jikkai-theme="paper"] input.fox-input,
+  body[data-jikkai-theme="paper"] select.fox-input,
+  body[data-jikkai-theme="paper"] textarea.fox-input { background:#f8fafc !important; color:#111827 !important; border-color:#cbd5e1 !important; }
+
+  body[data-jikkai-theme="ice"] [class*="bg-black"],
+  body[data-jikkai-theme="ice"] [class*="bg-zinc-950"],
+  body[data-jikkai-theme="ice"] [class*="bg-zinc-900"] { background-color: rgba(8,20,36,.92) !important; }
+  body[data-jikkai-theme="ice"] [class*="border-orange"],
+  body[data-jikkai-theme="ice"] [class*="border-zinc-"] { border-color: rgba(56,189,248,.32) !important; }
+  body[data-jikkai-theme="ice"] [class*="text-orange"] { color:#7dd3fc !important; }
+  body[data-jikkai-theme="ice"] input.fox-input,
+  body[data-jikkai-theme="ice"] select.fox-input,
+  body[data-jikkai-theme="ice"] textarea.fox-input { background:#031525 !important; color:#e0f2fe !important; border-color:#0ea5e9 !important; }
+
+  body[data-jikkai-theme="violet"] [class*="bg-black"],
+  body[data-jikkai-theme="violet"] [class*="bg-zinc-950"],
+  body[data-jikkai-theme="violet"] [class*="bg-zinc-900"] { background-color: rgba(14,8,28,.93) !important; }
+  body[data-jikkai-theme="violet"] [class*="border-orange"],
+  body[data-jikkai-theme="violet"] [class*="border-zinc-"] { border-color: rgba(168,85,247,.34) !important; }
+  body[data-jikkai-theme="violet"] [class*="text-orange"] { color:#c4b5fd !important; }
+  body[data-jikkai-theme="violet"] input.fox-input,
+  body[data-jikkai-theme="violet"] select.fox-input,
+  body[data-jikkai-theme="violet"] textarea.fox-input { background:#0f0920 !important; color:#f5f3ff !important; border-color:#7c3aed !important; }
+
+  .jikkai-theme-switcher { position:fixed; left:12px; bottom:18px; z-index:10000; }
+  .jikkai-theme-panel { position:absolute; left:0; bottom:42px; width:220px; padding:8px; border-radius:12px; border:1px solid rgba(234,88,12,.45); background:rgba(9,9,11,.96); box-shadow:0 18px 50px rgba(0,0,0,.55); display:grid; gap:6px; }
+  .jikkai-theme-panel button { display:flex; align-items:center; gap:8px; width:100%; padding:8px; border-radius:9px; border:1px solid rgba(63,63,70,.85); background:rgba(24,24,27,.86); color:#e4e4e7; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; }
+  .jikkai-theme-dot { width:14px; height:14px; border-radius:999px; border:1px solid rgba(255,255,255,.5); flex:0 0 auto; }
+  .jikkai-theme-toggle { width:32px; height:32px; border-radius:8px; border:1px solid rgba(234,88,12,.65); background:rgba(9,9,11,.92); color:#fed7aa; display:grid; place-items:center; font-size:14px; box-shadow:0 10px 24px rgba(0,0,0,.45); }
+  @media(max-width:640px){ .jikkai-theme-switcher{ left:10px; bottom:76px; } .jikkai-theme-panel{ bottom:38px; width:205px; } }
+
+
+  /* jikkai-shadow-ops-v1: atmosfera de organização clandestina */
+  @keyframes jikkai-scan { 0% { transform: translateY(-100%); opacity:.18; } 100% { transform: translateY(100%); opacity:.04; } }
+  @keyframes jikkai-grid-drift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 42px 78px, -68px 34px; } }
+  @keyframes jikkai-terminal-caret { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+  @keyframes jikkai-glitch { 0%,100% { transform:translate(0); filter:none; } 20% { transform:translate(-1px,1px); filter:contrast(1.25); } 40% { transform:translate(1px,-1px); } 60% { transform:translate(-1px,0); } 80% { transform:translate(1px,1px); } }
+  @keyframes jikkai-bar { 0% { width:0%; } 18% { width:28%; } 48% { width:58%; } 72% { width:82%; } 100% { width:100%; } }
+  @keyframes jikkai-pulse-ring { 0% { transform:scale(.86); opacity:.65; } 100% { transform:scale(1.25); opacity:0; } }
+  .shadow-ops-bg {
+    position:relative;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(234,88,12,.18), transparent 34%),
+      radial-gradient(circle at 86% 74%, rgba(153,27,27,.18), transparent 38%),
+      #030303;
+    overflow:hidden;
+  }
+  .shadow-ops-bg:before {
+    content:"";
+    position:absolute;
+    inset:-40%;
+    background-image:
+      linear-gradient(rgba(234,88,12,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(234,88,12,.045) 1px, transparent 1px);
+    background-size: 42px 42px, 42px 42px;
+    animation:jikkai-grid-drift 15s linear infinite;
+    transform:rotate(-7deg);
+    pointer-events:none;
+  }
+  .shadow-ops-bg:after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(234,88,12,.16) 48%, transparent 100%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 3px, transparent 7px);
+    mix-blend-mode:screen;
+    animation:jikkai-scan 3.2s linear infinite;
+    pointer-events:none;
+  }
+  .jikkai-terminal-card {
+    position:relative;
+    border:1px solid rgba(234,88,12,.48);
+    background:linear-gradient(180deg, rgba(9,9,11,.94), rgba(0,0,0,.96));
+    box-shadow:0 0 0 1px rgba(234,88,12,.08), 0 24px 90px rgba(0,0,0,.75), inset 0 0 40px rgba(124,45,18,.12);
+  }
+  .jikkai-terminal-card:before {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    background:linear-gradient(90deg, transparent, rgba(234,88,12,.08), transparent);
+    pointer-events:none;
+  }
+  .jikkai-caret:after { content:"_"; animation:jikkai-terminal-caret .9s step-end infinite; color:#fb923c; }
+  .jikkai-glitch { animation:jikkai-glitch 1.45s steps(2,end) infinite; }
+  .jikkai-loader-line { position:relative; overflow:hidden; background:#09090b; border:1px solid rgba(234,88,12,.35); }
+  .jikkai-loader-line > span { display:block; height:100%; background:linear-gradient(90deg,#7f1d1d,#ea580c,#fed7aa); box-shadow:0 0 20px rgba(234,88,12,.65); animation:jikkai-bar 2.6s ease-in-out forwards; }
+  .jikkai-status-line { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  .jikkai-ring { position:absolute; inset:-8px; border:1px solid rgba(234,88,12,.55); border-radius:999px; animation:jikkai-pulse-ring 1.4s ease-out infinite; }
+  .jikkai-transition-overlay {
+    position:fixed; inset:0; z-index:100000;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.78);
+    backdrop-filter:blur(5px);
+    pointer-events:none;
+  }
+  .jikkai-transition-overlay .mini {
+    width:min(420px, calc(100vw - 32px));
+  }
+
+
+
+  /* jikkai-shadow-ops-v2: acesso por nível, scanner, carimbos e modo discreto */
+  .jikkai-code-badge{
+    display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(234,88,12,.38);
+    background:linear-gradient(90deg,rgba(9,9,11,.86),rgba(124,45,18,.18));
+    color:#fed7aa;border-radius:999px;padding:7px 10px;font:800 10px/1 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    letter-spacing:.12em;text-transform:uppercase;box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 0 20px rgba(234,88,12,.06)
+  }
+  .jikkai-code-badge .dot{width:7px;height:7px;border-radius:999px;background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.8)}
+  .jikkai-classified-stamp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;transform:rotate(-1deg);box-shadow:inset 0 0 16px rgba(234,88,12,.06)}
+  .jikkai-access-overlay,.jikkai-dossier-scan{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.86);backdrop-filter:blur(7px);padding:18px}
+  .jikkai-access-card{width:min(520px,100%);position:relative;overflow:hidden;border:1px solid rgba(34,197,94,.42);background:linear-gradient(180deg,rgba(4,15,10,.96),rgba(0,0,0,.97));box-shadow:0 28px 100px rgba(0,0,0,.8),inset 0 0 48px rgba(34,197,94,.08)}
+  .jikkai-access-card:before,.jikkai-dossier-card:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 6px);pointer-events:none;opacity:.55}
+  .jikkai-dossier-card{width:min(440px,100%);position:relative;overflow:hidden;border:1px solid rgba(234,88,12,.45);background:linear-gradient(180deg,rgba(9,9,11,.96),rgba(0,0,0,.97));box-shadow:0 28px 100px rgba(0,0,0,.82),inset 0 0 42px rgba(234,88,12,.08)}
+  .jikkai-scan-window{position:relative;height:120px;border:1px solid rgba(234,88,12,.35);background:#020202;overflow:hidden;border-radius:12px}
+  .jikkai-scan-window:after{content:"";position:absolute;left:0;right:0;height:3px;background:#fb923c;box-shadow:0 0 18px rgba(251,146,60,.9);animation:jikkai-scan-line 1.05s ease-in-out infinite alternate}
+  @keyframes jikkai-scan-line{from{top:8px}to{top:108px}}
+  .jikkai-terminal-toast{position:fixed;right:16px;top:88px;z-index:100002;width:min(360px,calc(100vw - 32px));border:1px solid rgba(34,197,94,.45);background:rgba(1,10,6,.94);box-shadow:0 18px 50px rgba(0,0,0,.55);border-radius:12px;padding:12px 14px;color:#bbf7d0;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;animation:fadein .22s ease-out}
+  .jikkai-mode-row{margin-top:8px;padding-top:8px;border-top:1px solid rgba(63,63,70,.7)}
+  .jikkai-discrete-toggle{border-color:rgba(14,165,233,.5)!important;background:rgba(8,47,73,.45)!important;color:#bae6fd!important}
+  body[data-jikkai-mode="discrete"] .shadow-ops-bg:before,
+  body[data-jikkai-mode="discrete"] .shadow-ops-bg:after,
+  body[data-jikkai-mode="discrete"] .jikkai-ring,
+  body[data-jikkai-mode="discrete"] .jikkai-glitch,
+  body[data-jikkai-mode="discrete"] .jikkai-caret:after{animation:none!important;display:none!important}
+  body[data-jikkai-mode="discrete"] .jikkai-transition-overlay{display:none!important}
+  body[data-jikkai-mode="discrete"] .jikkai-terminal-card{box-shadow:0 18px 50px rgba(0,0,0,.45)!important}
+  @media(max-width:640px){.jikkai-terminal-toast{top:72px;right:10px;width:calc(100vw - 20px)}.jikkai-code-badge{font-size:8px;padding:6px 8px}}
+
 </style>
 </head>
 <body>
@@ -104,11 +294,11 @@
 const { useState, useEffect, useRef } = React;
 
 // ============ DEFAULTS ============
-// Permissões granulares — leader sempre tem todas via hasLeaderPerms
+// Selos granulares — leader sempre tem todas via hasLeaderPerms
 const PERMISSIONS_LIST = [
   { id: "manage_users",        label: "Gerenciar usuários", desc: "Criar, editar e remover logins" },
   { id: "manage_missions",     label: "Gerenciar missões", desc: "Criar, editar e atribuir missões" },
-  { id: "manage_roles",        label: "Gerenciar cargos", desc: "Criar/editar cargos e permissões" },
+  { id: "manage_roles",        label: "Gerenciar cargos", desc: "Criar/editar cargos e selos" },
   { id: "edit_history",        label: "Editar História", desc: "Editar linha do tempo" },
   { id: "edit_clans",          label: "Editar Clãs & Mandamentos", desc: "Criar/editar clãs e os 7 mandamentos" },
   { id: "edit_trios",          label: "Editar Equipes", desc: "Criar e editar equipes das divisões" },
@@ -136,7 +326,7 @@ function roleEfetivoUsuario(user, role) {
   if (!isRootUser(user)) return role;
   return {
     id: role?.id || "leader",
-    nome: role?.nome || "Acesso raiz",
+    nome: role?.nome || "Selo raiz",
     cor: role?.cor || "#D85A30",
     estruturaPosicao: role?.estruturaPosicao || "independente",
     ...(role || {}),
@@ -373,9 +563,7 @@ const DOSSIE_FIELDS = [
   { id: "vilaOrigem", label: "Vila", peso: 12 },
   { id: "especialidade", label: "Especialidade", peso: 14 },
   { id: "funcaoPreferida", label: "Função", peso: 10 },
-  { id: "disponibilidadeOperacional", label: "Disponibilidade", peso: 8 },
   { id: "estiloCombate", label: "Estilo", peso: 6 },
-  { id: "restricoesOperacionais", label: "Limites", peso: 6 },
 ];
 
 function valorDossie(u, campo) {
@@ -388,11 +576,12 @@ function progressoDossieUsuario(u) {
   if (!u) return { pct: 0, completos: 0, total: DOSSIE_FIELDS.length, faltando: DOSSIE_FIELDS.map(f => f.label), essenciaisOk: false };
   let pontos = 0;
   const faltando = [];
+  const totalPeso = DOSSIE_FIELDS.reduce((s, f) => s + (Number(f.peso) || 0), 0) || DOSSIE_FIELDS.length;
   DOSSIE_FIELDS.forEach(f => {
-    if (valorDossie(u, f.id)) pontos += f.peso;
+    if (valorDossie(u, f.id)) pontos += (Number(f.peso) || 0);
     else faltando.push(f.label);
   });
-  const pct = Math.max(0, Math.min(100, Math.round(pontos)));
+  const pct = Math.max(0, Math.min(100, Math.round((pontos / totalPeso) * 100)));
   const essenciaisOk = MEMBER_PROFILE_FIELDS.every(c => Boolean(valorDossie(u, c)));
   return { pct, completos: DOSSIE_FIELDS.length - faltando.length, total: DOSSIE_FIELDS.length, faltando, essenciaisOk };
 }
@@ -408,6 +597,74 @@ function funcaoOperacionalDoMembro(data, membro) {
   const vinculo = (equipe?.membros || []).find(m => m.username === membro?.username);
   const divisao = equipe ? divisoesJikkai(data).find(d => d.id === equipe.divisaoId) : null;
   return { equipe, vinculo, divisao };
+}
+
+
+function sugestoesDossieAutomaticas(data, membro) {
+  const familia = familiaDoMembro(data, membro) || null;
+  const { equipe, vinculo, divisao } = funcaoOperacionalDoMembro(data, membro);
+  const role = (data?.roles || []).find(r => r.id === membro?.role);
+  const especialidadePorEquipe = equipe?.tipo && equipe.tipo !== "Equipe" ? equipe.tipo : "";
+  const funcaoPorEquipe = vinculo?.papel || (equipe?.liderUsername === membro?.username ? "Líder de equipe" : "");
+  const estiloPorEspecialidade = (() => {
+    const base = String(membro?.especialidade || especialidadePorEquipe || "").toLowerCase();
+    if (base.includes("intel") || base.includes("recon") || base.includes("infil")) return "Furtivo";
+    if (base.includes("suporte") || base.includes("méd") || base.includes("med")) return "Suporte";
+    if (base.includes("defesa") || base.includes("escolta")) return "Defensivo";
+    if (base.includes("ataque") || base.includes("executor")) return "Curta distância";
+    return "";
+  })();
+  return {
+    nomeRP: membro?.nomeRP || membro?.displayName || getCodinome(membro),
+    linhagem: membro?.linhagem || familia?.nome || "",
+    especialidade: membro?.especialidade || especialidadePorEquipe || "Operador Jikkai",
+    funcaoPreferida: membro?.funcaoPreferida || funcaoPorEquipe || "Soldado",
+    estiloCombate: membro?.estiloCombate || estiloPorEspecialidade,
+    equipamentoPrincipal: membro?.equipamentoPrincipal || "",
+    divisaoNome: divisao?.nome || "Sem divisão",
+    equipeNome: equipe?.nome || "Sem equipe",
+    cargoNome: membro?.patente || role?.nome || membro?.role || "Membro",
+  };
+}
+
+function timelineAutomaticaMembro(data, membro) {
+  if (!membro) return [];
+  const username = membro.username;
+  const eventos = [];
+  const add = (dataEvento, titulo, desc, tipo = "registro") => {
+    if (!titulo) return;
+    eventos.push({ id: uid(), data: dataEvento || new Date().toISOString(), titulo, desc: desc || "", tipo });
+  };
+
+  if (membro.criadoEm) add(membro.criadoEm, "Membro criado", "Registro aberto na Jikkai.", "dossie");
+  if (membro.iniciacaoConcluidaEm) add(membro.iniciacaoConcluidaEm, "Iniciação concluída", "Protocolo de entrada finalizado.", "juramento");
+  const { equipe, vinculo, divisao } = funcaoOperacionalDoMembro(data, membro);
+  if (equipe) add(equipe.updatedAt || equipe.createdAt || membro.criadoEm || new Date().toISOString(), "Alocado em equipe", `${equipe.nome}${divisao ? " · " + divisao.nome : ""}${vinculo?.papel ? " · " + vinculo.papel : ""}`, "equipe");
+
+  (data.missoes || []).filter(m => usuarioParticipaMissao(m, username)).forEach(m => {
+    add(m.createdAt, "Missão atribuída", m.titulo, "missao");
+    if (m.startedAt) add(m.startedAt, "Missão em andamento", m.titulo, "missao");
+    if (m.relatorioFinalId) add(m.relatorioEnviadoEm || m.updatedAt || m.createdAt, "Relatório final enviado", m.titulo, "relatorio");
+    if (m.concluidaEm) add(m.concluidaEm, statusMissaoConfig(m.status).label, m.titulo, "missao");
+  });
+
+  (data.relatorios || []).filter(r => r.autorUsername === username).forEach(r => {
+    add(r.data || r.createdAt, "Relatório registrado", r.titulo || r.resumo || r.tipo || "Relatório", "relatorio");
+  });
+
+  (membro.condutaRegistros || []).forEach(r => {
+    add(r.data || r.criadoEm, r.tipo || "Registro de conduta", r.motivo || r.descricao || r.nota || "", "conduta");
+  });
+
+  (data.activityLog || []).filter(a => a.alvo === username || String(a.descricao || "").includes(getCodinome(membro)) || String(a.descricao || "").includes(username)).forEach(a => {
+    if (/senha|backup|foto_iniciacao/i.test(`${a.tipo} ${a.descricao}`)) return;
+    add(a.data, a.descricao || a.tipo || "Atividade", a.ator ? `Registrado por ${a.ator}` : "", "atividade");
+  });
+
+  return eventos
+    .filter(e => e.data)
+    .sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0))
+    .slice(0, 9);
 }
 
 function normalizarMembro(u, existente = true) {
@@ -565,7 +822,7 @@ const DEFAULT_CLAS = [
   },
 ];
 
-const FRASE_JURAMENTO = "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento";
+const FRASE_JURAMENTO = "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este juramento";
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
@@ -705,6 +962,132 @@ function Btn({ children, onClick, variant = "default", size = "sm", disabled, cl
   );
 }
 
+
+function ShadowBootScreen({ label = "LIBERANDO SELO DE ACESSO", detail = "canal de chakra oculto · juramento conferido · rastros mascarados", compact = false }) {
+  const linhas = [
+    "erguendo barreira de chakra",
+    "conferindo marca do juramento",
+    "abrindo pergaminhos selados",
+    "liberando passagem pelas sombras",
+  ];
+  return (
+    <div className="min-h-screen shadow-ops-bg flex items-center justify-center p-5">
+      <div className={`jikkai-terminal-card rounded-2xl ${compact ? "p-5 max-w-md" : "p-6 sm:p-8 max-w-xl"} w-full text-center overflow-hidden`}>
+        <div className="relative mx-auto mb-5 w-20 h-20 rounded-full border border-orange-800 bg-black flex items-center justify-center">
+          <span className="jikkai-ring" />
+          <IFlame className="w-10 h-10 text-orange-500 pulse-fire relative z-10" />
+        </div>
+        <div className="jikkai-status-line text-[10px] uppercase tracking-[0.34em] text-orange-600 mb-2">PORTÃO SELADO JIKKAI</div>
+        <h1 className="jikkai-glitch jikkai-caret text-2xl sm:text-3xl font-black text-orange-50 serif">{label}</h1>
+        <p className="text-zinc-500 text-xs sm:text-sm mt-3 leading-relaxed">{detail}</p>
+        <div className="jikkai-loader-line h-2 rounded-full mt-6"><span /></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5 text-left">
+          {linhas.map((l, i) => (
+            <div key={l} className="jikkai-status-line rounded border border-zinc-900 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-600">
+              <span className="text-orange-700">0{i + 1}</span> · {l}
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 text-[9px] uppercase tracking-[0.3em] text-zinc-700">Selo clandestino sob vigilância</div>
+      </div>
+    </div>
+  );
+}
+
+function PortalTransitionOverlay({ active, label = "ABRINDO PERGAMINHOS" }) {
+  if (!active) return null;
+  return (
+    <div className="jikkai-transition-overlay fadein">
+      <div className="mini jikkai-terminal-card rounded-2xl p-5 text-center">
+        <div className="relative mx-auto mb-4 w-14 h-14 rounded-full border border-orange-800 bg-black flex items-center justify-center">
+          <span className="jikkai-ring" />
+          <ILock className="w-7 h-7 text-orange-500 relative z-10" />
+        </div>
+        <div className="jikkai-status-line text-[9px] uppercase tracking-[0.32em] text-orange-600">SELO DE TRÂNSITO JIKKAI</div>
+        <div className="jikkai-caret text-orange-50 font-black serif text-xl mt-1">{label}</div>
+        <div className="jikkai-loader-line h-1.5 rounded-full mt-4"><span /></div>
+        <div className="jikkai-status-line text-[10px] text-zinc-600 mt-3 uppercase tracking-wider">dissipando rastros de chakra</div>
+      </div>
+    </div>
+  );
+}
+
+
+function AccessGrantedOverlay({ usuario, role }) {
+  const nivel = Number(usuario?.nivelAcesso || 1);
+  const sigilo = SIGILO_NIVEIS[Math.max(0, Math.min(SIGILO_NIVEIS.length - 1, nivel - 1))] || "Público";
+  const linhas = [
+    `MARCA: ${getCodinome(usuario)}`,
+    `POSIÇÃO: ${role?.nome || usuario?.role || "Membro"}`,
+    `SELO DE ACESSO: ${sigiloConfig(sigilo).codigo}`,
+    role?.hasLeaderPerms ? "AUTORIDADE: COMANDO TOTAL" : "AUTORIDADE: LIMITADA PELO SELO",
+  ];
+  return (
+    <div className="jikkai-access-overlay fadein">
+      <div className="jikkai-access-card rounded-2xl p-6 sm:p-7 text-center">
+        <div className="relative mx-auto mb-5 w-20 h-20 rounded-full border border-green-700 bg-black flex items-center justify-center">
+          <span className="jikkai-ring" style={{ borderColor: "rgba(34,197,94,.65)" }} />
+          <ICheck className="w-10 h-10 text-green-400 relative z-10" />
+        </div>
+        <div className="jikkai-status-line text-[10px] uppercase tracking-[0.32em] text-green-500">SELO LIBERADO</div>
+        <h1 className="text-2xl sm:text-3xl font-black text-green-100 serif mt-1">MARCA RECONHECIDA</h1>
+        <div className="grid gap-2 text-left mt-5">
+          {linhas.map((l, i) => (
+            <div key={l} className="jikkai-status-line rounded border border-green-900/50 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-wider text-green-300">
+              <span className="text-green-600">0{i + 1}</span> · {l}
+            </div>
+          ))}
+        </div>
+        <div className="jikkai-loader-line h-1.5 rounded-full mt-5"><span /></div>
+        <div className="mt-4 text-[9px] uppercase tracking-[0.3em] text-green-700">chakra mascarado · passagem autorizada</div>
+      </div>
+    </div>
+  );
+}
+
+function DossieScanOverlay({ membro }) {
+  const linhas = ["lendo marca de lealdade", "consultando pergaminhos de missão", "avaliando conduta pelo selo", "abrindo dossiê selado"];
+  return (
+    <div className="jikkai-dossier-scan fadein">
+      <div className="jikkai-dossier-card rounded-2xl p-5 text-center">
+        <div className="jikkai-status-line text-[9px] uppercase tracking-[0.3em] text-orange-600">LEITURA DE SELO</div>
+        <h3 className="text-xl font-black text-orange-50 serif mt-1">ABRINDO DOSSIÊ SELADO</h3>
+        <div className="jikkai-scan-window mt-4 flex items-center justify-center">
+          <MemberAvatar user={membro} size="xl" />
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-4 text-left">
+          {linhas.map((l, i) => <div key={l} className="jikkai-status-line rounded border border-zinc-900 bg-black/60 px-2 py-2 text-[9px] uppercase tracking-wider text-zinc-600"><span className="text-orange-700">0{i + 1}</span> · {l}</div>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PortalCodeBadge({ tab, subTab = "" }) {
+  const map = {
+    home: "SELO JIKKAI · CENTRAL",
+    membros: "SELO JIKKAI · DOSSIÊS",
+    jikkai: subTab === "contratos" ? "SELO JIKKAI · CONTRATOS" : subTab === "relatorios" ? "SELO JIKKAI · ARQUIVO" : "SELO JIKKAI · ESTRATÉGIA",
+    armas: "SELO JIKKAI · ARSENAL",
+    missoes: "SELO JIKKAI · MISSÕES",
+    juramento: "SELO JIKKAI · JURAMENTO",
+    visaogeral: "SELO JIKKAI · VITRINE",
+    arquivos: "SELO JIKKAI · ARQUIVO PÚBLICO",
+    gerenciar: "SELO JIKKAI · COMANDO",
+  };
+  return <div className="jikkai-code-badge"><span className="dot" />{map[tab] || "SELO JIKKAI · PORTAL"}</div>;
+}
+
+function TerminalToast({ message }) {
+  if (!message) return null;
+  return (
+    <div className="jikkai-terminal-toast">
+      <div className="text-[9px] uppercase tracking-[0.26em] text-green-600">SELO JIKKAI</div>
+      <div className="text-xs uppercase tracking-wider mt-1">{message}</div>
+    </div>
+  );
+}
+
 // ============ HOME ============
 function destinoSinalVisaoGeral(sinal) {
   if (sinal?.fonteTipo === "mapa") return { tab: "mapa" };
@@ -819,8 +1202,8 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
     prioridades.push(item);
   };
 
-  if (missoesAguardando.length) addPrioridade({ titulo: "Missão aguardando sua confirmação", desc: missoesAguardando[0].titulo, tab: "missoes", cor: "#EA580C" });
-  if (missoesEmAndamento.length) addPrioridade({ titulo: "Operação em andamento", desc: "Atualize objetivos e prepare o relatório final quando concluir.", tab: "missoes", cor: "#A855F7" });
+  if (missoesAguardando.length) addPrioridade({ titulo: "Missão aguardando sua confirmação", desc: missoesAguardando[0].titulo, tab: "missoes", action: `aceitar-missao:${missoesAguardando[0].id}`, cor: "#EA580C" });
+  if (missoesEmAndamento.length) addPrioridade({ titulo: "Operação em andamento", desc: "Atualize objetivos e prepare o relatório final quando concluir.", tab: "missoes", action: `relatorio-missao:${missoesEmAndamento[0].id}`, cor: "#A855F7" });
   if (missoesRevisaoMinhas.length) addPrioridade({ titulo: "Relatório enviado para revisão", desc: "Aguarde aprovação da liderança ou ajustes solicitados.", tab: "missoes", cor: "#38BDF8" });
   if (!perfilCompletoUsuario(usuario)) addPrioridade({ titulo: "Concluir seu dossiê", desc: "Complete foto, identidade, elemento, linhagem e vila para facilitar designações.", tab: "membros", subTab: "lista", action: "meu-dossie", cor: "#CA8A04" });
 
@@ -828,15 +1211,15 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Relatórios operacionais esperando decisão da liderança.", tab: "missoes", cor: "#A855F7" });
     if (propostas) addPrioridade({ titulo: `${propostas} ${propostas === 1 ? "proposta externa" : "propostas externas"}`, desc: "Contratos enviados aguardam análise.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
     if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", subTab: "usuarios", action: "iniciacoes-pendentes", cor: "#F59E0B" });
-    if (missoesSemRelatorio) addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações em andamento precisam de relatório para serem encerradas.", tab: "missoes", cor: "#38BDF8" });
-    if (contratosSemDesignacao) addPrioridade({ titulo: `${contratosSemDesignacao} ${contratosSemDesignacao === 1 ? "contrato aberto" : "contratos abertos"} sem designação`, desc: "Atribua uma divisão, equipe ou operador responsável.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
+    if (missoesSemRelatorio) { const missaoSemRel = (data.missoes || []).find(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id)); addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações em andamento precisam de relatório para serem encerradas.", tab: "missoes", action: missaoSemRel ? `relatorio-missao:${missaoSemRel.id}` : "", cor: "#38BDF8" }); }
+    if (contratosSemDesignacao) { const contratoPendente = (data.contratos || []).find(c => c.status === "Aberto" && !c.missaoId && !c.aceitoPor && !c.assignmentLabel); addPrioridade({ titulo: `${contratosSemDesignacao} ${contratosSemDesignacao === 1 ? "contrato aberto" : "contratos abertos"} sem designação`, desc: "Atribua uma divisão, equipe ou operador responsável.", tab: "jikkai", subTab: "contratos", action: contratoPendente ? `contrato-designar:${contratoPendente.id}` : "", cor: "#EF4444" }); }
     if (divisoesSemCapitao) addPrioridade({ titulo: `${divisoesSemCapitao} ${divisoesSemCapitao === 1 ? "divisão está" : "divisões estão"} sem Capitão`, desc: "Defina o Capitão responsável por cada divisão.", tab: "membros", subTab: "equipes", cor: "#DC2626" });
     if (equipesSemLider) addPrioridade({ titulo: `${equipesSemLider} ${equipesSemLider === 1 ? "equipe está" : "equipes estão"} sem líder`, desc: "Defina um líder para as crews/equipes operacionais.", tab: "membros", subTab: "equipes", cor: "#F97316" });
     if (membrosSemEquipe) addPrioridade({ titulo: `${membrosSemEquipe} membro${membrosSemEquipe === 1 ? "" : "s"} sem equipe`, desc: "Alocar membros nas crews deixa missões e contratos mais rápidos.", tab: "membros", subTab: "equipes", cor: "#A855F7" });
-    if (dossiesIncompletos) addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", cor: "#CA8A04" });
+    if (dossiesIncompletos) { const primeiroDossie = membrosFox.find(u => !perfilCompletoUsuario(u)); addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", action: primeiroDossie ? `dossie-usuario:${primeiroDossie.username}` : "", cor: "#CA8A04" }); }
   } else if (isCapitaoDivisao) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} revisão`, desc: "Relatórios da sua divisão precisam de decisão.", tab: "missoes", cor: "#A855F7" });
-    if (missoesSemRelatorio) addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações da sua divisão precisam ser registradas.", tab: "missoes", cor: "#38BDF8" });
+    if (missoesSemRelatorio) { const missaoSemRel = (data.missoes || []).find(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id)); addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações da sua divisão precisam ser registradas.", tab: "missoes", action: missaoSemRel ? `relatorio-missao:${missaoSemRel.id}` : "", cor: "#38BDF8" }); }
     if (equipesSemLider) addPrioridade({ titulo: `${equipesSemLider} ${equipesSemLider === 1 ? "equipe está" : "equipes estão"} sem líder`, desc: "Organize as crews da sua divisão.", tab: "membros", subTab: "equipes", cor: "#F97316" });
   }
 
@@ -892,8 +1275,8 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
             <p className="text-zinc-500 leading-relaxed mt-3 max-w-2xl">Veja primeiro o que exige sua ação: missões designadas, dossiê, relatórios e registros importantes.</p>
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="px-3 py-1.5 rounded-full border border-orange-800 bg-orange-950/20 text-orange-300 text-[10px] uppercase tracking-wider font-black">{cargoUsuario?.nome || usuario?.patente || "Membro"}</span>
-              <span className="px-3 py-1.5 rounded-full border border-zinc-700 bg-zinc-950 text-zinc-400 text-[10px] uppercase tracking-wider font-black">{ramoUsuario?.nome || "Sem ramo"}{trioUsuario ? ` · ${trioUsuario.nome}` : ""}</span>
-              <span className="px-3 py-1.5 rounded-full border border-red-800 bg-red-950/20 text-red-300 text-[10px] uppercase tracking-wider font-black">Acesso nível {usuario?.nivelAcesso || 1}</span>
+              <span className="px-3 py-1.5 rounded-full border border-zinc-700 bg-zinc-950 text-zinc-400 text-[10px] uppercase tracking-wider font-black">{funcaoOperacionalDoMembro(data, usuario)?.divisao?.nome || "Sem divisão"}{funcaoOperacionalDoMembro(data, usuario)?.equipe ? ` · ${funcaoOperacionalDoMembro(data, usuario).equipe.nome}` : ""}</span>
+              <span className="px-3 py-1.5 rounded-full border border-red-800 bg-red-950/20 text-red-300 text-[10px] uppercase tracking-wider font-black">Selo nível {usuario?.nivelAcesso || 1}</span>
               {juramentoUsuario && <span className="px-3 py-1.5 rounded-full border border-green-900 bg-green-950/20 text-green-300 text-[10px] uppercase tracking-wider font-black">Juramento selado</span>}
             </div>
           </div>
@@ -909,7 +1292,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
                 <div className="text-2xl font-black serif group-hover:text-orange-300" style={{ color: acaoPrincipal.cor || "#EA580C" }}>{acaoPrincipal.titulo}</div>
               </div>
               <p className="text-zinc-500 text-sm mt-3 leading-relaxed">{acaoPrincipal.desc}</p>
-              <div className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-orange-700 text-white text-xs uppercase tracking-wider font-black">Abrir agora →</div>
+              <div className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-orange-700 text-white text-xs uppercase tracking-wider font-black">Abrir ação →</div>
             </button>
             {pendenciasRapidas.length > 0 && (
               <div className="mt-4 pt-4 border-t border-zinc-800/70">
@@ -935,7 +1318,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <QuickCard icon={IClipboard} titulo="Minhas Missões" desc="Aceite, acompanhe objetivos e envie relatório final." badge={minhasMissoes.length ? `${minhasMissoes.length} ativa${minhasMissoes.length === 1 ? "" : "s"}` : "0 ativa"} onClick={() => onNavigate("missoes")} accent="#A855F7" />
         <QuickCard icon={IFile} titulo="Criar Relatório" desc="Missão concluída, ocorrência sem missão, risco ou registro narrativo." badge={relatoriosMeus.length ? `${relatoriosMeus.length} meu${relatoriosMeus.length === 1 ? "" : "s"}` : "Avulso"} onClick={() => onNavigate("jikkai", "relatorios", "novo-relatorio-avulso")} accent="#38BDF8" />
-        <QuickCard icon={IUsers} titulo="Meu Dossiê 2.0" desc="Foto, função, prontidão, limites e dados úteis para missões." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("membros", "lista", "meu-dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
+        <QuickCard icon={IUsers} titulo="Meu Dossiê" desc="Foto, identidade, especialidade e função para missões." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("membros", "lista", "meu-dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
         <QuickCard icon={ITarget} titulo="Mapa Estratégico" desc="Locais, rotas e pontos importantes da organização." badge="Mapa" onClick={() => onNavigate("mapa")} accent="#EA580C" />
       </section>
 
@@ -970,7 +1353,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
             <div className="min-w-0">
               <div className="text-xl font-black text-orange-50 serif truncate">{getCodinome(usuario)}</div>
               <div className="text-zinc-500 text-xs mt-1 truncate">{usuario?.patente || cargoUsuario?.nome || "Operador"}</div>
-              <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-1">{ramoUsuario?.nome || "Sem ramo"}{trioUsuario ? ` · ${trioUsuario.nome}` : ""}</div>
+              <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-1">{funcaoOperacionalDoMembro(data, usuario)?.divisao?.nome || "Sem divisão"}{funcaoOperacionalDoMembro(data, usuario)?.equipe ? ` · ${funcaoOperacionalDoMembro(data, usuario).equipe.nome}` : ""}</div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-5">
@@ -1010,7 +1393,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
       <section className="grid md:grid-cols-3 gap-3">
         <button onClick={() => onNavigate("historia", "cla")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><ICrown className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Clã Lamona</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Conheça a origem, Archie e o legado familiar.</p></button>
         <button onClick={() => onNavigate("membros", "estrutura")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-black text-left hover:border-orange-700 transition-colors"><IUsers className="w-6 h-6 text-red-500 mb-3" /><div className="text-orange-50 font-black serif">Organização</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Divisões, equipes e dossiês dos membros.</p></button>
-        <button onClick={() => onNavigate("jikkai", "plano")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-red-950/15 to-black text-left hover:border-orange-700 transition-colors"><ITarget className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Painel Jikkai</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Plano, contratos, relatórios e situação estratégica. {sinaisOcultos > 0 ? `${sinaisOcultos} registros acima do seu acesso.` : ""}</p></button>
+        <button onClick={() => onNavigate("jikkai", "plano")} className="p-5 rounded-xl border border-zinc-800 bg-gradient-to-br from-red-950/15 to-black text-left hover:border-orange-700 transition-colors"><ITarget className="w-6 h-6 text-orange-500 mb-3" /><div className="text-orange-50 font-black serif">Painel Jikkai</div><p className="text-zinc-600 text-xs mt-2 leading-relaxed">Plano, contratos, relatórios e situação estratégica. {sinaisOcultos > 0 ? `${sinaisOcultos} registros acima do seu selo.` : ""}</p></button>
       </section>
 
       <section className="rounded-xl border border-red-900/30 bg-black/55 p-5 flex flex-col sm:flex-row items-start gap-4">
@@ -1055,7 +1438,7 @@ function GaleriaModal({ onSave, onClose, usuario }) {
     if (!arquivo) { setErro("Selecione uma imagem primeiro."); return; }
     if (!titulo.trim()) { setErro("Dê um título à imagem."); return; }
     if (!cloudClient) {
-      setErro("Sincronização em nuvem não configurada — upload indisponível.");
+      setErro("Selamento em nuvem não configurada — upload indisponível.");
       return;
     }
     setUploading(true);
@@ -1286,7 +1669,7 @@ function GaleriaSection({ data, setData, isLider, usuario }) {
         <div className="p-4 mb-4 bg-yellow-950/30 border border-yellow-800/50 rounded text-yellow-300 text-sm flex items-start gap-2">
           <IAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <div>
-            <strong>Sincronização em nuvem desativada.</strong> Upload de arquivos não funciona neste modo. Use a opção "Por URL" para adicionar imagens hospedadas externamente.
+            <strong>Selamento em nuvem desativada.</strong> Upload de arquivos não funciona neste modo. Use a opção "Por URL" para adicionar imagens hospedadas externamente.
           </div>
         </div>
       )}
@@ -1732,7 +2115,7 @@ function ClaPage({ data, setData, role, embedded = false }) {
         </div>
         {editMandamentos && (
           <div className="mt-3 text-xs text-yellow-500/80 italic">
-            ⚠ Mudanças nos mandamentos são sincronizadas automaticamente com o ritual de Juramento.
+            ⚠ Mudanças nos mandamentos são seladas automaticamente com o ritual de Juramento.
           </div>
         )}
       </div>
@@ -1742,6 +2125,13 @@ function ClaPage({ data, setData, role, embedded = false }) {
 
 // ============ MEMBROS — ETAPA 1: DOSSIÊS, ESTRUTURA E TRIOS ============
 function DossieModal({ membro, data, onClose }) {
+  const [scannerAtivo, setScannerAtivo] = useState(true);
+  useEffect(() => {
+    if (!membro) return;
+    setScannerAtivo(true);
+    const t = setTimeout(() => setScannerAtivo(false), 820);
+    return () => clearTimeout(t);
+  }, [membro?.username]);
   if (!membro) return null;
   const role = data.roles.find(r => r.id === membro.role);
   const familia = familiaDoMembro(data, membro);
@@ -1761,21 +2151,21 @@ function DossieModal({ membro, data, onClose }) {
     ["Equipe", equipe?.nome || "Sem equipe"],
     ["Função na equipe", vinculo?.papel || membro.funcaoPreferida || "Não definida"],
     ["Especialidade", membro.especialidade || "Não definida"],
-    ["Disponibilidade", membro.disponibilidadeOperacional || "Não definida"],
     ["Estilo", membro.estiloCombate || "Não definido"],
     ["Equipamento principal", membro.equipamentoPrincipal || "Não definido"],
     ["Responde a", superior ? getCodinome(superior) : "Comando da Jikkai"],
-    ["Nível de acesso", `Nível ${membro.nivelAcesso || 1}`],
+    ["Selo de acesso", `Nível ${membro.nivelAcesso || 1}`],
   ];
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
+      {scannerAtivo && <DossieScanOverlay membro={membro} />}
       <div className="w-full max-w-5xl max-h-[100dvh] sm:max-h-[92vh] overflow-y-auto bg-zinc-950 border border-orange-800 rounded-t-2xl sm:rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="relative p-5 border-b border-orange-900/40 bg-gradient-to-br from-red-950/45 via-black to-orange-950/20">
           <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
           <div className="grid lg:grid-cols-[auto_1fr_auto] gap-5 items-center">
             <MemberAvatar user={membro} size="xl" />
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-1">Dossiê 2.0 · Operador</div>
+              <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600 mb-1">Dossiê · Operador</div>
               <h3 className="text-3xl font-black text-orange-50 serif break-words">{getCodinome(membro)}</h3>
               <div className="text-zinc-500 italic">{membro.nomeRP || membro.displayName}</div>
               <div className="flex items-center gap-2 flex-wrap mt-3">
@@ -1822,12 +2212,7 @@ function DossieModal({ membro, data, onClose }) {
               <div className="grid sm:grid-cols-2 gap-2">{camposOperacionais.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
             </div>
           </div>
-          {(membro.restricoesOperacionais || membro.bio) && (
-            <div className="grid lg:grid-cols-2 gap-4">
-              {membro.restricoesOperacionais && <div className="p-4 rounded bg-red-950/10 border border-red-900/30"><div className="text-[9px] uppercase tracking-widest text-red-500 mb-2">Limites / riscos operacionais</div><p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">{membro.restricoesOperacionais}</p></div>}
-              {membro.bio && <div className="p-4 rounded bg-black/50 border border-orange-900/30"><div className="text-[9px] uppercase tracking-widest text-orange-700 mb-2">Registro pessoal</div><p className="text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">{membro.bio}</p></div>}
-            </div>
-          )}
+          <TimelineAutomaticaMembro data={data} membro={membro} />
         </div>
       </div>
     </div>
@@ -1843,6 +2228,38 @@ function InfoCell({ label, value }) {
   );
 }
 
+
+function TimelineAutomaticaMembro({ data, membro }) {
+  const eventos = timelineAutomaticaMembro(data, membro);
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-black/45 p-4">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-orange-600">Timeline automática</div>
+          <div className="text-zinc-600 text-[11px] mt-1">Gerada por missões, relatórios, equipe e registros do portal.</div>
+        </div>
+        <span className="text-[10px] px-2 py-1 rounded border border-zinc-800 text-zinc-500">{eventos.length}</span>
+      </div>
+      {eventos.length === 0 ? (
+        <div className="text-zinc-600 text-sm italic">Nenhum evento automático encontrado.</div>
+      ) : (
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          {eventos.map((e, idx) => (
+            <div key={e.tipo + e.titulo + e.data + idx} className="flex gap-3 p-2 rounded-lg border border-zinc-900 bg-zinc-950/55">
+              <div className="mt-1.5 w-2 h-2 rounded-full bg-orange-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="text-orange-50 text-sm font-bold leading-tight">{e.titulo}</div>
+                {e.desc && <div className="text-zinc-500 text-xs mt-0.5 truncate" title={e.desc}>{e.desc}</div>}
+                <div className="text-[10px] text-zinc-700 mt-1">{new Date(e.data).toLocaleString("pt-BR")}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MeuDossieModal({ membro, data, setData, onClose }) {
   const { equipe, vinculo, divisao } = funcaoOperacionalDoMembro(data, membro);
   const [aba, setAba] = useState("essencial");
@@ -1853,11 +2270,8 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     vilaOrigem: membro.vilaOrigem || "",
     especialidade: membro.especialidade || "",
     funcaoPreferida: membro.funcaoPreferida || vinculo?.papel || "",
-    disponibilidadeOperacional: membro.disponibilidadeOperacional || "",
     estiloCombate: membro.estiloCombate || "",
     equipamentoPrincipal: membro.equipamentoPrincipal || "",
-    restricoesOperacionais: membro.restricoesOperacionais || "",
-    bio: membro.bio || "",
   });
   const [arquivo, setArquivo] = useState(null);
   const [preview, setPreview] = useState(membro.avatarUrl || "");
@@ -1867,6 +2281,19 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
   const progresso = progressoDossieUsuario({ ...membro, ...form, avatarUrl: preview || membro.avatarUrl });
   const setCampo = (campo, valor) => setForm(f => ({ ...f, [campo]: valor }));
   const chip = (campo, valor) => <button type="button" onClick={() => setCampo(campo, valor)} className="px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-orange-200 hover:border-orange-700 text-[10px] uppercase tracking-wider">{valor}</button>;
+  const sugestoes = sugestoesDossieAutomaticas(data, membro);
+  const aplicarAutomatico = () => {
+    setForm(f => ({
+      ...f,
+      nomeRP: f.nomeRP || sugestoes.nomeRP,
+      linhagem: f.linhagem || sugestoes.linhagem,
+      especialidade: f.especialidade || sugestoes.especialidade,
+      funcaoPreferida: f.funcaoPreferida || sugestoes.funcaoPreferida,
+      estiloCombate: f.estiloCombate || sugestoes.estiloCombate,
+      equipamentoPrincipal: f.equipamentoPrincipal || sugestoes.equipamentoPrincipal,
+    }));
+    setAba("essencial");
+  };
   const aplicarEquipe = () => {
     setForm(f => ({
       ...f,
@@ -1917,11 +2344,16 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
         avatarStoragePath = "";
       }
       setData(d => {
-        const atualizado = normalizarMembro({ ...membro, ...form, avatarUrl, avatarStoragePath });
+        const auto = sugestoesDossieAutomaticas(d, membro);
+        const formFinal = { ...form };
+        ["nomeRP", "linhagem", "especialidade", "funcaoPreferida", "estiloCombate", "equipamentoPrincipal"].forEach(campo => {
+          if (!String(formFinal[campo] || "").trim() && String(auto[campo] || "").trim()) formFinal[campo] = auto[campo];
+        });
+        const atualizado = normalizarMembro({ ...membro, ...formFinal, avatarUrl, avatarStoragePath });
         return {
           ...d,
           users: d.users.map(u => u.username === membro.username ? atualizado : u),
-          activityLog: [...(d.activityLog || []), atividade("perfil_atualizado", membro.username, membro.username, arquivo ? "Atualizou o Dossiê 2.0 e a foto de perfil" : "Atualizou o Dossiê 2.0")],
+          activityLog: [...(d.activityLog || []), atividade("perfil_atualizado", membro.username, membro.username, arquivo ? "Atualizou o Dossiê e a foto de perfil" : "Atualizou o Dossiê")],
         };
       });
       onClose();
@@ -1934,7 +2366,6 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
   const abas = [
     { id: "essencial", label: "Essencial", icon: IUsers },
     { id: "operacional", label: "Operação", icon: ISwords },
-    { id: "registro", label: "Registro", icon: IFile },
   ];
   const camposFaltando = progresso.faltando.slice(0, 4);
   return (
@@ -1943,7 +2374,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
         <div className="p-4 border-b border-orange-900/40 flex items-center justify-between bg-zinc-950">
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600">Arquivo pessoal</div>
-            <h3 className="text-xl font-black text-orange-50 serif">Dossiê 2.0</h3>
+            <h3 className="text-xl font-black text-orange-50 serif">Dossiê</h3>
           </div>
           <button onClick={onClose} disabled={salvando} className="text-zinc-500 hover:text-red-400"><IX className="w-5 h-5" /></button>
         </div>
@@ -1960,6 +2391,11 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500 mb-2"><span>Prontidão do dossiê</span><span className="text-orange-300 font-black">{progresso.pct}%</span></div>
               <div className="h-2 rounded-full bg-zinc-900 overflow-hidden"><div className="h-full bg-gradient-to-r from-orange-900 to-orange-400" style={{ width: progresso.pct + "%" }} /></div>
               <div className="mt-3 text-xs text-zinc-500 leading-relaxed">{camposFaltando.length ? <>Falta: <span className="text-yellow-500">{camposFaltando.join(", ")}</span></> : <span className="text-green-500">Pronto para operações.</span>}</div>
+            </div>
+            <div className="p-4 rounded-xl bg-sky-950/10 border border-sky-900/35">
+              <div className="text-[9px] uppercase tracking-[0.2em] text-sky-500 mb-2">Automático</div>
+              <div className="text-zinc-500 text-xs leading-relaxed">Usa cargo, equipe e divisão para preencher função e especialidade quando estiverem vazias.</div>
+              <Btn onClick={aplicarAutomatico} variant="default" className="mt-3 w-full justify-center"><ICheck className="w-3 h-3" /> Preencher automático</Btn>
             </div>
             {(equipe || divisao) && (
               <div className="p-4 rounded-xl bg-orange-950/10 border border-orange-900/35">
@@ -1992,33 +2428,20 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               <div className="space-y-4 fadein">
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div><label className="fox-label">Função preferida em equipe</label><input value={form.funcaoPreferida} onChange={e => setCampo("funcaoPreferida", e.target.value)} className="fox-input" placeholder="Ex.: Líder, soldado, suporte..." /><div className="flex flex-wrap gap-1 mt-2">{["Líder", "Soldado", "Batedor", "Suporte", "Executor", "Rastreador"].map(v => <React.Fragment key={v}>{chip("funcaoPreferida", v)}</React.Fragment>)}</div></div>
-                  <div><label className="fox-label">Disponibilidade operacional</label><select value={form.disponibilidadeOperacional} onChange={e => setCampo("disponibilidadeOperacional", e.target.value)} className="fox-input"><option value="">Selecionar</option><option>Alta</option><option>Média</option><option>Baixa</option><option>Somente sob convocação</option></select></div>
                   <div><label className="fox-label">Estilo de combate</label><input value={form.estiloCombate} onChange={e => setCampo("estiloCombate", e.target.value)} className="fox-input" placeholder="Ex.: curta distância, genjutsu, furtivo..." /><div className="flex flex-wrap gap-1 mt-2">{["Furtivo", "Curta distância", "Longo alcance", "Defensivo", "Controle", "Suporte"].map(v => <React.Fragment key={v}>{chip("estiloCombate", v)}</React.Fragment>)}</div></div>
                   <div><label className="fox-label">Equipamento / arma principal</label><input value={form.equipamentoPrincipal} onChange={e => setCampo("equipamentoPrincipal", e.target.value)} className="fox-input" placeholder="Ex.: katana, kunais, selos, venenos..." /></div>
-                  <div className="sm:col-span-2"><label className="fox-label">Limites / riscos operacionais</label><textarea rows="3" value={form.restricoesOperacionais} onChange={e => setCampo("restricoesOperacionais", e.target.value)} className="fox-input" placeholder="O que a liderança precisa saber antes de te colocar em uma missão? Ex.: não atua contra determinada vila, risco de exposição, limitações de chakra..." /></div>
                 </div>
               </div>
             )}
-
-            {aba === "registro" && (
-              <div className="space-y-4 fadein">
-                <div><label className="fox-label">Registro pessoal</label><textarea rows="7" value={form.bio} onChange={e => setCampo("bio", e.target.value)} className="fox-input" placeholder="Resumo narrativo do personagem dentro da Jikkai. Não precisa ser enorme: origem, motivação, trauma, objetivo e comportamento em missão." /></div>
-                <div className="grid sm:grid-cols-3 gap-3 text-xs">
-                  <div className="p-3 rounded border border-zinc-800 bg-black/45"><div className="text-orange-600 uppercase tracking-wider text-[9px] mb-1">Automático</div><div className="text-zinc-500">Divisão, equipe, cargo e líder vêm da estrutura criada pela liderança.</div></div>
-                  <div className="p-3 rounded border border-zinc-800 bg-black/45"><div className="text-orange-600 uppercase tracking-wider text-[9px] mb-1">Útil para missão</div><div className="text-zinc-500">Especialidade, disponibilidade e limites ajudam capitães a montar equipes.</div></div>
-                  <div className="p-3 rounded border border-zinc-800 bg-black/45"><div className="text-orange-600 uppercase tracking-wider text-[9px] mb-1">Sem excesso</div><div className="text-zinc-500">O essencial fica pronto rápido; detalhes podem ser completados depois.</div></div>
-                </div>
-              </div>
-            )}
-            <div className="mt-4 p-3 rounded border border-yellow-900/40 bg-yellow-950/10 text-yellow-600 text-xs">Codinome, cargo, divisão, equipe, nível de acesso e posição hierárquica são definidos pela liderança/capitão no Painel de Comando.</div>
+            <div className="mt-4 p-3 rounded border border-yellow-900/40 bg-yellow-950/10 text-yellow-600 text-xs">Preencha só o que depende de você. Cargo, divisão, equipe, capitão, histórico e timeline são puxados automaticamente pelo portal.</div>
             {erro && <div className="mt-3 p-3 rounded border border-red-800 bg-red-950/30 text-red-300 text-sm">{erro}</div>}
           </section>
         </div>
-        <div className="p-4 border-t border-zinc-800 flex justify-between gap-2 bg-zinc-950">
-          <div className="hidden sm:block text-xs text-zinc-600">Obrigatório para sair de “incompleto”: foto, nome RP, elemento, vila e especialidade.</div>
-          <div className="flex gap-2 ml-auto">
-            <Btn onClick={onClose} variant="ghost" disabled={salvando}>Cancelar</Btn>
-            <Btn onClick={salvar} variant="primary" disabled={salvando}>{salvando ? "Salvando..." : <><ISave className="w-3 h-3" /> Salvar dossiê</>}</Btn>
+        <div className="mobile-dossie-footer p-3 sm:p-4 border-t border-zinc-800 flex flex-col sm:flex-row sm:justify-between gap-2 bg-zinc-950">
+          <div className="hidden sm:block text-xs text-zinc-600">O portal completa o resto com base em equipe, divisão, missões e registros.</div>
+          <div className="flex gap-2 sm:ml-auto">
+            <Btn onClick={onClose} variant="ghost" disabled={salvando} className="flex-1 sm:flex-none justify-center">Cancelar</Btn>
+            <Btn onClick={salvar} variant="primary" disabled={salvando} className="flex-1 sm:flex-none justify-center">{salvando ? "Salvando..." : <><ISave className="w-3 h-3" /> Salvar</>}</Btn>
           </div>
         </div>
       </div>
@@ -2267,13 +2690,21 @@ function EstruturaSection({ data, onOpen }) {
     </div>
   );
 
-  const MemberStrip = ({ titulo, registros }) => {
-    if (!registros.length) return null;
+  const MemberStrip = ({ titulo, registros = [] }) => {
+    const itens = (registros || []).map((item, idx) => {
+      if (!item) return null;
+      const username = item.user?.username || item.username || item.registro?.username;
+      const user = item.user || usuariosPorNome(username);
+      const registro = item.registro || item || {};
+      if (!user) return null;
+      return { user, registro, idx };
+    }).filter(Boolean);
+    if (!itens.length) return null;
     return (
       <div>
         <div className="text-[8px] uppercase tracking-[0.18em] text-zinc-600 mb-1">{titulo}</div>
         <div className="grid grid-cols-1 gap-1.5">
-          {registros.map(({ user, registro }) => <Mugshot key={`${user.username}_${registro.papel || "m"}`} user={user} tone="zinc" cargo={registro.papel || "Soldado"} mini />)}
+          {itens.map(({ user, registro, idx }) => <Mugshot key={`${user.username}_${registro?.papel || registro?.nivel || idx}`} user={user} tone="zinc" cargo={registro?.papel || registro?.nivel || "Soldado"} mini />)}
         </div>
       </div>
     );
@@ -2352,10 +2783,85 @@ function EstruturaSection({ data, onOpen }) {
       </div>
     );
   };
+  const MobileCargoStack = ({ titulo, lista, tone = "orange" }) => {
+    if (!lista.length) return null;
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-black/45 p-3">
+        <div className="text-[9px] uppercase tracking-[0.24em] text-orange-600 mb-2">{titulo}</div>
+        <div className="space-y-2">{lista.map(u => <Mugshot key={u.username} user={u} tone={tone} cargo={u.patente || roleOf(u)?.nome} mini />)}</div>
+      </div>
+    );
+  };
+
+  const MobileEquipeCard = ({ equipe }) => {
+    const lider = usuariosPorNome(equipe.liderUsername);
+    const membrosEquipe = (equipe.membros || []).map(v => {
+      const username = typeof v === "string" ? v : v?.username;
+      const user = usuariosPorNome(username);
+      if (!user) return null;
+      return { ...(typeof v === "object" && v ? v : { username }), user };
+    }).filter(Boolean);
+    const soldados = membrosEquipe.filter(v => !String(v.nivel || v.papel || "").toLowerCase().includes("associ") && !String(v.nivel || v.papel || "").toLowerCase().includes("recrut"));
+    const base = membrosEquipe.filter(v => String(v.nivel || v.papel || "").toLowerCase().includes("associ") || String(v.nivel || v.papel || "").toLowerCase().includes("recrut"));
+    return (
+      <details className="rounded-xl border border-zinc-800 bg-zinc-950/70 overflow-hidden" open>
+        <summary className="list-none p-3 cursor-pointer">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0"><div className="text-orange-50 font-black truncate">{equipe.nome}</div><div className="text-zinc-600 text-[10px] uppercase tracking-wider">{equipe.tipo || "Equipe"} · {membrosEquipe.length} membro{membrosEquipe.length === 1 ? "" : "s"}</div></div>
+            <span className="text-[9px] px-2 py-1 rounded border border-zinc-800 text-zinc-500 uppercase">{equipe.status || "Ativa"}</span>
+          </div>
+        </summary>
+        <div className="px-3 pb-3 space-y-2">
+          {lider && <div><div className="text-[8px] uppercase tracking-[0.2em] text-orange-700 mb-1">Líder</div><Mugshot user={lider} tone="orange" cargo="Líder da equipe" mini /></div>}
+          {soldados.length > 0 && <MemberStrip titulo="Soldados" registros={soldados} />}
+          {base.length > 0 && <MemberStrip titulo="Recrutas / Associados" registros={base} />}
+          {!lider && !soldados.length && !base.length && <div className="text-zinc-700 text-xs italic text-center py-2">Equipe sem integrantes.</div>}
+        </div>
+      </details>
+    );
+  };
+
+  const MobileDivisaoCard = ({ divisao }) => {
+    const capitao = usuariosPorNome(divisao.capitaoUsername) || membros.find(u => posOf(u) === "capitao_ramo" && (u.divisaoId === divisao.id || u.ramoId === divisao.id));
+    const equipesDaDivisao = equipes.filter(e => e.divisaoId === divisao.id);
+    return (
+      <div className="rounded-2xl border bg-black/45 overflow-hidden" style={{ borderColor: (divisao.cor || "#7C2D12") + "88" }}>
+        <div className="p-3" style={{ background: `linear-gradient(135deg, ${(divisao.cor || "#7C2D12")}28, #050505 78%)` }}>
+          <div className="text-[9px] uppercase tracking-[0.24em] text-orange-600">Divisão</div>
+          <div className="text-orange-50 font-black serif text-lg leading-tight mt-1">{divisao.nome}</div>
+          <div className="text-zinc-600 text-[10px] uppercase tracking-wider mt-1">{equipesDaDivisao.length} equipe{equipesDaDivisao.length === 1 ? "" : "s"}</div>
+          {capitao && <div className="mt-3"><div className="text-[8px] uppercase tracking-[0.2em] text-red-500 mb-1">Capitão</div><Mugshot user={capitao} tone="red" cargo="Capitão" mini /></div>}
+        </div>
+        <div className="p-2.5 space-y-2">
+          {equipesDaDivisao.length ? equipesDaDivisao.map(equipe => <MobileEquipeCard key={equipe.id} equipe={equipe} />) : <div className="rounded-xl border border-dashed border-zinc-800 bg-black/35 p-4 text-center text-zinc-700 text-xs italic">Nenhuma equipe criada nesta divisão.</div>}
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="fadein space-y-5">
-      <section className="rounded-2xl border border-zinc-800 bg-black/60 p-3 sm:p-4 overflow-hidden">
+      <section className="md:hidden rounded-2xl border border-zinc-800 bg-black/60 p-3 overflow-hidden">
+        <div className="text-center mb-3">
+          <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Estrutura</div>
+          <div className="text-orange-50 font-black serif text-xl mt-1">Hierarquia compacta</div>
+        </div>
+        <div className="space-y-3">
+          <MobileCargoStack titulo="Líder" lista={lideranca} tone="orange" />
+          <div className="grid grid-cols-1 gap-3">
+            <MobileCargoStack titulo="Conselheiro" lista={conselheiros} tone="yellow" />
+            <MobileCargoStack titulo="Braço Direito" lista={bracos} tone="purple" />
+          </div>
+          <div className="rounded-xl border border-orange-900/40 bg-orange-950/10 p-3 text-center">
+            <div className="text-[9px] uppercase tracking-[0.24em] text-orange-500">Mesa Central</div>
+            <div className="text-orange-50 font-black serif">Comando</div>
+          </div>
+          {divisoes.length ? divisoes.map(divisao => <MobileDivisaoCard key={divisao.id} divisao={divisao} />) : <div className="rounded-xl border border-dashed border-zinc-800 bg-black/35 p-6 text-center text-zinc-600">Nenhuma divisão criada.</div>}
+        </div>
+      </section>
+
+      <section className="hidden md:block rounded-2xl border border-zinc-800 bg-black/60 p-3 sm:p-4 overflow-hidden">
         <div className="overflow-x-auto pb-3 -mx-2 px-2">
           <div className="min-w-[1120px] relative rounded-2xl border border-zinc-900 bg-[radial-gradient(circle_at_top,rgba(234,88,12,.09),transparent_32%),linear-gradient(180deg,rgba(24,24,27,.45),rgba(0,0,0,.76))] p-5">
             <div className="absolute inset-0 opacity-[.06] pointer-events-none" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "44px 44px" }} />
@@ -2479,25 +2985,6 @@ function ReputacaoSection({ data, setData, role, usuario, onOpen }) {
 
   return (
     <div className="fadein space-y-5">
-      <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-4">
-        <div className="rounded-xl border border-orange-900/40 bg-gradient-to-br from-orange-950/20 to-black p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-orange-600 mb-1">Sistema interno</div>
-          <h3 className="text-2xl font-black text-orange-50 serif">Lealdade & Conduta</h3>
-          <p className="text-zinc-500 text-sm mt-2 leading-relaxed">Agora o painel usa os próprios sinais do portal — missões, relatórios, contratos e alertas — para sugerir ajustes. A liderança decide com um clique, mas não precisa preencher tudo do zero.</p>
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <div className="p-3 rounded-lg border border-orange-900/40 bg-black/40 text-center"><div className="text-xl font-black text-orange-300">{confiaveis}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">confiáveis</div></div>
-            <div className="p-3 rounded-lg border border-yellow-900/40 bg-black/40 text-center"><div className="text-xl font-black text-yellow-300">{sobObservacao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">atenção</div></div>
-            <div className="p-3 rounded-lg border border-sky-900/40 bg-black/40 text-center"><div className="text-xl font-black text-sky-300">{comSugestao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">sugestões</div></div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-1">Impacto externo</div>
-          <h3 className="text-xl font-black text-orange-50 serif">Registro narrativo, não placar</h3>
-          <p className="text-zinc-500 text-sm mt-2 leading-relaxed">O portal não inventa fama fora do jogo. Ele só sugere impacto quando há relatório, alerta, falha pública ou contrato relevante registrado.</p>
-          <div className="flex flex-wrap gap-2 mt-4">{REPUTACAO_NIVEIS.map(n => <ReputacaoBadge key={n} tipo="impacto" valor={n} compacto />)}</div>
-        </div>
-      </div>
-
       <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
         <div>
           <label className="fox-label">Buscar membro</label>
@@ -2603,7 +3090,7 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
   ];
   return (
     <div>
-      <SectionTitle icon={IUsers} sub="Dossiês operacionais, estrutura, divisões e equipes da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê 2.0</Btn>}>Membros</SectionTitle>
+      <SectionTitle icon={IUsers} sub="Dossiês operacionais, estrutura, divisões e equipes da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
       <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
@@ -2759,7 +3246,7 @@ function TriosSection({ data, setData, podeEditar, role, usuario }) {
           <div>
             <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Divisões & Equipes</div>
             <h3 className="text-2xl sm:text-3xl font-black text-orange-50 serif mt-1">Comando operacional</h3>
-            <p className="text-zinc-500 text-sm mt-2 max-w-3xl">Capitães constroem equipes dentro da própria divisão. Soldados executam. Recrutas e associados ficam abaixo, com acesso e responsabilidade menores.</p>
+            <p className="text-zinc-500 text-sm mt-2 max-w-3xl">Capitães constroem equipes dentro da própria divisão. Soldados executam. Recrutas e associados ficam abaixo, com selo e responsabilidade menores.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {podeEditar && !editando && <Btn onClick={() => setEditando(true)} variant="primary"><IEdit className="w-3 h-3" /> Editar estrutura</Btn>}
@@ -3245,7 +3732,7 @@ const SIGILO_CFG = {
     nivel: 4, codigo: "NÍVEL IV", label: "Olhos do Líder",
     cor: "#A855F7", border: "border-purple-800", bg: "bg-purple-950/30",
     badge: "bg-purple-950 text-purple-300 border-purple-800",
-    desc: "Acesso exclusivo da liderança máxima."
+    desc: "Selo exclusivo da liderança máxima."
   },
 };
 
@@ -3307,7 +3794,7 @@ function SigiloBadge({ sigilo, compacto = false }) {
   const c = sigiloConfig(sigilo);
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider ${c.badge} ${compacto ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5"}`}
+      className={`jikkai-classified-stamp inline-flex items-center gap-1 rounded border font-black uppercase tracking-wider ${c.badge} ${compacto ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5"}`}
       title={c.desc}
     >
       <ILock className={compacto ? "w-2.5 h-2.5" : "w-3 h-3"} />
@@ -3328,7 +3815,7 @@ function ConteudoCensurado({ sigilo, tipo = "OPERAÇÃO", subtitulo = "INFORMAÇ
         <div className="min-w-0 flex-1 font-mono">
           <div className="flex items-center gap-2 flex-wrap mb-3">
             <SigiloBadge sigilo={sigilo} />
-            <span className="text-[10px] uppercase tracking-[0.25em] text-zinc-600">Acesso negado</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-zinc-600">Selo negado</span>
           </div>
           <div className="text-zinc-300 text-sm mb-1">{tipo}: <span className="tracking-[0.18em] text-zinc-600">████████████</span></div>
           <div className="text-zinc-500 text-xs mb-1">ALVO: {subtitulo}</div>
@@ -3448,7 +3935,7 @@ function FaseEditor({ fase, data, onSave, onCancel }) {
     </div>
 
     <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
-      <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Desbloqueio</div><div className="text-zinc-600 text-xs">Condições exigidas para avançar no plano.</div></div><Btn onClick={addReq} variant="ghost"><IPlus className="w-3 h-3" /> Requisito</Btn></div>
+      <div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Selamento</div><div className="text-zinc-600 text-xs">Condições exigidas para romper o próximo selo do plano.</div></div><Btn onClick={addReq} variant="ghost"><IPlus className="w-3 h-3" /> Requisito</Btn></div>
       <div className="space-y-2">{draft.requisitos.map((r, i) => <div key={r.id || i} className="flex items-center gap-2"><input type="checkbox" checked={r.atendido} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, atendido: e.target.checked } : x) }))} className="accent-green-600" /><input value={r.texto} onChange={e => setDraft(d => ({ ...d, requisitos: d.requisitos.map((x, index) => index === i ? { ...x, texto: e.target.value } : x) }))} className="fox-input flex-1" /><button onClick={() => setDraft(d => ({ ...d, requisitos: d.requisitos.filter((_, index) => index !== i) }))} className="text-red-500"><ITrash className="w-4 h-4" /></button></div>)}</div>
     </div>
 
@@ -3711,7 +4198,7 @@ function RelatorioModal({ relatorio, onSave, onClose, niveisPermitidos = SIGILO_
                   {contratoSelecionado && (
                     <div className="mt-2 p-2 rounded-lg border border-zinc-800 bg-black/40 text-[11px] text-zinc-400 leading-relaxed">
                       <div className="text-orange-300 font-black serif truncate">{contratoSelecionado.titulo}</div>
-                      <div className="mt-1">Recompensa: <strong className="text-orange-400">{Number(contratoSelecionado.valorRecompensa || 0).toLocaleString("pt-BR")} {contratoSelecionado.tipoRecompensa}</strong></div>
+                      <div className="mt-1">Recompensa: <strong className="text-orange-400">{Number(contratoSelecionado.valorRecompensa || 0).toLocaleString("pt-BR")} {moedaContrato(contratoSelecionado.tipoRecompensa)}</strong></div>
                       {contratoSelecionado.missaoId && <div className="mt-1 text-purple-400">Não altera equipe, missão, responsável ou status.</div>}
                     </div>
                   )}
@@ -3875,15 +4362,7 @@ function RelatoriosSection({ data, setData, isLider, usuario, role, navigationRe
 
   return (
     <div className="fadein">
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div className="border-l-4 border-orange-600 pl-4">
-          <div className="flex items-center gap-3">
-            <IFile className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-bold text-orange-50 tracking-wide serif">Relatórios da Jikkai</h2>
-          </div>
-          <p className="text-zinc-500 text-sm mt-1 italic">{relatoriosLiberados.length} liberados · {relatorios.length} registros no arquivo</p>
-          <p className="text-sky-400 text-xs mt-2 max-w-2xl">Use relatórios para concluir missões e também para registrar acontecimentos relevantes que não nasceram de uma missão formal.</p>
-        </div>
+      <div className="flex justify-end mb-4">
         <Btn onClick={() => setModal({ tipo: "Ocorrência sem missão" })} variant="primary"><IPlus className="w-3 h-3" /> Criar Relatório</Btn>
       </div>
 
@@ -3997,18 +4476,63 @@ const DIFICULDADE_CFG = {
   "Letal":      { cor: "#B91C1C" },
 };
 
+
+const CONTRATO_CATEGORIAS = [
+  {
+    id: "busca_item",
+    label: "Busca de Item",
+    desc: "Localizar, comprar ou recuperar item difícil de encontrar no mundo ninja.",
+    resumo: "Localizar e entregar item específico ao contratante.",
+    dificuldade: "Fácil",
+    titulo: "Busca de item raro",
+    descricao: "Item desejado:\nOnde foi visto pela última vez:\nValor máximo para compra:\nCondições de entrega:"
+  },
+  {
+    id: "sequestro_informacao",
+    label: "Sequestro",
+    desc: "Capturar alvo, pressionar ou extrair informações com risco provável de combate.",
+    resumo: "Capturar alvo ou obter informação estratégica.",
+    dificuldade: "Difícil",
+    titulo: "Captura para interrogatório",
+    descricao: "Alvo:\nInformação desejada:\nLocal provável:\nLimites do contratante:"
+  },
+  {
+    id: "eliminacao_combate",
+    label: "Combate",
+    desc: "Neutralizar alvo, escolta, qualquer assunto operacional.",
+    resumo: "Neutralizar alvo ou ameaça designada.",
+    dificuldade: "Letal",
+    titulo: "Eliminação de alvo",
+    descricao: "Alvo:\nMotivo do contrato:\nÚltima localização:\nRiscos conhecidos:"
+  },
+];
+
+function moedaContrato() { return "Yens"; }
+function categoriaContratoLabel(id) {
+  return CONTRATO_CATEGORIAS.find(c => c.id === id)?.label || "Contrato Geral";
+}
+
 function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   const editando = !!contrato?.id;
   const [titulo, setTitulo] = useState(contrato?.titulo || "");
   const [descricaoCurta, setDescCurta] = useState(contrato?.descricaoCurta || "");
   const [descricao, setDescricao] = useState(contrato?.descricao || "");
   const [valorRecompensa, setValor] = useState(contrato?.valorRecompensa || 100);
-  const [tipoRecompensa, setTipo] = useState(contrato?.tipoRecompensa || "Pontos de Sangue");
+  const tipoRecompensa = "Yens";
+  const [categoriaContrato, setCategoriaContrato] = useState(contrato?.categoriaContrato || "");
   const [dificuldade, setDificuldade] = useState(contrato?.dificuldade || "Médio");
   const [status, setStatus] = useState(contrato?.status || (viewerIsContratante ? "Proposta" : "Aberto"));
   const [limites, setLimites] = useState(contrato?.limites || "");
   const [prazo, setPrazo] = useState(contrato?.prazo || "");
   const [observacoes, setObservacoes] = useState(contrato?.observacoes || "");
+
+  const aplicarCategoriaContrato = (cat) => {
+    setCategoriaContrato(cat.id);
+    setDificuldade(cat.dificuldade || "Médio");
+    if (!titulo.trim()) setTitulo(cat.titulo || cat.label);
+    if (!descricaoCurta.trim()) setDescCurta(cat.resumo || cat.desc);
+    if (!descricao.trim()) setDescricao(cat.descricao || cat.desc);
+  };
 
   const valido = titulo.trim() && descricaoCurta.trim();
 
@@ -4019,7 +4543,8 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
       descricaoCurta: descricaoCurta.trim(),
       descricao: descricao.trim(),
       valorRecompensa: Number(valorRecompensa) || 0,
-      tipoRecompensa,
+      tipoRecompensa: "Yens",
+      categoriaContrato,
       dificuldade,
       status,
       limites: limites.trim(),
@@ -4030,7 +4555,7 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
 
   const tituloModal = editando
     ? "Editar Contrato"
-    : (viewerIsContratante ? "Solicitar Contrato à F.O.X." : "Forjar Novo Contrato");
+    : (viewerIsContratante ? "Solicitar Contrato à Jikkai" : "Forjar Novo Contrato");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
@@ -4045,10 +4570,26 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
         <div className="p-5 space-y-4">
           {viewerIsContratante && !editando && (
             <div className="p-3 bg-orange-950/30 border border-orange-900/50 rounded text-xs text-orange-300 leading-relaxed">
-              Sua solicitação ficará marcada como <strong>Proposta</strong> e será analisada pela liderança da F.O.X.
+              Sua solicitação ficará marcada como <strong>Proposta</strong> e será analisada pela liderança da Jikkai
               Você poderá negociar os termos através das mensagens dentro do contrato.
             </div>
           )}
+          <div>
+            <label className="fox-label">Categoria do contrato</label>
+            <div className="grid sm:grid-cols-3 gap-2">
+              {CONTRATO_CATEGORIAS.map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => aplicarCategoriaContrato(cat)}
+                  className={`text-left rounded-lg border p-3 transition-colors ${categoriaContrato === cat.id ? "border-orange-500 bg-orange-950/40" : "border-zinc-800 bg-black/30 hover:border-orange-700"}`}
+                >
+                  <div className="text-orange-200 font-black text-xs uppercase tracking-wider">{cat.label}</div>
+                  <div className="text-[11px] text-zinc-500 leading-snug mt-1">{cat.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="fox-label">Título *</label>
             <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder={viewerIsContratante ? "Ex: Eliminação de rival comercial" : "Ex: Eliminar mercador de Konoha"} autoFocus />
@@ -4061,17 +4602,10 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
             <label className="fox-label">Descrição completa</label>
             <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="5" className="fox-input" placeholder={viewerIsContratante ? "Contexto do serviço, alvo, motivação..." : "Detalhes do contrato, alvo, contexto..."} />
           </div>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="fox-label">{viewerIsContratante ? "Valor oferecido" : "Recompensa"}</label>
-              <input type="number" value={valorRecompensa} onChange={(e) => setValor(e.target.value)} className="fox-input" />
-            </div>
-            <div>
-              <label className="fox-label">Moeda</label>
-              <select value={tipoRecompensa} onChange={(e) => setTipo(e.target.value)} className="fox-input">
-                <option>Pontos de Sangue</option>
-                <option>Ryō</option>
-              </select>
+              <label className="fox-label">{viewerIsContratante ? "Valor oferecido (Yens)" : "Recompensa (Yens)"}</label>
+              <input type="number" value={valorRecompensa} onChange={(e) => setValor(e.target.value)} className="fox-input" placeholder="Ex: 2500" />
             </div>
             <div>
               <label className="fox-label">Dificuldade estimada</label>
@@ -4202,7 +4736,7 @@ function ContratoAtribuicaoModal({ contrato, data, usuario, role, onSave, onClos
   );
 }
 
-function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContratante }) {
+function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContratante, navigationRequest }) {
   const [modal, setModal] = useState(null);
   const [relatorioContrato, setRelatorioContrato] = useState(null);
   const [designarContrato, setDesignarContrato] = useState(null);
@@ -4211,7 +4745,18 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
   const [novaMsgPorContrato, setNovaMsgPorContrato] = useState({});
   const niveisPermitidosContrato = niveisPermitidosPara(data, usuario, role);
 
-  // Helper local: nome a exibir respeitando o viewer
+  useEffect(() => {
+    if (navigationRequest?.tab !== "jikkai" || navigationRequest?.subTab !== "contratos") return;
+    const action = String(navigationRequest.action || "");
+    if (action.startsWith("contrato-designar:")) {
+      const id = action.split(":")[1];
+      const contrato = (data.contratos || []).find(c => c.id === id);
+      if (contrato) { setExpandido(id); setDesignarContrato(contrato); }
+    }
+  }, [navigationRequest?.token]);
+
+  // Helper local: nome a exibir respeitando sigilo do contratante e do viewer
+  const podeVerAutorContrato = !!(isLider || role?.hasLeaderPerms || hasPerm(role, "edit_contracts") || ["lider", "conselheiro", "braco_direito"].includes(estruturaPosicaoRole(role)));
   const exibirNome = (username, nomeArmazenado) => {
     if (!username && !nomeArmazenado) return "?";
     const u = data.users?.find(x => x.username === username);
@@ -4220,11 +4765,17 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
       if (username === usuario?.username) return u?.displayName || u?.codinome || "Você";
       // Se quem criou é outro contratante, mostro o codinome dele
       if (u?.role === "contratante") return u.codinome || u.displayName || "Contratante";
-      // Senão (operador da F.O.X.), mascaro completamente
+      // Senão (operador da Jikkai), mascaro completamente
       return "Jikkai — Liderança";
     }
+    // Membro comum não vê a identidade do contratante; só liderança/gestão de contratos vê.
+    if (u?.role === "contratante" && !podeVerAutorContrato) return "Contratante externo";
     if (u) return nomeParaExibir(u, false);
     return nomeArmazenado || username || "?";
+  };
+  const exibirCriadorContrato = (contrato) => {
+    if (!viewerIsContratante && contrato?.tipo === "externo" && !podeVerAutorContrato) return "Contratante externo";
+    return exibirNome(contrato?.criadoPor, contrato?.criadoPorNome);
   };
 
   // Filtragem: contratante só vê seus próprios contratos + os "Aberto" (vitrine)
@@ -4367,7 +4918,7 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
       source: "contrato",
       sigilo: normalizarSigilo(config.sigilo || "Restrito"),
       contratoId: contrato.id,
-      recompensa: `${contrato.valorRecompensa} ${contrato.tipoRecompensa}`,
+      recompensa: `${contrato.valorRecompensa} ${moedaContrato(contrato.tipoRecompensa)}`,
       attributionType: config.attributionType || "membro",
       targetId: config.targetId || "",
       divisaoId: config.divisaoId || "",
@@ -4416,21 +4967,12 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
     : ["Todos", "Proposta", "Aberto", "Em Andamento", "Concluído", "Falhou", "Recusado"];
 
   const podeCriar = isLider || viewerIsContratante;
-  const tituloHeader = viewerIsContratante ? "Contratos & Propostas" : "Contratos — Mercenários";
+  const tituloHeader = viewerIsContratante ? "Contratos & Propostas" : "Contratos Jikkai";
   const labelBotaoCriar = viewerIsContratante ? "Solicitar Contrato" : "Forjar Contrato";
 
   return (
     <div className="fadein">
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div className="border-l-4 border-red-700 pl-4">
-          <div className="flex items-center gap-3">
-            <ISwords className="w-6 h-6 text-red-500" />
-            <h2 className="text-2xl font-bold text-red-50 tracking-wide serif">{tituloHeader}</h2>
-          </div>
-          <p className="text-zinc-500 text-sm mt-1 italic">{todos.length} {todos.length === 1 ? "contrato" : "contratos"}</p>
-        </div>
-        {podeCriar && <Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> {labelBotaoCriar}</Btn>}
-      </div>
+      {podeCriar && <div className="flex justify-end mb-4"><Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> {labelBotaoCriar}</Btn></div>}
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {FILTROS.map(f => {
@@ -4491,6 +5033,11 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
                   <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border" style={{ color: dc.cor, borderColor: dc.cor + "80", background: dc.cor + "15" }}>
                     {c.dificuldade}
                   </span>
+                  {c.categoriaContrato && (
+                    <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-zinc-700 text-zinc-300 bg-black/40">
+                      {categoriaContratoLabel(c.categoriaContrato)}
+                    </span>
+                  )}
                   {c.tipo === "externo" && (
                     <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-orange-700 text-orange-300 bg-orange-950/40">
                       Solicitação Externa
@@ -4510,7 +5057,7 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
                 <div className="flex items-center gap-2 mb-3 p-2 bg-black/60 border border-red-900/40 rounded">
                   <div className="w-2 h-2 rounded-full bg-red-500 pulse-fire" />
                   <div className="text-xs uppercase tracking-wider text-zinc-500">{c.tipo === "externo" ? "Oferta:" : "Recompensa:"}</div>
-                  <div className="text-orange-300 font-black text-sm">{Number(c.valorRecompensa || 0).toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{c.tipoRecompensa}</span></div>
+                  <div className="text-orange-300 font-black text-sm">{Number(c.valorRecompensa || 0).toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{moedaContrato(c.tipoRecompensa)}</span></div>
                 </div>
 
                 {responsavelContrato && (
@@ -4665,7 +5212,7 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
                 </div>
 
                 <div className="text-[10px] text-zinc-700 italic mt-2">
-                  {c.tipo === "externo" ? "Solicitado" : "Forjado"} por {exibirNome(c.criadoPor, c.criadoPorNome)} · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
+                  {c.tipo === "externo" ? "Solicitado" : "Forjado"} por {exibirCriadorContrato(c)} · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
                 </div>
               </div>
             </div>
@@ -4800,7 +5347,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
 
         <section><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600 mb-3">Objetivos estratégicos</div><div className="space-y-3">{(fase.objetivos || []).map(o => <ObjetivoEstrategicoCard key={o.id} objetivo={o} data={data} isLider={isLider} onEdit={() => setEditandoFase(fase.id)} />)}</div></section>
 
-        {(fase.requisitos || []).length > 0 && <section className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60"><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Requisitos de desbloqueio</div><div className="text-zinc-600 text-xs mt-1">{requisitosAtendidos} de {fase.requisitos.length} atendidos</div></div><div className="text-orange-300 font-black">{fase.requisitos.length ? Math.round(requisitosAtendidos / fase.requisitos.length * 100) : 0}%</div></div><div className="space-y-2">{fase.requisitos.map(r => <div key={r.id} className="flex items-center gap-2 text-sm">{r.atendido ? <ICheck className="w-4 h-4 text-green-500" /> : <ILock className="w-4 h-4 text-zinc-700" />}<span className={r.atendido ? "text-zinc-300" : "text-zinc-600"}>{r.texto}</span></div>)}</div></section>}
+        {(fase.requisitos || []).length > 0 && <section className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60"><div className="flex items-center justify-between gap-3 mb-3"><div><div className="text-[9px] uppercase tracking-[0.25em] text-orange-600">Requisitos do selo</div><div className="text-zinc-600 text-xs mt-1">{requisitosAtendidos} de {fase.requisitos.length} atendidos</div></div><div className="text-orange-300 font-black">{fase.requisitos.length ? Math.round(requisitosAtendidos / fase.requisitos.length * 100) : 0}%</div></div><div className="space-y-2">{fase.requisitos.map(r => <div key={r.id} className="flex items-center gap-2 text-sm">{r.atendido ? <ICheck className="w-4 h-4 text-green-500" /> : <ILock className="w-4 h-4 text-zinc-700" />}<span className={r.atendido ? "text-zinc-300" : "text-zinc-600"}>{r.texto}</span></div>)}</div></section>}
 
         {editandoFase === fase.id && <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div>}
       </div>;
@@ -4808,7 +5355,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
   }
 
   return <div className="fadein">
-    <SectionTitle icon={ITarget} sub="Sala de guerra digital integrada aos registros do portal" action={isLider && <Btn onClick={criarAlertaManual} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn>}>Painel Estratégico JIKKAI</SectionTitle>
+    {isLider && <div className="flex justify-end mb-4"><Btn onClick={criarAlertaManual} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn></div>}
 
     <div className="p-5 rounded-2xl border border-orange-900/40 bg-gradient-to-br from-red-950/20 via-black to-black mb-6">
       <div className="flex flex-col lg:flex-row lg:items-end gap-6"><div className="flex-1"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Plano geral</div><div className="flex items-end gap-3 mt-1"><div className="text-5xl sm:text-6xl font-black text-orange-50 serif leading-none">{progressoGeral}<span className="text-2xl text-orange-600">%</span></div><div className="flex-1 mb-2"><div className="h-3 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progressoGeral + "%" }} /></div></div></div><div className="text-zinc-500 text-sm mt-2">Fase atual: <strong className="text-orange-200">{faseAtual ? "FASE " + faseAtual.n + " — " + faseAtual.titulo : "Nenhuma fase ativa"}</strong></div></div>
@@ -4941,7 +5488,7 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
             Para aceitar ou negociar termos, entre em contato direto com a liderança através dos canais combinados.
           </div>
         </div>
-        <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={true} />
+        <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={true} navigationRequest={navigationRequest} />
       </div>
     );
   }
@@ -4972,7 +5519,7 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
       </div>
 
       {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} />}
-      {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={false} />}
+      {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={false} navigationRequest={navigationRequest} />}
       {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} navigationRequest={navigationRequest} />}
     </div>
   );
@@ -5111,7 +5658,7 @@ function JuramentadoView({ juramentado, modoIniciacao = false }) {
             </div>
           )}
           <div className="pt-6 border-t border-orange-900/40 text-zinc-400 italic max-w-lg mx-auto text-sm">
-            “Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento.”
+            “Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este juramento.”
           </div>
           {!modoIniciacao && <div className="mt-6 text-[10px] uppercase tracking-wider text-zinc-700">Este registro é pessoal. O arquivo completo é visível somente à liderança.</div>}
         </div>
@@ -5155,16 +5702,16 @@ function fraseJuramentoAceita(valor) {
 
   const variacoes = [
     FRASE_JURAMENTO,
-    "Que o meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este julgamento",
-    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair esse julgamento",
-    "Que meu próprio sangue queime e que as correntes da minha alma me esmaguem se eu trair este julgamento",
-    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem caso eu traia este julgamento",
+    "Que o meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este juramento",
+    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair esse juramento",
+    "Que meu próprio sangue queime e que as correntes da minha alma me esmaguem se eu trair este juramento",
+    "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem caso eu traia este juramento",
   ].map(normalizarFraseRitual);
   if (variacoes.includes(digitada)) return true;
 
   const distancia = distanciaLevenshtein(digitada, alvo);
   const similaridade = 1 - distancia / Math.max(alvo.length, digitada.length, 1);
-  const palavrasObrigatorias = ["sangue", "queime", "correntes", "alma", "esmaguem", "trair", "julgamento"];
+  const palavrasObrigatorias = ["sangue", "queime", "correntes", "alma", "esmaguem", "trair", "juramento"];
   const presentes = palavrasObrigatorias.filter(palavra => digitada.includes(palavra)).length;
   return similaridade >= 0.88 || (presentes >= 6 && digitada.length >= alvo.length * 0.75);
 }
@@ -5241,12 +5788,24 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
   };
 
   if (selando) return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center fadein">
-      <ISkull className="w-24 h-24 text-orange-600 mb-6 pulse-fire" />
-      <div className="text-orange-600 uppercase tracking-[0.4em] text-xs mb-3">Selando o Pacto</div>
-      <h2 className="text-3xl font-black text-orange-50 serif mb-6">{FRASE_JURAMENTO}</h2>
-      <div className="w-full max-w-md h-2 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-600 blood-fill" /></div>
-      <div className="text-zinc-600 text-xs mt-4 italic">Registrando o juramento nos arquivos da Jikkai...</div>
+    <div className="min-h-[60vh] shadow-ops-bg flex flex-col items-center justify-center text-center fadein rounded-xl overflow-hidden p-5">
+      <div className="jikkai-terminal-card rounded-2xl p-6 sm:p-8 max-w-2xl w-full">
+        <div className="relative mx-auto mb-6 w-24 h-24 rounded-full border border-red-800 bg-black flex items-center justify-center">
+          <span className="jikkai-ring" />
+          <ISkull className="w-14 h-14 text-orange-600 pulse-fire relative z-10" />
+        </div>
+        <div className="jikkai-status-line text-orange-600 uppercase tracking-[0.4em] text-xs mb-3">Selando o Juramento</div>
+        <h2 className="text-2xl sm:text-3xl font-black text-orange-50 serif mb-6">“{FRASE_JURAMENTO}”</h2>
+        <div className="jikkai-loader-line w-full max-w-md h-2 rounded mx-auto"><span /></div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-5 text-left">
+          {["marcando sangue", "selando dossiê", "liberando selo"].map((linha, i) => (
+            <div key={linha} className="jikkai-status-line rounded border border-zinc-900 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-600">
+              <span className="text-orange-700">0{i + 1}</span> · {linha}
+            </div>
+          ))}
+        </div>
+        <div className="text-zinc-600 text-xs mt-4 italic">Gravando nos pergaminhos selados da Jikkai...</div>
+      </div>
     </div>
   );
 
@@ -5430,24 +5989,24 @@ function IntroducaoPrimeiroAcesso({ data, usuario, juramentado, juramentar, onAt
                 {[
                   ["Ramo", ramo?.nome || "Aguardando designação"],
                   ["Patente", usuario.patente || "Recruta em Observação"],
-                  ["Nível de acesso", "Nível " + (usuario.nivelAcesso || 1)],
+                  ["Selo de acesso", "Nível " + (usuario.nivelAcesso || 1)],
                   ["Responsável pelo ingresso", recrutador ? getCodinome(recrutador) : "Comando da Jikkai"],
                 ].map(([l, v]) => <div key={l} className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-[9px] uppercase tracking-wider text-orange-700">{l}</div><div className="text-zinc-200 text-sm mt-1">{v}</div></div>)}
               </div>
-              <p className="text-zinc-500 text-sm max-w-xl mx-auto mt-6">Seu acesso foi autorizado. Antes de entrar no portal, você conhecerá a organização, sua estrutura e as responsabilidades que assumirá.</p>
+              <p className="text-zinc-500 text-sm max-w-xl mx-auto mt-6">Seu selo foi reconhecido. Antes de entrar no portal, você conhecerá a organização, sua estrutura e as responsabilidades que assumirá.</p>
               <div className="mt-7"><Btn onClick={avancar} variant="primary" size="lg">Confirmar identidade</Btn></div>
             </div>
           )}
 
-          {etapa === 1 && <div className="fadein"><div className="text-center mb-7"><IFlame className="w-16 h-16 text-orange-500 mx-auto mb-3 pulse-fire" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Introdução</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O que é a Jikkai</h2></div><div className="max-w-3xl mx-auto space-y-4 text-zinc-300 leading-relaxed"><p>A <strong className="text-orange-400">Jikkai</strong> é a estrutura estratégica responsável por preservar a ordem, conduzir operações e manter vivo o legado da F.O.X.</p><p>Ela reúne liderança, conselho, ramos, divisões e células operacionais. Cada integrante possui uma função, um nível de acesso e responsabilidade sobre aquilo que conhece e executa.</p><div className="p-5 border-l-4 border-orange-600 bg-orange-950/10 italic text-orange-100">À espreita nas trevas, manter a ordem. Nós somos sombras, entretanto mostramos o caminho.</div><p>Entrar não significa apenas receber uma conta. Significa ocupar uma posição registrada dentro da organização.</p></div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Conhecer a estrutura</Btn></div></div>}
+          {etapa === 1 && <div className="fadein"><div className="text-center mb-7"><IFlame className="w-16 h-16 text-orange-500 mx-auto mb-3 pulse-fire" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Introdução</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O que é a Jikkai</h2></div><div className="max-w-3xl mx-auto space-y-4 text-zinc-300 leading-relaxed"><p>A <strong className="text-orange-400">Jikkai</strong> é a estrutura estratégica responsável por preservar a ordem, conduzir operações e manter vivo o legado da F.O.X.</p><p>Ela reúne liderança, conselho, ramos, divisões e células operacionais. Cada integrante possui uma função, um selo de acesso e responsabilidade sobre aquilo que conhece e executa.</p><div className="p-5 border-l-4 border-orange-600 bg-orange-950/10 italic text-orange-100">À espreita nas trevas, manter a ordem. Nós somos sombras, entretanto mostramos o caminho.</div><p>Entrar não significa apenas receber uma conta. Significa ocupar uma posição registrada dentro da organização.</p></div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Conhecer a estrutura</Btn></div></div>}
 
           {etapa === 2 && <div className="fadein"><IntroducaoEstruturaAtual data={data} usuario={usuario} /><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Entendi meu lugar</Btn></div></div>}
 
-          {etapa === 3 && <div className="fadein"><div className="text-center mb-7"><IShield className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Conduta</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O peso do seu acesso</h2></div><div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">{[["Respeitar a hierarquia","Ordens, decisões e conflitos seguem a cadeia de comando registrada."],["Preservar informações","Dados internos não devem ser levados para fora da organização sem autorização."],["Responder pelos próprios atos","Toda ação realizada em nome da Jikkai possui consequências no RP."],["Registrar acontecimentos","Missões, relatórios e fatos relevantes mantêm a história oficial viva."],["Não usar o nome sem autorização","A reputação da Jikkai não pode ser empenhada em decisões pessoais."],["Honrar o pacto","O juramento formaliza sua entrada e sua lealdade interna."]].map(([t,d]) => <div key={t} className="p-4 rounded-lg border border-zinc-800 bg-black/40"><div className="text-orange-300 font-bold text-sm">{t}</div><p className="text-zinc-500 text-xs leading-relaxed mt-2">{d}</p></div>)}</div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir ao juramento</Btn></div></div>}
+          {etapa === 3 && <div className="fadein"><div className="text-center mb-7"><IShield className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Conduta</div><h2 className="text-3xl font-black text-orange-50 serif mt-1">O peso do seu selo</h2></div><div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">{[["Respeitar a hierarquia","Ordens, decisões e conflitos seguem a cadeia de comando registrada."],["Preservar informações","Pergaminhos internos não devem ser levados para fora da organização sem autorização."],["Responder pelos próprios atos","Toda ação realizada em nome da Jikkai possui consequências no RP."],["Registrar acontecimentos","Missões, relatórios e fatos relevantes mantêm a história oficial viva."],["Não usar o nome sem autorização","A reputação da Jikkai não pode ser empenhada em decisões pessoais."],["Honrar o pacto","O juramento formaliza sua entrada e sua lealdade interna."]].map(([t,d]) => <div key={t} className="p-4 rounded-lg border border-zinc-800 bg-black/40"><div className="text-orange-300 font-bold text-sm">{t}</div><p className="text-zinc-500 text-xs leading-relaxed mt-2">{d}</p></div>)}</div><div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir ao juramento</Btn></div></div>}
 
           {etapa === 4 && <div className="fadein">{juramentado ? <div className="space-y-5"><div className="p-4 rounded-lg border border-green-900/50 bg-green-950/10 flex items-start gap-3"><ICheck className="w-5 h-5 text-green-500 mt-0.5" /><div><div className="text-green-300 font-bold">Juramento anterior localizado</div><p className="text-zinc-500 text-sm mt-1">Seu registro foi preservado. Não será necessário repetir o pacto.</p></div></div><JuramentadoView juramentado={juramentado} modoIniciacao /><div className="flex gap-2"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={() => setEtapa(5)} variant="primary" className="flex-1 justify-center">Validar registro e continuar</Btn></div></div> : <JuramentoPage usuario={usuario} juramentado={null} juramentar={juramentar} data={data} modoIniciacao onConcluido={() => setEtapa(5)} />}</div>}
 
-          {etapa === 5 && <div className="fadein text-center py-5"><ICheck className="w-20 h-20 text-green-500 mx-auto mb-5" /><div className="text-[10px] uppercase tracking-[0.4em] text-green-600">Iniciação concluída</div><h2 className="text-4xl font-black text-orange-50 serif mt-2">Seu registro está ativo</h2><p className="text-zinc-400 max-w-xl mx-auto mt-4 leading-relaxed">Você conhece a Jikkai, reconhece sua estrutura e possui um juramento registrado. Apresente-se ao responsável pelo seu ingresso e aguarde sua primeira designação.</p><div className="mt-7 p-4 rounded-lg border border-orange-900/40 bg-orange-950/10 max-w-md mx-auto"><div className="text-[9px] uppercase tracking-wider text-orange-700">Status</div><div className="text-orange-300 font-black mt-1">MEMBRO INICIADO · ACESSO NÍVEL {usuario.nivelAcesso || 1}</div></div><div className="mt-8"><Btn onClick={onConcluir} variant="primary" size="lg"><ILock className="w-4 h-4" /> Acessar o portal</Btn></div></div>}
+          {etapa === 5 && <div className="fadein text-center py-5"><ICheck className="w-20 h-20 text-green-500 mx-auto mb-5" /><div className="text-[10px] uppercase tracking-[0.4em] text-green-600">Iniciação concluída</div><h2 className="text-4xl font-black text-orange-50 serif mt-2">Seu registro está ativo</h2><p className="text-zinc-400 max-w-xl mx-auto mt-4 leading-relaxed">Você conhece a Jikkai, reconhece sua estrutura e possui um juramento selado. Apresente-se ao responsável pelo seu ingresso e aguarde sua primeira designação.</p><div className="mt-7 p-4 rounded-lg border border-orange-900/40 bg-orange-950/10 max-w-md mx-auto"><div className="text-[9px] uppercase tracking-wider text-orange-700">Status</div><div className="text-orange-300 font-black mt-1">MEMBRO INICIADO · SELO NÍVEL {usuario.nivelAcesso || 1}</div></div><div className="mt-8"><Btn onClick={onConcluir} variant="primary" size="lg"><ILock className="w-4 h-4" /> Entrar pelo selo</Btn></div></div>}
         </div>
       </div>
     </div>
@@ -5485,9 +6044,11 @@ function RegistroJuramentosManager({ data, setData, usuario }) {
 }
 
 // ============ MINHAS MISSÕES ============
-function MinhasMissoesPage({ data, setData, usuario, role, onNavigate }) {
+function MinhasMissoesPage({ data, setData, usuario, role, onNavigate, navigationRequest }) {
   const [filtro, setFiltro] = useState("Ativas");
   const [relatorioMissao, setRelatorioMissao] = useState(null);
+  const [destaqueMissaoId, setDestaqueMissaoId] = useState("");
+
 
   const todasMinhas = (data.missoes || [])
     .filter(m => usuarioParticipaMissao(m, usuario.username))
@@ -5496,6 +6057,21 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate }) {
   const ativas = todasMinhas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
   const encerradas = todasMinhas.filter(m => MISSAO_STATUS_TERMINAIS.includes(m.status));
   const minhas = filtro === "Ativas" ? ativas : filtro === "Encerradas" ? encerradas : todasMinhas;
+
+  useEffect(() => {
+    if (navigationRequest?.tab !== "missoes") return;
+    const action = String(navigationRequest.action || "");
+    const id = action.split(":")[1];
+    if (!id) return;
+    const alvo = (data.missoes || []).find(m => m.id === id && usuarioParticipaMissao(m, usuario.username));
+    if (!alvo) return;
+    setFiltro("Ativas");
+    setDestaqueMissaoId(id);
+    if (action.startsWith("relatorio-missao:")) setRelatorioMissao(alvo);
+    setTimeout(() => {
+      try { document.getElementById("missao-" + id)?.scrollIntoView({ behavior: "smooth", block: "center" }); } catch {}
+    }, 80);
+  }, [navigationRequest?.token]);
 
   const updateMissao = (id, patch) => setData(d => ({
     ...d,
@@ -5629,7 +6205,7 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate }) {
           const contrato = m.contratoId ? (data.contratos || []).find(x => x.id === m.contratoId) : null;
 
           return (
-            <div key={m.id} className={`p-5 rounded-lg border ${c.border} ${c.bg} fadein`}>
+            <div id={`missao-${m.id}`} key={m.id} className={`p-5 rounded-lg border ${destaqueMissaoId === m.id ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-black " : ""}${c.border} ${c.bg} fadein`}>
               <div className="flex items-start gap-4">
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${c.circle}`}>
                   {m.status === "concluida" ? <ICheck className="w-5 h-5" /> : m.status === "falhou" ? <IAlert className="w-5 h-5" /> : <IClipboard className="w-5 h-5" />}
@@ -5831,7 +6407,7 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
   };
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, acesso e posição hierárquica.</p></div>{editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro</Btn>}</div>
+      <div className="flex items-center justify-between"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, selo e posição hierárquica.</p></div>{editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro</Btn>}</div>
       {focoIniciacoes && pendentesIniciacao.length > 0 && (
         <section id="iniciacoes-pendentes" className="rounded-xl border border-amber-800/70 bg-amber-950/10 p-4 fadein">
           <div className="flex items-center justify-between gap-3 mb-3">
@@ -5867,7 +6443,7 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
             <div><label className="fox-label">Conduta</label><select value={form.conduta || "Limpo"} onChange={e => setForm({ ...form, conduta: e.target.value, condutaAtualizadaEm: new Date().toISOString() })} className="fox-input">{CONDUTA_NIVEIS.map(n => <option key={n}>{n}</option>)}</select></div>
             <div><label className="fox-label">Posição herdada do cargo</label><div className="min-h-11 px-3 py-2.5 rounded border border-zinc-800 bg-black text-orange-300 text-sm">{estruturaPosicaoLabel(data.roles.find(r => r.id === form.role))}</div><div className="text-zinc-700 text-[10px] mt-1">Altere a posição na aba Cargos.</div></div>
             <div><label className="fox-label">Responde a</label><select value={form.respondeA || ""} onChange={e => setForm({ ...form, respondeA: e.target.value })} className="fox-input"><option value="">— Comando geral —</option>{data.users.filter(u => u.username !== editando && u.role !== "contratante").map(u => <option key={u.username} value={u.username}>{getCodinome(u)}</option>)}</select></div>
-            <div><label className="fox-label">Nível de acesso</label><select value={form.nivelAcesso || 1} onChange={e => setForm({ ...form, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
+            <div><label className="fox-label">Selo de acesso</label><select value={form.nivelAcesso || 1} onChange={e => setForm({ ...form, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
             <div><label className="fox-label">Elemento</label><input value={form.elemento || ""} onChange={e => setForm({ ...form, elemento: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Linhagem</label><input value={form.linhagem || ""} onChange={e => setForm({ ...form, linhagem: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem || ""} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" /></div>
@@ -5887,7 +6463,7 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
         {data.users.map(u => { const role = data.roles.find(r => r.id === u.role); const cla = data.clas.find(c => c.id === u.cla); return (
           <div key={u.username} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg flex gap-3">
             <MemberAvatar user={u} size="md" />
-            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Acesso {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /><ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto /><ReputacaoBadge tipo="impacto" valor={u.reputacao} compacto /></div></div>
+            <div className="min-w-0 flex-1"><div className="text-orange-50 font-bold truncate">{getCodinome(u)}</div><div className="text-zinc-500 text-xs italic truncate">{u.nomeRP || u.displayName}</div><div className="text-zinc-600 text-[10px]">@{u.username}</div><div className="text-xs mt-1" style={{ color: role?.cor }}>{u.patente || role?.nome}</div><div className="text-[10px] text-zinc-600 mt-1">{cla?.nome || "Sem ramo"} · Selo {u.nivelAcesso || 1} · {u.iniciacaoStatus === "pendente" ? "Iniciação pendente" : "Iniciado"}</div><div className="flex flex-wrap gap-1 mt-2"><ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto /><ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto /><ReputacaoBadge tipo="impacto" valor={u.reputacao} compacto /></div></div>
             <div className="flex gap-1"><button onClick={() => iniciarEdit(u)} className="p-1.5 text-orange-400 hover:text-orange-300"><IEdit className="w-3.5 h-3.5" /></button>{u.username !== "leader" && <button onClick={() => remover(u.username)} className="p-1.5 text-red-500 hover:text-red-400"><ITrash className="w-3.5 h-3.5" /></button>}</div>
           </div>
         ); })}
@@ -5945,7 +6521,7 @@ function RamosManager({ data, setData, usuario }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <div><h3 className="text-orange-50 font-bold text-lg serif">Divisões da Jikkai ({(data.divisoes || DEFAULT_DIVISOES).length})</h3><p className="text-zinc-600 text-xs">Cada divisão possui uma cadeira de Capitão. A designação sincroniza o organograma operacional.</p></div>
+        <div><h3 className="text-orange-50 font-bold text-lg serif">Divisões da Jikkai ({(data.divisoes || DEFAULT_DIVISOES).length})</h3><p className="text-zinc-600 text-xs">Cada divisão possui uma cadeira de Capitão. A designação reflete no organograma operacional.</p></div>
         {!criando && <Btn onClick={() => setCriando(true)} variant="primary"><IPlus className="w-3 h-3" /> Novo Ramo</Btn>}
       </div>
       {criando && (
@@ -6047,7 +6623,7 @@ function CargosManager({ data, setData }) {
             <div><label className="fox-label">Cor</label><input type="color" value={form.cor} onChange={e => setForm({...form, cor:e.target.value})} className="h-11 w-full rounded bg-black border border-zinc-700" /></div>
           </div>
           <div className="p-3 rounded border border-zinc-800 bg-black/50 text-zinc-500 text-xs">{ESTRUTURA_POSICOES.find(p => p.id === form.estruturaPosicao)?.desc}</div>
-          <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer"><input type="checkbox" checked={form.hasLeaderPerms} onChange={e => setForm({...form, hasLeaderPerms:e.target.checked})} disabled={editando === "leader"} className="w-4 h-4 accent-orange-600" />Este cargo tem permissões de líder (edição total)</label>
+          <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer"><input type="checkbox" checked={form.hasLeaderPerms} onChange={e => setForm({...form, hasLeaderPerms:e.target.checked})} disabled={editando === "leader"} className="w-4 h-4 accent-orange-600" />Este cargo tem selos de líder (edição total)</label>
           <div className="flex gap-2 pt-2 border-t border-zinc-800"><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></div>
         </div>
       )}
@@ -6061,7 +6637,7 @@ function CargosManager({ data, setData }) {
             <div key={r.id} className="p-4 bg-zinc-950/60 border border-zinc-800 rounded-lg">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-3 h-12 rounded" style={{ background: r.cor }} />
-                <div className="flex-1 min-w-0"><div className="text-orange-50 font-bold">{r.nome} {r.protected && <span className="text-xs text-zinc-600">(protegido)</span>}</div><div className="text-zinc-500 text-xs">{count} usuário(s) · {isLeader ? <span className="text-orange-500">Permissões totais de líder</span> : `${(r.permissions || []).length} permissões`}</div><div className="text-[10px] uppercase tracking-wider text-orange-700 mt-1">{estruturaPosicaoLabel(r)} · ordem {ordemEstruturaRole(r)}</div></div>
+                <div className="flex-1 min-w-0"><div className="text-orange-50 font-bold">{r.nome} {r.protected && <span className="text-xs text-zinc-600">(protegido)</span>}</div><div className="text-zinc-500 text-xs">{count} usuário(s) · {isLeader ? <span className="text-orange-500">Selos totais de líder</span> : `${(r.permissions || []).length} selos`}</div><div className="text-[10px] uppercase tracking-wider text-orange-700 mt-1">{estruturaPosicaoLabel(r)} · ordem {ordemEstruturaRole(r)}</div></div>
                 <button onClick={() => abrirEdicao(r)} className="text-orange-400 hover:text-orange-300 p-2" title="Editar cargo e posição"><IEdit className="w-4 h-4" /></button>
                 {!r.protected && <button onClick={() => remover(r.id)} className="text-red-500 hover:text-red-400 p-2"><ITrash className="w-4 h-4" /></button>}
               </div>
@@ -6245,7 +6821,7 @@ function MissoesManager({ data, setData, usuario, role }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="text-orange-50 font-bold text-lg serif">Centro de Operações 2.0 ({todas.length})</h3>
+          <h3 className="text-orange-50 font-bold text-lg serif">Centro de Operações ({todas.length})</h3>
           <p className="text-zinc-600 text-xs">Contrato ou missão → divisão/equipe/membro → aceite → execução → relatório obrigatório → aprovação.</p>
         </div>
         {!criando && <Btn onClick={() => setCriando(true)} variant="primary"><IPlus className="w-3 h-3" /> Nova Missão</Btn>}
@@ -6457,7 +7033,7 @@ function BackupManager({ data, exportar, importar }) {
           <>
             <div className="flex items-center gap-2 mb-2">
               <ICheck className="w-5 h-5 text-green-500" />
-              <h3 className="text-green-100 font-bold">Sincronização em nuvem ATIVA</h3>
+              <h3 className="text-green-100 font-bold">Selamento em nuvem ATIVO</h3>
             </div>
             <p className="text-zinc-300 text-sm leading-relaxed">
               Todos os membros do clã compartilham os mesmos dados em tempo real via Supabase. Edições feitas por qualquer pessoa aparecem automaticamente para os outros. Ainda assim, recomendamos exportar um backup manual periodicamente.
@@ -6466,11 +7042,11 @@ function BackupManager({ data, exportar, importar }) {
         ) : (
           <>
             <IAlert className="w-6 h-6 text-yellow-500 mb-2" />
-            <h3 className="text-yellow-100 font-bold mb-2">Modo Local — Sincronização não configurada</h3>
+            <h3 className="text-yellow-100 font-bold mb-2">Modo Local — Selamento em nuvem não configurado</h3>
             <p className="text-zinc-300 text-sm leading-relaxed mb-2">
               Cada usuário está vendo os próprios dados, isolados no navegador. <strong className="text-yellow-400">Os dados NÃO são compartilhados entre membros.</strong>
             </p>
-            <p className="text-zinc-400 text-sm">Para ativar sincronização em nuvem (gratuita), siga as instruções no topo do arquivo HTML (configure Supabase e edite SUPABASE_URL e SUPABASE_KEY).</p>
+            <p className="text-zinc-400 text-sm">Para ativar selamento em nuvem (gratuita), siga as instruções no topo do arquivo HTML (configure Supabase e edite SUPABASE_URL e SUPABASE_KEY).</p>
           </>
         )}
       </div>
@@ -6518,11 +7094,11 @@ function LoginScreen({ data, onLogin }) {
       // Dispara música com som imediatamente (estamos dentro de um clique do usuário)
       if (typeof window.foxStartMusic === "function") window.foxStartMusic();
       onLogin(u);
-    } else setErro("Credenciais inválidas. Contate o líder para obter acesso.");
+    } else setErro("Marca inválida. Contate o líder para liberar seu selo.");
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen shadow-ops-bg bg-black flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: "radial-gradient(circle at 20% 30%, #7C2D12 0%, transparent 50%), radial-gradient(circle at 80% 70%, #B91C1C 0%, transparent 50%)"
       }} />
@@ -6535,7 +7111,7 @@ function LoginScreen({ data, onLogin }) {
           <h1 className="text-5xl font-black text-orange-50 serif">F.O.X.</h1>
           <p className="text-zinc-600 text-sm italic mt-2">Portal Restrito</p>
         </div>
-        <form onSubmit={tentar} className="bg-zinc-950/80 border border-orange-900/40 rounded-lg p-6 backdrop-blur space-y-4">
+        <form onSubmit={tentar} className="jikkai-terminal-card bg-zinc-950/80 border border-orange-900/40 rounded-lg p-6 backdrop-blur space-y-4">
           <div><label className="fox-label">Identificação</label><input value={user} onChange={(e) => setUser(e.target.value)} className="fox-input" placeholder="Seu username" /></div>
           <div><label className="fox-label">Senha</label><input type="password" value={pass} onChange={(e) => setPass(e.target.value)} className="fox-input" placeholder="••••••••" /></div>
           {erro && <div className="text-red-500 text-xs">{erro}</div>}
@@ -6745,7 +7321,7 @@ function migrate(raw) {
       membros,
     };
   });
-  // Garante cargos protegidos, permissões e posições estruturais sincronizadas.
+  // Garante cargos protegidos, selos e posições estruturais sincronizadas.
   const defaultsById = Object.fromEntries(DEFAULT_ROLES.map(r => [r.id, r]));
   let rolesOut = (raw.roles || DEFAULT_ROLES).map(r => ({
     ...(defaultsById[r.id] || {}),
@@ -6866,6 +7442,65 @@ function VisaoGeralContratantes({ data, setData, isLider }) {
 }
 
 
+
+const JIKKAI_THEMES = [
+  { id: "shadow", nome: "Sombras", desc: "Tema atual", dot: "linear-gradient(135deg,#000,#7c2d12)" },
+  { id: "clean", nome: "Clean", desc: "Claro quente", dot: "linear-gradient(135deg,#f3efe7,#ea580c)" },
+  { id: "paper", nome: "Papel", desc: "Claro neutro", dot: "linear-gradient(135deg,#ffffff,#94a3b8)" },
+  { id: "ice", nome: "Gelo", desc: "Azul frio", dot: "linear-gradient(135deg,#07111f,#38bdf8)" },
+  { id: "violet", nome: "Violeta", desc: "Noite roxa", dot: "linear-gradient(135deg,#070410,#a855f7)" },
+];
+
+function ThemeSwitcher() {
+  const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem("jikkai-theme") || "shadow"; } catch { return "shadow"; }
+  });
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem("jikkai-mode") || "shadows"; } catch { return "shadows"; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem("jikkai-theme", theme); } catch {}
+    if (document.body) document.body.setAttribute("data-jikkai-theme", theme);
+    document.documentElement.setAttribute("data-jikkai-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    try { localStorage.setItem("jikkai-mode", mode); } catch {}
+    if (document.body) document.body.setAttribute("data-jikkai-mode", mode);
+    document.documentElement.setAttribute("data-jikkai-mode", mode);
+  }, [mode]);
+
+  const atual = JIKKAI_THEMES.find(t => t.id === theme) || JIKKAI_THEMES[0];
+
+  return (
+    <div className="jikkai-theme-switcher">
+      {open && (
+        <div className="jikkai-theme-panel">
+          <div className="px-1 pb-1 text-[9px] uppercase tracking-[0.18em] text-orange-500 font-black">Tema visual</div>
+          {JIKKAI_THEMES.map(t => (
+            <button key={t.id} type="button" onClick={() => { setTheme(t.id); setOpen(false); }} title={t.desc}>
+              <span className="jikkai-theme-dot" style={{ background: t.dot }} />
+              <span className="flex-1 text-left">{t.nome}</span>
+              {theme === t.id && <span className="text-orange-400">●</span>}
+            </button>
+          ))}
+          <div className="jikkai-mode-row">
+            <div className="px-1 pb-1 text-[9px] uppercase tracking-[0.18em] text-sky-400 font-black">Modo de uso</div>
+            <button type="button" className="jikkai-discrete-toggle" onClick={() => { setMode(mode === "discrete" ? "shadows" : "discrete"); setOpen(false); }}>
+              <span className="jikkai-theme-dot" style={{ background: mode === "discrete" ? "linear-gradient(135deg,#082f49,#38bdf8)" : "linear-gradient(135deg,#000,#fb923c)" }} />
+              <span className="flex-1 text-left">{mode === "discrete" ? "Modo Discreto" : "Modo Sombras"}</span>
+              <span className="text-sky-300">●</span>
+            </button>
+          </div>
+        </div>
+      )}
+      <button type="button" className="jikkai-theme-toggle" onClick={() => setOpen(v => !v)} title={`Tema: ${atual.nome}`}>◐</button>
+    </div>
+  );
+}
+
 function MusicPlayer() {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -6962,6 +7597,11 @@ function App() {
   const [tab, setTab] = useState(() => sessaoInicial?.tab || "home");
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [navigationRequest, setNavigationRequest] = useState(null);
+  const [portalTransition, setPortalTransition] = useState(null);
+  const [accessGranted, setAccessGranted] = useState(null);
+  const [terminalToast, setTerminalToast] = useState(null);
+  const toastTimerRef = useRef(null);
+  const transitionTimerRef = useRef(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState({ cloudOk: null, localOk: true, time: null, syncing: false });
@@ -7007,6 +7647,26 @@ function App() {
       setSaveStatus({ ...res, time: new Date(), syncing: false });
     }, 500);
   }, [data, loading]);
+  useEffect(() => {
+    if (!saveStatus.time || saveStatus.syncing) return;
+    clearTimeout(toastTimerRef.current);
+    const ok = saveStatus.cloudOk === false ? false : saveStatus.localOk;
+    setTerminalToast(ok ? "PERGAMINHO SELADO · RASTROS DE CHAKRA APAGADOS" : "SELO INSTÁVEL · CÓPIA LOCAL PRESERVADA");
+    toastTimerRef.current = setTimeout(() => setTerminalToast(null), 2300);
+  }, [saveStatus.time, saveStatus.syncing]);
+
+  useEffect(() => () => {
+    clearTimeout(saveTimeoutRef.current);
+    clearTimeout(transitionTimerRef.current);
+    clearTimeout(toastTimerRef.current);
+  }, []);
+
+  const acionarTransicaoPortal = (label = "ABRINDO PERGAMINHOS") => {
+    clearTimeout(transitionTimerRef.current);
+    setPortalTransition(label);
+    transitionTimerRef.current = setTimeout(() => setPortalTransition(null), 680);
+  };
+
 
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
   const roleRegistrado = usuarioAtual && data ? data.roles.find(r => r.id === usuarioAtual.role) : null;
@@ -7096,7 +7756,7 @@ function App() {
       try {
         const novo = JSON.parse(ev.target.result);
         if (!novo.users || !novo.roles) throw new Error("Backup inválido");
-        if (confirm("Isso substituirá TODOS os dados atuais (e serão sincronizados com a nuvem se ativada). Continuar?")) {
+        if (confirm("Isso substituirá TODOS os dados atuais (e serão selados na nuvem se ativada). Continuar?")) {
           setData(novo);
           alert("Backup restaurado!");
         }
@@ -7161,17 +7821,20 @@ function App() {
   }));
 
   if (loading || !data) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <IFlame className="w-12 h-12 text-orange-500 pulse-fire mx-auto mb-4" />
-          <div className="text-orange-400 text-sm uppercase tracking-widest">Conectando ao portal...</div>
-        </div>
-      </div>
-    );
+    return <ShadowBootScreen label="LIBERANDO SELO DE ACESSO" detail="localizando pergaminhos · conferindo juramento · abrindo passagem oculta" />;
   }
 
-  if (!usuarioAtual) return <LoginScreen data={data} onLogin={(u) => { salvarSessaoPortalSnapshot({ usuario: u, tab: "home" }); setUsuario(u); }} />;
+  if (accessGranted) return <AccessGrantedOverlay usuario={accessGranted.usuario} role={accessGranted.role} />;
+
+  if (!usuarioAtual) return <LoginScreen data={data} onLogin={(u) => {
+    const roleLogin = roleEfetivoUsuario(u, data.roles.find(r => r.id === u.role));
+    setAccessGranted({ usuario: u, role: roleLogin });
+    setTimeout(() => {
+      salvarSessaoPortalSnapshot({ usuario: u, tab: "home" });
+      setUsuario(u);
+      setAccessGranted(null);
+    }, 1450);
+  }} />;
 
   if (!isContratante && !isLider && usuarioAtual.iniciacaoStatus === "pendente") {
     return <IntroducaoPrimeiroAcesso
@@ -7199,7 +7862,6 @@ function App() {
     { id: "arquivos", label: "Arquivo Público", icon: ILock },
   ] : [
     { id: "home", label: "Visão Geral", icon: IFlame },
-    { id: "historia", label: "História", icon: IBook },
     { id: "membros", label: "Membros", icon: IUsers },
     { id: "jikkai", label: "JIKKAI", icon: ITarget },
     { id: "armas", label: "Armas", icon: IShield },
@@ -7220,18 +7882,24 @@ function App() {
   const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id));
   const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
   const navegarPara = (id, subTab = "", action = "") => {
+    const destino = TABS.find(t => t.id === id)?.label || (id === "mapa" ? "MAPA ESTRATÉGICO" : "ARQUIVOS");
+    acionarTransicaoPortal(id === "mapa" ? "ABRINDO MAPA DAS SOMBRAS" : `LIBERANDO SELO: ${String(destino).toUpperCase()}`);
     if (id === "mapa") {
-      if (typeof window.foxOpenStrategicMap === "function") window.foxOpenStrategicMap();
-      else {
-        if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
-        window.location.href = "./mapa.html";
-      }
+      setTimeout(() => {
+        if (typeof window.foxOpenStrategicMap === "function") window.foxOpenStrategicMap();
+        else {
+          if (usuarioAtual) salvarSessaoPortalSnapshot({ usuario: usuarioAtual, tab, navigationRequest });
+          window.location.href = "./mapa.html";
+        }
+      }, 360);
       return;
     }
-    setTab(id);
-    setNavigationRequest({ tab: id, subTab, action, token: Date.now() });
-    setMobileMoreOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      setTab(id);
+      setNavigationRequest({ tab: id, subTab, action, token: Date.now() });
+      setMobileMoreOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 120);
   };
   const selecionarTabMobile = (id) => navegarPara(id);
 
@@ -7240,14 +7908,16 @@ function App() {
     if (!CLOUD_ENABLED) {
       return <div className="text-yellow-600 text-[9px]" title="Modo local — dados não compartilhados">⚠ Local</div>;
     }
-    if (saveStatus.syncing) return <div className="text-zinc-400 text-[9px]">⟳ Sincronizando...</div>;
-    if (saveStatus.cloudOk === true) return <div className="text-green-500 text-[9px] flex items-center gap-1"><ICheck className="w-3 h-3" />Sincronizado</div>;
+    if (saveStatus.syncing) return <div className="text-zinc-400 text-[9px]">⟳ Selando pergaminho...</div>;
+    if (saveStatus.cloudOk === true) return <div className="text-green-500 text-[9px] flex items-center gap-1"><ICheck className="w-3 h-3" />Pergaminho selado</div>;
     if (saveStatus.cloudOk === false) return <div className="text-red-500 text-[9px]">⚠ Erro sync</div>;
     return <div className="text-zinc-600 text-[9px]">—</div>;
   })();
 
   return (
     <div className="jikkai-compact min-h-screen bg-black text-zinc-200">
+      <PortalTransitionOverlay active={portalTransition} label={portalTransition || "ABRINDO PERGAMINHOS"} />
+      <TerminalToast message={terminalToast} />
       <header className="border-b border-orange-900/30 bg-black/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -7292,12 +7962,13 @@ function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 sm:pb-8">
+        <div className="mb-4 flex justify-end"><PortalCodeBadge tab={tab} subTab={navigationRequest?.subTab || ""} /></div>
         {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} role={role} isLider={isLider} onNavigate={navegarPara} />}
         {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} navigationRequest={navigationRequest} />}
         {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} onNavigate={navegarPara} />}
+        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} onNavigate={navegarPara} navigationRequest={navigationRequest} />}
         {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
         {tab === "visaogeral" && <VisaoGeralContratantes data={data} setData={setData} isLider={isLider} />}
         {tab === "arquivos" && isContratante && <ArquivoPublicoPage data={data} />}
@@ -7338,6 +8009,7 @@ function App() {
         </div>
       </nav>
 
+      <ThemeSwitcher />
       <PortalQuickActions onNavigate={navegarPara} isContratante={isContratante} />
 
       <footer className="border-t border-zinc-900 mt-10 sm:mt-16 pt-6 pb-28 sm:py-6 text-center text-zinc-700 text-xs">
