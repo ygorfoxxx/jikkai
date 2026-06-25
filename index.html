@@ -286,6 +286,65 @@
     box-shadow:0 0 28px rgba(88,101,242,.20);
   }
 
+
+/* jikkai-mobile-app-ux-v3: app mobile enxuto e operações fora de Gerenciar */
+@media (max-width: 640px){
+  html, body { width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  body { font-size: 14px; }
+  .jikkai-compact main { padding: 10px 10px 94px !important; }
+  .jikkai-compact header { position: sticky; top: 0; z-index: 40; }
+  .jikkai-compact header .max-w-6xl { padding: 8px 10px !important; }
+  .jikkai-compact header .text-orange-50.font-black.tracking-widest.serif { font-size: 14px; line-height: 1; }
+  .jikkai-compact header .text-zinc-600.text-\[10px\] { font-size: 8px !important; letter-spacing: .12em !important; }
+  .jikkai-compact main > .mb-4.flex.justify-end { display:none !important; }
+  .jikkai-code-badge { display:none !important; }
+  .jikkai-compact .grid.lg\:grid-cols-\[1fr_360px\],
+  .jikkai-compact .grid.lg\:grid-cols-\[1\.25fr_0\.75fr\],
+  .jikkai-compact .grid.lg\:grid-cols-\[1fr_0\.95fr\] { display:block !important; }
+  .jikkai-compact section { margin-bottom: 10px; }
+  .jikkai-compact h1 { font-size: 1.8rem !important; line-height: 1.05 !important; }
+  .jikkai-compact h2 { font-size: 1.35rem !important; line-height: 1.08 !important; }
+  .jikkai-compact h3 { font-size: 1.05rem !important; line-height: 1.12 !important; }
+  .jikkai-compact p { font-size: 12px; line-height: 1.45; }
+  .jikkai-compact .SectionTitle, .jikkai-compact [class*="border-l-4"] { padding-left: 10px !important; }
+  .jikkai-compact .rounded-xl, .jikkai-compact .rounded-2xl { border-radius: 14px !important; }
+  .jikkai-compact .p-4 { padding: 12px !important; }
+  .jikkai-compact .p-5 { padding: 13px !important; }
+  .jikkai-compact .p-6, .jikkai-compact .p-7, .jikkai-compact .p-8 { padding: 14px !important; }
+  .jikkai-compact .gap-4, .jikkai-compact .gap-5, .jikkai-compact .gap-6 { gap: 10px !important; }
+  .jikkai-compact .mb-5, .jikkai-compact .mb-6, .jikkai-compact .mb-8 { margin-bottom: 12px !important; }
+  .jikkai-compact .space-y-7 > :not([hidden]) ~ :not([hidden]),
+  .jikkai-compact .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 12px !important; }
+  .jikkai-compact .text-2xl { font-size: 1.25rem !important; }
+  .jikkai-compact .text-xl { font-size: 1.05rem !important; }
+  .jikkai-compact .text-lg { font-size: .96rem !important; }
+  .jikkai-compact .text-sm { font-size: .78rem !important; }
+  .jikkai-compact .text-xs { font-size: .68rem !important; }
+  .jikkai-compact .tracking-\[0\.35em\],
+  .jikkai-compact .tracking-\[0\.3em\],
+  .jikkai-compact .tracking-\[0\.28em\],
+  .jikkai-compact .tracking-widest { letter-spacing: .12em !important; }
+  .jikkai-compact .overflow-x-auto { -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .jikkai-compact .overflow-x-auto::-webkit-scrollbar { display:none; }
+  .jikkai-compact button { border-radius: 12px; }
+  .jikkai-compact .mobile-sheet-panel { max-height: 78dvh; }
+  .jikkai-compact nav.fixed.bottom-0 { border-top-color: rgba(234,88,12,.35) !important; box-shadow: 0 -18px 45px rgba(0,0,0,.65); }
+  .jikkai-compact nav.fixed.bottom-0 .grid { min-height: 56px; }
+  .jikkai-compact nav.fixed.bottom-0 button { min-height: 56px !important; padding: 6px 2px !important; gap: 3px !important; }
+  .jikkai-compact nav.fixed.bottom-0 svg { width: 18px !important; height: 18px !important; }
+  .jikkai-compact nav.fixed.bottom-0 span { font-size: 7.5px !important; letter-spacing: .04em !important; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jikkai-mobile-hero { padding: 14px !important; border-radius: 16px !important; }
+  .jikkai-mobile-hero .hero-title { font-size: 1.6rem !important; line-height: 1.05 !important; }
+  .jikkai-segmented { position: sticky; top: 58px; z-index: 25; margin: 0 -2px 12px; padding: 4px; border-radius: 16px; backdrop-filter: blur(16px); }
+  .jikkai-segmented button { min-height: 44px; font-size: 10px !important; letter-spacing: .08em !important; }
+  .jikkai-compact .mission-card-mobile { padding: 12px !important; }
+  .jikkai-compact .mission-card-mobile .w-12.h-12 { width: 38px !important; height: 38px !important; }
+  .jikkai-compact input.fox-input, .jikkai-compact select.fox-input, .jikkai-compact textarea.fox-input { min-height: 42px; font-size: 16px !important; }
+}
+@media (min-width:641px){
+  .jikkai-mobile-only { display:none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -352,9 +411,14 @@ function roleEfetivoUsuario(user, role) {
 
 const DEFAULT_ROLES = [
   { id: "leader", nome: "Líder", hasLeaderPerms: true, protected: true, cor: "#D85A30", permissions: [], estruturaPosicao: "lider", ordemEstrutura: 0 },
-  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C", permissions: ["manage_users", "manage_missions"], estruturaPosicao: "conselheiro", ordemEstrutura: 10 },
+  { id: "herdeiro", nome: "Herdeiro", hasLeaderPerms: false, protected: true, cor: "#F59E0B", permissions: ["manage_users", "manage_missions", "edit_contracts", "edit_reports", "edit_trios", "manage_juramentados"], estruturaPosicao: "braco_direito", ordemEstrutura: 4 },
+  { id: "braco_direito", nome: "Braço Direito", hasLeaderPerms: false, protected: true, cor: "#DC2626", permissions: ["manage_users", "manage_missions", "edit_contracts", "edit_reports", "edit_trios"], estruturaPosicao: "braco_direito", ordemEstrutura: 5 },
+  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C", permissions: ["manage_users", "manage_missions", "edit_reports"], estruturaPosicao: "conselheiro", ordemEstrutura: 10 },
   { id: "capitao", nome: "Capitão", hasLeaderPerms: false, protected: true, cor: "#C2410C", permissions: ["manage_missions"], estruturaPosicao: "capitao_ramo", ordemEstrutura: 30 },
-  { id: "member", nome: "Membro", hasLeaderPerms: false, protected: true, cor: "#7C2D12", permissions: [], estruturaPosicao: "operador", ordemEstrutura: 100 },
+  { id: "executor", nome: "Executor", hasLeaderPerms: false, protected: true, cor: "#EA580C", permissions: [], estruturaPosicao: "operador", ordemEstrutura: 60 },
+  { id: "member", nome: "Soldado", hasLeaderPerms: false, protected: true, cor: "#7C2D12", permissions: [], estruturaPosicao: "operador", ordemEstrutura: 100 },
+  { id: "associado", nome: "Associado", hasLeaderPerms: false, protected: true, cor: "#71717A", permissions: [], estruturaPosicao: "independente", ordemEstrutura: 130 },
+  { id: "recruta", nome: "Recruta", hasLeaderPerms: false, protected: true, cor: "#52525B", permissions: [], estruturaPosicao: "operador", ordemEstrutura: 150 },
   { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E", permissions: [], estruturaPosicao: "fora", ordemEstrutura: 999 },
 ];
 
@@ -569,7 +633,7 @@ function podeEditarLealdadeConduta(data, viewer, viewerRole, alvo) {
   return false;
 }
 
-const MEMBER_PROFILE_FIELDS = ["avatarUrl", "nomeRP", "elemento", "vilaOrigem", "especialidade"];
+const MEMBER_PROFILE_FIELDS = ["avatarUrl", "nomeRP", "elemento", "vilaOrigem", "especialidade", "graduacaoShinobi"];
 const DOSSIE_FIELDS = [
   { id: "avatarUrl", label: "Foto", peso: 18 },
   { id: "nomeRP", label: "Nome de RP", peso: 14 },
@@ -578,6 +642,8 @@ const DOSSIE_FIELDS = [
   { id: "especialidade", label: "Especialidade", peso: 14 },
   { id: "funcaoPreferida", label: "Função", peso: 10 },
   { id: "estiloCombate", label: "Estilo", peso: 6 },
+  { id: "graduacaoShinobi", label: "Graduação shinobi", peso: 8 },
+  { id: "bingoBookStatus", label: "Bingo Book", peso: 5 },
 ];
 
 function valorDossie(u, campo) {
@@ -635,6 +701,7 @@ function sugestoesDossieAutomaticas(data, membro) {
     funcaoPreferida: membro?.funcaoPreferida || funcaoPorEquipe || "Soldado",
     estiloCombate: membro?.estiloCombate || estiloPorEspecialidade,
     equipamentoPrincipal: membro?.equipamentoPrincipal || "",
+    graduacaoShinobi: membro?.graduacaoShinobi || membro?.patente || role?.nome || "",
     divisaoNome: divisao?.nome || "Sem divisão",
     equipeNome: equipe?.nome || "Sem equipe",
     cargoNome: membro?.patente || role?.nome || membro?.role || "Membro",
@@ -686,6 +753,8 @@ function normalizarMembro(u, existente = true) {
     avatarUrl: "", avatarStoragePath: "", nomeRP: "", elemento: "", linhagem: "",
     vilaOrigem: "", patente: "", especialidade: "", funcaoPreferida: "", disponibilidadeOperacional: "",
     estiloCombate: "", equipamentoPrincipal: "", restricoesOperacionais: "", bio: "", estruturaNivel: "operador",
+    graduacaoShinobi: "", registroShinobi: "", naturezaChakraSecundaria: "", tecnicaAssinatura: "", invocacao: "", statusNukenin: "",
+    bingoBookStatus: "Nao listado", bingoBookAlcunha: "", bingoBookRecompensa: "", bingoBookPericulosidade: "Baixa", bingoBookMotivo: "", bingoBookUltimaLocalizacao: "",
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
@@ -696,6 +765,8 @@ function normalizarMembro(u, existente = true) {
   const out = { ...base, ...u };
   if (!existente && !String(out.patente || "").trim()) out.patente = "Recruta em Observação";
   out.nomeRP = out.nomeRP || out.displayName || "";
+  out.bingoBookStatus = out.bingoBookStatus || "Nao listado";
+  out.bingoBookPericulosidade = out.bingoBookPericulosidade || "Baixa";
   out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
   out.reputacao = converterReputacaoLegada(out.reputacao);
   if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Baixo perfil";
@@ -926,6 +997,8 @@ const DEFAULT_DISCORD_DM_TEMPLATES = {
   relatorio_aprovado: "📜 SELO JIKKAI — RELATÓRIO APROVADO\n\nO pergaminho foi aceito pela liderança.\n\nMissão: {missao}\nResultado: {resultado}\n\nHistórico atualizado. A sombra permanece em movimento.",
   relatorio_recusado: "📜 SELO JIKKAI — RELATÓRIO RECUSADO\n\nA liderança recusou o pergaminho enviado.\n\nMissão: {missao}\nMotivo: {feedback}\n\nEntre no portal para corrigir ou aguardar nova orientação.",
   convocacao_lideranca: "⚠️ SELO JIKKAI — CONVOCAÇÃO DA LIDERANÇA\n\nVocê foi chamado pela liderança.\n\nAssunto: {assunto}\nMensagem: {mensagem}\n\nResponda assim que possível e verifique o portal.\n{portal}",
+  promocao_cargo: "⛩️ SELO JIKKAI — PROMOÇÃO REGISTRADA\n\nSeu selo hierárquico foi alterado pela liderança.\n\nCargo anterior: {cargo_antigo}\nNovo cargo: {cargo_novo}\nRegistrado por: {promovido_por}\n\nEntre no portal para verificar seu dossiê atualizado.\n{portal}",
+  cobranca_pendencia: "⚠️ SELO JIKKAI — COBRANÇA DA LIDERANÇA\n\nUma pendência foi marcada no seu nome.\n\nPendência: {pendencia}\nMotivo: {motivo}\nResponsável: {responsavel}\nRegistrado por: {lider}\n\nEntre no portal e resolva assim que possível.\n{portal}",
 };
 
 const DISCORD_TEMPLATE_LABELS = {
@@ -935,6 +1008,8 @@ const DISCORD_TEMPLATE_LABELS = {
   relatorio_aprovado: "Relatório aprovado",
   relatorio_recusado: "Relatório recusado",
   convocacao_lideranca: "Convocação da liderança",
+  promocao_cargo: "Promoção de cargo",
+  cobranca_pendencia: "Cobrança de pendência",
 };
 
 function discordBotTokenAtual() {
@@ -997,7 +1072,13 @@ function renderDiscordTemplate(data, key, vars = {}) {
     assunto: vars.assunto || "Convocação",
     mensagem: vars.mensagem || "A liderança solicitou sua presença.",
     lider: vars.lider || "Liderança Jikkai",
+    promovido_por: vars.promovido_por || vars.lider || "Liderança Jikkai",
+    cargo_antigo: vars.cargo_antigo || "Cargo anterior",
+    cargo_novo: vars.cargo_novo || "Novo cargo",
     categoria: vars.categoria || "Contrato",
+    pendencia: vars.pendencia || vars.assunto || "Pendência operacional",
+    motivo: vars.motivo || vars.mensagem || "A liderança solicitou correção desta pendência.",
+    responsavel: vars.responsavel || "Membro convocado",
   };
   return String(base).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, chave) => mapa[chave] != null ? String(mapa[chave]) : "");
 }
@@ -1095,6 +1176,35 @@ function mensagemDiscordConvocacao(data, assunto, mensagem, lider) {
     lider: lider || "Liderança Jikkai",
   });
 }
+
+function mensagemDiscordPromocao(data, alvo, cargoAntigo, cargoNovo, promovidoPor) {
+  return renderDiscordTemplate(data, "promocao_cargo", {
+    cargo_antigo: cargoAntigo || "Não definido",
+    cargo_novo: cargoNovo || "Novo cargo",
+    promovido_por: promovidoPor || "Liderança Jikkai",
+    mensagem: `${getCodinome(alvo)} teve o selo hierárquico atualizado.`,
+  });
+}
+
+function mensagemDiscordCobrancaPendencia(data, pendencia, motivo, lider, responsavel) {
+  return renderDiscordTemplate(data, "cobranca_pendencia", {
+    pendencia: pendencia || "Pendência operacional",
+    motivo: motivo || "A liderança solicitou correção desta pendência.",
+    lider: lider || "Liderança Jikkai",
+    responsavel: responsavel || "Membro convocado",
+    assunto: pendencia || "Cobrança de pendência",
+    mensagem: motivo || "A liderança solicitou correção desta pendência.",
+  });
+}
+
+// Ponte global para evitar erro de escopo no Babel do navegador.
+window.notificarDiscordUsuarios = notificarDiscordUsuarios;
+window.enviarDmDiscordParaUsuario = enviarDmDiscordParaUsuario;
+window.mensagemDiscordMissao = mensagemDiscordMissao;
+window.mensagemDiscordRelatorio = mensagemDiscordRelatorio;
+window.mensagemDiscordConvocacao = mensagemDiscordConvocacao;
+window.mensagemDiscordPromocao = mensagemDiscordPromocao;
+window.mensagemDiscordCobrancaPendencia = mensagemDiscordCobrancaPendencia;
 
 // ============ CLOUD SYNC CONFIG ============
 // Cole aqui os valores do seu projeto Supabase (veja instruções no topo do arquivo)
@@ -1234,6 +1344,103 @@ function Btn({ children, onClick, variant = "default", size = "sm", disabled, cl
   );
 }
 
+
+function PortalDecisionModal({ dialog, onClose }) {
+  if (!dialog) return null;
+  const tone = dialog.tone || "default";
+  const toneClasses = {
+    default: "border-orange-700 text-orange-400 bg-orange-950/20",
+    danger: "border-red-700 text-red-300 bg-red-950/25",
+    success: "border-green-700 text-green-300 bg-green-950/20",
+    info: "border-sky-700 text-sky-300 bg-sky-950/20",
+  };
+  const Icon = tone === "danger" ? IAlert : tone === "success" ? ICheck : IFile;
+  const confirmar = () => {
+    if (typeof dialog.onConfirm === "function") dialog.onConfirm();
+    onClose();
+  };
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className={`w-full max-w-lg rounded-xl border ${toneClasses[tone] || toneClasses.default} bg-zinc-950 shadow-2xl overflow-hidden`} onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-zinc-800 flex items-start gap-3">
+          <div className={`w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0 ${toneClasses[tone] || toneClasses.default}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.32em] text-orange-700">{dialog.eyebrow || "Pergaminho selado"}</div>
+            <h3 className="text-orange-50 font-black serif text-xl mt-1 leading-tight">{dialog.title || "Confirmar acao"}</h3>
+            {dialog.message && <p className="text-zinc-400 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{dialog.message}</p>}
+          </div>
+          <button onClick={onClose} className="ml-auto text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        {dialog.children && <div className="p-5 border-b border-zinc-800">{dialog.children}</div>}
+        <div className="p-4 bg-black/35 flex gap-2 justify-end flex-wrap">
+          {dialog.cancelLabel !== null && <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> {dialog.cancelLabel || "Cancelar"}</Btn>}
+          <Btn onClick={confirmar} variant={tone === "danger" ? "danger" : tone === "success" ? "success" : "primary"}>
+            {tone === "danger" ? <IAlert className="w-3 h-3" /> : <ICheck className="w-3 h-3" />}
+            {dialog.confirmLabel || "Confirmar"}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PortalNoticeModal({ notice, onClose }) {
+  if (!notice) return null;
+  return (
+    <PortalDecisionModal
+      dialog={{
+        eyebrow: notice.eyebrow || "Aviso do portal",
+        title: notice.title || "Registro atualizado",
+        message: notice.message || "",
+        tone: notice.tone || "info",
+        confirmLabel: notice.confirmLabel || "Entendido",
+        cancelLabel: null,
+        onConfirm: notice.onConfirm || null,
+      }}
+      onClose={onClose}
+    />
+  );
+}
+
+function FeedbackReviewModal({ modal, onClose }) {
+  const [texto, setTexto] = useState(modal?.initial || "");
+  useEffect(() => { setTexto(modal?.initial || ""); }, [modal?.key]);
+  if (!modal) return null;
+  const valido = texto.trim().length > 0;
+  const enviar = () => {
+    if (!valido) return;
+    modal.onSubmit(texto.trim());
+    onClose();
+  };
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-xl border border-orange-800 bg-zinc-950 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-zinc-800 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg border border-orange-800 bg-orange-950/20 text-orange-400 flex items-center justify-center flex-shrink-0"><IEdit className="w-5 h-5" /></div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.32em] text-orange-700">{modal.eyebrow || "Revisao de relatorio"}</div>
+            <h3 className="text-orange-50 font-black serif text-xl mt-1">{modal.title}</h3>
+            {modal.message && <p className="text-zinc-500 text-sm mt-2 leading-relaxed">{modal.message}</p>}
+          </div>
+          <button onClick={onClose} className="ml-auto text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5">
+          <label className="fox-label">{modal.label || "Mensagem para o operador"}</label>
+          <textarea value={texto} onChange={e => setTexto(e.target.value)} rows="6" className="fox-input" autoFocus placeholder={modal.placeholder || "Explique o que precisa ser ajustado..."} />
+          <div className="text-[10px] uppercase tracking-wider text-zinc-700 mt-2">A mensagem ficara registrada no relatorio e sera enviada por Discord quando disponivel.</div>
+        </div>
+        <div className="p-4 bg-black/35 border-t border-zinc-800 flex gap-2 justify-end flex-wrap">
+          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+          <Btn onClick={enviar} variant={modal.tone === "danger" ? "danger" : "primary"} disabled={!valido}>
+            <ISave className="w-3 h-3" /> {modal.confirmLabel || "Enviar feedback"}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ShadowBootScreen({ label = "LIBERANDO SELO DE ACESSO", detail = "canal de chakra oculto · juramento conferido · rastros mascarados", compact = false }) {
   const linhas = [
@@ -1457,16 +1664,35 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
   const isCapitaoDivisao = posicaoHome === "capitao_ramo";
   const divisoesVisiveisPendencias = isLider ? divisoesOperacionais : (isCapitaoDivisao ? escoposOperacionaisHome.divisoes : []);
   const equipesVisiveisPendencias = isLider ? equipesOperacionais : (isCapitaoDivisao ? escoposOperacionaisHome.equipes : []);
-  const divisoesSemCapitao = divisoesVisiveisPendencias.filter(d => !d.capitaoUsername).length;
-  const equipesSemLider = equipesVisiveisPendencias.filter(e => !e.liderUsername).length;
-  const membrosPendentes = membrosFox.filter(u => u.iniciacaoStatus === "pendente").length;
-  const dossiesIncompletos = membrosFox.filter(u => !perfilCompletoUsuario(u)).length;
+  const divisoesSemCapitaoLista = divisoesVisiveisPendencias.filter(d => !d.capitaoUsername);
+  const equipesSemLiderLista = equipesVisiveisPendencias.filter(e => !e.liderUsername);
+  const membrosPendentesLista = membrosFox.filter(u => u.iniciacaoStatus === "pendente");
+  const membrosDossieIncompleto = membrosFox.filter(u => !perfilCompletoUsuario(u));
   const missoesRevisaoTodas = (data.missoes || []).filter(m => m.status === "revisao");
-  const missoesRevisao = isLider ? missoesRevisaoTodas.length : missoesRevisaoTodas.filter(m => !isCapitaoDivisao || !m.divisaoId || divisoesVisiveisPendencias.some(d => d.id === m.divisaoId)).length;
-  const contratosSemDesignacao = (data.contratos || []).filter(c => c.status === "Aberto" && !c.missaoId && !c.aceitoPor && !c.assignmentLabel).length;
-  const missoesSemRelatorio = (data.missoes || []).filter(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id) && (isLider || !isCapitaoDivisao || !m.divisaoId || divisoesVisiveisPendencias.some(d => d.id === m.divisaoId))).length;
-  const membrosSemEquipe = membrosFox.filter(u => !["lider", "conselheiro", "braco_direito", "fora", "oculto"].includes(estruturaPosicaoRole(roleOf(u))) && !trioDoUsuario(data, u.username)).length;
-  const propostas = (data.contratos || []).filter(c => c.status === "Proposta").length;
+  const missoesRevisaoLista = isLider ? missoesRevisaoTodas : missoesRevisaoTodas.filter(m => !isCapitaoDivisao || !m.divisaoId || divisoesVisiveisPendencias.some(d => d.id === m.divisaoId));
+  const contratosSemDesignacaoLista = (data.contratos || []).filter(c => c.status === "Aberto" && !c.missaoId && !c.aceitoPor && !c.assignmentLabel);
+  const missoesSemRelatorioLista = (data.missoes || []).filter(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id) && (isLider || !isCapitaoDivisao || !m.divisaoId || divisoesVisiveisPendencias.some(d => d.id === m.divisaoId)));
+  const membrosSemEquipeLista = membrosFox.filter(u => !["lider", "conselheiro", "braco_direito", "fora", "oculto"].includes(estruturaPosicaoRole(roleOf(u))) && !trioDoUsuario(data, u.username));
+  const propostasLista = (data.contratos || []).filter(c => c.status === "Proposta");
+  const divisoesSemCapitao = divisoesSemCapitaoLista.length;
+  const equipesSemLider = equipesSemLiderLista.length;
+  const membrosPendentes = membrosPendentesLista.length;
+  const dossiesIncompletos = membrosDossieIncompleto.length;
+  const missoesRevisao = missoesRevisaoLista.length;
+  const contratosSemDesignacao = contratosSemDesignacaoLista.length;
+  const missoesSemRelatorio = missoesSemRelatorioLista.length;
+  const membrosSemEquipe = membrosSemEquipeLista.length;
+  const propostas = propostasLista.length;
+  const membrosEquipesSemLider = Array.from(new Set(equipesSemLiderLista.flatMap(e => {
+    const div = divisoesOperacionais.find(d => d.id === e.divisaoId);
+    return [div?.capitaoUsername, ...(e.membros || []).map(m => m.username)].filter(Boolean);
+  })));
+  const participantesMissoesSemRelatorio = Array.from(new Set(missoesSemRelatorioLista.flatMap(m => [m.assignedTo, ...(m.participants || [])].filter(Boolean))));
+  const liderancaPodeCobrarPendencias = !!(isLider || role?.hasLeaderPerms || ["lider", "conselheiro", "braco_direito"].includes(posicaoHome));
+  const montarCobranca = (usernames, pendencia, motivo) => {
+    const lista = Array.from(new Set((usernames || []).filter(Boolean)));
+    return liderancaPodeCobrarPendencias && lista.length ? { usernames: lista, pendencia, motivo } : null;
+  };
 
   const prioridades = [];
   const addPrioridade = item => {
@@ -1482,13 +1708,13 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
   if (isLider) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Relatórios operacionais esperando decisão da liderança.", tab: "missoes", cor: "#A855F7" });
     if (propostas) addPrioridade({ titulo: `${propostas} ${propostas === 1 ? "proposta externa" : "propostas externas"}`, desc: "Contratos enviados aguardam análise.", tab: "jikkai", subTab: "contratos", cor: "#EF4444" });
-    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", subTab: "usuarios", action: "iniciacoes-pendentes", cor: "#F59E0B" });
-    if (missoesSemRelatorio) { const missaoSemRel = (data.missoes || []).find(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id)); addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações em andamento precisam de relatório para serem encerradas.", tab: "missoes", action: missaoSemRel ? `relatorio-missao:${missaoSemRel.id}` : "", cor: "#38BDF8" }); }
+    if (membrosPendentes) addPrioridade({ titulo: `${membrosPendentes} ${membrosPendentes === 1 ? "iniciação pendente" : "iniciações pendentes"}`, desc: "Novos membros ainda não concluíram o protocolo de entrada.", tab: "gerenciar", subTab: "usuarios", action: "iniciacoes-pendentes", cor: "#F59E0B", cobranca: montarCobranca(membrosPendentesLista.map(u => u.username), "Iniciação pendente", "Conclua o protocolo de entrada e finalize o juramento no portal.") });
+    if (missoesSemRelatorio) { const missaoSemRel = missoesSemRelatorioLista[0]; addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações em andamento precisam de relatório para serem encerradas.", tab: "missoes", action: missaoSemRel ? `relatorio-missao:${missaoSemRel.id}` : "", cor: "#38BDF8", cobranca: montarCobranca(participantesMissoesSemRelatorio, "Missão sem relatório", "Envie o relatório final da missão para que a liderança possa encerrar o pergaminho.") }); }
     if (contratosSemDesignacao) { const contratoPendente = (data.contratos || []).find(c => c.status === "Aberto" && !c.missaoId && !c.aceitoPor && !c.assignmentLabel); addPrioridade({ titulo: `${contratosSemDesignacao} ${contratosSemDesignacao === 1 ? "contrato aberto" : "contratos abertos"} sem designação`, desc: "Atribua uma divisão, equipe ou operador responsável.", tab: "jikkai", subTab: "contratos", action: contratoPendente ? `contrato-designar:${contratoPendente.id}` : "", cor: "#EF4444" }); }
     if (divisoesSemCapitao) addPrioridade({ titulo: `${divisoesSemCapitao} ${divisoesSemCapitao === 1 ? "divisão está" : "divisões estão"} sem Capitão`, desc: "Defina o Capitão responsável por cada divisão.", tab: "membros", subTab: "equipes", cor: "#DC2626" });
-    if (equipesSemLider) addPrioridade({ titulo: `${equipesSemLider} ${equipesSemLider === 1 ? "equipe está" : "equipes estão"} sem líder`, desc: "Defina um líder para as crews/equipes operacionais.", tab: "membros", subTab: "equipes", cor: "#F97316" });
-    if (membrosSemEquipe) addPrioridade({ titulo: `${membrosSemEquipe} membro${membrosSemEquipe === 1 ? "" : "s"} sem equipe`, desc: "Alocar membros nas crews deixa missões e contratos mais rápidos.", tab: "membros", subTab: "equipes", cor: "#A855F7" });
-    if (dossiesIncompletos) { const primeiroDossie = membrosFox.find(u => !perfilCompletoUsuario(u)); addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", action: primeiroDossie ? `dossie-usuario:${primeiroDossie.username}` : "", cor: "#CA8A04" }); }
+    if (equipesSemLider) addPrioridade({ titulo: `${equipesSemLider} ${equipesSemLider === 1 ? "equipe está" : "equipes estão"} sem líder`, desc: "Defina um líder para as crews/equipes operacionais.", tab: "membros", subTab: "equipes", cor: "#F97316", cobranca: montarCobranca(membrosEquipesSemLider, "Equipe sem líder", "A equipe precisa de líder operacional. Verifique sua divisão/equipe no portal.") });
+    if (membrosSemEquipe) addPrioridade({ titulo: `${membrosSemEquipe} membro${membrosSemEquipe === 1 ? "" : "s"} sem equipe`, desc: "Alocar membros nas crews deixa missões e contratos mais rápidos.", tab: "membros", subTab: "equipes", cor: "#A855F7", cobranca: montarCobranca(membrosSemEquipeLista.map(u => u.username), "Membro sem equipe", "Você ainda não está vinculado a uma equipe. Procure a liderança/capitão ou aguarde designação.") });
+    if (dossiesIncompletos) { const primeiroDossie = membrosDossieIncompleto[0]; addPrioridade({ titulo: `${dossiesIncompletos} dossiê${dossiesIncompletos === 1 ? "" : "s"} incompleto${dossiesIncompletos === 1 ? "" : "s"}`, desc: "Registros de membros precisam ser completados.", tab: "membros", subTab: "lista", action: primeiroDossie ? `dossie-usuario:${primeiroDossie.username}` : "", cor: "#CA8A04", cobranca: montarCobranca(membrosDossieIncompleto.map(u => u.username), "Dossiê incompleto", "Complete seu dossiê no portal para facilitar designações e registros da Jikkai.") }); }
   } else if (isCapitaoDivisao) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} revisão`, desc: "Relatórios da sua divisão precisam de decisão.", tab: "missoes", cor: "#A855F7" });
     if (missoesSemRelatorio) { const missaoSemRel = (data.missoes || []).find(m => ["aceita", "andamento"].includes(m.status) && !(data.relatorios || []).some(r => r.missaoId === m.id)); addPrioridade({ titulo: `${missoesSemRelatorio} ${missoesSemRelatorio === 1 ? "missão está" : "missões estão"} sem relatório`, desc: "Operações da sua divisão precisam ser registradas.", tab: "missoes", action: missaoSemRel ? `relatorio-missao:${missaoSemRel.id}` : "", cor: "#38BDF8" }); }
@@ -1522,6 +1748,31 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
 
   const navegar = item => onNavigate(item.tab, item.subTab || "", item.action || "");
   const pendenciasRapidas = prioridades.filter(p => p.titulo !== acaoPrincipal.titulo).slice(0, 5);
+  const [cobrancaStatus, setCobrancaStatus] = useState("");
+  const [cobrandoPendencia, setCobrandoPendencia] = useState("");
+  const cobrarPendencia = async (item, ev) => {
+    ev?.stopPropagation?.();
+    ev?.preventDefault?.();
+    if (!item?.cobranca?.usernames?.length) { setCobrancaStatus("Não há membros com vínculo direto para cobrar nesta pendência."); return; }
+    setCobrandoPendencia(item.titulo);
+    setCobrancaStatus("Enviando cobrança pelo Discord...");
+    try {
+      const responsaveis = item.cobranca.usernames.map(username => {
+        const u = (data.users || []).find(x => x.username === username);
+        return u ? getCodinome(u) : username;
+      }).join(", ");
+      const content = window.mensagemDiscordCobrancaPendencia(data, item.cobranca.pendencia || item.titulo, item.cobranca.motivo || item.desc, getCodinome(usuario), responsaveis);
+      const resultado = await window.notificarDiscordUsuarios(data, item.cobranca.usernames, "convocacao", content);
+      const ok = resultado.filter(r => r.ok).length;
+      const falhas = resultado.length - ok;
+      const detalhes = resultado.filter(r => !r.ok).map(r => r.reason).filter(Boolean).slice(0, 2).join(" | ");
+      setCobrancaStatus(`Cobrança enviada para ${ok} membro(s).${falhas ? ` Falhas: ${falhas}${detalhes ? ` — ${detalhes}` : ""}.` : ""}`);
+    } catch (e) {
+      setCobrancaStatus("Falha ao cobrar pendência: " + (e.message || e));
+    } finally {
+      setCobrandoPendencia("");
+    }
+  };
 
   const QuickCard = ({ icon: Icone, titulo, desc, badge, onClick, accent = "#EA580C" }) => (
     <button onClick={onClick} className="group rounded-xl border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900/80 hover:border-orange-700 transition-all p-4 text-left min-h-[118px] flex flex-col justify-between">
@@ -1571,21 +1822,43 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
                 <div className="text-[9px] uppercase tracking-[0.24em] text-zinc-600 mb-2">Pendências rápidas</div>
                 <div className="space-y-2">
                   {pendenciasRapidas.map((p, index) => (
-                    <button key={p.titulo + index} onClick={() => navegar(p)} className="w-full flex items-start gap-2 rounded-lg border border-zinc-800 bg-black/40 hover:border-orange-700 p-2.5 text-left transition-colors">
-                      <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.cor || "#EA580C", boxShadow: `0 0 10px ${p.cor || "#EA580C"}80` }} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-orange-50 text-xs font-black leading-tight">{p.titulo}</span>
-                        {p.desc && <span className="block text-[10px] text-zinc-600 mt-0.5 truncate">{p.desc}</span>}
-                      </span>
-                      <span className="text-zinc-700 text-sm leading-none mt-0.5">›</span>
-                    </button>
+                    <div key={p.titulo + index} className="rounded-lg border border-zinc-800 bg-black/40 hover:border-orange-700 transition-colors">
+                      <button onClick={() => navegar(p)} className="w-full flex items-start gap-2 p-2.5 text-left">
+                        <span className="mt-1 w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.cor || "#EA580C", boxShadow: `0 0 10px ${p.cor || "#EA580C"}80` }} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-orange-50 text-xs font-black leading-tight">{p.titulo}</span>
+                          {p.desc && <span className="block text-[10px] text-zinc-600 mt-0.5 truncate">{p.desc}</span>}
+                        </span>
+                        <span className="text-zinc-700 text-sm leading-none mt-0.5">›</span>
+                      </button>
+                      {p.cobranca && (
+                        <div className="px-2.5 pb-2.5 pl-6 flex items-center justify-between gap-2">
+                          <span className="text-[9px] text-zinc-700 uppercase tracking-wider">{p.cobranca.usernames.length} destinatário{p.cobranca.usernames.length === 1 ? "" : "s"}</span>
+                          <button onClick={(ev) => cobrarPendencia(p, ev)} disabled={cobrandoPendencia === p.titulo} className="px-2.5 py-1.5 rounded border border-red-900/60 bg-red-950/25 text-red-300 hover:border-red-500 hover:text-red-100 text-[9px] uppercase tracking-wider font-black disabled:opacity-50">
+                            {cobrandoPendencia === p.titulo ? "Enviando..." : "Cobrar DM"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
+                {cobrancaStatus && <div className="mt-3 rounded-lg border border-indigo-900/50 bg-indigo-950/15 p-2 text-[10px] text-indigo-200 leading-relaxed">{cobrancaStatus}</div>}
               </div>
             )}
           </div>
         </div>
       </section>
+
+      {isCapitaoDivisao && (
+        <CapitaoDashboard
+          data={data}
+          usuario={usuario}
+          role={role}
+          onAbrirComando={() => onNavigate("missoes", "", "abrir-comando")}
+          onAbrirMinhas={() => onNavigate("missoes", "", "minhas-missoes")}
+          onNavigate={onNavigate}
+        />
+      )}
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <QuickCard icon={IClipboard} titulo="Minhas Missões" desc="Aceite, acompanhe objetivos e envie relatório final." badge={minhasMissoes.length ? `${minhasMissoes.length} ativa${minhasMissoes.length === 1 ? "" : "s"}` : "0 ativa"} onClick={() => onNavigate("missoes")} accent="#A855F7" />
@@ -2429,6 +2702,22 @@ function DossieModal({ membro, data, onClose }) {
     ["Selo de acesso", `Nível ${membro.nivelAcesso || 1}`],
     ["Discord", membro.discordVerificado && membro.discordId ? `${discordNomeExibicao(membro)} · ${membro.discordId}` : "Não verificado"],
   ];
+  const camposShinobi = [
+    ["Graduacao shinobi", membro.graduacaoShinobi || "Nao definida"],
+    ["Registro shinobi", membro.registroShinobi || "Nao definido"],
+    ["Natureza secundaria", membro.naturezaChakraSecundaria || "Nao definida"],
+    ["Tecnica assinatura", membro.tecnicaAssinatura || "Nao definida"],
+    ["Invocacao / pacto", membro.invocacao || "Nao definido"],
+    ["Status nukenin", membro.statusNukenin || "Nao definido"],
+  ];
+  const camposBingoBook = [
+    ["Status", membro.bingoBookStatus || "Nao listado"],
+    ["Periculosidade", membro.bingoBookPericulosidade || "Baixa"],
+    ["Alcunha", membro.bingoBookAlcunha || "Sem alcunha"],
+    ["Recompensa", membro.bingoBookRecompensa || "Nao definida"],
+    ["Ultima localizacao", membro.bingoBookUltimaLocalizacao || "Nao definida"],
+    ["Motivo", membro.bingoBookMotivo || "Nao definido"],
+  ];
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
       {scannerAtivo && <DossieScanOverlay membro={membro} />}
@@ -2483,6 +2772,16 @@ function DossieModal({ membro, data, onClose }) {
             <div className="rounded-xl border border-zinc-800 bg-black/45 p-4">
               <div className="text-[10px] uppercase tracking-[0.25em] text-orange-600 mb-3">Uso em missões/equipes</div>
               <div className="grid sm:grid-cols-2 gap-2">{camposOperacionais.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-sky-900/40 bg-sky-950/10 p-4">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-sky-400 mb-3">Ficha shinobi</div>
+              <div className="grid sm:grid-cols-2 gap-2">{camposShinobi.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
+            </div>
+            <div className="rounded-xl border border-red-900/40 bg-red-950/10 p-4">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-red-400 mb-3">Bingo Book</div>
+              <div className="grid sm:grid-cols-2 gap-2">{camposBingoBook.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
             </div>
           </div>
           <DiscordSealStatus usuario={membro} />
@@ -2546,6 +2845,18 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     funcaoPreferida: membro.funcaoPreferida || vinculo?.papel || "",
     estiloCombate: membro.estiloCombate || "",
     equipamentoPrincipal: membro.equipamentoPrincipal || "",
+    graduacaoShinobi: membro.graduacaoShinobi || "",
+    registroShinobi: membro.registroShinobi || "",
+    naturezaChakraSecundaria: membro.naturezaChakraSecundaria || "",
+    tecnicaAssinatura: membro.tecnicaAssinatura || "",
+    invocacao: membro.invocacao || "",
+    statusNukenin: membro.statusNukenin || "",
+    bingoBookStatus: membro.bingoBookStatus || "Nao listado",
+    bingoBookAlcunha: membro.bingoBookAlcunha || "",
+    bingoBookRecompensa: membro.bingoBookRecompensa || "",
+    bingoBookPericulosidade: membro.bingoBookPericulosidade || "Baixa",
+    bingoBookMotivo: membro.bingoBookMotivo || "",
+    bingoBookUltimaLocalizacao: membro.bingoBookUltimaLocalizacao || "",
     discordDmMissoes: membro.discordDmMissoes !== false,
     discordDmContratos: membro.discordDmContratos !== false,
     discordDmRelatorios: membro.discordDmRelatorios !== false,
@@ -2623,7 +2934,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
       setData(d => {
         const auto = sugestoesDossieAutomaticas(d, membro);
         const formFinal = { ...form };
-        ["nomeRP", "linhagem", "especialidade", "funcaoPreferida", "estiloCombate", "equipamentoPrincipal"].forEach(campo => {
+        ["nomeRP", "linhagem", "especialidade", "funcaoPreferida", "estiloCombate", "equipamentoPrincipal", "graduacaoShinobi"].forEach(campo => {
           if (!String(formFinal[campo] || "").trim() && String(auto[campo] || "").trim()) formFinal[campo] = auto[campo];
         });
         const atualizado = normalizarMembro({ ...membro, ...formFinal, avatarUrl, avatarStoragePath });
@@ -2642,6 +2953,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
 
   const abas = [
     { id: "essencial", label: "Essencial", icon: IUsers },
+    { id: "shinobi", label: "Shinobi", icon: IBook },
     { id: "operacional", label: "Operação", icon: ISwords },
   ];
   const camposFaltando = progresso.faltando.slice(0, 4);
@@ -2729,6 +3041,33 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               </div>
             )}
             <div className="mt-4 p-3 rounded border border-yellow-900/40 bg-yellow-950/10 text-yellow-600 text-xs">Preencha só o que depende de você. Cargo, divisão, equipe, capitão, histórico e timeline são puxados automaticamente pelo portal.</div>
+            {aba === "shinobi" && (
+              <div className="space-y-4 fadein">
+                <div className="rounded-xl border border-sky-900/35 bg-sky-950/10 p-3">
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-sky-400 font-black mb-3">Ficha shinobi</div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div><label className="fox-label">Graduacao shinobi</label><input value={form.graduacaoShinobi} onChange={e => setCampo("graduacaoShinobi", e.target.value)} className="fox-input" placeholder="Ex.: Genin, Chunin, Jonin, Nukenin..." /><div className="flex flex-wrap gap-1 mt-2">{["Genin", "Chunin", "Jonin", "ANBU", "Nukenin"].map(v => <React.Fragment key={v}>{chip("graduacaoShinobi", v)}</React.Fragment>)}</div></div>
+                    <div><label className="fox-label">Registro shinobi</label><input value={form.registroShinobi} onChange={e => setCampo("registroShinobi", e.target.value)} className="fox-input" placeholder="Matricula, alcunha oficial ou registro interno" /></div>
+                    <div><label className="fox-label">Natureza secundaria</label><input value={form.naturezaChakraSecundaria} onChange={e => setCampo("naturezaChakraSecundaria", e.target.value)} className="fox-input" placeholder="Ex.: Suiton, Yin, Yang..." /></div>
+                    <div><label className="fox-label">Status nukenin</label><input value={form.statusNukenin} onChange={e => setCampo("statusNukenin", e.target.value)} className="fox-input" placeholder="Ex.: limpo, suspeito, renegado..." /><div className="flex flex-wrap gap-1 mt-2">{["Limpo", "Suspeito", "Renegado", "Exilado"].map(v => <React.Fragment key={v}>{chip("statusNukenin", v)}</React.Fragment>)}</div></div>
+                    <div><label className="fox-label">Tecnica assinatura</label><input value={form.tecnicaAssinatura} onChange={e => setCampo("tecnicaAssinatura", e.target.value)} className="fox-input" placeholder="Jutsu, estilo ou tecnica pela qual e conhecido" /></div>
+                    <div><label className="fox-label">Invocacao / pacto</label><input value={form.invocacao} onChange={e => setCampo("invocacao", e.target.value)} className="fox-input" placeholder="Ex.: cobras, corvos, contrato vazio..." /></div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-red-900/35 bg-red-950/10 p-3">
+                  <div className="text-[9px] uppercase tracking-[0.22em] text-red-400 font-black mb-3">Bingo Book</div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div><label className="fox-label">Status no Bingo Book</label><select value={form.bingoBookStatus} onChange={e => setCampo("bingoBookStatus", e.target.value)} className="fox-input"><option>Nao listado</option><option>Monitorado</option><option>Procurado</option><option>Capturar vivo</option><option>Eliminar</option><option>Prioridade maxima</option></select></div>
+                    <div><label className="fox-label">Periculosidade</label><select value={form.bingoBookPericulosidade} onChange={e => setCampo("bingoBookPericulosidade", e.target.value)} className="fox-input"><option>Baixa</option><option>Media</option><option>Alta</option><option>Critica</option><option>S-rank</option></select></div>
+                    <div><label className="fox-label">Alcunha no livro</label><input value={form.bingoBookAlcunha} onChange={e => setCampo("bingoBookAlcunha", e.target.value)} className="fox-input" placeholder="Ex.: Nevoa Rubra, Raposa Negra..." /></div>
+                    <div><label className="fox-label">Recompensa</label><input value={form.bingoBookRecompensa} onChange={e => setCampo("bingoBookRecompensa", e.target.value)} className="fox-input" placeholder="Ex.: 80.000 Yens" /></div>
+                    <div><label className="fox-label">Ultima localizacao</label><input value={form.bingoBookUltimaLocalizacao} onChange={e => setCampo("bingoBookUltimaLocalizacao", e.target.value)} className="fox-input" placeholder="Ex.: fronteira de Kiri" /></div>
+                    <div><label className="fox-label">Motivo / acusacao</label><input value={form.bingoBookMotivo} onChange={e => setCampo("bingoBookMotivo", e.target.value)} className="fox-input" placeholder="Ex.: desercao, sabotagem, espionagem..." /></div>
+                  </div>
+                </div>
+              </div>
+            )}
             {erro && <div className="mt-3 p-3 rounded border border-red-800 bg-red-950/30 text-red-300 text-sm">{erro}</div>}
           </section>
         </div>
@@ -2776,6 +3115,7 @@ function MembrosListSection({ data, viewerIsContratante, onOpen }) {
                   </div>
                   <div className="text-xs mt-2" style={{ color: role?.cor }}>{u.patente || role?.nome || u.role}</div>
                   <div className="text-zinc-600 text-xs mt-1 truncate">{u.especialidade || "Especialidade pendente"}{u.funcaoPreferida ? ` · ${u.funcaoPreferida}` : ""}</div>
+                  <div className="text-zinc-700 text-[10px] mt-1 truncate">{u.graduacaoShinobi || "Graduacao pendente"}{u.bingoBookStatus && u.bingoBookStatus !== "Nao listado" ? ` - Bingo: ${u.bingoBookStatus}` : ""}</div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     <ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto />
                     <ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto />
@@ -3385,8 +3725,10 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
   ];
   return (
     <div>
-      <SectionTitle icon={IUsers} sub="Dossiês operacionais, estrutura, divisões e equipes da Jikkai." action={<Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>}>Membros</SectionTitle>
-      <div className="mb-8 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
+      <div className="mb-3 flex justify-end">
+        <Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>
+      </div>
+      <div className="mb-5 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
             <I className="w-4 h-4" /><span>{t.label}</span>{t.badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${active ? "bg-black/40 text-white" : "bg-orange-600 text-black"}`}>{t.badge}</span>}
@@ -3536,18 +3878,9 @@ function TriosSection({ data, setData, podeEditar, role, usuario }) {
 
   return (
     <div className="fadein space-y-5">
-      <div className="relative overflow-hidden rounded-2xl border border-orange-900/40 bg-gradient-to-br from-black via-zinc-950 to-red-950/20 p-5">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 relative">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Divisões & Equipes</div>
-            <h3 className="text-2xl sm:text-3xl font-black text-orange-50 serif mt-1">Comando operacional</h3>
-            <p className="text-zinc-500 text-sm mt-2 max-w-3xl">Capitães constroem equipes dentro da própria divisão. Soldados executam. Recrutas e associados ficam abaixo, com selo e responsabilidade menores.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {podeEditar && !editando && <Btn onClick={() => setEditando(true)} variant="primary"><IEdit className="w-3 h-3" /> Editar estrutura</Btn>}
-            {editando && <><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></>}
-          </div>
-        </div>
+      <div className="flex justify-end flex-wrap gap-2">
+        {podeEditar && !editando && <Btn onClick={() => setEditando(true)} variant="primary"><IEdit className="w-3 h-3" /> Editar estrutura</Btn>}
+        {editando && <><Btn onClick={cancelar} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn><Btn onClick={salvar} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn></>}
       </div>
 
       {editando && podeEditar && <section className="rounded-2xl border border-orange-900/45 bg-gradient-to-br from-zinc-950 via-black to-red-950/10 overflow-hidden">
@@ -3989,6 +4322,13 @@ const MISSAO_STATUS_CFG = {
 };
 
 const MISSAO_STATUS_TERMINAIS = ["concluida", "falhou", "recusada", "arquivada"];
+const MISSAO_KANBAN_COLUNAS = [
+  { id: "entrada", label: "Atribuidas", desc: "Operacoes recem seladas, aguardando aceite.", statuses: ["atribuida", "pendente"], tone: "border-zinc-800 bg-zinc-950/70" },
+  { id: "aceite", label: "Aceitas", desc: "Celula confirmou presenca e esta pronta.", statuses: ["aceita"], tone: "border-blue-900/60 bg-blue-950/15" },
+  { id: "campo", label: "Em campo", desc: "Operadores ja iniciaram a missao.", statuses: ["andamento"], tone: "border-orange-900/70 bg-orange-950/15" },
+  { id: "revisao", label: "Revisao", desc: "Relatorio final, ajustes ou decisao da lideranca.", statuses: ["revisao", "devolvida"], tone: "border-purple-900/60 bg-purple-950/15" },
+  { id: "encerrada", label: "Encerradas", desc: "Concluidas, falhas, recusadas ou arquivadas.", statuses: ["concluida", "falhou", "recusada", "arquivada"], tone: "border-zinc-800 bg-black/45" },
+];
 
 function participantesDaMissao(missao) {
   return Array.from(new Set([...(Array.isArray(missao?.participants) ? missao.participants : []), missao?.assignedTo].filter(Boolean)));
@@ -4807,6 +5147,35 @@ function categoriaContratoLabel(id) {
   return CONTRATO_CATEGORIAS.find(c => c.id === id)?.label || "Contrato Geral";
 }
 
+function ContratoStatusTrail({ status }) {
+  const passos = [
+    { id: "Proposta", label: "Proposta" },
+    { id: "Aberto", label: "Analise" },
+    { id: "Em Andamento", label: "Execucao" },
+    { id: "Concluído", label: "Conclusao" },
+  ];
+  const ordem = status === "Recusado" ? 1 : status === "Falhou" ? 3 : Math.max(0, passos.findIndex(p => p.id === status));
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-black/40 p-3">
+      <div className="grid grid-cols-4 gap-2">
+        {passos.map((p, i) => {
+          const ativo = i <= ordem && status !== "Recusado";
+          const atual = p.id === status || (status === "Aberto" && p.id === "Aberto") || (status === "Falhou" && p.id === "Em Andamento");
+          return (
+            <div key={p.id} className="min-w-0">
+              <div className={`h-1.5 rounded-full ${ativo ? "bg-orange-600" : "bg-zinc-800"}`} />
+              <div className={`text-[9px] uppercase tracking-wider mt-1 truncate ${atual ? "text-orange-300 font-black" : ativo ? "text-zinc-300" : "text-zinc-700"}`}>{p.label}</div>
+            </div>
+          );
+        })}
+      </div>
+      {(status === "Recusado" || status === "Falhou") && (
+        <div className="text-[10px] uppercase tracking-wider text-red-400 mt-3">{status === "Recusado" ? "Proposta recusada pela lideranca" : "Operacao encerrada como falha"}</div>
+      )}
+    </div>
+  );
+}
+
 function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   const editando = !!contrato?.id;
   const [titulo, setTitulo] = useState(contrato?.titulo || "");
@@ -4820,6 +5189,8 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   const [limites, setLimites] = useState(contrato?.limites || "");
   const [prazo, setPrazo] = useState(contrato?.prazo || "");
   const [observacoes, setObservacoes] = useState(contrato?.observacoes || "");
+  const wizardContratante = viewerIsContratante && !editando;
+  const [wizardStep, setWizardStep] = useState(1);
 
   const aplicarCategoriaContrato = (cat) => {
     setCategoriaContrato(cat.id);
@@ -4851,6 +5222,151 @@ function ContratoModal({ contrato, onSave, onClose, viewerIsContratante }) {
   const tituloModal = editando
     ? "Editar Contrato"
     : (viewerIsContratante ? "Solicitar Contrato à Jikkai" : "Forjar Novo Contrato");
+
+  const wizardSteps = [
+    { id: 1, label: "Servico" },
+    { id: 2, label: "Alvo" },
+    { id: 3, label: "Termos" },
+    { id: 4, label: "Revisao" },
+  ];
+  const wizardStepValido =
+    wizardStep === 1 ? !!categoriaContrato :
+    wizardStep === 2 ? !!(titulo.trim() && descricaoCurta.trim()) :
+    wizardStep === 3 ? Number(valorRecompensa) > 0 :
+    valido;
+  const avancarWizard = () => {
+    if (!wizardStepValido) return;
+    setWizardStep(s => Math.min(4, s + 1));
+  };
+
+  if (wizardContratante) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
+        <div className="bg-zinc-950 border border-orange-700 rounded-xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="p-5 border-b border-orange-900/50 flex items-center justify-between sticky top-0 bg-zinc-950 z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <IBriefcase className="w-6 h-6 text-orange-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.32em] text-orange-700">Pergaminho de contrato</div>
+                <h3 className="text-xl font-bold text-orange-50 serif truncate">Solicitar servico a Jikkai</h3>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+          </div>
+
+          <div className="p-5 space-y-5">
+            <div className="grid grid-cols-4 gap-2">
+              {wizardSteps.map(s => (
+                <button key={s.id} type="button" onClick={() => s.id < wizardStep && setWizardStep(s.id)} className={`rounded-lg border px-2 py-2 text-[10px] uppercase tracking-wider font-black ${wizardStep === s.id ? "border-orange-500 bg-orange-950/40 text-orange-100" : s.id < wizardStep ? "border-green-900/60 bg-green-950/10 text-green-300" : "border-zinc-800 bg-black/30 text-zinc-600"}`}>
+                  <span className="block text-xs">{String(s.id).padStart(2, "0")}</span>{s.label}
+                </button>
+              ))}
+            </div>
+
+            {wizardStep === 1 && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-orange-50 font-black serif text-lg">Que tipo de servico voce quer contratar?</div>
+                  <p className="text-zinc-500 text-sm mt-1">Escolha o pergaminho mais proximo. Ele preenche um modelo que voce ajusta nos proximos passos.</p>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {CONTRATO_CATEGORIAS.map(cat => (
+                    <button key={cat.id} type="button" onClick={() => aplicarCategoriaContrato(cat)} className={`text-left rounded-xl border p-4 transition-colors ${categoriaContrato === cat.id ? "border-orange-500 bg-orange-950/40" : "border-zinc-800 bg-black/30 hover:border-orange-700"}`}>
+                      <div className="text-orange-200 font-black text-xs uppercase tracking-wider">{cat.label}</div>
+                      <div className="text-[11px] text-zinc-500 leading-snug mt-2">{cat.desc}</div>
+                      <div className="mt-3 text-[10px] uppercase tracking-wider text-zinc-600">Risco estimado: <span className="text-orange-300">{cat.dificuldade}</span></div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-orange-50 font-black serif text-lg">Descreva o alvo e a finalidade</div>
+                  <p className="text-zinc-500 text-sm mt-1">Use nomes, vila, local provavel, motivo e qualquer informacao que ajude a Jikkai a avaliar o risco.</p>
+                </div>
+                <div>
+                  <label className="fox-label">Titulo do contrato *</label>
+                  <input value={titulo} onChange={(e) => setTitulo(e.target.value)} className="fox-input" placeholder="Ex: capturar informante de Konoha" autoFocus />
+                </div>
+                <div>
+                  <label className="fox-label">Resumo para o card *</label>
+                  <input value={descricaoCurta} onChange={(e) => setDescCurta(e.target.value)} className="fox-input" placeholder="Uma frase objetiva sobre o pedido" />
+                </div>
+                <div>
+                  <label className="fox-label">Detalhes operacionais</label>
+                  <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows="7" className="fox-input" placeholder="Alvo, ultima localizacao, vila, motivacao, risco conhecido, contato e condicoes de entrega..." />
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-orange-50 font-black serif text-lg">Defina recompensa, prazo e limites</div>
+                  <p className="text-zinc-500 text-sm mt-1">A proposta entra como pendente. A lideranca pode aceitar, recusar ou negociar pelos comentarios do contrato.</p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="fox-label">Valor oferecido (Yens)</label>
+                    <input type="number" value={valorRecompensa} onChange={(e) => setValor(e.target.value)} className="fox-input" placeholder="Ex: 2500" />
+                  </div>
+                  <div>
+                    <label className="fox-label">Dificuldade estimada</label>
+                    <select value={dificuldade} onChange={(e) => setDificuldade(e.target.value)} className="fox-input">
+                      <option>Fácil</option><option>Médio</option><option>Difícil</option><option>Letal</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="fox-label">Limites e restricoes</label>
+                  <textarea value={limites} onChange={(e) => setLimites(e.target.value)} rows="4" className="fox-input" placeholder="Ex: sem baixas civis, sem testemunhas, capturar vivo, evitar determinada vila..." />
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="fox-label">Prazo desejado</label>
+                    <input value={prazo} onChange={(e) => setPrazo(e.target.value)} className="fox-input" placeholder="Ex: ate o proximo domingo" />
+                  </div>
+                  <div>
+                    <label className="fox-label">Observacoes extras</label>
+                    <input value={observacoes} onChange={(e) => setObservacoes(e.target.value)} className="fox-input" placeholder="Notas adicionais" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {wizardStep === 4 && (
+              <div className="space-y-4">
+                <div>
+                  <div className="text-orange-50 font-black serif text-lg">Revise antes de selar</div>
+                  <p className="text-zinc-500 text-sm mt-1">Depois do envio, voce acompanha o status nesta mesma aba e negocia pelos detalhes do contrato.</p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="fox-label">Categoria</div><div className="text-orange-100 font-bold">{categoriaContratoLabel(categoriaContrato)}</div></div>
+                  <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="fox-label">Oferta</div><div className="text-orange-100 font-bold">{Number(valorRecompensa || 0).toLocaleString("pt-BR")} Yens</div></div>
+                  <div className="p-3 rounded-lg border border-zinc-800 bg-black/40 sm:col-span-2"><div className="fox-label">Titulo</div><div className="text-orange-100 font-bold">{titulo || "Sem titulo"}</div><div className="text-zinc-500 text-sm mt-1">{descricaoCurta || "Sem resumo"}</div></div>
+                  <div className="p-3 rounded-lg border border-zinc-800 bg-black/40 sm:col-span-2"><div className="fox-label">Detalhes</div><div className="text-zinc-300 text-sm whitespace-pre-wrap">{descricao || "Sem detalhes adicionais."}</div></div>
+                  {(limites || prazo || observacoes) && <div className="p-3 rounded-lg border border-orange-900/40 bg-orange-950/10 sm:col-span-2"><div className="fox-label">Termos</div><div className="text-zinc-300 text-sm whitespace-pre-wrap">{[limites && `Limites: ${limites}`, prazo && `Prazo: ${prazo}`, observacoes && `Notas: ${observacoes}`].filter(Boolean).join("\n")}</div></div>}
+                </div>
+                <ContratoStatusTrail status="Proposta" />
+              </div>
+            )}
+          </div>
+
+          <div className="p-5 border-t border-zinc-800 flex gap-2 justify-between sticky bottom-0 bg-zinc-950 flex-wrap">
+            <Btn onClick={wizardStep === 1 ? onClose : () => setWizardStep(s => Math.max(1, s - 1))} variant="ghost"><IX className="w-3 h-3" /> {wizardStep === 1 ? "Cancelar" : "Voltar"}</Btn>
+            {wizardStep < 4 ? (
+              <Btn onClick={avancarWizard} variant="primary" disabled={!wizardStepValido}><ICheck className="w-3 h-3" /> Proximo</Btn>
+            ) : (
+              <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> Enviar proposta</Btn>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fadein" onClick={onClose}>
@@ -5035,6 +5551,8 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
   const [modal, setModal] = useState(null);
   const [relatorioContrato, setRelatorioContrato] = useState(null);
   const [designarContrato, setDesignarContrato] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
+  const [aviso, setAviso] = useState(null);
   const [filtro, setFiltro] = useState("Todos");
   const [expandido, setExpandido] = useState(null);
   const [novaMsgPorContrato, setNovaMsgPorContrato] = useState({});
@@ -5108,7 +5626,11 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
   const deletar = (id) => {
     const contratoAtual = (data.contratos || []).find(c => c.id === id);
     if (!contratoAtual) {
-      alert("Contrato não encontrado. Recarregue a página e tente novamente.");
+      setAviso({
+        title: "Contrato nao encontrado",
+        message: "Recarregue a pagina e tente novamente.",
+        tone: "danger",
+      });
       return;
     }
 
@@ -5118,52 +5640,67 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
       ? `\n\nEste contrato possui ${missoesVinculadas} missão(ões) e ${relatoriosVinculados} relatório(s) vinculados. Eles serão mantidos, mas o vínculo com o contrato será removido para não quebrar o histórico.`
       : "";
 
-    if (!confirm(`Deletar o contrato "${contratoAtual.titulo}"? Esta ação não pode ser desfeita.${avisoVinculos}`)) return;
-
-    setData(d => {
-      const contratoAlvo = (d.contratos || []).find(c => c.id === id);
-      if (!contratoAlvo) return d;
-      const removidoEm = new Date().toISOString();
-      return {
-        ...d,
-        contratos: (d.contratos || []).filter(c => c.id !== id),
-        missoes: (d.missoes || []).map(m => m.contratoId === id ? {
-          ...m,
-          contratoId: null,
-          contratoRemovidoTitulo: contratoAlvo.titulo,
-          contratoRemovidoEm: removidoEm,
-          source: m.source === "contrato" ? "manual" : m.source,
-        } : m),
-        relatorios: (d.relatorios || []).map(r => r.contratoId === id ? {
-          ...r,
-          contratoId: "",
-          contratoTitulo: r.contratoTitulo || contratoAlvo.titulo,
-          contratoRemovido: true,
-          contratoRemovidoEm: removidoEm,
-        } : r),
-        activityLog: [...(d.activityLog || []), atividade("contrato_removido", usuario?.username, id, "Removeu o contrato " + contratoAlvo.titulo)],
-      };
+    setConfirmacao({
+      title: `Deletar "${contratoAtual.titulo}"?`,
+      message: `Esta acao nao pode ser desfeita.${avisoVinculos}`,
+      tone: "danger",
+      confirmLabel: "Deletar",
+      onConfirm: () => {
+        setData(d => {
+          const contratoAlvo = (d.contratos || []).find(c => c.id === id);
+          if (!contratoAlvo) return d;
+          const removidoEm = new Date().toISOString();
+          return {
+            ...d,
+            contratos: (d.contratos || []).filter(c => c.id !== id),
+            missoes: (d.missoes || []).map(m => m.contratoId === id ? {
+              ...m,
+              contratoId: null,
+              contratoRemovidoTitulo: contratoAlvo.titulo,
+              contratoRemovidoEm: removidoEm,
+              source: m.source === "contrato" ? "manual" : m.source,
+            } : m),
+            relatorios: (d.relatorios || []).map(r => r.contratoId === id ? {
+              ...r,
+              contratoId: "",
+              contratoTitulo: r.contratoTitulo || contratoAlvo.titulo,
+              contratoRemovido: true,
+              contratoRemovidoEm: removidoEm,
+            } : r),
+            activityLog: [...(d.activityLog || []), atividade("contrato_removido", usuario?.username, id, "Removeu o contrato " + contratoAlvo.titulo)],
+          };
+        });
+        setExpandido(prev => prev === id ? null : prev);
+        setDesignarContrato(prev => prev?.id === id ? null : prev);
+        setRelatorioContrato(prev => prev?.contratoId === id ? null : prev);
+      },
     });
-
-    setExpandido(prev => prev === id ? null : prev);
-    setDesignarContrato(prev => prev?.id === id ? null : prev);
-    setRelatorioContrato(prev => prev?.contratoId === id ? null : prev);
   };
 
   const aprovarProposta = (id) => {
-    if (!confirm("Aprovar esta proposta? Ela ficará aberta para os operadores aceitarem.")) return;
-    setData(d => ({
-      ...d,
-      contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Aberto", aprovadoEm: new Date().toISOString(), aprovadoPor: usuario?.username } : c),
-    }));
+    setConfirmacao({
+      title: "Aprovar proposta?",
+      message: "Ela ficara aberta para os operadores aceitarem ou para a lideranca designar uma equipe.",
+      tone: "success",
+      confirmLabel: "Aprovar",
+      onConfirm: () => setData(d => ({
+        ...d,
+        contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Aberto", aprovadoEm: new Date().toISOString(), aprovadoPor: usuario?.username } : c),
+      })),
+    });
   };
 
   const recusarProposta = (id) => {
-    if (!confirm("Recusar esta proposta?")) return;
-    setData(d => ({
-      ...d,
-      contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Recusado", recusadoEm: new Date().toISOString() } : c),
-    }));
+    setConfirmacao({
+      title: "Recusar proposta?",
+      message: "O contratante deixara de ver esta proposta entre contratos ativos.",
+      tone: "danger",
+      confirmLabel: "Recusar",
+      onConfirm: () => setData(d => ({
+        ...d,
+        contratos: d.contratos.map(c => c.id === id ? { ...c, status: "Recusado", recusadoEm: new Date().toISOString() } : c),
+      })),
+    });
   };
 
   const adicionarNegociacao = (contratoId) => {
@@ -5196,7 +5733,14 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
 
   const criarMissaoDeContrato = (contrato, config) => {
     const participantes = Array.from(new Set((config.participants || []).filter(Boolean)));
-    if (!participantes.length) { alert("Nenhum operador selecionado para este contrato."); return; }
+    if (!participantes.length) {
+      setAviso({
+        title: "Nenhum operador selecionado",
+        message: "Escolha uma equipe, divisao ou operador antes de converter o contrato em missao.",
+        tone: "danger",
+      });
+      return;
+    }
     const missaoId = uid();
     const objetivos = (config.objetivosText || "").split("\n").map(s => s.trim()).filter(Boolean).map(text => ({ text, done: false }));
     const novaMissao = {
@@ -5240,20 +5784,29 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
       } : c),
       activityLog: [...(d.activityLog || []), atividade("contrato_designado", usuario?.username, contrato.id, "Designou contrato para " + novaMissao.assignmentLabel)],
     }));
-    notificarDiscordUsuarios(data, participantes, "contrato", mensagemDiscordMissao(data, novaMissao, "contrato"));
+    window.notificarDiscordUsuarios(data, participantes, "contrato", mensagemDiscordMissao(data, novaMissao, "contrato"));
     setDesignarContrato(null);
-    alert("Contrato convertido em missão. A equipe deverá confirmar participação e enviar relatório final para encerrar.");
+    setAviso({
+      title: "Contrato convertido em missao",
+      message: "A equipe devera confirmar participacao e enviar relatorio final para encerrar a operacao.",
+      tone: "success",
+    });
   };
 
   const aceitar = (contrato) => {
-    if (!confirm(`Aceitar o contrato "${contrato.titulo}"? Será criada uma missão atribuída a você.`)) return;
-    criarMissaoDeContrato(contrato, {
-      attributionType: "membro",
-      targetId: usuario.username,
-      participants: [usuario.username],
-      sigilo: "Restrito",
-      objetivosText: "Executar o contrato conforme limites definidos\nEnviar relatório final",
-      assignmentLabel: escopoOperacionalLabel(data, "membro", usuario.username, "Operador individual"),
+    setConfirmacao({
+      title: `Aceitar "${contrato.titulo}"?`,
+      message: "Uma missao sera criada e atribuida a voce. Ao concluir, envie o relatorio final.",
+      tone: "success",
+      confirmLabel: "Aceitar contrato",
+      onConfirm: () => criarMissaoDeContrato(contrato, {
+        attributionType: "membro",
+        targetId: usuario.username,
+        participants: [usuario.username],
+        sigilo: "Restrito",
+        objetivosText: "Executar o contrato conforme limites definidos\nEnviar relatorio final",
+        assignmentLabel: escopoOperacionalLabel(data, "membro", usuario.username, "Operador individual"),
+      }),
     });
   };
 
@@ -5265,10 +5818,54 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
   const podeCriar = isLider || viewerIsContratante;
   const tituloHeader = viewerIsContratante ? "Contratos & Propostas" : "Contratos Jikkai";
   const labelBotaoCriar = viewerIsContratante ? "Solicitar Contrato" : "Forjar Contrato";
+  const meusContratos = viewerIsContratante ? todosBruto.filter(c => c.criadoPor === usuario?.username) : [];
+  const ultimoContrato = meusContratos[0];
+  const contratosEmNegociacao = meusContratos.filter(c => ["Proposta", "Aberto"].includes(c.status)).length;
+  const contratosEmOperacao = meusContratos.filter(c => c.status === "Em Andamento").length;
+  const contratosFinalizados = meusContratos.filter(c => ["Concluído", "Falhou"].includes(c.status)).length;
+  const proximaAcaoContratante = ultimoContrato
+    ? (ultimoContrato.status === "Proposta" ? "Aguardando analise da lideranca"
+      : ultimoContrato.status === "Aberto" ? "Proposta aprovada. Aguarde designacao ou negociacao"
+      : ultimoContrato.status === "Em Andamento" ? "Operacao em andamento"
+      : ultimoContrato.status === "Concluído" ? "Contrato concluido"
+      : ultimoContrato.status === "Falhou" ? "Contrato encerrado como falha"
+      : "Proposta recusada")
+    : "Abra sua primeira proposta para a Jikkai.";
 
   return (
     <div className="fadein">
-      {podeCriar && <div className="flex justify-end mb-4"><Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> {labelBotaoCriar}</Btn></div>}
+      {viewerIsContratante ? (
+        <div className="mb-6 rounded-xl border border-orange-900/50 bg-gradient-to-br from-orange-950/20 via-black to-zinc-950 p-5 overflow-hidden">
+          <div className="flex flex-col lg:flex-row gap-5 lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.32em] text-orange-600">Mesa de contratos</div>
+              <h3 className="text-2xl font-black text-orange-50 serif mt-1">Solicite, negocie e acompanhe</h3>
+              <p className="text-zinc-500 text-sm mt-2 max-w-2xl">Cada proposta fica registrada como um pergaminho. A lideranca avalia, responde pela negociacao e pode converter o pedido em operacao.</p>
+            </div>
+            <Btn onClick={() => setModal({})} variant="primary" size="md"><IPlus className="w-4 h-4" /> Solicitar contrato</Btn>
+          </div>
+          <div className="grid sm:grid-cols-4 gap-3 mt-5">
+            <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-2xl font-black text-orange-300">{meusContratos.length}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Minhas propostas</div></div>
+            <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-2xl font-black text-purple-300">{contratosEmNegociacao}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Em analise</div></div>
+            <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-2xl font-black text-orange-300">{contratosEmOperacao}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Em operacao</div></div>
+            <div className="p-3 rounded-lg border border-zinc-800 bg-black/40"><div className="text-2xl font-black text-green-300">{contratosFinalizados}</div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Encerrados</div></div>
+          </div>
+          <div className="mt-4 grid lg:grid-cols-[1.1fr_0.9fr] gap-3">
+            <div className="p-3 rounded-lg border border-zinc-800 bg-black/45">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-2">Ultimo pergaminho</div>
+              {ultimoContrato ? (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap"><span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${(CONTRATO_STATUS_CFG[ultimoContrato.status] || CONTRATO_STATUS_CFG.Proposta).badge}`}>{ultimoContrato.status}</span><span className="text-orange-100 font-bold">{ultimoContrato.titulo}</span></div>
+                  <div className="text-zinc-500 text-sm mt-2">{proximaAcaoContratante}</div>
+                </>
+              ) : <div className="text-zinc-600 text-sm italic">{proximaAcaoContratante}</div>}
+            </div>
+            <ContratoStatusTrail status={ultimoContrato?.status || "Proposta"} />
+          </div>
+        </div>
+      ) : (
+        podeCriar && <div className="flex justify-end mb-4"><Btn onClick={() => setModal({})} variant="primary"><IPlus className="w-3 h-3" /> {labelBotaoCriar}</Btn></div>
+      )}
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {FILTROS.map(f => {
@@ -5355,6 +5952,8 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
                   <div className="text-xs uppercase tracking-wider text-zinc-500">{c.tipo === "externo" ? "Oferta:" : "Recompensa:"}</div>
                   <div className="text-orange-300 font-black text-sm">{Number(c.valorRecompensa || 0).toLocaleString("pt-BR")} <span className="text-orange-600 text-xs uppercase">{moedaContrato(c.tipoRecompensa)}</span></div>
                 </div>
+
+                {viewerIsContratante && ehMinhaProposta && <div className="mb-3"><ContratoStatusTrail status={c.status} /></div>}
 
                 {responsavelContrato && (
                   <div className="mb-3 p-2 rounded border border-purple-900/40 bg-purple-950/10 text-xs">
@@ -5545,6 +6144,60 @@ function ContratosSection({ data, setData, isLider, usuario, role, viewerIsContr
           viewerIsContratante={viewerIsContratante}
         />
       )}
+      <PortalDecisionModal dialog={confirmacao} onClose={() => setConfirmacao(null)} />
+      <PortalNoticeModal notice={aviso} onClose={() => setAviso(null)} />
+    </div>
+  );
+}
+
+function AlertaEstrategicoModal({ faseAtual, onSave, onClose }) {
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [risco, setRisco] = useState("Moderado");
+  const valido = titulo.trim().length > 0;
+  const salvar = () => {
+    if (!valido) return;
+    onSave({ titulo: titulo.trim(), descricao: descricao.trim(), risco });
+  };
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm fadein" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-xl border border-red-800 bg-zinc-950 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-red-900/50 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg border border-red-800 bg-red-950/25 text-red-300 flex items-center justify-center flex-shrink-0"><IAlert className="w-5 h-5" /></div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.32em] text-red-500">Alerta estrategico</div>
+            <h3 className="text-orange-50 font-black serif text-xl mt-1">Registrar sinal para o comando</h3>
+            <p className="text-zinc-500 text-sm mt-2">O alerta entrara no painel JIKKAI e ficara vinculado a fase atual do plano.</p>
+          </div>
+          <button onClick={onClose} className="ml-auto text-zinc-500 hover:text-red-400 p-1"><IX className="w-5 h-5" /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="p-3 rounded-lg border border-orange-900/40 bg-orange-950/10 text-xs text-orange-200">
+            Fase vinculada: <strong>{faseAtual ? `Fase ${faseAtual.n} - ${faseAtual.titulo}` : "Plano Jikkai"}</strong>
+          </div>
+          <div>
+            <label className="fox-label">Titulo do alerta *</label>
+            <input value={titulo} onChange={e => setTitulo(e.target.value)} className="fox-input" autoFocus placeholder="Ex: rota de Kiri sob observacao" />
+          </div>
+          <div>
+            <label className="fox-label">Situacao, consequencia e resposta recomendada</label>
+            <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows="5" className="fox-input" placeholder="Descreva o sinal, quem deve agir e qual risco ele cria para a Jikkai." />
+          </div>
+          <div>
+            <label className="fox-label">Nivel de risco</label>
+            <select value={risco} onChange={e => setRisco(e.target.value)} className="fox-input">
+              <option>Baixo</option>
+              <option>Moderado</option>
+              <option>Elevado</option>
+              <option>Crítico</option>
+            </select>
+          </div>
+        </div>
+        <div className="p-4 bg-black/35 border-t border-zinc-800 flex gap-2 justify-end flex-wrap">
+          <Btn onClick={onClose} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
+          <Btn onClick={salvar} variant="primary" disabled={!valido}><ISave className="w-3 h-3" /> Registrar alerta</Btn>
+        </div>
+      </div>
     </div>
   );
 }
@@ -5553,6 +6206,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
   const [aba, setAba] = useState("visao");
   const [faseAberta, setFaseAberta] = useState(null);
   const [editandoFase, setEditandoFase] = useState(null);
+  const [alertaModal, setAlertaModal] = useState(false);
 
   const fases = data.fases || [];
   const sinais = coletarSinaisEstrategicos(data);
@@ -5573,12 +6227,10 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
     setEditandoFase(null);
   };
 
-  const criarAlertaManual = () => {
-    const titulo = window.prompt("Título do alerta estratégico:", "");
-    if (!titulo?.trim()) return;
-    const descricao = window.prompt("Descreva a situação, consequência e resposta recomendada:", "") || "";
-    const riscoInformado = window.prompt("Nível de risco: Baixo, Moderado, Elevado ou Crítico", "Moderado") || "Moderado";
-    const risco = normalizarRisco(riscoInformado);
+  const criarAlertaManual = (form) => {
+    const titulo = form.titulo || "";
+    const descricao = form.descricao || "";
+    const risco = normalizarRisco(form.risco || "Moderado");
     const faseId = faseAtual?.id || "";
     setData(d => ({
       ...d,
@@ -5599,6 +6251,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
       }],
       activityLog: [...(d.activityLog || []), atividade("alerta_estrategico_criado", usuario?.username || "lideranca", faseId || "jikkai", "Criou o alerta estratégico: " + titulo.trim())],
     }));
+    setAlertaModal(false);
   };
 
   const resolverAlertaManual = sinal => {
@@ -5651,7 +6304,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
   }
 
   return <div className="fadein">
-    {isLider && <div className="flex justify-end mb-4"><Btn onClick={criarAlertaManual} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn></div>}
+    {isLider && <div className="flex justify-end mb-4"><Btn onClick={() => setAlertaModal(true)} variant="primary"><IAlert className="w-3 h-3" /> Novo alerta</Btn></div>}
 
     <div className="p-5 rounded-2xl border border-orange-900/40 bg-gradient-to-br from-red-950/20 via-black to-black mb-6">
       <div className="flex flex-col lg:flex-row lg:items-end gap-6"><div className="flex-1"><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Plano geral</div><div className="flex items-end gap-3 mt-1"><div className="text-5xl sm:text-6xl font-black text-orange-50 serif leading-none">{progressoGeral}<span className="text-2xl text-orange-600">%</span></div><div className="flex-1 mb-2"><div className="h-3 bg-zinc-900 rounded overflow-hidden"><div className="h-full bg-gradient-to-r from-red-700 to-orange-500" style={{ width: progressoGeral + "%" }} /></div></div></div><div className="text-zinc-500 text-sm mt-2">Fase atual: <strong className="text-orange-200">{faseAtual ? "FASE " + faseAtual.n + " — " + faseAtual.titulo : "Nenhuma fase ativa"}</strong></div></div>
@@ -5672,6 +6325,7 @@ function PlanoSection({ data, setData, isLider, usuario = null }) {
 
     {aba === "historico" && <div className="space-y-2">{(data.activityLog || []).filter(a => ["fase_atualizada", "alerta_estrategico_criado", "alerta_estrategico_resolvido"].includes(a.tipo)).slice().reverse().map(a => <div key={a.id} className="p-3 rounded border border-zinc-800 bg-zinc-950/50 flex items-start gap-3"><IBook className="w-4 h-4 text-orange-600 mt-0.5" /><div><div className="text-zinc-300 text-sm">{a.descricao}</div><div className="text-[10px] text-zinc-700 mt-1">{a.ator} · {new Date(a.data).toLocaleString("pt-BR")}</div></div></div>)}</div>}
 
+    {alertaModal && <AlertaEstrategicoModal faseAtual={faseAtual} onSave={criarAlertaManual} onClose={() => setAlertaModal(false)} />}
     {editandoFase && (() => { const fase = fases.find(f => f.id === editandoFase); return fase ? <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/95 p-4 sm:p-8"><div className="max-w-5xl mx-auto bg-zinc-950 border border-orange-700 rounded-xl p-5"><FaseEditor fase={fase} data={data} onCancel={() => setEditandoFase(null)} onSave={patch => salvarFase(fase.id, patch)} /></div></div> : null; })()}
   </div>;
 }
@@ -5774,14 +6428,14 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
 
   // Modo contratante: pula sub-tabs e renderiza só ContratosSection com header próprio
   if (viewerIsContratante) {
+    return <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={true} navigationRequest={navigationRequest} />;
     return (
       <div>
         <SectionTitle icon={ISwords} sub="Contratos disponíveis para aquisição">Contratos Jikkai</SectionTitle>
         <div className="mb-6 p-4 bg-zinc-950/60 border border-orange-900/30 rounded-lg flex items-start gap-3">
           <IBriefcase className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-zinc-400 leading-relaxed">
-            Esta é a vitrine pública de contratos da F.O.X. Os contratos abaixo estão disponíveis para discussão.
-            Para aceitar ou negociar termos, entre em contato direto com a liderança através dos canais combinados.
+            Esta é a mesa pública de contratos da Jikkai. Solicite um serviço pelo pergaminho guiado, acompanhe o status por aqui e use os detalhes do contrato para negociar termos com a liderança.
           </div>
         </div>
         <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={true} navigationRequest={navigationRequest} />
@@ -5814,7 +6468,7 @@ function JikkaiPage({ data, setData, isLider, usuario, role, viewerIsContratante
         })}
       </div>
 
-      {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} />}
+      {subTab === "plano" && <PlanoSection data={data} setData={setData} isLider={isLider} usuario={usuario} />}
       {subTab === "contratos" && <ContratosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} viewerIsContratante={false} navigationRequest={navigationRequest} />}
       {subTab === "relatorios" && <RelatoriosSection data={data} setData={setData} isLider={isLider} usuario={usuario} role={role} navigationRequest={navigationRequest} />}
     </div>
@@ -6455,7 +7109,6 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate, navigatio
   if (todasMinhas.length === 0) {
     return (
       <div>
-        <SectionTitle icon={IClipboard} sub="Missões atribuídas a você">Minhas Missões</SectionTitle>
         <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg">
           <IClipboard className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
           <p className="text-zinc-500">Nenhuma missão atribuída no momento.</p>
@@ -6469,16 +7122,7 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate, navigatio
 
   return (
     <div>
-      <SectionTitle icon={IClipboard} sub={`${ativas.length} ${ativas.length === 1 ? "operação ativa" : "operações ativas"} · acompanhe e relate o resultado`}>Minhas Missões</SectionTitle>
-
-      <div className="mb-5 p-4 rounded-lg border border-purple-900/40 bg-purple-950/10 text-sm text-zinc-300 leading-relaxed">
-        <strong className="text-purple-300 uppercase tracking-wider text-xs">Lembrete:</strong> missões designadas pela liderança, conselheiros ou capitães de divisão devem ser acompanhadas aqui. Ao concluir, envie o relatório final. Se um acontecimento importante ocorrer fora de missão, registre em <span className="text-sky-300 font-bold">JIKKAI → Relatórios</span>.
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="ghost"><IFile className="w-3 h-3" /> Criar relatório avulso</Btn>
-        </div>
-      </div>
-
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap">
         {["Ativas", "Encerradas", "Todas"].map(f => {
           const count = f === "Ativas" ? ativas.length : f === "Encerradas" ? encerradas.length : todasMinhas.length;
           return (
@@ -6511,7 +7155,7 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate, navigatio
           const contrato = m.contratoId ? (data.contratos || []).find(x => x.id === m.contratoId) : null;
 
           return (
-            <div id={`missao-${m.id}`} key={m.id} className={`p-5 rounded-lg border ${destaqueMissaoId === m.id ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-black " : ""}${c.border} ${c.bg} fadein`}>
+            <div id={`missao-${m.id}`} key={m.id} className={`mission-card-mobile p-5 rounded-lg border ${destaqueMissaoId === m.id ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-black " : ""}${c.border} ${c.bg} fadein`}>
               <div className="flex items-start gap-4">
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${c.circle}`}>
                   {m.status === "concluida" ? <ICheck className="w-5 h-5" /> : m.status === "falhou" ? <IAlert className="w-5 h-5" /> : <IClipboard className="w-5 h-5" />}
@@ -6618,18 +7262,17 @@ function MinhasMissoesPage({ data, setData, usuario, role, onNavigate, navigatio
 function GerenciarPage({ data, setData, usuario, role, exportar, importar, navigationRequest }) {
   const isLider = role?.hasLeaderPerms === true;
   const podeUsuarios = isLider || hasPerm(role,"manage_users");
-  const podeMissoes = isLider || hasPerm(role,"manage_missions");
-  const podeCargos = isLider || hasPerm(role,"manage_roles");
+  const podeCargos = isLider || hasPerm(role,"manage_roles") || estruturaPosicaoRole(role) === "conselheiro";
   const podeRamos = isLider;
   const podeJuramentos = isLider;
   const podeBackup = isLider;
   const podeDiscord = isLider;
-  const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
+  const primeiraAba = podeUsuarios?"usuarios":podeCargos?"cargos":podeRamos?"ramos":podeDiscord?"discord":"backup";
   const [aba, setAba] = useState(primeiraAba);
   useEffect(() => {
     if (navigationRequest?.tab !== "gerenciar") return;
     if (navigationRequest.action === "iniciacoes-pendentes" && podeUsuarios) { setAba("usuarios"); return; }
-    if (["usuarios", "cargos", "ramos", "juramentos", "missoes", "discord", "backup"].includes(navigationRequest.subTab)) setAba(navigationRequest.subTab);
+    if (["usuarios", "cargos", "ramos", "juramentos", "discord", "backup"].includes(navigationRequest.subTab)) setAba(navigationRequest.subTab);
   }, [navigationRequest?.token]);
 
   return (
@@ -6642,7 +7285,6 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar, navig
           podeCargos && { id: "cargos", label: "Cargos", icon: ICrown },
           podeRamos && { id: "ramos", label: "Divisões", icon: IShield },
           podeJuramentos && { id: "juramentos", label: "Juramentos", icon: ISkull },
-          podeMissoes && { id: "missoes", label: "Missões", icon: IClipboard },
           podeDiscord && { id: "discord", label: "Discord", icon: IShield },
           podeBackup && { id: "backup", label: "Backup", icon: IDownload },
         ].filter(Boolean).map(t => {
@@ -6656,10 +7298,9 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar, navig
       </div>
 
       {aba === "usuarios" && <UsuariosManager data={data} setData={setData} usuario={usuario} navigationAction={navigationRequest?.tab === "gerenciar" ? navigationRequest.action : ""} />}
-      {aba === "cargos" && <CargosManager data={data} setData={setData} />}
+      {aba === "cargos" && <CargosManager data={data} setData={setData} usuario={usuario} role={role} />}
       {aba === "ramos" && <RamosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "juramentos" && <RegistroJuramentosManager data={data} setData={setData} usuario={usuario} />}
-      {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
       {aba === "discord" && <DiscordManager data={data} setData={setData} usuario={usuario} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
     </div>
@@ -6692,15 +7333,31 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
     if (editando === "__novo__" && data.users.some(u => u.username.toLowerCase() === form.username.trim().toLowerCase())) { setErro("Username já existe."); return; }
     if (editando === "__novo__" && !form.password) { setErro("Senha obrigatória para novo usuário."); return; }
     const username = form.username.trim();
+    const anteriorAntesSalvar = editando !== "__novo__" ? data.users.find(u => u.username === editando) : null;
+    const cargoAntigoAntes = anteriorAntesSalvar ? data.roles.find(r => r.id === anteriorAntesSalvar.role) : null;
+    const cargoNovoAntes = data.roles.find(r => r.id === form.role);
+    const houvePromocao = Boolean(anteriorAntesSalvar && cargoNovoAntes && anteriorAntesSalvar.role !== form.role);
     setData(d => {
       if (editando === "__novo__") {
         const novo = normalizarMembro({ ...form, username, nomeRP: form.nomeRP || form.displayName, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, estruturaNivel: estruturaPosicaoRole(d.roles.find(r => r.id === form.role)), criadoEm: new Date().toISOString(), criadoPor: usuario?.username || "lideranca", iniciacaoStatus: "pendente" }, false);
         return { ...d, users: [...d.users, novo], activityLog: [...(d.activityLog || []), atividade("membro_criado", usuario?.username, username, `Criou o registro de ${getCodinome(novo)}`)] };
       }
       const anterior = d.users.find(u => u.username === editando);
-      const atualizado = normalizarMembro({ ...anterior, ...form, username: editando, password: form.password || anterior.password, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, estruturaNivel: estruturaPosicaoRole(d.roles.find(r => r.id === form.role)) });
+      const cargoAtual = d.roles.find(r => r.id === form.role);
+      const patenteFinal = anterior?.role !== form.role ? cargoAtual?.nome || form.patente : form.patente;
+      const atualizado = normalizarMembro({ ...anterior, ...form, patente: patenteFinal, username: editando, password: form.password || anterior.password, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, estruturaNivel: estruturaPosicaoRole(cargoAtual) });
       return { ...d, users: d.users.map(u => u.username === editando ? atualizado : u), activityLog: [...(d.activityLog || []), atividade("membro_editado", usuario?.username, editando, `Atualizou o dossiê administrativo de ${getCodinome(atualizado)}`)] };
     });
+    if (houvePromocao) {
+      setTimeout(async () => {
+        try {
+          const conteudo = mensagemDiscordPromocao(data, anteriorAntesSalvar, cargoAntigoAntes?.nome || anteriorAntesSalvar.role || "Não definido", cargoNovoAntes.nome, getCodinome(usuario));
+          await window.notificarDiscordUsuarios(data, [anteriorAntesSalvar.username], "promocao", conteudo);
+        } catch (e) {
+          console.warn("Falha ao notificar promoção por Discord", e);
+        }
+      }, 80);
+    }
     setEditando(null);
   };
   const remover = username => {
@@ -6870,11 +7527,47 @@ function RamosManager({ data, setData, usuario }) {
   );
 }
 
-function CargosManager({ data, setData }) {
+function CargosManager({ data, setData, usuario, role }) {
+  const podeEditarCargos = !!(role?.hasLeaderPerms || hasPerm(role, "manage_roles"));
+  const podePromover = !!(role?.hasLeaderPerms || hasPerm(role, "manage_users") || estruturaPosicaoRole(role) === "conselheiro");
   const vazio = () => ({ nome: "", hasLeaderPerms: false, cor: "#7C2D12", estruturaPosicao: "operador", ordemEstrutura: 100 });
   const [form, setForm] = useState(vazio());
   const [criando, setCriando] = useState(false);
   const [editando, setEditando] = useState(null);
+  const membrosPromoviveis = (data.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
+  const cargosPromoviveis = (data.roles || []).filter(r => r.id !== "contratante").slice().sort((a,b) => ordemEstruturaRole(a)-ordemEstruturaRole(b));
+  const [promoUser, setPromoUser] = useState(membrosPromoviveis[0]?.username || "");
+  const [promoRole, setPromoRole] = useState(cargosPromoviveis.find(r => r.id === "member")?.id || cargosPromoviveis[0]?.id || "");
+  const [promoStatus, setPromoStatus] = useState("");
+
+  useEffect(() => {
+    if (!promoUser && membrosPromoviveis[0]?.username) setPromoUser(membrosPromoviveis[0].username);
+    if (!promoRole && cargosPromoviveis[0]?.id) setPromoRole(cargosPromoviveis[0].id);
+  }, [membrosPromoviveis.length, cargosPromoviveis.length]);
+
+  const promoverMembro = async () => {
+    const alvo = (data.users || []).find(u => u.username === promoUser);
+    const novoCargo = (data.roles || []).find(r => r.id === promoRole);
+    if (!alvo || !novoCargo) { setPromoStatus("Escolha um membro e um cargo."); return; }
+    if (alvo.username === "leader" && novoCargo.id !== "leader") { setPromoStatus("O líder raiz não deve ser rebaixado."); return; }
+    const cargoAntigo = (data.roles || []).find(r => r.id === alvo.role);
+    if (alvo.role === novoCargo.id) { setPromoStatus(`${getCodinome(alvo)} já possui este cargo.`); return; }
+    setData(d => ({
+      ...d,
+      users: d.users.map(u => u.username === alvo.username ? { ...u, role: novoCargo.id, patente: novoCargo.nome, estruturaNivel: estruturaPosicaoRole(novoCargo) } : u),
+      activityLog: [...(d.activityLog || []), atividade("promocao_cargo", usuario?.username, alvo.username, `${getCodinome(alvo)} recebeu o cargo ${novoCargo.nome}`)],
+    }));
+    setPromoStatus("Cargo atualizado. Enviando selo pelo Discord...");
+    try {
+      const conteudo = mensagemDiscordPromocao(data, alvo, cargoAntigo?.nome || alvo.role || "Não definido", novoCargo.nome, getCodinome(usuario));
+      const resultado = await window.notificarDiscordUsuarios(data, [alvo.username], "promocao", conteudo);
+      const ok = resultado.filter(r => r.ok).length;
+      const falha = resultado.find(r => !r.ok);
+      setPromoStatus(ok ? `Promoção registrada e DM enviada para ${getCodinome(alvo)}.` : `Promoção registrada. DM não enviada: ${falha?.reason || "falha desconhecida"}.`);
+    } catch (e) {
+      setPromoStatus("Promoção registrada. Falha na DM: " + (e.message || e));
+    }
+  };
 
   const abrirNovo = () => { setForm(vazio()); setEditando(null); setCriando(true); };
   const abrirEdicao = role => { setForm({ ...role, estruturaPosicao: estruturaPosicaoRole(role), ordemEstrutura: ordemEstruturaRole(role) }); setEditando(role.id); setCriando(true); };
@@ -6918,9 +7611,25 @@ function CargosManager({ data, setData }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div><h3 className="text-orange-50 font-bold text-lg serif">Cargos ({data.roles.length})</h3><p className="text-zinc-600 text-xs mt-1">A posição definida aqui controla automaticamente onde todos os usuários desse cargo aparecem na estrutura.</p></div>
-        {!criando && <Btn onClick={abrirNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Cargo</Btn>}
+        <div><h3 className="text-orange-50 font-bold text-lg serif">Cargos ({data.roles.length})</h3><p className="text-zinc-600 text-xs mt-1">Promova membros e ajuste os selos da hierarquia.</p></div>
+        {!criando && podeEditarCargos && <Btn onClick={abrirNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Cargo</Btn>}
       </div>
+
+      {podePromover && (
+        <section className="rounded-xl border border-orange-900/45 bg-gradient-to-br from-zinc-950 via-black to-orange-950/10 p-4 space-y-3">
+          <div>
+            <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Promoção rápida</div>
+            <div className="text-orange-50 font-black serif text-lg mt-1">Alterar cargo e avisar por Discord</div>
+          </div>
+          <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+            <div><label className="fox-label">Membro</label><select value={promoUser} onChange={e => setPromoUser(e.target.value)} className="fox-input">{membrosPromoviveis.map(u => <option key={u.username} value={u.username}>{getCodinome(u)} · {(data.roles || []).find(r => r.id === u.role)?.nome || u.role}</option>)}</select></div>
+            <div><label className="fox-label">Novo cargo</label><select value={promoRole} onChange={e => setPromoRole(e.target.value)} className="fox-input">{cargosPromoviveis.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
+            <Btn onClick={promoverMembro} variant="primary" className="w-full sm:w-auto justify-center"><ICrown className="w-3 h-3" /> Promover</Btn>
+          </div>
+          <div className="text-[11px] text-zinc-600 leading-relaxed">Ao promover, o dossiê é atualizado e o membro recebe DM se tiver Discord verificado.</div>
+          {promoStatus && <div className="p-3 rounded-lg border border-zinc-800 bg-black/55 text-xs text-zinc-300">{promoStatus}</div>}
+        </section>
+      )}
 
       {criando && (
         <div className="p-4 bg-zinc-950/80 border border-orange-700 rounded-lg space-y-3 fadein">
@@ -6947,10 +7656,10 @@ function CargosManager({ data, setData }) {
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-3 h-12 rounded" style={{ background: r.cor }} />
                 <div className="flex-1 min-w-0"><div className="text-orange-50 font-bold">{r.nome} {r.protected && <span className="text-xs text-zinc-600">(protegido)</span>}</div><div className="text-zinc-500 text-xs">{count} usuário(s) · {isLeader ? <span className="text-orange-500">Selos totais de líder</span> : `${(r.permissions || []).length} selos`}</div><div className="text-[10px] uppercase tracking-wider text-orange-700 mt-1">{estruturaPosicaoLabel(r)} · ordem {ordemEstruturaRole(r)}</div></div>
-                <button onClick={() => abrirEdicao(r)} className="text-orange-400 hover:text-orange-300 p-2" title="Editar cargo e posição"><IEdit className="w-4 h-4" /></button>
-                {!r.protected && <button onClick={() => remover(r.id)} className="text-red-500 hover:text-red-400 p-2"><ITrash className="w-4 h-4" /></button>}
+                {podeEditarCargos && <button onClick={() => abrirEdicao(r)} className="text-orange-400 hover:text-orange-300 p-2" title="Editar cargo e posição"><IEdit className="w-4 h-4" /></button>}
+                {podeEditarCargos && !r.protected && <button onClick={() => remover(r.id)} className="text-red-500 hover:text-red-400 p-2"><ITrash className="w-4 h-4" /></button>}
               </div>
-              {!isLeader && r.id !== "contratante" && <div className="mt-3 pt-3 border-t border-zinc-800 grid sm:grid-cols-2 gap-1">{PERMISSIONS_LIST.map(p => <label key={p.id} className="flex items-start gap-2 text-xs text-zinc-300 cursor-pointer hover:text-orange-300 p-1"><input type="checkbox" checked={(r.permissions || []).includes(p.id)} onChange={() => togglePerm(p.id)} className="w-3.5 h-3.5 accent-orange-600 mt-0.5" /><span><strong>{p.label}</strong><br/><span className="text-zinc-600 text-[10px]">{p.desc}</span></span></label>)}</div>}
+              {podeEditarCargos && !isLeader && r.id !== "contratante" && <div className="mt-3 pt-3 border-t border-zinc-800 grid sm:grid-cols-2 gap-1">{PERMISSIONS_LIST.map(p => <label key={p.id} className="flex items-start gap-2 text-xs text-zinc-300 cursor-pointer hover:text-orange-300 p-1"><input type="checkbox" checked={(r.permissions || []).includes(p.id)} onChange={() => togglePerm(p.id)} className="w-3.5 h-3.5 accent-orange-600 mt-0.5" /><span><strong>{p.label}</strong><br/><span className="text-zinc-600 text-[10px]">{p.desc}</span></span></label>)}</div>}
             </div>
           );
         })}
@@ -6959,10 +7668,204 @@ function CargosManager({ data, setData }) {
   );
 }
 
+function CapitaoDashboard({ data, usuario, role, onAbrirComando, onAbrirMinhas, onNavigate }) {
+  const divisoes = divisoesDoCapitao(data, usuario);
+  const divIds = new Set(divisoes.map(d => d.id));
+  const equipes = equipesJikkai(data).filter(e => divIds.has(e.divisaoId));
+  const equipeIds = new Set(equipes.map(e => e.id));
+  const membrosSet = new Set([usuario?.username, ...divisoes.flatMap(d => membrosDaDivisaoOperacional(data, d.id)), ...equipes.flatMap(e => (e.membros || []).map(m => m.username))].filter(Boolean));
+  const membros = (data.users || []).filter(u => membrosSet.has(u.username) && u.role !== "contratante");
+  const missaoNoEscopo = (m) => {
+    const participa = participantesDaMissao(m).some(p => membrosSet.has(p));
+    return divIds.has(m.divisaoId)
+      || equipeIds.has(m.equipeId)
+      || (m.attributionType === "divisao" && divIds.has(m.targetId))
+      || (m.attributionType === "equipe" && equipeIds.has(m.targetId))
+      || participa;
+  };
+  const missoesEscopo = (data.missoes || []).filter(missaoNoEscopo);
+  const abertas = missoesEscopo.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const emCampo = missoesEscopo.filter(m => m.status === "andamento");
+  const revisao = missoesEscopo.filter(m => m.status === "revisao" || m.status === "devolvida");
+  const aguardandoAceite = missoesEscopo.filter(m => ["atribuida", "pendente"].includes(m.status) && participantesDaMissao(m).some(p => !(m.aceites || []).includes(p)));
+  const missoesIds = new Set(missoesEscopo.map(m => m.id));
+  const contratosEscopo = (data.contratos || []).filter(c => missoesIds.has(c.missaoId) || missoesIds.has(c.missaoVinculadaId) || membrosSet.has(c.aceitoPor));
+  const contratosAtivos = contratosEscopo.filter(c => ["Aberto", "Em Andamento", "Proposta"].includes(c.status));
+  const dossiesPendentes = membros
+    .map(u => ({ user: u, perfil: progressoDossieUsuario(u) }))
+    .filter(x => x.perfil.pct < 75)
+    .sort((a, b) => a.perfil.pct - b.perfil.pct);
+  const membrosSemEquipe = membros.filter(u => u.username !== usuario?.username && !equipes.some(e => (e.membros || []).some(m => m.username === u.username)));
+  const proximasAcoes = [
+    ...revisao.slice(0, 2).map(m => ({ tone: "purple", titulo: "Revisar relatorio", desc: m.titulo, onClick: onAbrirComando })),
+    ...aguardandoAceite.slice(0, 2).map(m => ({ tone: "orange", titulo: "Cobrar aceite", desc: m.titulo, onClick: onAbrirComando })),
+    ...emCampo.slice(0, 2).map(m => ({ tone: "sky", titulo: "Acompanhar campo", desc: m.titulo, onClick: onAbrirComando })),
+  ].slice(0, 4);
+
+  if (!divisoes.length) {
+    return (
+      <section className="rounded-xl border border-yellow-900/45 bg-yellow-950/10 p-4">
+        <div className="flex items-start gap-3">
+          <IAlert className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="text-yellow-200 font-black serif">Capitao sem divisao vinculada</div>
+            <p className="text-yellow-100/70 text-sm mt-1">Seu cargo permite comandar missoes, mas a lideranca ainda precisa marcar seu usuario como capitao de uma divisao em Membros &gt; Equipes.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const stat = (label, value, color) => (
+    <div className="rounded-lg border border-zinc-800 bg-black/45 p-3">
+      <div className={`text-2xl font-black ${color}`}>{value}</div>
+      <div className="text-[9px] uppercase tracking-wider text-zinc-600 mt-1">{label}</div>
+    </div>
+  );
+
+  return (
+    <section className="rounded-2xl border border-orange-900/45 bg-gradient-to-br from-zinc-950 via-black to-red-950/15 p-4 space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Painel do capitao</div>
+          <h3 className="text-xl font-black text-orange-50 serif mt-1">Comando da divisao</h3>
+          <div className="flex gap-1.5 flex-wrap mt-2">
+            {divisoes.map(d => <span key={d.id} className="px-2 py-1 rounded border border-orange-900/50 bg-orange-950/15 text-orange-200 text-[10px] uppercase tracking-wider">{d.nome}</span>)}
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Btn onClick={onAbrirComando} variant="primary"><IClipboard className="w-3 h-3" /> Comando</Btn>
+          <Btn onClick={onAbrirMinhas} variant="ghost"><IUsers className="w-3 h-3" /> Minhas</Btn>
+          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="default"><IFile className="w-3 h-3" /> Relatorio</Btn>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        {stat("ativas no escopo", abertas.length, "text-orange-300")}
+        {stat("em campo", emCampo.length, "text-sky-300")}
+        {stat("revisao/ajustes", revisao.length, "text-purple-300")}
+        {stat("aceites pendentes", aguardandoAceite.length, "text-yellow-300")}
+      </div>
+
+      <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-3">
+        <div className="rounded-xl border border-zinc-800 bg-black/35 p-3">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="text-[9px] uppercase tracking-[0.24em] text-orange-600 font-black">Proximas decisoes</div>
+            <button onClick={onAbrirComando} className="text-orange-400 text-[10px] uppercase tracking-wider font-bold">Abrir kanban</button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {proximasAcoes.length ? proximasAcoes.map((a, i) => (
+              <button key={i} onClick={a.onClick} className="text-left rounded-lg border border-zinc-800 bg-zinc-950/65 p-3 hover:border-orange-700">
+                <div className="text-orange-50 font-bold text-sm">{a.titulo}</div>
+                <div className="text-zinc-500 text-xs mt-1 line-clamp-2">{a.desc}</div>
+              </button>
+            )) : <div className="sm:col-span-2 rounded-lg border border-dashed border-zinc-800 bg-black/25 p-4 text-center text-zinc-700 text-sm">Nenhuma decisao critica agora.</div>}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-800 bg-black/35 p-3 space-y-3">
+          <div className="text-[9px] uppercase tracking-[0.24em] text-orange-600 font-black">Estado da divisao</div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded border border-zinc-800 bg-zinc-950/70 p-2"><div className="text-lg font-black text-orange-200">{equipes.length}</div><div className="text-[8px] uppercase text-zinc-600">equipes</div></div>
+            <div className="rounded border border-zinc-800 bg-zinc-950/70 p-2"><div className="text-lg font-black text-orange-200">{membros.length}</div><div className="text-[8px] uppercase text-zinc-600">membros</div></div>
+            <div className="rounded border border-zinc-800 bg-zinc-950/70 p-2"><div className="text-lg font-black text-orange-200">{contratosAtivos.length}</div><div className="text-[8px] uppercase text-zinc-600">contratos</div></div>
+          </div>
+          <div className="space-y-2">
+            {dossiesPendentes.slice(0, 3).map(({ user, perfil }) => (
+              <div key={user.username} className="flex items-center gap-2 rounded border border-zinc-800 bg-zinc-950/60 p-2">
+                <MemberAvatar user={user} size="xs" />
+                <div className="min-w-0 flex-1"><div className="text-orange-50 text-xs font-bold truncate">{getCodinome(user)}</div><div className="text-zinc-600 text-[10px]">Dossie {perfil.pct}%</div></div>
+              </div>
+            ))}
+            {membrosSemEquipe.length > 0 && <div className="rounded border border-yellow-900/50 bg-yellow-950/10 p-2 text-yellow-200 text-[11px]">{membrosSemEquipe.length} membro{membrosSemEquipe.length === 1 ? "" : "s"} sem equipe definida.</div>}
+            {!dossiesPendentes.length && !membrosSemEquipe.length && <div className="rounded border border-green-900/50 bg-green-950/10 p-2 text-green-200 text-[11px]">Divisao organizada para novas operacoes.</div>}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MissoesOperacionaisPage({ data, setData, usuario, role, onNavigate, navigationRequest }) {
+  const podeComando = !!(isRootUser(usuario) || role?.hasLeaderPerms || hasPerm(role, "manage_missions"));
+  const isCapitaoDivisao = estruturaPosicaoRole(role) === "capitao_ramo";
+  const minhasTodas = (data.missoes || []).filter(m => usuarioParticipaMissao(m, usuario.username));
+  const minhasAtivas = minhasTodas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
+  const todas = data.missoes || [];
+  const aguardandoRevisao = todas.filter(m => m.status === "revisao").length;
+  const abertas = todas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status)).length;
+  const [modo, setModo] = useState(() => podeComando ? "comando" : "minhas");
+
+  useEffect(() => {
+    if (!podeComando) { setModo("minhas"); return; }
+    const action = String(navigationRequest?.action || "");
+    if (navigationRequest?.tab === "missoes" && action === "abrir-comando") setModo("comando");
+    if (navigationRequest?.tab === "missoes" && action === "minhas-missoes") setModo("minhas");
+    if (navigationRequest?.tab === "missoes" && (action.startsWith("relatorio-missao:") || action.startsWith("aceitar-missao:"))) setModo("minhas");
+  }, [podeComando, navigationRequest?.token]);
+
+  const acao = podeComando
+    ? { titulo: "Criar ou comandar missão", desc: "Atribua para divisão, equipe ou membro sem entrar em Gerenciar.", label: "Abrir comando", onClick: () => setModo("comando") }
+    : { titulo: "Minhas operações", desc: "Aceite, inicie e envie relatório final das missões recebidas.", label: "Ver minhas missões", onClick: () => setModo("minhas") };
+
+  return (
+    <div className="space-y-4 fadein">
+      <section className="jikkai-mobile-hero relative overflow-hidden rounded-2xl border border-orange-900/45 bg-gradient-to-br from-black via-red-950/18 to-black p-5">
+        <div className="absolute -right-12 -top-16 w-52 h-52 rounded-full bg-orange-900/10 blur-3xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">SELO JIKKAI · MISSÕES</div>
+            <h1 className="hero-title text-3xl font-black text-orange-50 serif mt-1">Operações</h1>
+            <p className="text-zinc-500 text-sm mt-2 max-w-2xl">Missões são rotina operacional. Criação, aceite, execução e relatório ficam aqui — Gerenciar fica só para administração.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:min-w-[300px]">
+            <div className="rounded-xl border border-orange-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-orange-300">{minhasAtivas.length}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">minhas</div></div>
+            <div className="rounded-xl border border-purple-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-purple-300">{abertas}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">ativas</div></div>
+            <div className="rounded-xl border border-sky-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-sky-300">{aguardandoRevisao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">revisão</div></div>
+          </div>
+        </div>
+        <div className="relative mt-4 flex flex-col sm:flex-row gap-2">
+          <Btn onClick={acao.onClick} variant="primary" className="justify-center"><IClipboard className="w-3 h-3" /> {acao.label}</Btn>
+          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="ghost" className="justify-center"><IFile className="w-3 h-3" /> Relatório avulso</Btn>
+        </div>
+      </section>
+
+      {isCapitaoDivisao && (
+        <CapitaoDashboard
+          data={data}
+          usuario={usuario}
+          role={role}
+          onAbrirComando={() => setModo("comando")}
+          onAbrirMinhas={() => setModo("minhas")}
+          onNavigate={onNavigate}
+        />
+      )}
+
+      {podeComando && (
+        <div className="jikkai-segmented grid grid-cols-2 gap-1 border border-zinc-800 bg-zinc-950/85">
+          <button onClick={() => setModo("minhas")} className={`rounded-xl px-3 py-2.5 uppercase font-black transition-all ${modo === "minhas" ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200"}`}>
+            Minhas missões <span className="opacity-60">({minhasTodas.length})</span>
+          </button>
+          <button onClick={() => setModo("comando")} className={`rounded-xl px-3 py-2.5 uppercase font-black transition-all ${modo === "comando" ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200"}`}>
+            Comando <span className="opacity-60">({todas.length})</span>
+          </button>
+        </div>
+      )}
+
+      {(!podeComando || modo === "minhas") && <MinhasMissoesPage data={data} setData={setData} usuario={usuario} role={role} onNavigate={onNavigate} navigationRequest={navigationRequest} />}
+      {podeComando && modo === "comando" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
+    </div>
+  );
+}
+
 function MissoesManager({ data, setData, usuario, role }) {
   const [criando, setCriando] = useState(false);
   const [filtro, setFiltro] = useState("Ativas");
+  const [modoVisual, setModoVisual] = useState("kanban");
   const [expandida, setExpandida] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
+  const [aviso, setAviso] = useState(null);
+  const [feedbackModal, setFeedbackModal] = useState(null);
   const niveisPermitidos = niveisPermitidosPara(data, usuario, role);
   const sigiloInicial = niveisPermitidos.includes("Restrito") ? "Restrito" : niveisPermitidos[0] || "Público";
   const escopos = escoposGerenciaveisOperacionais(data, usuario, role);
@@ -7035,15 +7938,20 @@ function MissoesManager({ data, setData, usuario, role }) {
       fluxoObrigatorio: true,
     };
     setData(d => ({ ...d, missoes: [...d.missoes, nova], activityLog: [...(d.activityLog || []), atividade("missao_criada", usuario?.username, nova.id, "Criou missão para " + nova.assignmentLabel)] }));
-    notificarDiscordUsuarios(data, participantes, "missao", mensagemDiscordMissao(data, nova, "missao"));
+    window.notificarDiscordUsuarios(data, participantes, "missao", mensagemDiscordMissao(data, nova, "missao"));
     setForm({ titulo: "", desc: "", attributionType: tipoInicial, targetId: alvoInicial, participants: [], objetivosText: "", sigilo: sigiloInicial });
     setCriando(false);
   };
 
   const remover = (id) => {
-    if (confirm("Remover esta missão? O contrato e os relatórios vinculados não serão apagados.")) {
-      setData(d => ({ ...d, missoes: d.missoes.filter(m => m.id !== id) }));
-    }
+    const missao = (data.missoes || []).find(m => m.id === id);
+    setConfirmacao({
+      title: `Remover "${missao?.titulo || "missao"}"?`,
+      message: "O contrato e os relatorios vinculados nao serao apagados.",
+      tone: "danger",
+      confirmLabel: "Remover",
+      onConfirm: () => setData(d => ({ ...d, missoes: d.missoes.filter(m => m.id !== id) })),
+    });
   };
 
   const atualizar = (id, patch) => setData(d => ({
@@ -7052,114 +7960,172 @@ function MissoesManager({ data, setData, usuario, role }) {
   }));
 
   const iniciarPelaLideranca = (m) => {
-    if (!confirm(`Iniciar "${m.titulo}" mesmo sem todas as confirmações?`)) return;
-    atualizar(m.id, { status: "andamento", startedAt: m.startedAt || new Date().toISOString() });
+    setConfirmacao({
+      title: `Iniciar "${m.titulo}"?`,
+      message: "A operacao sera marcada em andamento mesmo sem todas as confirmacoes dos operadores.",
+      tone: "success",
+      confirmLabel: "Iniciar",
+      onConfirm: () => atualizar(m.id, { status: "andamento", startedAt: m.startedAt || new Date().toISOString() }),
+    });
   };
 
   const devolverParaAjustes = (m) => {
-    const feedback = prompt("Explique quais ajustes o operador deve fazer no relatório:", m.feedbackRevisao || "");
-    if (feedback == null || !feedback.trim()) return;
-    setData(d => ({
-      ...d,
-      missoes: d.missoes.map(x => x.id === m.id ? {
-        ...x,
-        status: "devolvida",
-        feedbackRevisao: feedback.trim(),
-        devolvidaEm: new Date().toISOString(),
-        devolvidaPor: usuario.username,
-      } : x),
-      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
-        ...r,
-        statusAprovacao: "Ajustes solicitados",
-        feedbackAprovacao: feedback.trim(),
-        revisadoPor: usuario.username,
-        revisadoEm: new Date().toISOString(),
-      } : r),
-    }));
-    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "ajustes", feedback.trim()));
+    setFeedbackModal({
+      key: "ajustes_" + m.id,
+      title: "Solicitar ajustes no relatorio",
+      message: m.titulo,
+      initial: m.feedbackRevisao || "",
+      confirmLabel: "Solicitar ajustes",
+      onSubmit: feedback => {
+        setData(d => ({
+          ...d,
+          missoes: d.missoes.map(x => x.id === m.id ? {
+            ...x,
+            status: "devolvida",
+            feedbackRevisao: feedback,
+            devolvidaEm: new Date().toISOString(),
+            devolvidaPor: usuario.username,
+          } : x),
+          relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+            ...r,
+            statusAprovacao: "Ajustes solicitados",
+            feedbackAprovacao: feedback,
+            revisadoPor: usuario.username,
+            revisadoEm: new Date().toISOString(),
+          } : r),
+        }));
+        window.notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "ajustes", feedback));
+      },
+    });
   };
 
   const recusarRelatorio = (m) => {
-    const feedback = prompt("Informe o motivo da recusa do relatório:", m.feedbackRevisao || "");
-    if (feedback == null || !feedback.trim()) return;
-    setData(d => ({
-      ...d,
-      missoes: d.missoes.map(x => x.id === m.id ? {
-        ...x,
-        status: "devolvida",
-        feedbackRevisao: feedback.trim(),
-        devolvidaEm: new Date().toISOString(),
-        devolvidaPor: usuario.username,
-      } : x),
-      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
-        ...r,
-        statusAprovacao: "Recusado",
-        feedbackAprovacao: feedback.trim(),
-        revisadoPor: usuario.username,
-        revisadoEm: new Date().toISOString(),
-      } : r),
-      activityLog: [...(d.activityLog || []), atividade("relatorio_recusado", usuario?.username, m.id, "Recusou o relatório final de " + m.titulo)],
-    }));
-    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "recusado", feedback.trim()));
+    setFeedbackModal({
+      key: "recusar_" + m.id,
+      title: "Recusar relatorio final",
+      message: m.titulo,
+      initial: m.feedbackRevisao || "",
+      tone: "danger",
+      confirmLabel: "Recusar relatorio",
+      placeholder: "Explique por que o relatorio foi recusado...",
+      onSubmit: feedback => {
+        setData(d => ({
+          ...d,
+          missoes: d.missoes.map(x => x.id === m.id ? {
+            ...x,
+            status: "devolvida",
+            feedbackRevisao: feedback,
+            devolvidaEm: new Date().toISOString(),
+            devolvidaPor: usuario.username,
+          } : x),
+          relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+            ...r,
+            statusAprovacao: "Recusado",
+            feedbackAprovacao: feedback,
+            revisadoPor: usuario.username,
+            revisadoEm: new Date().toISOString(),
+          } : r),
+          activityLog: [...(d.activityLog || []), atividade("relatorio_recusado", usuario?.username, m.id, "Recusou o relatório final de " + m.titulo)],
+        }));
+        window.notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "recusado", feedback));
+      },
+    });
   };
 
   const aprovarResultado = (m) => {
     const relatorio = (data.relatorios || []).find(r => r.id === m.relatorioFinalId);
-    if (!relatorio) { alert("Relatório final não encontrado. Missão não pode ser encerrada sem relatório."); return; }
+    if (!relatorio) {
+      setAviso({
+        title: "Relatorio final nao encontrado",
+        message: "A missao nao pode ser encerrada sem relatorio final enviado por um operador.",
+        tone: "danger",
+      });
+      return;
+    }
     const falhou = relatorio.resultado === "Falha";
     const statusFinal = falhou ? "falhou" : "concluida";
     const statusContrato = falhou ? "Falhou" : "Concluído";
     const texto = falhou ? "confirmar a falha da operação" : "aprovar a conclusão da operação";
-    if (!confirm(`Deseja ${texto}? O contrato vinculado também será atualizado, se existir.`)) return;
-
-    setData(d => ({
-      ...d,
-      missoes: d.missoes.map(x => x.id === m.id ? {
-        ...x,
-        status: statusFinal,
-        concluidaEm: new Date().toISOString(),
-        aprovadaPor: usuario.username,
-        feedbackRevisao: "",
-      } : x),
-      relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
-        ...r,
-        statusAprovacao: "Aprovado",
-        aprovadoPor: usuario.username,
-        aprovadoEm: new Date().toISOString(),
-      } : r),
-      contratos: (d.contratos || []).map(c => c.id === m.contratoId ? {
-        ...c,
-        status: statusContrato,
-        finalizadoEm: new Date().toISOString(),
-        resultadoMissao: relatorio.resultado,
-        relatorioFinalId: relatorio.id,
-      } : c),
-      activityLog: [...(d.activityLog || []), atividade("missao_aprovada", usuario?.username, m.id, "Aprovou o relatório final de " + m.titulo)],
-    }));
-    notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "aprovado"));
+    setConfirmacao({
+      title: `Deseja ${texto}?`,
+      message: "O contrato vinculado tambem sera atualizado, se existir.",
+      tone: falhou ? "danger" : "success",
+      confirmLabel: falhou ? "Confirmar falha" : "Aprovar resultado",
+      onConfirm: () => {
+        setData(d => ({
+          ...d,
+          missoes: d.missoes.map(x => x.id === m.id ? {
+            ...x,
+            status: statusFinal,
+            concluidaEm: new Date().toISOString(),
+            aprovadaPor: usuario.username,
+            feedbackRevisao: "",
+          } : x),
+          relatorios: (d.relatorios || []).map(r => r.id === m.relatorioFinalId ? {
+            ...r,
+            statusAprovacao: "Aprovado",
+            aprovadoPor: usuario.username,
+            aprovadoEm: new Date().toISOString(),
+          } : r),
+          contratos: (d.contratos || []).map(c => c.id === m.contratoId ? {
+            ...c,
+            status: statusContrato,
+            finalizadoEm: new Date().toISOString(),
+            resultadoMissao: relatorio.resultado,
+            relatorioFinalId: relatorio.id,
+          } : c),
+          activityLog: [...(d.activityLog || []), atividade("missao_aprovada", usuario?.username, m.id, "Aprovou o relatório final de " + m.titulo)],
+        }));
+        window.notificarDiscordUsuarios(data, m.participants || [m.assignedTo], "relatorio", mensagemDiscordRelatorio(data, m, "aprovado"));
+      },
+    });
   };
 
   const arquivar = (m) => {
     if (m.status === "andamento" || m.status === "aceita" || m.status === "atribuida") {
-      alert("Missão ativa não deve ser arquivada sem relatório final e decisão da liderança.");
+      setAviso({
+        title: "Missao ativa",
+        message: "Missao ativa nao deve ser arquivada sem relatorio final e decisao da lideranca.",
+        tone: "danger",
+      });
       return;
     }
-    if (!confirm(`Arquivar a missão "${m.titulo}"?`)) return;
-    atualizar(m.id, { status: "arquivada", arquivadaEm: new Date().toISOString() });
+    setConfirmacao({
+      title: `Arquivar "${m.titulo}"?`,
+      message: "A missao sairá da rotina ativa e ficara como registro historico.",
+      tone: "default",
+      confirmLabel: "Arquivar",
+      onConfirm: () => atualizar(m.id, { status: "arquivada", arquivadaEm: new Date().toISOString() }),
+    });
   };
+
+  const renderAcoesOperacionais = (m) => (
+    <div className="flex gap-2 flex-wrap">
+      {["atribuida", "pendente", "aceita"].includes(m.status) && (
+        <Btn onClick={() => iniciarPelaLideranca(m)} variant="primary"><ISwords className="w-3 h-3" /> Iniciar</Btn>
+      )}
+      {m.status === "revisao" && (
+        <>
+          <Btn onClick={() => aprovarResultado(m)} variant="success"><ICheck className="w-3 h-3" /> Aprovar</Btn>
+          <Btn onClick={() => devolverParaAjustes(m)} variant="default"><IEdit className="w-3 h-3" /> Ajustes</Btn>
+          <Btn onClick={() => recusarRelatorio(m)} variant="danger"><IX className="w-3 h-3" /> Recusar</Btn>
+        </>
+      )}
+      {["concluida", "falhou", "recusada"].includes(m.status) && (
+        <Btn onClick={() => arquivar(m)} variant="ghost"><IFile className="w-3 h-3" /> Arquivar</Btn>
+      )}
+    </div>
+  );
 
   const todas = (data.missoes || []).slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const ativas = todas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
   const encerradas = todas.filter(m => MISSAO_STATUS_TERMINAIS.includes(m.status));
   const missoes = filtro === "Ativas" ? ativas : filtro === "Encerradas" ? encerradas : todas;
+  const colunasKanban = MISSAO_KANBAN_COLUNAS.map(col => ({ ...col, missoes: missoes.filter(m => col.statuses.includes(m.status || "atribuida")) }));
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h3 className="text-orange-50 font-bold text-lg serif">Centro de Operações ({todas.length})</h3>
-          <p className="text-zinc-600 text-xs">Contrato ou missão → divisão/equipe/membro → aceite → execução → relatório obrigatório → aprovação.</p>
-        </div>
+      <div className="flex justify-end gap-3 flex-wrap">
         {!criando && <Btn onClick={() => setCriando(true)} variant="primary"><IPlus className="w-3 h-3" /> Nova Missão</Btn>}
       </div>
 
@@ -7258,18 +8224,112 @@ function MissoesManager({ data, setData, usuario, role }) {
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap">
-        {["Ativas", "Encerradas", "Todas"].map(f => {
-          const count = f === "Ativas" ? ativas.length : f === "Encerradas" ? encerradas.length : todas.length;
-          return <button key={f} onClick={() => setFiltro(f)} className={`px-3 py-1.5 rounded text-xs uppercase tracking-wider font-bold border ${filtro === f ? "bg-orange-700 border-orange-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500"}`}>{f} ({count})</button>;
-        })}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {["Ativas", "Encerradas", "Todas"].map(f => {
+            const count = f === "Ativas" ? ativas.length : f === "Encerradas" ? encerradas.length : todas.length;
+            return <button key={f} onClick={() => setFiltro(f)} className={`px-3 py-1.5 rounded text-xs uppercase tracking-wider font-bold border ${filtro === f ? "bg-orange-700 border-orange-600 text-white" : "bg-zinc-950 border-zinc-800 text-zinc-500"}`}>{f} ({count})</button>;
+          })}
+        </div>
+        <div className="jikkai-segmented grid grid-cols-2 gap-1 border border-zinc-800 bg-zinc-950/85 min-w-[180px]">
+          {[
+            ["kanban", "Kanban"],
+            ["lista", "Lista"],
+          ].map(([id, label]) => (
+            <button key={id} onClick={() => setModoVisual(id)} className={`rounded-xl px-3 py-2 text-[10px] uppercase font-black transition-all ${modoVisual === id ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {missoes.length === 0 && !criando && (
         <div className="p-8 text-center bg-zinc-950/50 border border-zinc-800 rounded-lg text-zinc-600 italic">Nenhuma missão neste filtro.</div>
       )}
 
-      <div className="space-y-3">
+      {modoVisual === "kanban" && missoes.length > 0 && (
+        <div className="grid md:grid-cols-2 xl:grid-cols-5 gap-3 items-start">
+          {colunasKanban.map(col => (
+            <section key={col.id} className={`rounded-xl border ${col.tone} p-3 min-h-[230px]`}>
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <div className="text-orange-50 font-black serif">{col.label}</div>
+                  <div className="text-zinc-600 text-[10px] leading-relaxed mt-1">{col.desc}</div>
+                </div>
+                <span className="min-w-7 text-center rounded-full border border-zinc-700 bg-black px-2 py-1 text-[10px] font-black text-orange-200">{col.missoes.length}</span>
+              </div>
+              <div className="space-y-2">
+                {col.missoes.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-zinc-800 bg-black/25 p-4 text-center text-[11px] text-zinc-700">Sem operacao nesta etapa.</div>
+                )}
+                {col.missoes.map(m => {
+                  const c = statusMissaoConfig(m.status);
+                  const sigilo = normalizarSigilo(m.sigilo);
+                  const autorizado = podeVerItemSigiloso(m, data, usuario, role);
+                  if (!autorizado) return <ConteudoCensurado key={m.id} sigilo={sigilo} tipo="OPERACAO" />;
+                  const participantes = participantesDaMissao(m);
+                  const objetivos = m.objetivos || [];
+                  const concluidos = objetivos.filter(o => o.done).length;
+                  const prog = objetivos.length > 0 ? Math.round(concluidos / objetivos.length * 100) : 0;
+                  const relatorio = m.relatorioFinalId ? (data.relatorios || []).find(r => r.id === m.relatorioFinalId) : null;
+                  const contrato = m.contratoId ? (data.contratos || []).find(x => x.id === m.contratoId) : null;
+                  const expanded = expandida === m.id;
+                  const assignmentLabel = m.assignmentLabel || escopoOperacionalLabel(data, m.attributionType, m.targetId, participantes.length > 1 ? "Equipe operacional" : "Operador individual");
+                  return (
+                    <article key={m.id} className={`rounded-lg border ${c.border} bg-black/45 p-3 shadow-inner`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-orange-50 font-bold text-sm leading-tight">{m.titulo}</div>
+                          <div className="flex gap-1.5 flex-wrap mt-1">
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase tracking-wider ${c.badge}`}>{c.label}</span>
+                            <SigiloBadge sigilo={sigilo} compacto />
+                          </div>
+                        </div>
+                        <button onClick={() => setExpandida(expanded ? null : m.id)} className="text-orange-400 p-1 leading-none" title="Detalhes">{expanded ? "-" : "+"}</button>
+                      </div>
+                      <div className="mt-2 text-[10px] text-zinc-500 leading-relaxed">
+                        {assignmentLabel}<br />
+                        {participantes.length} operador{participantes.length === 1 ? "" : "es"} - {(m.aceites || []).length}/{participantes.length} aceitaram
+                      </div>
+                      {objetivos.length > 0 && (
+                        <div className="mt-2">
+                          <div className="h-1.5 rounded-full bg-zinc-900 overflow-hidden"><div className="h-full bg-orange-600" style={{ width: `${prog}%` }} /></div>
+                          <div className="text-[9px] text-zinc-600 mt-1">{concluidos}/{objetivos.length} objetivos - {prog}%</div>
+                        </div>
+                      )}
+                      {expanded && (
+                        <div className="mt-3 pt-3 border-t border-zinc-800 space-y-3 fadein">
+                          {m.desc && <p className="text-zinc-400 text-xs leading-relaxed">{m.desc}</p>}
+                          {contrato && <div className="rounded border border-red-900/40 bg-red-950/10 p-2 text-[11px] text-red-200">Contrato: {contrato.titulo}</div>}
+                          <div className="flex gap-1 flex-wrap">
+                            {participantes.slice(0, 8).map(p => {
+                              const u = data.users.find(x => x.username === p);
+                              return <span key={p} className="px-2 py-1 rounded border border-zinc-800 bg-zinc-950 text-zinc-400 text-[9px]">{u ? getCodinome(u) : p}</span>;
+                            })}
+                            {participantes.length > 8 && <span className="px-2 py-1 rounded border border-zinc-800 bg-zinc-950 text-zinc-600 text-[9px]">+{participantes.length - 8}</span>}
+                          </div>
+                          {relatorio ? (
+                            <div className="rounded border border-purple-900/50 bg-purple-950/10 p-2 text-[11px] text-zinc-300">
+                              <div className="text-purple-300 uppercase tracking-wider text-[9px] mb-1">Relatorio final - {relatorio.resultado}</div>
+                              <div className="line-clamp-3">{relatorio.resumo || relatorio.descricao}</div>
+                            </div>
+                          ) : (
+                            <div className="rounded border border-purple-900/40 bg-purple-950/10 p-2 text-[11px] text-purple-200">Aguardando relatorio final do operador.</div>
+                          )}
+                          {renderAcoesOperacionais(m)}
+                          <button onClick={() => remover(m.id)} className="text-red-500 text-[10px] uppercase tracking-wider font-bold">Remover missao</button>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {modoVisual === "lista" && <div className="space-y-3">
         {missoes.map((m) => {
           const c = statusMissaoConfig(m.status);
           const sigilo = normalizarSigilo(m.sigilo);
@@ -7356,7 +8416,10 @@ function MissoesManager({ data, setData, usuario, role }) {
             </div>
           );
         })}
-      </div>
+      </div>}
+      <PortalDecisionModal dialog={confirmacao} onClose={() => setConfirmacao(null)} />
+      <PortalNoticeModal notice={aviso} onClose={() => setAviso(null)} />
+      <FeedbackReviewModal modal={feedbackModal} onClose={() => setFeedbackModal(null)} />
     </div>
   );
 }
@@ -7402,7 +8465,7 @@ function DiscordManager({ data, setData, usuario }) {
     setEnviando(true);
     setStatus("Enviando convocação...");
     try {
-      const resultado = await notificarDiscordUsuarios(data, selecionados, "convocacao", content);
+      const resultado = await window.notificarDiscordUsuarios(data, selecionados, "convocacao", content);
       const ok = resultado.filter(r => r.ok).length;
       const falhas = resultado.length - ok;
       const detalhesFalhas = resultado.filter(r => !r.ok).map(r => r.reason).filter(Boolean).slice(0, 3).join(" | ");
@@ -7426,6 +8489,9 @@ function DiscordManager({ data, setData, usuario }) {
     assunto,
     mensagem,
     lider: getCodinome(usuario),
+    pendencia: "Dossiê incompleto",
+    motivo: "Complete seu dossiê no portal para facilitar designações e registros da Jikkai.",
+    responsavel: "Tenshi / Equipe Corvos",
   });
 
   return (
@@ -7833,10 +8899,15 @@ function migrate(raw) {
     if (!rolesOut.find(r => r.id === rolePadrao.id)) rolesOut.push({ ...rolePadrao });
   }
   rolesOut = rolesOut.map(r => {
-    if (r.id === "leader") return { ...r, hasLeaderPerms: true, protected: true, estruturaPosicao: "lider", ordemEstrutura: 0 };
-    if (r.id === "conselheiro") return { ...r, hasLeaderPerms: false, protected: true, estruturaPosicao: "conselheiro", ordemEstrutura: Number(r.ordemEstrutura) || 10, permissions: r.permissions.length ? r.permissions : ["manage_users", "manage_missions"] };
+    if (r.id === "leader") return { ...r, nome: r.nome || "Líder", hasLeaderPerms: true, protected: true, estruturaPosicao: "lider", ordemEstrutura: 0 };
+    if (r.id === "herdeiro") return { ...r, protected: true, estruturaPosicao: "braco_direito", ordemEstrutura: Number(r.ordemEstrutura) || 4, permissions: r.permissions.length ? r.permissions : ["manage_users", "manage_missions", "edit_contracts", "edit_reports", "edit_trios", "manage_juramentados"] };
+    if (r.id === "braco_direito") return { ...r, protected: true, estruturaPosicao: "braco_direito", ordemEstrutura: Number(r.ordemEstrutura) || 5, permissions: r.permissions.length ? r.permissions : ["manage_users", "manage_missions", "edit_contracts", "edit_reports", "edit_trios"] };
+    if (r.id === "conselheiro") return { ...r, hasLeaderPerms: false, protected: true, estruturaPosicao: "conselheiro", ordemEstrutura: Number(r.ordemEstrutura) || 10, permissions: r.permissions.length ? r.permissions : ["manage_users", "manage_missions", "edit_reports"] };
     if (r.id === "capitao") return { ...r, protected: true, estruturaPosicao: "capitao_ramo", ordemEstrutura: Number(r.ordemEstrutura) || 30, permissions: Array.from(new Set([...(r.permissions || []), "manage_missions"])) };
-    if (r.id === "member") return { ...r, protected: true, estruturaPosicao: r.estruturaPosicao || "operador", ordemEstrutura: Number(r.ordemEstrutura) || 100 };
+    if (r.id === "executor") return { ...r, protected: true, estruturaPosicao: "operador", ordemEstrutura: Number(r.ordemEstrutura) || 60 };
+    if (r.id === "member") return { ...r, nome: r.nome === "Membro" ? "Soldado" : (r.nome || "Soldado"), protected: true, estruturaPosicao: r.estruturaPosicao || "operador", ordemEstrutura: Number(r.ordemEstrutura) || 100 };
+    if (r.id === "associado") return { ...r, protected: true, estruturaPosicao: r.estruturaPosicao || "independente", ordemEstrutura: Number(r.ordemEstrutura) || 130 };
+    if (r.id === "recruta") return { ...r, protected: true, estruturaPosicao: r.estruturaPosicao || "operador", ordemEstrutura: Number(r.ordemEstrutura) || 150 };
     if (r.id === "contratante") return { ...r, protected: true, estruturaPosicao: "fora", ordemEstrutura: 999 };
     return { ...r, estruturaPosicao: normalizarPosicaoEstrutura(r), ordemEstrutura: ordemEstruturaRole(r) };
   });
@@ -8282,7 +9353,7 @@ function App() {
     };
   }, [usuarioAtual?.username, tab, navigationRequest?.token]);
   const isLider = isRootUser(usuarioAtual) || role?.hasLeaderPerms === true;
-  const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_missions") || hasPerm(role, "manage_roles");
+  const podeGerenciar = isLider || hasPerm(role, "manage_users") || hasPerm(role, "manage_roles");
   const isContratante = !isRootUser(usuarioAtual) && usuarioAtual?.role === "contratante";
   const meuJuramento = juramentoDoUsuario(data?.juramentados, usuarioAtual);
   const nivelAcesso = nivelAcessoUsuario(data, usuarioAtual, role);
@@ -8451,7 +9522,7 @@ function App() {
 
   const mobilePrimaryIds = isContratante
     ? ["visaogeral", "jikkai", "arquivos"]
-    : ["home", "missoes", "membros", "jikkai"];
+    : ["home", "missoes", "membros"];
   const mobilePrimaryTabs = TABS.filter(t => mobilePrimaryIds.includes(t.id));
   const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id));
   const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
@@ -8542,7 +9613,7 @@ function App() {
         {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "armas" && !isContratante && <ArmasPage data={data} setData={setData} isLider={isLider} />}
-        {tab === "missoes" && !isContratante && <MinhasMissoesPage data={data} setData={setData} usuario={usuarioAtual} role={role} onNavigate={navegarPara} navigationRequest={navigationRequest} />}
+        {tab === "missoes" && !isContratante && <MissoesOperacionaisPage data={data} setData={setData} usuario={usuarioAtual} role={role} onNavigate={navegarPara} navigationRequest={navigationRequest} />}
         {tab === "juramento" && !isContratante && <JuramentoPage usuario={usuarioAtual} juramentado={meuJuramento} juramentar={juramentar} juramentados={data.juramentados} removerJuramento={removerJuramento} isLider={isLider} data={data} />}
         {tab === "visaogeral" && <VisaoGeralContratantes data={data} setData={setData} isLider={isLider} />}
         {tab === "arquivos" && isContratante && <ArquivoPublicoPage data={data} />}
