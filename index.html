@@ -373,7 +373,7 @@ const PERMISSIONS_LIST = [
   { id: "manage_missions",     label: "Gerenciar missões", desc: "Criar, editar e atribuir missões" },
   { id: "manage_roles",        label: "Gerenciar cargos", desc: "Criar/editar cargos e selos" },
   { id: "edit_history",        label: "Editar História", desc: "Editar linha do tempo" },
-  { id: "edit_clans",          label: "Editar Clãs & Mandamentos", desc: "Criar/editar clãs e os 7 mandamentos" },
+  { id: "edit_clans",          label: "Editar Clãs & Código Jikkai", desc: "Criar/editar clãs e os 5 mandamentos da Jikkai" },
   { id: "edit_trios",          label: "Editar Equipes", desc: "Criar e editar equipes das divisões" },
   { id: "edit_arms",           label: "Editar Armas", desc: "Editar armas lendárias" },
   { id: "edit_jikkai",         label: "Editar JIKKAI", desc: "Editar fases e objetivos do plano" },
@@ -464,7 +464,7 @@ function ordemEstruturaRole(role) {
 const DEFAULT_USERS = [
   {
     username: "leader", password: "jikkai123", role: "leader",
-    displayName: "Líder Supremo", nomeRP: "Líder Supremo", codinome: "Alpha",
+    displayName: "Líder Supremo", nomeRP: "Líder Supremo", codinome: "VIPER",
     status: "Líder", level: 50, cla: "soke", elemento: "", linhagem: "",
     vilaOrigem: "", patente: "Líder Supremo", especialidade: "Comando estratégico",
     bio: "", avatarUrl: "", avatarStoragePath: "", estruturaNivel: "lideranca",
@@ -475,7 +475,8 @@ const DEFAULT_USERS = [
 ];
 
 // Mandamentos default — agora editáveis e armazenados em data.mandamentos
-const DEFAULT_MANDAMENTOS = [
+// Código da organização Jikkai: 5 princípios, sem vínculo obrigatório ao Clã Lamona.
+const OLD_DEFAULT_MANDAMENTOS = [
   "O sangue Lamona vem antes de qualquer vila.",
   "Nenhum juramentado é abandonado em campo.",
   "A força só é usada em defesa — até a ordem do líder.",
@@ -484,6 +485,24 @@ const DEFAULT_MANDAMENTOS = [
   "Discrição acima de glória. Sombras acima de holofotes.",
   "A palavra do líder é lei até que o conselho a conteste.",
 ];
+
+const DEFAULT_MANDAMENTOS = [
+  "A Jikkai vem antes da glória pessoal.",
+  "Nenhum juramentado é abandonado quando age pela organização.",
+  "Informação interna permanece nas sombras, salvo ordem da liderança.",
+  "Toda ação em nome da Jikkai exige responsabilidade, discrição e consequência.",
+  "Quem trai o selo, trai a própria sombra dentro da Jikkai.",
+];
+
+function normalizarMandamentosJikkai(lista) {
+  const arr = Array.isArray(lista) ? lista.map(m => String(m || "").trim()).filter(Boolean) : [];
+  const legadoLamona = arr.some(m => /Lamona|trai o clã|palavra do líder é lei/i.test(m));
+  const igualLegado = arr.length === OLD_DEFAULT_MANDAMENTOS.length && arr.every((m, i) => m === OLD_DEFAULT_MANDAMENTOS[i]);
+  if (!arr.length || legadoLamona || igualLegado) return [...DEFAULT_MANDAMENTOS];
+  const cinco = arr.slice(0, DEFAULT_MANDAMENTOS.length);
+  while (cinco.length < DEFAULT_MANDAMENTOS.length) cinco.push(DEFAULT_MANDAMENTOS[cinco.length]);
+  return cinco;
+}
 
 // Helpers para exibição de nomes respeitando o cargo do viewer
 function getCodinome(u) {
@@ -854,7 +873,7 @@ const EQUIPE_PAPEIS = ["Líder", "Soldado", "Recruta", "Associado", "Ataque", "S
 const DEFAULT_FASES = [
   { n: 1, titulo: "Preparação & Consolidação", desc: "Reunir membros, definir líder, mandamentos, hierarquia. Farmar nível, dinheiro, profissão.", objetivos: [
     { text: "Definir líder", done: true },
-    { text: "Estabelecer mandamentos", done: true },
+    { text: "Estabelecer o código da Jikkai", done: true },
     { text: "Farmar nível 50", done: false },
     { text: "Definir elementos e linhagens estratégicas", done: false },
   ], status: "andamento" },
@@ -906,6 +925,280 @@ const DEFAULT_CLAS = [
 ];
 
 const FRASE_JURAMENTO = "Que meu próprio sangue queime, que as correntes da minha alma me esmaguem se eu trair este juramento";
+
+// ============ SELO DE ENTRADA + BANCO DE CODINOMES ============
+const CODINOME_STATUS = ["disponivel", "reservado", "em_uso", "restrito", "aposentado", "banido"];
+const CODINOMES_RESTRITOS_PADRAO = ["alpha", "omega", "prime", "zero", "oracle", "warden"];
+const CODINOME_SEED = [
+  ["VIPER", "Liderança", "Codinome permanente do líder da Jikkai.", "em_uso", true, "leader"],
+  ["Alpha", "Liderança", "Selo restrito de comando.", "restrito", true, ""],
+  ["Omega", "Liderança", "Selo restrito de encerramento e último recurso.", "restrito", true, ""],
+  ["Prime", "Liderança", "Selo restrito para autoridade de primeira linha.", "restrito", true, ""],
+  ["Zero", "Liderança", "Selo restrito para identidade apagada.", "restrito", true, ""],
+  ["Oracle", "Liderança", "Selo restrito para conselho e leitura estratégica.", "restrito", true, ""],
+  ["Warden", "Liderança", "Selo restrito para guarda da ordem.", "restrito", true, ""],
+  ["Ghost", "Sombra", "Presença invisível. Operador de infiltração."],
+  ["Spencer", "Agente", "Codinome de agente clássico e profissional."],
+  ["Kazen", "Elemento", "Vento e fogo em uma assinatura original."],
+  ["Phantom", "Sombra", "Aparição que atravessa linhas inimigas."],
+  ["Wraith", "Sombra", "Espírito vingativo e difícil de rastrear."],
+  ["Shade", "Sombra", "Sombra compacta, silenciosa e constante."],
+  ["Specter", "Sombra", "Espectro de presença quase impossível de fixar."],
+  ["Raven", "Inteligência", "Corvo de observação, presságio e mensagem."],
+  ["Cipher", "Inteligência", "Código vivo, enigma e criptografia."],
+  ["Haze", "Sombra", "Névoa baixa, confusão e sumiço."],
+  ["Dusk", "Sombra", "Crepúsculo, transição e operação noturna."],
+  ["Umbra", "Sombra", "Sombra profunda e núcleo oculto."],
+  ["Hollow", "Sombra", "Vazio, silêncio interno e frieza."],
+  ["Mamba", "Predador", "Cobra letal, rápida e precisa."],
+  ["Fang", "Predador", "Presa direta, ofensiva e intimidadora."],
+  ["Talon", "Predador", "Garra aérea e captura precisa."],
+  ["Raptor", "Predador", "Caçador veloz e agressivo."],
+  ["Wolf", "Predador", "Lobo de matilha, caça e resistência."],
+  ["Jackal", "Predador", "Sobrevivente oportunista, astuto e persistente."],
+  ["Scorpion", "Predador", "Ataque curto, veneno e contra-golpe."],
+  ["Basilisk", "Predador", "Presença mortal e paralisante."],
+  ["Reaper", "Executor", "Ceifador, finalizador e ameaça simbólica."],
+  ["Raiden", "Elemento", "Trovão, impacto e domínio elétrico."],
+  ["Storm", "Elemento", "Tempestade aberta e pressão constante."],
+  ["Frost", "Elemento", "Frieza, controle e resistência."],
+  ["Ember", "Elemento", "Brasa viva, pequena mas persistente."],
+  ["Ash", "Elemento", "Cinzas depois do fogo e da queda."],
+  ["Cinder", "Elemento", "Cinza ardente, fogo contido."],
+  ["Onyx", "Elemento", "Pedra negra, elegância e rigidez."],
+  ["Obsidian", "Elemento", "Vidro vulcânico negro, corte e defesa."],
+  ["Nova", "Impacto", "Explosão de presença e ascensão."],
+  ["Havoc", "Impacto", "Caos controlado em campo."],
+  ["Ruin", "Impacto", "Queda, destruição e consequência."],
+  ["Knox", "Agente", "Curto, duro e profissional."],
+  ["Graves", "Agente", "Sombrio, sério e marcado por perdas."],
+  ["Bishop", "Agente", "Peça estratégica, calculista e posicional."],
+  ["Mercer", "Agente", "Frio, mercenário e eficiente."],
+  ["Cross", "Agente", "Marca, cruzamento e execução objetiva."],
+  ["Archer", "Agente", "Precisão, distância e alvo."],
+  ["Kane", "Agente", "Agressivo, simples e memorável."],
+  ["Wolfe", "Agente", "Lobo com assinatura mais elegante."],
+  ["Vance", "Agente", "Comando seco e presença de oficial."],
+  ["Pierce", "Agente", "Penetração, perfuração e foco."],
+  ["Blackfox", "F.O.X.", "Raposa negra, identidade direta da organização."],
+  ["Redfox", "F.O.X.", "Raposa vermelha, fogo e linhagem."],
+  ["Silverfox", "F.O.X.", "Raposa prateada, astúcia e maturidade."],
+  ["Nightfox", "F.O.X.", "Raposa noturna e operações discretas."],
+  ["Ghostfox", "F.O.X.", "Raposa fantasma, sumiço e rastros apagados."],
+  ["Vulpes", "F.O.X.", "Nome latino da raposa, selo elegante."],
+  ["Kiba", "F.O.X.", "Presa curta, direta e feroz."],
+  ["Kurokiba", "F.O.X.", "Presa negra e assinatura sombria."],
+  ["Yoru", "F.O.X.", "Noite, silêncio e movimento oculto."],
+  ["Tenko", "F.O.X.", "Raposa celestial, selo raro."],
+  ["Nemesis", "Elite", "Rival inevitável, vingança e destino."],
+  ["Revenant", "Elite", "Aquele que retorna depois da queda."],
+  ["Ronin", "Elite", "Guerreiro sem mestre, disciplina própria."],
+  ["Aegis", "Elite", "Escudo, proteção e defesa superior."],
+  ["Orion", "Elite", "Caçador, estrela e mira."],
+  ["Helix", "Elite", "Espiral, linhagem e evolução."],
+  ["Vector", "Elite", "Direção, alvo e cálculo."],
+  ["Rune", "Elite", "Símbolo, marca e escrita selada."],
+  ["Sigil", "Elite", "Selo arcano e registro oculto."],
+  ["Omen", "Elite", "Presságio e sinal de perigo."],
+  ["Bane", "Elite", "Destruidor, ruína de inimigos."],
+  ["Creed", "Elite", "Código, crença e juramento."]
+];
+
+const DEFAULT_CODINOMES = CODINOME_SEED.map(([nome, categoria, descricao = "", status = "disponivel", restrito = false, usadoPor = ""]) => ({
+  id: slugEstrutura(nome), nome, categoria, descricao, status, restrito: Boolean(restrito), usadoPor,
+  usadoEm: usadoPor ? new Date().toISOString() : "", reservadoParaConvite: "", reservadoEm: "", conviteId: ""
+}));
+
+function codinomeId(valor) { return slugEstrutura(valor); }
+function codinomeNome(valor) { return String(valor || "").trim(); }
+function codinomeIgual(a, b) { return codinomeId(a) === codinomeId(b); }
+function codinomeStatusLabel(status) {
+  return ({ disponivel: "Disponível", reservado: "Reservado", em_uso: "Em uso", restrito: "Restrito", aposentado: "Aposentado", banido: "Banido" })[status] || "Disponível";
+}
+function normalizarTokenConvite(token) { return String(token || "").trim().toUpperCase(); }
+function gerarTokenConvite() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "SELO-";
+  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+function conviteExpirado(convite) {
+  return Boolean(convite?.expiraEm && new Date(convite.expiraEm).getTime() < Date.now());
+}
+function linkConvitePortal(token) {
+  try {
+    const url = new URL(window.location.href);
+    url.search = "?convite=" + encodeURIComponent(normalizarTokenConvite(token));
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return "?convite=" + encodeURIComponent(normalizarTokenConvite(token));
+  }
+}
+function urlConviteAtual() {
+  try { return normalizarTokenConvite(new URLSearchParams(window.location.search).get("convite") || ""); }
+  catch { return ""; }
+}
+function limparUrlConvite() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("convite");
+    window.history.replaceState({}, "", url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : "") + url.hash);
+  } catch {}
+}
+function normalizarCodinomeEntrada(c, fallback = {}) {
+  const nome = codinomeNome(c?.nome || fallback.nome);
+  const id = codinomeId(c?.id || nome);
+  const status = CODINOME_STATUS.includes(c?.status) ? c.status : (fallback.status || "disponivel");
+  return {
+    id,
+    nome: nome || fallback.nome || id,
+    categoria: c?.categoria || fallback.categoria || "Geral",
+    descricao: c?.descricao || fallback.descricao || "",
+    status,
+    restrito: Boolean(c?.restrito || fallback.restrito || CODINOMES_RESTRITOS_PADRAO.includes(id)),
+    usadoPor: c?.usadoPor || fallback.usadoPor || "",
+    usadoEm: c?.usadoEm || fallback.usadoEm || "",
+    reservadoParaConvite: c?.reservadoParaConvite || "",
+    reservadoEm: c?.reservadoEm || "",
+    conviteId: c?.conviteId || fallback.conviteId || "",
+  };
+}
+function normalizarBancoCodinomes(rawCodinomes, users = []) {
+  const porId = new Map();
+  DEFAULT_CODINOMES.forEach(c => porId.set(c.id, normalizarCodinomeEntrada(c)));
+  (Array.isArray(rawCodinomes) ? rawCodinomes : []).forEach(c => {
+    const normalizado = normalizarCodinomeEntrada(c, porId.get(codinomeId(c?.id || c?.nome)) || {});
+    if (normalizado.id) porId.set(normalizado.id, { ...(porId.get(normalizado.id) || {}), ...normalizado });
+  });
+
+  // VIPER é permanente do líder.
+  const viper = porId.get("viper") || normalizarCodinomeEntrada({ nome: "VIPER", categoria: "Liderança" });
+  porId.set("viper", { ...viper, nome: "VIPER", categoria: "Liderança", status: "em_uso", restrito: true, usadoPor: "leader", usadoEm: viper.usadoEm || new Date().toISOString(), descricao: viper.descricao || "Codinome permanente do líder da Jikkai." });
+
+  CODINOMES_RESTRITOS_PADRAO.forEach(id => {
+    const c = porId.get(id);
+    if (c && c.status !== "em_uso") porId.set(id, { ...c, restrito: true, status: "restrito" });
+  });
+
+  (users || []).forEach(u => {
+    const nome = codinomeNome(u.codinome);
+    if (!nome) return;
+    const id = codinomeId(nome);
+    if (id === "viper" && u.username !== "leader") return;
+    const atual = porId.get(id) || normalizarCodinomeEntrada({ nome, categoria: "Personalizado" });
+    porId.set(id, { ...atual, nome: atual.nome || nome, status: "em_uso", usadoPor: u.username, usadoEm: atual.usadoEm || u.criadoEm || new Date().toISOString() });
+  });
+
+  return Array.from(porId.values()).sort((a, b) => {
+    if (a.id === "viper") return -1;
+    if (b.id === "viper") return 1;
+    const peso = { em_uso: 0, restrito: 1, disponivel: 2, reservado: 3, aposentado: 4, banido: 5 };
+    return (peso[a.status] ?? 9) - (peso[b.status] ?? 9) || a.nome.localeCompare(b.nome);
+  });
+}
+function codinomeUsadoPorOutroUsuario(users, nome, ignoreUsername = "") {
+  const id = codinomeId(nome);
+  if (!id) return false;
+  return (users || []).some(u => u.username !== ignoreUsername && codinomeId(u.codinome) === id);
+}
+function codinomeDisponivelParaConvite(data, nome, convite = null) {
+  const id = codinomeId(nome);
+  if (!id) return false;
+  if (codinomeUsadoPorOutroUsuario(data?.users || [], nome, "")) return false;
+  const c = (data?.codinomes || []).find(x => x.id === id || codinomeId(x.nome) === id);
+  if (!c) return false;
+  if (c.status === "disponivel" && !c.restrito) return true;
+  if (c.status === "reservado" && convite && c.reservadoParaConvite === convite.token) return true;
+  return false;
+}
+function codinomesDisponiveisParaConvite(data, convite = null) {
+  const categoriasLiberadas = Array.isArray(convite?.categoriasLiberadas) ? convite.categoriasLiberadas.filter(Boolean) : [];
+  return (data?.codinomes || [])
+    .filter(c => codinomeDisponivelParaConvite(data, c.nome, convite))
+    .filter(c => !categoriasLiberadas.length || categoriasLiberadas.includes(c.categoria))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+function atualizarBancoCodinomeUsuario(codinomes = [], anteriorCodinome = "", novoCodinome = "", username = "", conviteId = "") {
+  const lista = normalizarBancoCodinomes(codinomes, []);
+  const anteriorId = codinomeId(anteriorCodinome);
+  const novoId = codinomeId(novoCodinome);
+  let out = lista.map(c => ({ ...c }));
+  if (anteriorId && anteriorId !== novoId) {
+    out = out.map(c => c.id === anteriorId && c.usadoPor === username && c.id !== "viper" ? { ...c, status: "aposentado", usadoPor: username, aposentadoEm: new Date().toISOString() } : c);
+  }
+  if (novoId) {
+    const existente = out.find(c => c.id === novoId);
+    const entrada = { ...(existente || normalizarCodinomeEntrada({ nome: novoCodinome, categoria: "Personalizado" })), id: novoId, nome: existente?.nome || codinomeNome(novoCodinome), status: "em_uso", restrito: existente?.restrito || novoId === "viper", usadoPor: username, usadoEm: existente?.usadoEm || new Date().toISOString(), reservadoParaConvite: "", conviteId };
+    out = existente ? out.map(c => c.id === novoId ? entrada : c) : [...out, entrada];
+  }
+  return normalizarBancoCodinomes(out, []);
+}
+function registrarUsuarioPorConviteEstado(data, token, cadastro) {
+  const tokenNormalizado = normalizarTokenConvite(token);
+  const convite = (data.convitesEntrada || []).find(c => normalizarTokenConvite(c.token) === tokenNormalizado);
+  if (!convite) return { error: "Selo de entrada não localizado." };
+  if (convite.status && convite.status !== "pendente") return { error: "Este selo já foi utilizado ou cancelado." };
+  if (conviteExpirado(convite)) return { error: "Este selo expirou. Solicite um novo convite à liderança." };
+
+  const username = String(cadastro.username || "").trim();
+  const senha = String(cadastro.password || "");
+  const nomeRP = String(cadastro.nomeRP || "").trim();
+  const displayName = String(cadastro.displayName || nomeRP || cadastro.codinome || username).trim();
+  const codinome = codinomeNome(cadastro.codinome);
+
+  if (!/^[a-zA-Z0-9_.-]{3,24}$/.test(username)) return { error: "O username deve ter 3 a 24 caracteres e usar apenas letras, números, ponto, underline ou hífen." };
+  if ((data.users || []).some(u => u.username.toLowerCase() === username.toLowerCase())) return { error: "Este username já existe." };
+  if (senha.length < 4) return { error: "A senha precisa ter pelo menos 4 caracteres." };
+  if (!nomeRP) return { error: "Informe seu nome de RP." };
+  if (!codinomeDisponivelParaConvite(data, codinome, convite)) return { error: "Este codinome não está mais disponível." };
+
+  const rolePadrao = convite.rolePadrao || (convite.tipo === "contratante" ? "contratante" : "recruta");
+  const cargo = (data.roles || []).find(r => r.id === rolePadrao) || (data.roles || []).find(r => r.id === "recruta") || (data.roles || [])[0];
+  const now = new Date().toISOString();
+  const novo = normalizarMembro({
+    username,
+    password: senha,
+    displayName,
+    nomeRP,
+    codinome,
+    role: cargo?.id || "recruta",
+    status: "Novo",
+    level: 0,
+    cla: convite.claPadrao || "",
+    elemento: cadastro.elemento || "",
+    linhagem: cadastro.linhagem || "",
+    vilaOrigem: cadastro.vilaOrigem || "",
+    patente: cargo?.id === "contratante" ? "Contratante" : "Recruta em Observação",
+    especialidade: cadastro.especialidade || "",
+    bio: "",
+    estruturaNivel: estruturaPosicaoRole(cargo),
+    respondeA: convite.respondeA || "",
+    nivelAcesso: Math.max(1, Math.min(5, Number(convite.nivelAcesso) || 1)),
+    iniciacaoStatus: cargo?.id === "contratante" ? "concluida" : "pendente",
+    criadoEm: now,
+    criadoPor: convite.criadoPor || "convite",
+    conviteId: convite.id,
+    conviteToken: convite.token,
+    conviteUsadoEm: now,
+    reputacao: "Baixo perfil",
+    lealdade: cargo?.id === "contratante" ? "Observado" : "Observado",
+    conduta: "Limpo",
+  }, false);
+
+  const codinomes = atualizarBancoCodinomeUsuario(data.codinomes || [], "", codinome, username, convite.id);
+  const convitesEntrada = (data.convitesEntrada || []).map(c => c.id === convite.id ? { ...c, status: "usado", usadoPor: username, usadoEm: now, codinomeEscolhido: codinome } : c);
+  return {
+    user: novo,
+    data: {
+      ...data,
+      users: [...(data.users || []), novo],
+      codinomes,
+      convitesEntrada,
+      activityLog: [...(data.activityLog || []), atividade("convite_usado", username, username, `Usou o selo ${convite.token} e assumiu o codinome ${codinome}`)],
+    }
+  };
+}
 
 
 const DISCORD_CLIENT_ID = "1519450321947070474";
@@ -2471,10 +2764,10 @@ function ClaPage({ data, setData, role, embedded = false }) {
   const [editando, setEditando] = useState(false);
   const [draft, setDraft] = useState(data.clas);
   const [editMandamentos, setEditMandamentos] = useState(false);
-  const [draftMandamentos, setDraftMandamentos] = useState(data.mandamentos || []);
+  const [draftMandamentos, setDraftMandamentos] = useState(normalizarMandamentosJikkai(data.mandamentos));
 
   useEffect(() => { if (!editando) setDraft(data.clas); }, [data.clas, editando]);
-  useEffect(() => { if (!editMandamentos) setDraftMandamentos(data.mandamentos || []); }, [data.mandamentos, editMandamentos]);
+  useEffect(() => { if (!editMandamentos) setDraftMandamentos(normalizarMandamentosJikkai(data.mandamentos)); }, [data.mandamentos, editMandamentos]);
 
   const salvar = () => { setData(d => ({ ...d, clas: draft.filter(c => c.nome.trim()) })); setEditando(false); };
   const cancelar = () => { setDraft(data.clas); setEditando(false); };
@@ -2488,14 +2781,12 @@ function ClaPage({ data, setData, role, embedded = false }) {
 
   // Editor de Mandamentos
   const salvarMandamentos = () => {
-    setData(d => ({ ...d, mandamentos: draftMandamentos.filter(m => m.trim()) }));
+    setData(d => ({ ...d, mandamentos: normalizarMandamentosJikkai(draftMandamentos) }));
     setEditMandamentos(false);
   };
-  const cancelarMandamentos = () => { setDraftMandamentos(data.mandamentos || []); setEditMandamentos(false); };
+  const cancelarMandamentos = () => { setDraftMandamentos(normalizarMandamentosJikkai(data.mandamentos)); setEditMandamentos(false); };
   const updateMandamento = (i, val) => setDraftMandamentos(draftMandamentos.map((m, idx) => idx === i ? val : m));
-  const removeMandamento = (i) => setDraftMandamentos(draftMandamentos.filter((_, idx) => idx !== i));
-  const addMandamento = () => setDraftMandamentos([...draftMandamentos, "Novo mandamento"]);
-  const moveMandamento = (i, dir) => {
+    const moveMandamento = (i, dir) => {
     const ni = i + dir;
     if (ni < 0 || ni >= draftMandamentos.length) return;
     const n = [...draftMandamentos];
@@ -2515,7 +2806,7 @@ function ClaPage({ data, setData, role, embedded = false }) {
   );
 
   const clas = editando ? draft : data.clas;
-  const mandamentos = editMandamentos ? draftMandamentos : (data.mandamentos || []);
+  const mandamentos = editMandamentos ? normalizarMandamentosJikkai(draftMandamentos) : normalizarMandamentosJikkai(data.mandamentos);
 
   // Lista membros não-contratantes filtrados por clã
   const membrosDoCla = (claId) => (data.users || []).filter(u => u.role !== "contratante" && u.cla === claId);
@@ -2527,7 +2818,7 @@ function ClaPage({ data, setData, role, embedded = false }) {
         <div className="mb-6 border-l-4 border-orange-600 pl-4">
           <div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">Legado familiar</div>
           <h2 className="text-2xl font-black text-orange-50 serif mt-1">Clã Lamona</h2>
-          <p className="text-zinc-500 text-sm mt-1 italic">A família que antecede a F.O.X.; seus ramos, membros, figuras e mandamentos.</p>
+          <p className="text-zinc-500 text-sm mt-1 italic">A família que antecede a F.O.X.; seus ramos, membros e figuras.</p>
           {action && <div className="mt-3">{action}</div>}
         </div>
       ) : (
@@ -2623,7 +2914,7 @@ function ClaPage({ data, setData, role, embedded = false }) {
       {/* Mandamentos */}
       <div>
         <div className="flex items-center justify-between mb-3 gap-2">
-          <h3 className="text-xl font-bold text-orange-50 serif">Os {mandamentos.length} Mandamentos</h3>
+          <div><h3 className="text-xl font-bold text-orange-50 serif">Os {mandamentos.length} Mandamentos da Jikkai</h3><p className="text-zinc-600 text-xs mt-1">Código da organização, separado do legado Lamona.</p></div>
           {podeEditar && (editMandamentos ? (
             <div className="flex gap-2">
               <Btn onClick={cancelarMandamentos} variant="ghost"><IX className="w-3 h-3" /> Cancelar</Btn>
@@ -2643,7 +2934,7 @@ function ClaPage({ data, setData, role, embedded = false }) {
                   <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
                     <button onClick={() => moveMandamento(i, -1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Subir">↑</button>
                     <button onClick={() => moveMandamento(i, 1)} className="mobile-tap flex-1 sm:flex-none px-3 bg-zinc-900 border border-zinc-800 rounded text-zinc-400" title="Descer">↓</button>
-                    <button onClick={() => removeMandamento(i)} className="mobile-tap flex-1 sm:flex-none px-3 bg-red-950/80 text-red-300 rounded"><ITrash className="w-4 h-4 mx-auto" /></button>
+                    
                   </div>
                 </>
               ) : (
@@ -2651,13 +2942,10 @@ function ClaPage({ data, setData, role, embedded = false }) {
               )}
             </div>
           ))}
-          {editMandamentos && (
-            <Btn onClick={addMandamento} variant="ghost" className="w-full justify-center"><IPlus className="w-3 h-3" /> Adicionar mandamento</Btn>
-          )}
         </div>
         {editMandamentos && (
           <div className="mt-3 text-xs text-yellow-500/80 italic">
-            ⚠ Mudanças nos mandamentos são seladas automaticamente com o ritual de Juramento.
+            ⚠ O juramento da Jikkai possui sempre 5 mandamentos. Edite o texto e a ordem, mas mantenha o código da organização.
           </div>
         )}
       </div>
@@ -7414,7 +7702,7 @@ function fraseJuramentoAceita(valor) {
 }
 
 function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao = false, onConcluido = null }) {
-  const mandamentos = data?.mandamentos || DEFAULT_MANDAMENTOS;
+  const mandamentos = normalizarMandamentosJikkai(data?.mandamentos);
   const [step, setStep] = useState(0);
   const [aceitos, setAceitos] = useState(() => new Array(mandamentos.length).fill(false));
   const [form, setForm] = useState({
@@ -7533,7 +7821,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
 
       {step === 1 && (
         <div className="fadein space-y-4">
-          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Os {mandamentos.length} Mandamentos</h3><p className="text-zinc-500 text-sm">Leia e aceite cada princípio individualmente.</p></div>
+          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Os {mandamentos.length} Mandamentos da Jikkai</h3><p className="text-zinc-500 text-sm">Leia e aceite cada princípio da organização individualmente.</p></div>
           <div className="space-y-2">
             {mandamentos.map((m, i) => (
               <label key={i} className={"flex items-start gap-3 p-4 rounded border cursor-pointer transition-all " + (aceitos[i] ? "bg-orange-950/20 border-orange-700" : "bg-zinc-950/50 border-zinc-800 hover:border-zinc-700")}>
@@ -7542,7 +7830,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
               </label>
             ))}
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(0)} variant="ghost">Voltar</Btn><Btn onClick={() => setStep(2)} variant="primary" disabled={!todosAceitos} className="flex-1 justify-center">{todosAceitos ? "Aceito os Mandamentos" : "Aceite todos (" + aceitos.filter(Boolean).length + "/" + mandamentos.length + ")"}</Btn></div>
+          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(0)} variant="ghost">Voltar</Btn><Btn onClick={() => setStep(2)} variant="primary" disabled={!todosAceitos} className="flex-1 justify-center">{todosAceitos ? "Aceito os Mandamentos da Jikkai" : "Aceite todos (" + aceitos.filter(Boolean).length + "/" + mandamentos.length + ")"}</Btn></div>
         </div>
       )}
 
@@ -8065,6 +8353,12 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(vazio());
   const [erro, setErro] = useState("");
+  const cargosConvite = (data.roles || []).filter(r => r.id !== "leader" && r.hasLeaderPerms !== true);
+  const cargoConvitePadrao = cargosConvite.find(r => r.id === "recruta")?.id || cargosConvite.find(r => r.id === "member")?.id || cargosConvite[0]?.id || "recruta";
+  const [conviteAberto, setConviteAberto] = useState(false);
+  const [conviteForm, setConviteForm] = useState({ tipo: "recruta", rolePadrao: cargoConvitePadrao, nivelAcesso: 1, validadeDias: 7, categoriasLiberadas: [], discordObrigatorio: true });
+  const [conviteGerado, setConviteGerado] = useState(null);
+  const [conviteStatus, setConviteStatus] = useState("");
   const pendentesIniciacao = (data.users || []).filter(u => u.role !== "contratante" && u.iniciacaoStatus === "pendente");
   const focoIniciacoes = navigationAction === "iniciacoes-pendentes";
   useEffect(() => {
@@ -8072,12 +8366,76 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
     setEditando(null);
     setTimeout(() => document.getElementById("iniciacoes-pendentes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
   }, [navigationAction, pendentesIniciacao.length]);
+
+  const categoriasCodinome = Array.from(new Set((data.codinomes || []).map(c => c.categoria).filter(Boolean))).sort();
+  const convitesRecentes = (data.convitesEntrada || []).slice().sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0)).slice(0, 8);
+  const codinomesDisponiveis = codinomesDisponiveisParaConvite(data, { categoriasLiberadas: conviteForm.categoriasLiberadas });
+
+  const gerarConviteEntrada = () => {
+    let token = gerarTokenConvite();
+    const usados = new Set((data.convitesEntrada || []).map(c => normalizarTokenConvite(c.token)));
+    while (usados.has(token)) token = gerarTokenConvite();
+    const now = new Date();
+    const validadeDias = Number(conviteForm.validadeDias) || 7;
+    const convite = {
+      id: "convite_" + uid(),
+      token,
+      tipo: conviteForm.tipo || "recruta",
+      rolePadrao: conviteForm.rolePadrao || cargoConvitePadrao,
+      nivelAcesso: Math.max(1, Math.min(5, Number(conviteForm.nivelAcesso) || 1)),
+      status: "pendente",
+      criadoPor: usuario?.username || "leader",
+      criadoEm: now.toISOString(),
+      expiraEm: new Date(now.getTime() + validadeDias * 24 * 60 * 60 * 1000).toISOString(),
+      usadoPor: "",
+      usadoEm: "",
+      codinomeEscolhido: "",
+      discordObrigatorio: conviteForm.discordObrigatorio !== false,
+      categoriasLiberadas: conviteForm.categoriasLiberadas || [],
+    };
+    setData(d => ({
+      ...d,
+      convitesEntrada: [...(d.convitesEntrada || []), convite],
+      activityLog: [...(d.activityLog || []), atividade("convite_criado", usuario?.username, convite.token, "Gerou um Selo de Entrada")],
+    }));
+    setConviteGerado(convite);
+    setConviteStatus("Selo de Entrada gerado. Envie o link para o novo membro.");
+  };
+
+  const copiarLinkConvite = async (convite) => {
+    const link = linkConvitePortal(convite.token);
+    try {
+      await navigator.clipboard.writeText(link);
+      setConviteStatus("Link copiado para a área de transferência.");
+    } catch {
+      setConviteStatus(link);
+    }
+  };
+
+  const revogarConvite = (convite) => {
+    if (!confirm("Revogar este Selo de Entrada?")) return;
+    setData(d => ({
+      ...d,
+      convitesEntrada: (d.convitesEntrada || []).map(c => c.id === convite.id ? { ...c, status: "cancelado", canceladoEm: new Date().toISOString(), canceladoPor: usuario?.username || "leader" } : c),
+      activityLog: [...(d.activityLog || []), atividade("convite_revogado", usuario?.username, convite.token, "Revogou um Selo de Entrada")],
+    }));
+  };
+
+  const toggleCategoriaConvite = (categoria) => {
+    setConviteForm(f => {
+      const atual = new Set(f.categoriasLiberadas || []);
+      if (atual.has(categoria)) atual.delete(categoria); else atual.add(categoria);
+      return { ...f, categoriasLiberadas: Array.from(atual) };
+    });
+  };
+
   const iniciarEdit = u => { setEditando(u.username); setForm({ ...normalizarMembro(u), password: "" }); setErro(""); };
   const iniciarNovo = () => { setEditando("__novo__"); setForm(vazio()); setErro(""); };
   const cancelar = () => { setEditando(null); setErro(""); };
   const salvar = () => {
     if (!form.username.trim() || !form.displayName.trim()) { setErro("Username e nome são obrigatórios."); return; }
     if (editando === "__novo__" && data.users.some(u => u.username.toLowerCase() === form.username.trim().toLowerCase())) { setErro("Username já existe."); return; }
+    if (form.codinome?.trim() && codinomeUsadoPorOutroUsuario(data.users || [], form.codinome, editando === "__novo__" ? "" : editando)) { setErro("Este codinome já pertence a outro membro."); return; }
     if (editando === "__novo__" && !form.password) { setErro("Senha obrigatória para novo usuário."); return; }
     const username = form.username.trim();
     const anteriorAntesSalvar = editando !== "__novo__" ? data.users.find(u => u.username === editando) : null;
@@ -8087,13 +8445,13 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
     setData(d => {
       if (editando === "__novo__") {
         const novo = normalizarMembro({ ...form, username, nomeRP: form.nomeRP || form.displayName, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, estruturaNivel: estruturaPosicaoRole(d.roles.find(r => r.id === form.role)), criadoEm: new Date().toISOString(), criadoPor: usuario?.username || "lideranca", iniciacaoStatus: "pendente" }, false);
-        return { ...d, users: [...d.users, novo], activityLog: [...(d.activityLog || []), atividade("membro_criado", usuario?.username, username, `Criou o registro de ${getCodinome(novo)}`)] };
+        return { ...d, users: [...d.users, novo], codinomes: atualizarBancoCodinomeUsuario(d.codinomes || [], "", novo.codinome, novo.username), activityLog: [...(d.activityLog || []), atividade("membro_criado", usuario?.username, username, `Criou o registro de ${getCodinome(novo)}`)] };
       }
       const anterior = d.users.find(u => u.username === editando);
       const cargoAtual = d.roles.find(r => r.id === form.role);
       const patenteFinal = anterior?.role !== form.role ? cargoAtual?.nome || form.patente : form.patente;
       const atualizado = normalizarMembro({ ...anterior, ...form, patente: patenteFinal, username: editando, password: form.password || anterior.password, level: Number(form.level) || 0, nivelAcesso: Number(form.nivelAcesso) || 1, estruturaNivel: estruturaPosicaoRole(cargoAtual) });
-      return { ...d, users: d.users.map(u => u.username === editando ? atualizado : u), activityLog: [...(d.activityLog || []), atividade("membro_editado", usuario?.username, editando, `Atualizou o dossiê administrativo de ${getCodinome(atualizado)}`)] };
+      return { ...d, users: d.users.map(u => u.username === editando ? atualizado : u), codinomes: atualizarBancoCodinomeUsuario(d.codinomes || [], anterior?.codinome || "", atualizado.codinome, editando), activityLog: [...(d.activityLog || []), atividade("membro_editado", usuario?.username, editando, `Atualizou o dossiê administrativo de ${getCodinome(atualizado)}`)] };
     });
     if (houvePromocao) {
       setTimeout(async () => {
@@ -8110,18 +8468,54 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
   const remover = username => {
     if (username === "leader") { alert("O líder principal não pode ser removido."); return; }
     if (!confirm(`Remover ${username}?`)) return;
-    setData(d => ({
-      ...d,
-      users: d.users.filter(u => u.username !== username),
-      missoes: (d.missoes || []).map(m => ({ ...m, assignedTo: m.assignedTo === username ? "" : m.assignedTo, participants: (m.participants || []).filter(p => p !== username), aceites: (m.aceites || []).filter(p => p !== username) })),
-      trios: (d.trios || []).map(t => ({ ...t, membros: (t.membros || []).filter(m => m.username !== username) })),
-      activityLog: [...(d.activityLog || []), atividade("membro_removido", usuario?.username, username, `Removeu @${username} da organização`)],
-    }));
+    setData(d => {
+      const alvo = d.users.find(u => u.username === username);
+      return {
+        ...d,
+        users: d.users.filter(u => u.username !== username),
+        codinomes: atualizarBancoCodinomeUsuario(d.codinomes || [], alvo?.codinome || "", "", username),
+        missoes: (d.missoes || []).map(m => ({ ...m, assignedTo: m.assignedTo === username ? "" : m.assignedTo, participants: (m.participants || []).filter(p => p !== username), aceites: (m.aceites || []).filter(p => p !== username) })),
+        trios: (d.trios || []).map(t => ({ ...t, membros: (t.membros || []).filter(m => m.username !== username) })),
+        activityLog: [...(d.activityLog || []), atividade("membro_removido", usuario?.username, username, `Removeu @${username} da organização`)],
+      };
+    });
   };
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, selo e posição hierárquica.</p></div>{editando === null && <Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro</Btn>}</div>
-      {focoIniciacoes && pendentesIniciacao.length > 0 && (
+      <div className="flex items-center justify-between gap-3 flex-wrap"><div><h3 className="text-orange-50 font-bold text-lg serif">Dossiês administrativos ({data.users.length})</h3><p className="text-zinc-600 text-xs mt-1">Campos de comando, selo, posição hierárquica e convites de entrada.</p></div>{editando === null && <div className="flex gap-2 flex-wrap"><Btn onClick={() => { setConviteAberto(v => !v); setConviteStatus(""); }} variant="default"><ILink className="w-3 h-3" /> Gerar Selo de Entrada</Btn><Btn onClick={iniciarNovo} variant="primary"><IPlus className="w-3 h-3" /> Novo Membro Manual</Btn></div>}</div>
+      {conviteAberto && editando === null && (
+        <section className="rounded-xl border border-orange-900/60 bg-zinc-950/80 p-4 sm:p-5 fadein space-y-4">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Selo de Entrada</div><h4 className="text-orange-50 font-black serif text-xl">Convite por link com codinome único</h4><p className="text-zinc-600 text-xs mt-1">O líder envia o link; o novo membro escolhe um codinome disponível, cria conta e inicia a apresentação, Discord e juramento.</p></div>
+            <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-green-900 bg-green-950/20 text-green-300 font-black">{codinomesDisponiveis.length} codinomes liberados</span>
+          </div>
+          <div className="grid md:grid-cols-4 gap-3">
+            <div><label className="fox-label">Tipo de entrada</label><select value={conviteForm.tipo} onChange={e => setConviteForm({ ...conviteForm, tipo: e.target.value })} className="fox-input"><option value="recruta">Recruta</option><option value="associado">Associado</option><option value="contratante">Contratante</option><option value="membro_antigo">Membro antigo</option></select></div>
+            <div><label className="fox-label">Cargo inicial</label><select value={conviteForm.rolePadrao} onChange={e => setConviteForm({ ...conviteForm, rolePadrao: e.target.value })} className="fox-input">{cargosConvite.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
+            <div><label className="fox-label">Selo de acesso</label><select value={conviteForm.nivelAcesso} onChange={e => setConviteForm({ ...conviteForm, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
+            <div><label className="fox-label">Expiração</label><select value={conviteForm.validadeDias} onChange={e => setConviteForm({ ...conviteForm, validadeDias: Number(e.target.value) })} className="fox-input"><option value={1}>24 horas</option><option value={3}>3 dias</option><option value={7}>7 dias</option><option value={14}>14 dias</option></select></div>
+          </div>
+          <div>
+            <label className="fox-label">Categorias liberadas de codinome</label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setConviteForm({ ...conviteForm, categoriasLiberadas: [] })} className={`px-3 py-2 rounded border text-[10px] uppercase tracking-wider font-black ${!(conviteForm.categoriasLiberadas || []).length ? "border-orange-600 bg-orange-950/30 text-orange-200" : "border-zinc-800 text-zinc-500"}`}>Todos disponíveis</button>
+              {categoriasCodinome.map(cat => <button key={cat} type="button" onClick={() => toggleCategoriaConvite(cat)} className={`px-3 py-2 rounded border text-[10px] uppercase tracking-wider font-black ${(conviteForm.categoriasLiberadas || []).includes(cat) ? "border-orange-600 bg-orange-950/30 text-orange-200" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}>{cat}</button>)}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-zinc-800">
+            <div className="text-zinc-600 text-xs leading-relaxed max-w-xl">VIPER está reservado ao líder. Alpha, Omega, Prime, Zero, Oracle e Warden ficam restritos e não aparecem para recrutas.</div>
+            <Btn onClick={gerarConviteEntrada} variant="primary"><ILink className="w-3 h-3" /> Gerar link</Btn>
+          </div>
+          {conviteGerado && (
+            <div className="p-4 rounded-lg border border-green-800 bg-green-950/10">
+              <div className="flex items-start justify-between gap-3 flex-wrap"><div><div className="text-[9px] uppercase tracking-wider text-green-500">Convite criado</div><div className="text-green-200 font-black mt-1">{conviteGerado.token}</div><div className="text-zinc-500 text-xs mt-1 break-all">{linkConvitePortal(conviteGerado.token)}</div></div><Btn onClick={() => copiarLinkConvite(conviteGerado)} variant="success"><IClipboard className="w-3 h-3" /> Copiar link</Btn></div>
+            </div>
+          )}
+          {conviteStatus && <div className="text-xs text-orange-300 bg-black/40 border border-zinc-800 rounded p-2 break-all">{conviteStatus}</div>}
+          {convitesRecentes.length > 0 && <div className="grid md:grid-cols-2 gap-2">{convitesRecentes.map(c => { const usado = c.status === "usado"; const cancelado = c.status === "cancelado"; const expirado = !usado && !cancelado && conviteExpirado(c); const texto = usado ? `Usado por @${c.usadoPor} · ${c.codinomeEscolhido || "sem codinome"}` : cancelado ? "Cancelado" : expirado ? "Expirado" : `Pendente · expira ${c.expiraEm ? new Date(c.expiraEm).toLocaleDateString("pt-BR") : "sem data"}`; return <div key={c.id} className="p-3 rounded-lg border border-zinc-800 bg-black/45 flex items-center justify-between gap-3"><div className="min-w-0"><div className="text-orange-50 font-black text-sm">{c.token}</div><div className="text-zinc-600 text-[10px] mt-1 truncate">{texto}</div></div><div className="flex gap-1 flex-shrink-0"><button onClick={() => copiarLinkConvite(c)} className="p-2 text-orange-400 hover:text-orange-300"><IClipboard className="w-3.5 h-3.5" /></button>{c.status === "pendente" && !expirado && <button onClick={() => revogarConvite(c)} className="p-2 text-red-500 hover:text-red-400"><IX className="w-3.5 h-3.5" /></button>}</div></div>; })}</div>}
+        </section>
+      )}
+            {focoIniciacoes && pendentesIniciacao.length > 0 && (
         <section id="iniciacoes-pendentes" className="rounded-xl border border-amber-800/70 bg-amber-950/10 p-4 fadein">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div><div className="text-[9px] uppercase tracking-[0.28em] text-amber-500">Ação pendente</div><h4 className="text-orange-50 font-black serif">Iniciações pendentes</h4></div>
@@ -9404,6 +9798,104 @@ function LoginScreen({ data, onLogin }) {
   );
 }
 
+function ConviteEntradaScreen({ data, token, onRegistrar, onVoltarLogin }) {
+  const tokenNormalizado = normalizarTokenConvite(token);
+  const convite = (data.convitesEntrada || []).find(c => normalizarTokenConvite(c.token) === tokenNormalizado);
+  const [codinome, setCodinome] = useState("");
+  const [buscaCodinome, setBuscaCodinome] = useState("");
+  const [form, setForm] = useState({ username: "", password: "", confirm: "", displayName: "", nomeRP: "", elemento: "", linhagem: "", vilaOrigem: "", especialidade: "" });
+  const [erro, setErro] = useState("");
+  const [registrando, setRegistrando] = useState(false);
+
+  const disponiveis = codinomesDisponiveisParaConvite(data, convite);
+  const termo = buscaCodinome.trim().toLowerCase();
+  const codinomesFiltrados = disponiveis.filter(c => !termo || [c.nome, c.categoria, c.descricao].some(v => String(v || "").toLowerCase().includes(termo)));
+  const statusConvite = !convite ? "invalido" : convite.status !== "pendente" ? "usado" : conviteExpirado(convite) ? "expirado" : "ok";
+  const cargo = convite ? (data.roles || []).find(r => r.id === convite.rolePadrao) : null;
+  const codinomeSelecionado = disponiveis.find(c => c.nome === codinome || c.id === codinomeId(codinome));
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setErro("");
+    if (statusConvite !== "ok") { setErro("Este selo não está disponível."); return; }
+    if (!codinomeSelecionado) { setErro("Escolha um codinome disponível antes de continuar."); return; }
+    if (form.password !== form.confirm) { setErro("As senhas não conferem."); return; }
+    setRegistrando(true);
+    try {
+      const res = onRegistrar(tokenNormalizado, { ...form, codinome: codinomeSelecionado.nome });
+      if (res?.error) setErro(res.error);
+    } finally {
+      setRegistrando(false);
+    }
+  };
+
+  const renderIndisponivel = (titulo, msg) => (
+    <div className="min-h-screen shadow-ops-bg bg-black flex items-center justify-center p-4">
+      <div className="jikkai-terminal-card max-w-lg w-full rounded-2xl p-6 text-center">
+        <IAlert className="w-14 h-14 text-red-500 mx-auto mb-4" />
+        <div className="text-[10px] uppercase tracking-[0.35em] text-red-500">Selo recusado</div>
+        <h1 className="text-3xl font-black text-orange-50 serif mt-2">{titulo}</h1>
+        <p className="text-zinc-500 text-sm leading-relaxed mt-3">{msg}</p>
+        <Btn onClick={onVoltarLogin} variant="primary" className="mx-auto mt-6"><ILock className="w-3 h-3" /> Voltar ao portal</Btn>
+      </div>
+    </div>
+  );
+
+  if (statusConvite === "invalido") return renderIndisponivel("Convite não encontrado", "Este link não corresponde a nenhum Selo de Entrada ativo no portal.");
+  if (statusConvite === "usado") return renderIndisponivel("Selo já utilizado", "Este convite já foi consumido. Solicite um novo link à liderança.");
+  if (statusConvite === "expirado") return renderIndisponivel("Selo expirado", "O prazo deste convite acabou. Solicite um novo Selo de Entrada à liderança.");
+
+  return (
+    <div className="min-h-screen shadow-ops-bg bg-black text-zinc-200 p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto py-4 sm:py-8">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-800 bg-black/70 text-orange-300 text-[10px] uppercase tracking-[0.26em] font-black">SELO DE ENTRADA · {convite.token}</div>
+          <h1 className="text-4xl sm:text-5xl font-black text-orange-50 serif mt-4">Escolha seu codinome</h1>
+          <p className="text-zinc-500 max-w-2xl mx-auto mt-3 leading-relaxed">Este nome será sua identidade permanente dentro da Jikkai. Depois do juramento, nenhum outro membro poderá usá-lo.</p>
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_420px] gap-5 items-start">
+          <section className="rounded-2xl border border-orange-900/40 bg-zinc-950/80 p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Banco de codinomes</div><h2 className="text-xl font-black text-orange-50 serif">Disponíveis para este selo</h2></div>
+              <div className="text-[10px] uppercase tracking-wider text-zinc-600">{disponiveis.length} disponíveis</div>
+            </div>
+            <input value={buscaCodinome} onChange={e => setBuscaCodinome(e.target.value)} className="fox-input mb-4" placeholder="Pesquisar Ghost, Kazen, Sombra..." />
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[62vh] overflow-y-auto mobile-scrollbar-none pr-1">
+              {codinomesFiltrados.map(c => {
+                const ativo = c.nome === codinome;
+                return <button key={c.id} type="button" onClick={() => setCodinome(c.nome)} className={`p-4 rounded-xl border text-left transition-all ${ativo ? "border-orange-500 bg-orange-950/30" : "border-zinc-800 bg-black/45 hover:border-orange-800"}`}>
+                  <div className="flex items-start justify-between gap-2"><div className="text-orange-50 font-black text-lg serif">{c.nome}</div><span className="text-[8px] uppercase tracking-wider px-2 py-1 rounded border border-green-900 bg-green-950/20 text-green-300">Disponível</span></div>
+                  <div className="text-[9px] uppercase tracking-wider text-orange-700 mt-1">{c.categoria}</div>
+                  <p className="text-zinc-600 text-xs leading-relaxed mt-2">{c.descricao}</p>
+                </button>;
+              })}
+              {codinomesFiltrados.length === 0 && <div className="sm:col-span-2 xl:col-span-3 p-8 rounded-xl border border-dashed border-zinc-800 text-center text-zinc-600 italic">Nenhum codinome disponível com esse filtro.</div>}
+            </div>
+          </section>
+
+          <form onSubmit={enviar} className="rounded-2xl border border-orange-900/40 bg-zinc-950/90 p-5 space-y-4 sticky top-4">
+            <div className="p-4 rounded-xl border border-zinc-800 bg-black/50">
+              <div className="text-[9px] uppercase tracking-[0.26em] text-orange-700">Codinome escolhido</div>
+              <div className="text-3xl font-black text-orange-50 serif mt-1">{codinomeSelecionado?.nome || "—"}</div>
+              <div className="text-zinc-600 text-xs mt-1">Cargo inicial: {cargo?.nome || convite.rolePadrao || "Recruta"} · Selo nível {convite.nivelAcesso || 1}</div>
+            </div>
+            <div><label className="fox-label">Username *</label><input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className="fox-input" placeholder="ex: ghost" autoComplete="username" /></div>
+            <div className="grid sm:grid-cols-2 gap-3"><div><label className="fox-label">Senha *</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="fox-input" autoComplete="new-password" /></div><div><label className="fox-label">Confirmar senha *</label><input type="password" value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} className="fox-input" autoComplete="new-password" /></div></div>
+            <div><label className="fox-label">Nome de RP *</label><input value={form.nomeRP} onChange={e => setForm({ ...form, nomeRP: e.target.value, displayName: form.displayName || e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Nome de exibição</label><input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} className="fox-input" placeholder="Como aparecerá no portal" /></div>
+            <div className="grid sm:grid-cols-2 gap-3"><div><label className="fox-label">Elemento</label><input value={form.elemento} onChange={e => setForm({ ...form, elemento: e.target.value })} className="fox-input" /></div><div><label className="fox-label">Linhagem</label><input value={form.linhagem} onChange={e => setForm({ ...form, linhagem: e.target.value })} className="fox-input" /></div></div>
+            <div className="grid sm:grid-cols-2 gap-3"><div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" /></div><div><label className="fox-label">Especialidade</label><input value={form.especialidade} onChange={e => setForm({ ...form, especialidade: e.target.value })} className="fox-input" /></div></div>
+            {erro && <div className="text-red-400 text-xs leading-relaxed">{erro}</div>}
+            <Btn type="submit" variant="primary" size="lg" disabled={registrando || !codinomeSelecionado} className="w-full justify-center"><IShield className="w-4 h-4" /> {registrando ? "Selando..." : "Criar registro e iniciar"}</Btn>
+            <button type="button" onClick={onVoltarLogin} className="w-full text-center text-zinc-700 hover:text-zinc-500 text-[10px] uppercase tracking-wider">Já tenho acesso ao portal</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ============ APP ============
 
 const PORTAL_SESSION_KEY = "fox-portal-session-v2";
@@ -9489,6 +9981,8 @@ const DEFAULT_DATA = {
   relatorios: [],
   contratos: [],
   galeria: [],
+  codinomes: DEFAULT_CODINOMES,
+  convitesEntrada: [],
   activityLog: [],
   discordDmTemplates: DEFAULT_DISCORD_DM_TEMPLATES,
   visaoGeralContratantes: {
@@ -9509,9 +10003,7 @@ function migrate(raw) {
     ];
   }
   if (!raw.historia) migrated.historia = DEFAULT_HISTORIA;
-  if (!raw.mandamentos || !Array.isArray(raw.mandamentos) || raw.mandamentos.length === 0) {
-    migrated.mandamentos = DEFAULT_MANDAMENTOS;
-  }
+  migrated.mandamentos = normalizarMandamentosJikkai(raw.mandamentos || migrated.mandamentos);
   if (!raw.relatorios) migrated.relatorios = [];
   migrated.relatorios = (raw.relatorios || []).map(r => ({
     ...r,
@@ -9521,6 +10013,22 @@ function migrate(raw) {
   if (!raw.galeria) migrated.galeria = [];
   if (!raw.activityLog) migrated.activityLog = [];
   migrated.discordDmTemplates = { ...DEFAULT_DISCORD_DM_TEMPLATES, ...(raw.discordDmTemplates || {}) };
+  migrated.convitesEntrada = Array.isArray(raw.convitesEntrada) ? raw.convitesEntrada.map(c => ({
+    id: c.id || "convite_" + uid(),
+    token: normalizarTokenConvite(c.token || gerarTokenConvite()),
+    tipo: c.tipo || "recruta",
+    rolePadrao: c.rolePadrao || "recruta",
+    nivelAcesso: Math.max(1, Math.min(5, Number(c.nivelAcesso) || 1)),
+    status: c.status || "pendente",
+    criadoPor: c.criadoPor || "leader",
+    criadoEm: c.criadoEm || new Date().toISOString(),
+    expiraEm: c.expiraEm || "",
+    usadoPor: c.usadoPor || "",
+    usadoEm: c.usadoEm || "",
+    codinomeEscolhido: c.codinomeEscolhido || "",
+    discordObrigatorio: c.discordObrigatorio !== false,
+    categoriasLiberadas: Array.isArray(c.categoriasLiberadas) ? c.categoriasLiberadas : [],
+  })) : [];
   if (!raw.missoes) migrated.missoes = [];
   migrated.missoes = (raw.missoes || []).map(m => {
     const participants = Array.from(new Set([...(Array.isArray(m.participants) ? m.participants : []), m.assignedTo].filter(Boolean)));
@@ -9546,9 +10054,10 @@ function migrate(raw) {
   // Garante o formato completo do dossiê sem apagar campos antigos.
   migrated.users = (raw.users || DEFAULT_USERS).map(u => normalizarMembro({
     ...u,
-    codinome: u.codinome != null ? u.codinome : "",
+    codinome: u.username === "leader" ? "VIPER" : (u.codinome != null ? u.codinome : ""),
     cla: u.cla != null ? u.cla : "",
   }, true));
+  migrated.codinomes = normalizarBancoCodinomes(raw.codinomes || DEFAULT_CODINOMES, migrated.users);
   // Preserva juramentos antigos, normaliza os registros e reconhece quem já realizou o pacto.
   migrated.juramentados = (Array.isArray(raw.juramentados) ? raw.juramentados : []).map((j, index) => ({
     ...j,
@@ -10124,6 +10633,23 @@ function App() {
     setMobileMoreOpen(false);
   };
 
+  const registrarPorConvite = (token, cadastro) => {
+    const res = registrarUsuarioPorConviteEstado(data, token, cadastro);
+    if (res.error) return { error: res.error };
+    const criado = res.user;
+    setData(res.data);
+    if (criado) {
+      if (typeof window.foxStartMusic === "function") window.foxStartMusic();
+      limparUrlConvite();
+      salvarSessaoPortalSnapshot({ usuario: criado, tab: "home" });
+      setUsuario(criado);
+      setTab("home");
+      setNavigationRequest(null);
+      setTerminalToast(`CODINOME ${criado.codinome} SELADO · INICIE O PROTOCOLO`);
+    }
+    return { user: criado };
+  };
+
   const juramentar = (dados) => setData(d => {
     const registros = Array.isArray(d.juramentados) ? d.juramentados : [];
     const existente = juramentoDoUsuario(registros, { username: dados.username, displayName: dados.nome, nomeRP: dados.nome, codinome: dados.nome });
@@ -10190,6 +10716,9 @@ function App() {
   }
 
   if (accessGranted) return <AccessGrantedOverlay usuario={accessGranted.usuario} role={accessGranted.role} />;
+
+  const tokenConvite = urlConviteAtual();
+  if (!usuarioAtual && tokenConvite) return <ConviteEntradaScreen data={data} token={tokenConvite} onRegistrar={registrarPorConvite} onVoltarLogin={() => { limparUrlConvite(); setTerminalToast("SELO DE CONVITE FECHADO"); }} />;
 
   if (!usuarioAtual) return <LoginScreen data={data} onLogin={(u) => {
     const roleLogin = roleEfetivoUsuario(u, data.roles.find(r => r.id === u.role));
