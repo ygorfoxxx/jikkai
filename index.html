@@ -643,7 +643,6 @@ const DOSSIE_FIELDS = [
   { id: "funcaoPreferida", label: "Função", peso: 10 },
   { id: "estiloCombate", label: "Estilo", peso: 6 },
   { id: "graduacaoShinobi", label: "Graduação shinobi", peso: 8 },
-  { id: "bingoBookStatus", label: "Bingo Book", peso: 5 },
 ];
 
 function valorDossie(u, campo) {
@@ -754,7 +753,7 @@ function normalizarMembro(u, existente = true) {
     vilaOrigem: "", patente: "", especialidade: "", funcaoPreferida: "", disponibilidadeOperacional: "",
     estiloCombate: "", equipamentoPrincipal: "", restricoesOperacionais: "", bio: "", estruturaNivel: "operador",
     graduacaoShinobi: "", registroShinobi: "", naturezaChakraSecundaria: "", tecnicaAssinatura: "", invocacao: "", statusNukenin: "",
-    bingoBookStatus: "Nao listado", bingoBookAlcunha: "", bingoBookRecompensa: "", bingoBookPericulosidade: "Baixa", bingoBookMotivo: "", bingoBookUltimaLocalizacao: "",
+    buildShinobi: null,
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
@@ -765,8 +764,6 @@ function normalizarMembro(u, existente = true) {
   const out = { ...base, ...u };
   if (!existente && !String(out.patente || "").trim()) out.patente = "Recruta em Observação";
   out.nomeRP = out.nomeRP || out.displayName || "";
-  out.bingoBookStatus = out.bingoBookStatus || "Nao listado";
-  out.bingoBookPericulosidade = out.bingoBookPericulosidade || "Baixa";
   out.nivelAcesso = Math.max(1, Math.min(5, Number(out.nivelAcesso) || 1));
   out.reputacao = converterReputacaoLegada(out.reputacao);
   if (!REPUTACAO_NIVEIS.includes(out.reputacao)) out.reputacao = "Baixo perfil";
@@ -1703,7 +1700,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
   if (missoesAguardando.length) addPrioridade({ titulo: "Missão aguardando sua confirmação", desc: missoesAguardando[0].titulo, tab: "missoes", action: `aceitar-missao:${missoesAguardando[0].id}`, cor: "#EA580C" });
   if (missoesEmAndamento.length) addPrioridade({ titulo: "Operação em andamento", desc: "Atualize objetivos e prepare o relatório final quando concluir.", tab: "missoes", action: `relatorio-missao:${missoesEmAndamento[0].id}`, cor: "#A855F7" });
   if (missoesRevisaoMinhas.length) addPrioridade({ titulo: "Relatório enviado para revisão", desc: "Aguarde aprovação da liderança ou ajustes solicitados.", tab: "missoes", cor: "#38BDF8" });
-  if (!perfilCompletoUsuario(usuario)) addPrioridade({ titulo: "Concluir seu dossiê", desc: "Complete foto, identidade, elemento, linhagem e vila para facilitar designações.", tab: "membros", subTab: "lista", action: "meu-dossie", cor: "#CA8A04" });
+  if (!perfilCompletoUsuario(usuario)) addPrioridade({ titulo: "Concluir seu dossiê", desc: "Complete foto, identidade, elemento, linhagem e vila para facilitar designações.", tab: "perfil", subTab: "dossie", cor: "#CA8A04" });
 
   if (isLider) {
     if (missoesRevisao) addPrioridade({ titulo: `${missoesRevisao} ${missoesRevisao === 1 ? "missão aguarda" : "missões aguardam"} aprovação`, desc: "Relatórios operacionais esperando decisão da liderança.", tab: "missoes", cor: "#A855F7" });
@@ -1863,7 +1860,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <QuickCard icon={IClipboard} titulo="Minhas Missões" desc="Aceite, acompanhe objetivos e envie relatório final." badge={minhasMissoes.length ? `${minhasMissoes.length} ativa${minhasMissoes.length === 1 ? "" : "s"}` : "0 ativa"} onClick={() => onNavigate("missoes")} accent="#A855F7" />
         <QuickCard icon={IFile} titulo="Criar Relatório" desc="Missão concluída, ocorrência sem missão, risco ou registro narrativo." badge={relatoriosMeus.length ? `${relatoriosMeus.length} meu${relatoriosMeus.length === 1 ? "" : "s"}` : "Avulso"} onClick={() => onNavigate("jikkai", "relatorios", "novo-relatorio-avulso")} accent="#38BDF8" />
-        <QuickCard icon={IUsers} titulo="Meu Dossiê" desc="Foto, identidade, especialidade e função para missões." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("membros", "lista", "meu-dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
+        <QuickCard icon={IUsers} titulo="Meu Perfil" desc="Dossiê pessoal, build shinobi, foto e avisos por Discord." badge={perfilCompletoUsuario(usuario) ? "Completo" : "Pendente"} onClick={() => onNavigate("perfil", "dossie")} accent={perfilCompletoUsuario(usuario) ? "#16A34A" : "#CA8A04"} />
         <QuickCard icon={ITarget} titulo="Mapa Estratégico" desc="Locais, rotas e pontos importantes da organização." badge="Mapa" onClick={() => onNavigate("mapa")} accent="#EA580C" />
       </section>
 
@@ -1891,7 +1888,7 @@ function HomePage({ data, usuario, role, isLider, onNavigate }) {
           </div>
         </div>
 
-        <button onClick={() => onNavigate("membros", "lista", "meu-dossie")} className="rounded-xl border border-orange-900/50 bg-gradient-to-br from-red-950/20 to-black p-5 text-left hover:border-orange-600 transition-colors">
+        <button onClick={() => onNavigate("perfil", "dossie")} className="rounded-xl border border-orange-900/50 bg-gradient-to-br from-red-950/20 to-black p-5 text-left hover:border-orange-600 transition-colors">
           <div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Meu registro</div>
           <div className="flex items-center gap-4 mt-4">
             <MemberAvatar user={usuario} size="lg" />
@@ -2704,19 +2701,7 @@ function DossieModal({ membro, data, onClose }) {
   ];
   const camposShinobi = [
     ["Graduacao shinobi", membro.graduacaoShinobi || "Nao definida"],
-    ["Registro shinobi", membro.registroShinobi || "Nao definido"],
-    ["Natureza secundaria", membro.naturezaChakraSecundaria || "Nao definida"],
-    ["Tecnica assinatura", membro.tecnicaAssinatura || "Nao definida"],
-    ["Invocacao / pacto", membro.invocacao || "Nao definido"],
     ["Status nukenin", membro.statusNukenin || "Nao definido"],
-  ];
-  const camposBingoBook = [
-    ["Status", membro.bingoBookStatus || "Nao listado"],
-    ["Periculosidade", membro.bingoBookPericulosidade || "Baixa"],
-    ["Alcunha", membro.bingoBookAlcunha || "Sem alcunha"],
-    ["Recompensa", membro.bingoBookRecompensa || "Nao definida"],
-    ["Ultima localizacao", membro.bingoBookUltimaLocalizacao || "Nao definida"],
-    ["Motivo", membro.bingoBookMotivo || "Nao definido"],
   ];
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm fadein" onClick={onClose}>
@@ -2779,10 +2764,7 @@ function DossieModal({ membro, data, onClose }) {
               <div className="text-[10px] uppercase tracking-[0.25em] text-sky-400 mb-3">Ficha shinobi</div>
               <div className="grid sm:grid-cols-2 gap-2">{camposShinobi.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
             </div>
-            <div className="rounded-xl border border-red-900/40 bg-red-950/10 p-4">
-              <div className="text-[10px] uppercase tracking-[0.25em] text-red-400 mb-3">Bingo Book</div>
-              <div className="grid sm:grid-cols-2 gap-2">{camposBingoBook.map(([label, value]) => <InfoCell key={label} label={label} value={value} />)}</div>
-            </div>
+            <BuildSummaryCard usuario={membro} />
           </div>
           <DiscordSealStatus usuario={membro} />
           <TimelineAutomaticaMembro data={data} membro={membro} />
@@ -2851,12 +2833,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     tecnicaAssinatura: membro.tecnicaAssinatura || "",
     invocacao: membro.invocacao || "",
     statusNukenin: membro.statusNukenin || "",
-    bingoBookStatus: membro.bingoBookStatus || "Nao listado",
-    bingoBookAlcunha: membro.bingoBookAlcunha || "",
-    bingoBookRecompensa: membro.bingoBookRecompensa || "",
-    bingoBookPericulosidade: membro.bingoBookPericulosidade || "Baixa",
-    bingoBookMotivo: membro.bingoBookMotivo || "",
-    bingoBookUltimaLocalizacao: membro.bingoBookUltimaLocalizacao || "",
+    buildShinobi: membro.buildShinobi ? normalizeBuild(membro.buildShinobi, membro) : null,
     discordDmMissoes: membro.discordDmMissoes !== false,
     discordDmContratos: membro.discordDmContratos !== false,
     discordDmRelatorios: membro.discordDmRelatorios !== false,
@@ -2888,7 +2865,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
       funcaoPreferida: vinculo?.papel || f.funcaoPreferida || "Soldado",
       especialidade: f.especialidade || equipe?.tipo || "Operador de equipe",
     }));
-    setAba("operacional");
+    setAba("essencial");
   };
 
   const escolherFoto = (e) => {
@@ -2934,6 +2911,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
       setData(d => {
         const auto = sugestoesDossieAutomaticas(d, membro);
         const formFinal = { ...form };
+        if (!buildHasMeaningfulData(formFinal.buildShinobi, membro)) formFinal.buildShinobi = null;
         ["nomeRP", "linhagem", "especialidade", "funcaoPreferida", "estiloCombate", "equipamentoPrincipal", "graduacaoShinobi"].forEach(campo => {
           if (!String(formFinal[campo] || "").trim() && String(auto[campo] || "").trim()) formFinal[campo] = auto[campo];
         });
@@ -2954,7 +2932,6 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
   const abas = [
     { id: "essencial", label: "Essencial", icon: IUsers },
     { id: "shinobi", label: "Shinobi", icon: IBook },
-    { id: "operacional", label: "Operação", icon: ISwords },
   ];
   const camposFaltando = progresso.faltando.slice(0, 4);
   return (
@@ -3031,15 +3008,6 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               </div>
             )}
 
-            {aba === "operacional" && (
-              <div className="space-y-4 fadein">
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div><label className="fox-label">Função preferida em equipe</label><input value={form.funcaoPreferida} onChange={e => setCampo("funcaoPreferida", e.target.value)} className="fox-input" placeholder="Ex.: Líder, soldado, suporte..." /><div className="flex flex-wrap gap-1 mt-2">{["Líder", "Soldado", "Batedor", "Suporte", "Executor", "Rastreador"].map(v => <React.Fragment key={v}>{chip("funcaoPreferida", v)}</React.Fragment>)}</div></div>
-                  <div><label className="fox-label">Estilo de combate</label><input value={form.estiloCombate} onChange={e => setCampo("estiloCombate", e.target.value)} className="fox-input" placeholder="Ex.: curta distância, genjutsu, furtivo..." /><div className="flex flex-wrap gap-1 mt-2">{["Furtivo", "Curta distância", "Longo alcance", "Defensivo", "Controle", "Suporte"].map(v => <React.Fragment key={v}>{chip("estiloCombate", v)}</React.Fragment>)}</div></div>
-                  <div><label className="fox-label">Equipamento / arma principal</label><input value={form.equipamentoPrincipal} onChange={e => setCampo("equipamentoPrincipal", e.target.value)} className="fox-input" placeholder="Ex.: katana, kunais, selos, venenos..." /></div>
-                </div>
-              </div>
-            )}
             <div className="mt-4 p-3 rounded border border-yellow-900/40 bg-yellow-950/10 text-yellow-600 text-xs">Preencha só o que depende de você. Cargo, divisão, equipe, capitão, histórico e timeline são puxados automaticamente pelo portal.</div>
             {aba === "shinobi" && (
               <div className="space-y-4 fadein">
@@ -3047,23 +3015,7 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
                   <div className="text-[9px] uppercase tracking-[0.22em] text-sky-400 font-black mb-3">Ficha shinobi</div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div><label className="fox-label">Graduacao shinobi</label><input value={form.graduacaoShinobi} onChange={e => setCampo("graduacaoShinobi", e.target.value)} className="fox-input" placeholder="Ex.: Genin, Chunin, Jonin, Nukenin..." /><div className="flex flex-wrap gap-1 mt-2">{["Genin", "Chunin", "Jonin", "ANBU", "Nukenin"].map(v => <React.Fragment key={v}>{chip("graduacaoShinobi", v)}</React.Fragment>)}</div></div>
-                    <div><label className="fox-label">Registro shinobi</label><input value={form.registroShinobi} onChange={e => setCampo("registroShinobi", e.target.value)} className="fox-input" placeholder="Matricula, alcunha oficial ou registro interno" /></div>
-                    <div><label className="fox-label">Natureza secundaria</label><input value={form.naturezaChakraSecundaria} onChange={e => setCampo("naturezaChakraSecundaria", e.target.value)} className="fox-input" placeholder="Ex.: Suiton, Yin, Yang..." /></div>
                     <div><label className="fox-label">Status nukenin</label><input value={form.statusNukenin} onChange={e => setCampo("statusNukenin", e.target.value)} className="fox-input" placeholder="Ex.: limpo, suspeito, renegado..." /><div className="flex flex-wrap gap-1 mt-2">{["Limpo", "Suspeito", "Renegado", "Exilado"].map(v => <React.Fragment key={v}>{chip("statusNukenin", v)}</React.Fragment>)}</div></div>
-                    <div><label className="fox-label">Tecnica assinatura</label><input value={form.tecnicaAssinatura} onChange={e => setCampo("tecnicaAssinatura", e.target.value)} className="fox-input" placeholder="Jutsu, estilo ou tecnica pela qual e conhecido" /></div>
-                    <div><label className="fox-label">Invocacao / pacto</label><input value={form.invocacao} onChange={e => setCampo("invocacao", e.target.value)} className="fox-input" placeholder="Ex.: cobras, corvos, contrato vazio..." /></div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-red-900/35 bg-red-950/10 p-3">
-                  <div className="text-[9px] uppercase tracking-[0.22em] text-red-400 font-black mb-3">Bingo Book</div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div><label className="fox-label">Status no Bingo Book</label><select value={form.bingoBookStatus} onChange={e => setCampo("bingoBookStatus", e.target.value)} className="fox-input"><option>Nao listado</option><option>Monitorado</option><option>Procurado</option><option>Capturar vivo</option><option>Eliminar</option><option>Prioridade maxima</option></select></div>
-                    <div><label className="fox-label">Periculosidade</label><select value={form.bingoBookPericulosidade} onChange={e => setCampo("bingoBookPericulosidade", e.target.value)} className="fox-input"><option>Baixa</option><option>Media</option><option>Alta</option><option>Critica</option><option>S-rank</option></select></div>
-                    <div><label className="fox-label">Alcunha no livro</label><input value={form.bingoBookAlcunha} onChange={e => setCampo("bingoBookAlcunha", e.target.value)} className="fox-input" placeholder="Ex.: Nevoa Rubra, Raposa Negra..." /></div>
-                    <div><label className="fox-label">Recompensa</label><input value={form.bingoBookRecompensa} onChange={e => setCampo("bingoBookRecompensa", e.target.value)} className="fox-input" placeholder="Ex.: 80.000 Yens" /></div>
-                    <div><label className="fox-label">Ultima localizacao</label><input value={form.bingoBookUltimaLocalizacao} onChange={e => setCampo("bingoBookUltimaLocalizacao", e.target.value)} className="fox-input" placeholder="Ex.: fronteira de Kiri" /></div>
-                    <div><label className="fox-label">Motivo / acusacao</label><input value={form.bingoBookMotivo} onChange={e => setCampo("bingoBookMotivo", e.target.value)} className="fox-input" placeholder="Ex.: desercao, sabotagem, espionagem..." /></div>
                   </div>
                 </div>
               </div>
@@ -3083,6 +3035,297 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
   );
 }
 
+function PerfilPage({ data, setData, usuario, role, navigationRequest }) {
+  const membro = data.users.find(u => u.username === usuario?.username) || usuario;
+  const { equipe, vinculo, divisao } = funcaoOperacionalDoMembro(data, membro);
+  const [subTab, setSubTab] = useState("dossie");
+  const criarForm = () => ({
+    nomeRP: membro?.nomeRP || membro?.displayName || "",
+    elemento: membro?.elemento || "",
+    linhagem: membro?.linhagem || "",
+    vilaOrigem: membro?.vilaOrigem || "",
+    especialidade: membro?.especialidade || "",
+    funcaoPreferida: membro?.funcaoPreferida || vinculo?.papel || "",
+    estiloCombate: membro?.estiloCombate || "",
+    equipamentoPrincipal: membro?.equipamentoPrincipal || "",
+    graduacaoShinobi: membro?.graduacaoShinobi || "",
+    statusNukenin: membro?.statusNukenin || "",
+    buildShinobi: membro?.buildShinobi ? normalizeBuild(membro.buildShinobi, membro) : null,
+    discordDmMissoes: membro?.discordDmMissoes !== false,
+    discordDmContratos: membro?.discordDmContratos !== false,
+    discordDmRelatorios: membro?.discordDmRelatorios !== false,
+  });
+  const [form, setForm] = useState(criarForm);
+  const [arquivo, setArquivo] = useState(null);
+  const [preview, setPreview] = useState(membro?.avatarUrl || "");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [salvoEm, setSalvoEm] = useState(null);
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (navigationRequest?.tab !== "perfil") return;
+    if (["dossie", "build"].includes(navigationRequest.subTab)) setSubTab(navigationRequest.subTab);
+    if (navigationRequest.action === "build") setSubTab("build");
+  }, [navigationRequest?.token]);
+
+  useEffect(() => {
+    setForm(criarForm());
+    setPreview(membro?.avatarUrl || "");
+    setArquivo(null);
+    setErro("");
+  }, [membro?.username]);
+
+  if (!membro) return null;
+
+  const progresso = progressoDossieUsuario({ ...membro, ...form, avatarUrl: preview || membro.avatarUrl });
+  const roleAtual = (data.roles || []).find(r => r.id === membro.role) || role;
+  const buildPronta = buildHasMeaningfulData(form.buildShinobi, membro);
+  const setCampo = (campo, valor) => { setSalvoEm(null); setForm(f => ({ ...f, [campo]: valor })); };
+  const chip = (campo, valor) => <button type="button" onClick={() => setCampo(campo, valor)} className="px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-orange-200 hover:border-orange-700 text-[10px] uppercase tracking-wider">{valor}</button>;
+  const sugestoes = sugestoesDossieAutomaticas(data, membro);
+
+  const aplicarAutomatico = () => {
+    setForm(f => ({
+      ...f,
+      nomeRP: f.nomeRP || sugestoes.nomeRP,
+      linhagem: f.linhagem || sugestoes.linhagem,
+      especialidade: f.especialidade || sugestoes.especialidade,
+      funcaoPreferida: f.funcaoPreferida || sugestoes.funcaoPreferida,
+      estiloCombate: f.estiloCombate || sugestoes.estiloCombate,
+      equipamentoPrincipal: f.equipamentoPrincipal || sugestoes.equipamentoPrincipal,
+      graduacaoShinobi: f.graduacaoShinobi || sugestoes.graduacaoShinobi,
+    }));
+    setSalvoEm(null);
+  };
+
+  const aplicarEquipe = () => {
+    setForm(f => ({
+      ...f,
+      funcaoPreferida: vinculo?.papel || f.funcaoPreferida || "Soldado",
+      especialidade: f.especialidade || equipe?.tipo || "Operador de equipe",
+    }));
+    setSalvoEm(null);
+  };
+
+  const escolherFoto = (e) => {
+    setErro("");
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setErro("Escolha uma imagem JPG, PNG ou WEBP."); return; }
+    if (file.size > 3 * 1024 * 1024) { setErro("A foto deve ter no maximo 3 MB."); return; }
+    const reader = new FileReader();
+    reader.onerror = () => setErro("Nao foi possivel ler a imagem escolhida.");
+    reader.onload = () => {
+      const imagem = new Image();
+      imagem.onerror = () => setErro("A imagem escolhida nao pode ser processada.");
+      imagem.onload = () => {
+        const tamanho = 384;
+        const recorte = Math.min(imagem.naturalWidth, imagem.naturalHeight);
+        const origemX = Math.max(0, (imagem.naturalWidth - recorte) / 2);
+        const origemY = Math.max(0, (imagem.naturalHeight - recorte) / 2);
+        const canvas = document.createElement("canvas");
+        canvas.width = tamanho;
+        canvas.height = tamanho;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { setErro("Seu navegador nao conseguiu preparar a foto."); return; }
+        ctx.drawImage(imagem, origemX, origemY, recorte, recorte, 0, 0, tamanho, tamanho);
+        setPreview(canvas.toDataURL("image/jpeg", 0.82));
+        setArquivo(file);
+        setSalvoEm(null);
+      };
+      imagem.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const salvar = () => {
+    setErro("");
+    setSalvando(true);
+    let avatarUrl = membro.avatarUrl || "";
+    let avatarStoragePath = membro.avatarStoragePath || "";
+    try {
+      if (arquivo) {
+        avatarUrl = preview;
+        avatarStoragePath = "";
+      }
+      setData(d => {
+        const auto = sugestoesDossieAutomaticas(d, membro);
+        const formFinal = { ...form };
+        if (!buildHasMeaningfulData(formFinal.buildShinobi, membro)) formFinal.buildShinobi = null;
+        ["nomeRP", "linhagem", "especialidade", "funcaoPreferida", "estiloCombate", "equipamentoPrincipal", "graduacaoShinobi"].forEach(campo => {
+          if (!String(formFinal[campo] || "").trim() && String(auto[campo] || "").trim()) formFinal[campo] = auto[campo];
+        });
+        const atualizado = normalizarMembro({ ...membro, ...formFinal, avatarUrl, avatarStoragePath });
+        return {
+          ...d,
+          users: d.users.map(u => u.username === membro.username ? atualizado : u),
+          activityLog: [...(d.activityLog || []), atividade("perfil_atualizado", membro.username, membro.username, arquivo ? "Atualizou o perfil, dossie e foto" : "Atualizou o perfil")],
+        };
+      });
+      setArquivo(null);
+      setSalvoEm(new Date());
+    } catch (e) {
+      setErro(e.message || "Nao foi possivel salvar o perfil.");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const PerfilSaveBar = ({ compact = false }) => (
+    <div className={`flex ${compact ? "flex-col" : "flex-col sm:flex-row sm:items-center"} gap-2 sm:justify-between`}>
+      <div className="text-xs text-zinc-600">
+        {salvoEm ? <span className="text-green-500">Salvo as {salvoEm.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span> : "Altere o dossie ou a build e sele o perfil quando terminar."}
+      </div>
+      <Btn onClick={salvar} variant="primary" disabled={salvando} className="justify-center">
+        {salvando ? "Salvando..." : <><ISave className="w-3 h-3" /> Salvar perfil</>}
+      </Btn>
+    </div>
+  );
+
+  const tabs = [
+    { id: "dossie", label: "Dossie", icon: IFile },
+    { id: "build", label: "Build", icon: ISettings },
+  ];
+
+  return (
+    <div className="fadein space-y-5">
+      <section className="rounded-2xl border border-orange-900/40 bg-gradient-to-br from-zinc-950 via-black to-orange-950/15 p-4 sm:p-5">
+        <div className="grid lg:grid-cols-[auto_1fr_auto] gap-4 items-center">
+          <MemberAvatar user={{ ...membro, avatarUrl: preview || membro.avatarUrl }} size="xl" />
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Arquivo pessoal</div>
+            <h1 className="text-3xl font-black text-orange-50 serif leading-tight truncate">{getCodinome(membro)}</h1>
+            <div className="text-zinc-500 text-sm mt-1 truncate">{membro.nomeRP || membro.displayName} · {roleAtual?.nome || membro.role}</div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className={`text-[10px] px-2 py-1 rounded border ${perfilCompletoUsuario({ ...membro, ...form, avatarUrl: preview || membro.avatarUrl }) ? "border-green-800 text-green-400" : "border-yellow-800 text-yellow-500"}`}>{progresso.pct}% dossie</span>
+              <span className={`text-[10px] px-2 py-1 rounded border ${buildPronta ? "border-violet-700 text-violet-300" : "border-zinc-800 text-zinc-600"}`}>{buildPronta ? "Build salva" : "Build pendente"}</span>
+              <StatusBadge status={membro.status || "Ativo"} />
+            </div>
+          </div>
+          <div className="w-full lg:w-72">
+            <PerfilSaveBar compact />
+          </div>
+        </div>
+      </section>
+
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-1 flex gap-1 overflow-x-auto">
+        {tabs.map(t => { const Icon = t.icon; const active = subTab === t.id; return (
+          <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-xs uppercase tracking-wider font-black transition-all ${active ? "bg-orange-700 text-white" : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900"}`}>
+            <Icon className="w-4 h-4" />{t.label}
+          </button>
+        ); })}
+      </div>
+
+      {erro && <div className="p-3 rounded border border-red-800 bg-red-950/30 text-red-300 text-sm">{erro}</div>}
+
+      {subTab === "dossie" && (
+        <div className="grid xl:grid-cols-[320px_1fr] gap-4">
+          <aside className="space-y-4">
+            <section className="rounded-xl border border-zinc-800 bg-black/55 p-4 text-center">
+              <div className="w-36 h-36 mx-auto rounded-full overflow-hidden border-2 border-orange-700 bg-black flex items-center justify-center">
+                {preview ? <img src={preview} alt="Previa" className="w-full h-full object-cover" /> : <span className="text-3xl font-black text-orange-400">{iniciaisMembro(membro)}</span>}
+              </div>
+              <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} className="hidden" />
+              <Btn onClick={() => inputRef.current?.click()} variant="default" disabled={salvando} className="mt-3 w-full justify-center"><IUpload className="w-3 h-3" /> Foto do perfil</Btn>
+            </section>
+
+            <section className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-4">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500 mb-2"><span>Prontidao</span><span className="text-orange-300 font-black">{progresso.pct}%</span></div>
+              <div className="h-2 rounded-full bg-zinc-900 overflow-hidden"><div className="h-full bg-gradient-to-r from-orange-900 to-orange-400" style={{ width: progresso.pct + "%" }} /></div>
+              <div className="mt-3 text-xs text-zinc-500 leading-relaxed">{progresso.faltando.length ? <>Falta: <span className="text-yellow-500">{progresso.faltando.slice(0, 4).join(", ")}</span></> : <span className="text-green-500">Perfil pronto para operacoes.</span>}</div>
+            </section>
+
+            <DiscordSealStatus usuario={membro} compact showButton />
+
+            <section className="rounded-xl border border-sky-900/35 bg-sky-950/10 p-4">
+              <div className="text-[9px] uppercase tracking-[0.22em] text-sky-500 font-black">Preenchimento rapido</div>
+              <p className="text-zinc-500 text-xs leading-relaxed mt-2">Usa cargo, equipe e divisao para completar funcao, especialidade e graduacao quando estiverem vazias.</p>
+              <Btn onClick={aplicarAutomatico} variant="default" className="mt-3 w-full justify-center"><ICheck className="w-3 h-3" /> Preencher automatico</Btn>
+            </section>
+
+            {(equipe || divisao) && (
+              <section className="rounded-xl border border-orange-900/35 bg-orange-950/10 p-4">
+                <div className="text-[9px] uppercase tracking-[0.22em] text-orange-600 font-black">Vinculo atual</div>
+                <div className="text-orange-50 font-bold mt-2">{equipe?.nome || "Sem equipe"}</div>
+                <div className="text-zinc-500 text-xs mt-1">{divisao?.nome || "Sem divisao"}{vinculo?.papel ? ` · ${vinculo.papel}` : ""}</div>
+                <Btn onClick={aplicarEquipe} variant="ghost" className="mt-3 w-full justify-center"><ICheck className="w-3 h-3" /> Usar no perfil</Btn>
+              </section>
+            )}
+          </aside>
+
+          <section className="space-y-4 min-w-0">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/65 p-4 sm:p-5">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-orange-600 font-black mb-4">Identidade</div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div><label className="fox-label">Nome de RP</label><input value={form.nomeRP} onChange={e => setCampo("nomeRP", e.target.value)} className="fox-input" /></div>
+                <div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem} onChange={e => setCampo("vilaOrigem", e.target.value)} className="fox-input" placeholder="Ex.: Kirigakure" /></div>
+                <div><label className="fox-label">Elemento</label><input value={form.elemento} onChange={e => setCampo("elemento", e.target.value)} className="fox-input" placeholder="Ex.: Raiton" /><div className="flex flex-wrap gap-1 mt-2">{["Katon", "Suiton", "Raiton", "Doton", "Fuuton"].map(v => <React.Fragment key={v}>{chip("elemento", v)}</React.Fragment>)}</div></div>
+                <div><label className="fox-label">Linhagem / cla de origem</label><input value={form.linhagem} onChange={e => setCampo("linhagem", e.target.value)} className="fox-input" placeholder="Ex.: Lamona, Hyuuga, Uchiha..." /></div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/65 p-4 sm:p-5">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-orange-600 font-black mb-4">Uso em missoes</div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div><label className="fox-label">Especialidade principal</label><input value={form.especialidade} onChange={e => setCampo("especialidade", e.target.value)} className="fox-input" placeholder="Ex.: Inteligencia, infiltracao, ataque, suporte..." /><div className="flex flex-wrap gap-1 mt-2">{["Infiltracao", "Inteligencia", "Ataque", "Suporte", "Escolta", "Rastreamento", "Negociacao"].map(v => <React.Fragment key={v}>{chip("especialidade", v)}</React.Fragment>)}</div></div>
+                <div><label className="fox-label">Funcao preferida</label><input value={form.funcaoPreferida} onChange={e => setCampo("funcaoPreferida", e.target.value)} className="fox-input" placeholder="Ex.: Lider, soldado, suporte..." /><div className="flex flex-wrap gap-1 mt-2">{["Lider", "Soldado", "Batedor", "Suporte", "Executor", "Rastreador"].map(v => <React.Fragment key={v}>{chip("funcaoPreferida", v)}</React.Fragment>)}</div></div>
+                <div><label className="fox-label">Estilo de combate</label><input value={form.estiloCombate} onChange={e => setCampo("estiloCombate", e.target.value)} className="fox-input" placeholder="Ex.: curta distancia, genjutsu, furtivo..." /><div className="flex flex-wrap gap-1 mt-2">{["Furtivo", "Curta distancia", "Longo alcance", "Defensivo", "Controle", "Suporte"].map(v => <React.Fragment key={v}>{chip("estiloCombate", v)}</React.Fragment>)}</div></div>
+                <div><label className="fox-label">Equipamento / arma principal</label><input value={form.equipamentoPrincipal} onChange={e => setCampo("equipamentoPrincipal", e.target.value)} className="fox-input" placeholder="Ex.: katana, kunais, selos, venenos..." /></div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-sky-900/35 bg-sky-950/10 p-4 sm:p-5">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-sky-400 font-black mb-4">Ficha shinobi</div>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div><label className="fox-label">Graduacao shinobi</label><input value={form.graduacaoShinobi} onChange={e => setCampo("graduacaoShinobi", e.target.value)} className="fox-input" placeholder="Ex.: Genin, Chunin, Jonin, Nukenin..." /><div className="flex flex-wrap gap-1 mt-2">{["Genin", "Chunin", "Jonin", "ANBU", "Nukenin"].map(v => <React.Fragment key={v}>{chip("graduacaoShinobi", v)}</React.Fragment>)}</div></div>
+                <div><label className="fox-label">Status nukenin</label><input value={form.statusNukenin} onChange={e => setCampo("statusNukenin", e.target.value)} className="fox-input" placeholder="Ex.: limpo, suspeito, renegado..." /><div className="flex flex-wrap gap-1 mt-2">{["Limpo", "Suspeito", "Renegado", "Exilado"].map(v => <React.Fragment key={v}>{chip("statusNukenin", v)}</React.Fragment>)}</div></div>
+              </div>
+            </div>
+
+            {membro.discordVerificado && (
+              <div className="rounded-xl border border-indigo-900/35 bg-indigo-950/10 p-4 sm:p-5">
+                <div className="text-[10px] uppercase tracking-[0.25em] text-indigo-300 font-black mb-4">Avisos por DM</div>
+                <div className="grid md:grid-cols-3 gap-2 text-xs text-zinc-400">
+                  {[
+                    ["discordDmMissoes", "Receber aviso de missao"],
+                    ["discordDmContratos", "Receber aviso de contrato"],
+                    ["discordDmRelatorios", "Receber aviso de relatorio"],
+                  ].map(([campo, label]) => (
+                    <label key={campo} className="flex items-center gap-2 p-3 rounded border border-zinc-800 bg-black/35">
+                      <input type="checkbox" checked={form[campo] !== false} onChange={e => setCampo(campo, e.target.checked)} />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-zinc-800 bg-black/55 p-4">
+              <PerfilSaveBar />
+            </div>
+          </section>
+        </div>
+      )}
+
+      {subTab === "build" && (
+        <div className="space-y-4">
+          <section className="rounded-xl border border-violet-900/35 bg-violet-950/10 p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-violet-300 font-black">Build pessoal</div>
+                <div className="text-zinc-500 text-xs mt-1">A build fica presa ao seu perfil. Lideres e capitaes veem um resumo no seu dossie.</div>
+              </div>
+              <PerfilSaveBar compact />
+            </div>
+          </section>
+          <BuildPage usuario={membro} value={form.buildShinobi} onChange={next => { setCampo("buildShinobi", next); setSalvoEm(null); }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MembrosListSection({ data, viewerIsContratante, onOpen }) {
   const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
   const completos = usuariosVisiveis.filter(perfilCompletoUsuario).length;
@@ -3090,7 +3333,7 @@ function MembrosListSection({ data, viewerIsContratante, onOpen }) {
     <div className="fadein space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-zinc-800 bg-zinc-950/55">
         <div>
-          <div className="text-orange-50 font-black serif text-lg">Dossiês operacionais</div>
+          <div className="text-orange-50 font-black serif text-lg">Membros operacionais</div>
           <div className="text-zinc-500 text-xs mt-1">{usuariosVisiveis.length} membros · {completos} prontos para designação · {usuariosVisiveis.length - completos} pendentes</div>
         </div>
         <div className="text-[10px] uppercase tracking-wider text-zinc-600">Foto + função + limites ajudam capitães a montar missões</div>
@@ -3115,7 +3358,7 @@ function MembrosListSection({ data, viewerIsContratante, onOpen }) {
                   </div>
                   <div className="text-xs mt-2" style={{ color: role?.cor }}>{u.patente || role?.nome || u.role}</div>
                   <div className="text-zinc-600 text-xs mt-1 truncate">{u.especialidade || "Especialidade pendente"}{u.funcaoPreferida ? ` · ${u.funcaoPreferida}` : ""}</div>
-                  <div className="text-zinc-700 text-[10px] mt-1 truncate">{u.graduacaoShinobi || "Graduacao pendente"}{u.bingoBookStatus && u.bingoBookStatus !== "Nao listado" ? ` - Bingo: ${u.bingoBookStatus}` : ""}</div>
+                  <div className="text-zinc-700 text-[10px] mt-1 truncate">{u.graduacaoShinobi || "Graduacao pendente"}{buildHasMeaningfulData(u.buildShinobi, u) ? " - Build salva" : ""}</div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     <ReputacaoBadge tipo="lealdade" valor={u.lealdade} compacto />
                     <ReputacaoBadge tipo="conduta" valor={u.conduta || "Limpo"} compacto />
@@ -3703,31 +3946,22 @@ function ReputacaoSection({ data, setData, role, usuario, onOpen }) {
 function MembrosPage({ data, setData, role, usuario, viewerIsContratante, navigationRequest }) {
   const [subTab, setSubTab] = useState("lista");
   const [dossieAberto, setDossieAberto] = useState(null);
-  const [editandoMeuDossie, setEditandoMeuDossie] = useState(false);
 
   useEffect(() => {
     if (navigationRequest?.tab !== "membros") return;
     if (["lista", "estrutura", "reputacao", "trios"].includes(navigationRequest.subTab)) setSubTab(navigationRequest.subTab);
-    if (navigationRequest.action === "meu-dossie") {
-      setSubTab("lista");
-      setEditandoMeuDossie(true);
-    }
   }, [navigationRequest?.token]);
 
   const podeEditarTrios = hasPerm(role, "edit_trios") || ["lider", "braco_direito", "conselheiro", "capitao_ramo"].includes(estruturaPosicaoRole(role));
   const usuariosVisiveis = (data.users || []).filter(u => u.role !== "contratante");
-  const membroAtual = data.users.find(u => u.username === usuario?.username) || usuario;
   const SUB_TABS = [
-    { id: "lista", label: "Dossiês", icon: IUsers, badge: usuariosVisiveis.length || null },
+    { id: "lista", label: "Membros", icon: IUsers, badge: usuariosVisiveis.length || null },
     { id: "estrutura", label: "Estrutura", icon: ICrown, badge: null },
     { id: "reputacao", label: "Lealdade & Conduta", icon: IShield, badge: null },
     { id: "trios", label: "Divisões & Equipes", icon: ISwords, badge: (data.trios || []).length || null },
   ];
   return (
     <div>
-      <div className="mb-3 flex justify-end">
-        <Btn onClick={() => setEditandoMeuDossie(true)} variant="primary"><IEdit className="w-3 h-3" /> Meu Dossiê</Btn>
-      </div>
       <div className="mb-5 bg-zinc-950/60 border border-zinc-800 rounded-lg p-1 flex gap-1 overflow-x-auto">
         {SUB_TABS.map(t => { const I = t.icon; const active = subTab === t.id; return (
           <button key={t.id} onClick={() => setSubTab(t.id)} className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded text-xs uppercase tracking-wider font-bold transition-all ${active ? "bg-gradient-to-r from-red-700 to-orange-700 text-white shadow-lg" : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"}`}>
@@ -3740,7 +3974,6 @@ function MembrosPage({ data, setData, role, usuario, viewerIsContratante, naviga
       {subTab === "reputacao" && <ReputacaoSection data={data} setData={setData} role={role} usuario={usuario} onOpen={setDossieAberto} />}
       {subTab === "trios" && <TriosSection data={data} setData={setData} podeEditar={podeEditarTrios} role={role} usuario={usuario} />}
       {dossieAberto && <DossieModal membro={data.users.find(u => u.username === dossieAberto.username) || dossieAberto} data={data} onClose={() => setDossieAberto(null)} />}
-      {editandoMeuDossie && membroAtual && <MeuDossieModal membro={membroAtual} data={data} setData={setData} onClose={() => setEditandoMeuDossie(false)} />}
     </div>
   );
 }
@@ -6570,6 +6803,520 @@ function ArmasPage({ data, setData, isLider }) {
   );
 }
 
+// ============ BUILD SHINOBI ============
+const BUILD_STORAGE_PREFIX = "jikkai-build-v1";
+const BUILD_ATTRS = [
+  { id: "vida", label: "Vida", short: "HP", tone: "text-red-300" },
+  { id: "chakra", label: "Chakra", short: "CK", tone: "text-cyan-300" },
+  { id: "taijutsu", label: "Taijutsu", short: "TAI", tone: "text-orange-300", trainable: true },
+  { id: "ninjutsu", label: "Ninjutsu", short: "NIN", tone: "text-blue-300", trainable: true },
+  { id: "genjutsu", label: "Genjutsu", short: "GEN", tone: "text-violet-300", trainable: true },
+  { id: "kenjutsu", label: "Kenjutsu", short: "KEN", tone: "text-yellow-300", trainable: true },
+];
+const BUILD_ATTR_IDS = BUILD_ATTRS.map(a => a.id);
+const BUILD_COMBAT_ATTRS = BUILD_ATTRS.filter(a => a.trainable).map(a => a.id);
+const BUILD_ZERO_ATTRS = { vida: 0, chakra: 0, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 };
+const BUILD_ZERO_TRAINING = { taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 };
+const BUILD_RANKS = [
+  { id: "genin", name: "Genin", maxAttributePoints: 125, maxTrainableAttributePoints: 65, baseStats: { vida: 650, chakra: 650, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
+  { id: "chunnin", name: "Chunnin", maxAttributePoints: 250, maxTrainableAttributePoints: 125, baseStats: { vida: 900, chakra: 900, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
+];
+const BUILD_ELEMENTS = [
+  { id: "fire", name: "Katon" },
+  { id: "wind", name: "Fuuton" },
+  { id: "lightning", name: "Raiton" },
+  { id: "water", name: "Suiton" },
+  { id: "earth", name: "Doton" },
+];
+const BUILD_LINEAGES = [
+  { id: "uchiha", name: "Uchiha", primaryAttribute: "ninjutsu" },
+  { id: "uzumaki", name: "Uzumaki", primaryAttribute: "ninjutsu" },
+  { id: "senju", name: "Senju", primaryAttribute: "ninjutsu" },
+  { id: "hyuuga_souke", name: "Hyuuga Souke", primaryAttribute: "taijutsu" },
+  { id: "hyuuga_bunke", name: "Hyuuga Bunke", primaryAttribute: "taijutsu" },
+  { id: "nara", name: "Nara", primaryAttribute: "ninjutsu" },
+  { id: "sabaku", name: "Sabaku", primaryAttribute: "ninjutsu" },
+  { id: "lotus", name: "Lotus", primaryAttribute: "taijutsu" },
+  { id: "yuuhi", name: "Yuuhi", primaryAttribute: "genjutsu" },
+  { id: "momochi", name: "Momochi", primaryAttribute: "kenjutsu" },
+];
+const BUILD_EQUIPMENTS = [
+  { id: "hat", name: "Chapeu", type: "equipment", stats: {} },
+  { id: "akatsuki-hat", name: "Chapeu de Akatsuki", type: "equipment", stats: { vida: 10, chakra: 10 } },
+  { id: "kage-hat", name: "Chapeu de Kage", type: "equipment", stats: { vida: 50, chakra: 50 } },
+  { id: "chunnin-jacket", name: "Colete Chunnin", type: "equipment", stats: { vida: 10, chakra: 12 } },
+  { id: "bandana", name: "Bandana", type: "accessory", stats: { vida: 5, chakra: 3 } },
+];
+const BUILD_LINEAGE_SKILLS = {
+  uchiha: [
+    { id: "sharingan-dousatsugan", name: "Sharingan Dousatsugan", baseDamage: 0, scalingAttribute: "genjutsu", scalingPercent: 0 },
+    { id: "sharingan-copiador", name: "Sharingan Copiador", baseDamage: 0, scalingAttribute: "genjutsu", scalingPercent: 0 },
+    { id: "magen-kasegui", name: "Magen: Tsukuyomi", baseDamage: 150, scalingAttribute: "genjutsu", scalingPercent: 0.4 },
+  ],
+  uzumaki: [
+    { id: "fuuinjutsu-fuuka-houin", name: "Fuuinjutsu: Fuuka Houin", baseDamage: 50, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "fuuinjutsu-kongou-fuusa", name: "Fuuinjutsu: Kongou Fuusa", baseDamage: 100, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "fuuinjutsu-shiki-fuujin", name: "Fuuinjutsu: Shiki Fuujin", baseDamage: 150, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+  ],
+  senju: [
+    { id: "benishigure", name: "Benishigure", baseDamage: 50, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "ouka-resshou", name: "Ouka Resshou", baseDamage: 100, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "tsuutenkyaku", name: "Tsuutenkyaku", baseDamage: 150, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+  ],
+  hyuuga_souke: [
+    { id: "byakugan-juuken-souke", name: "Byakugan: Juuken", baseDamage: 0, scalingAttribute: "taijutsu", scalingPercent: 0 },
+    { id: "hakke-kuuhekishou", name: "Hakke Kuushou: Vacuum Palm", baseDamage: 100, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "juuho-soushiken", name: "Juuho Soushiken", baseDamage: 150, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+  ],
+  hyuuga_bunke: [
+    { id: "byakugan-juuken-bunke", name: "Byakugan: Juuken", baseDamage: 0, scalingAttribute: "taijutsu", scalingPercent: 0 },
+    { id: "hakkeshou-kaiten", name: "Hakkeshou Kaiten", baseDamage: 100, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "hakke-sanjuu-ni-shou", name: "Hakke Sanjuu Ni Shou", baseDamage: 150, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+  ],
+  nara: [
+    { id: "kagemane", name: "Kagemane", baseDamage: 50, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "kage-nui", name: "Kage Nui", baseDamage: 100, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "kageyose", name: "Kageyose", baseDamage: 150, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+  ],
+  sabaku: [
+    { id: "suna-no-kouken", name: "Suna no Kouken", baseDamage: 50, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "suna-no-tate", name: "Suna no Tate", baseDamage: 0, scalingAttribute: "ninjutsu", scalingPercent: 0 },
+    { id: "sabaku-soutaisou", name: "Sabaku Soutaisou", baseDamage: 150, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+  ],
+  lotus: [
+    { id: "dainamikku-entori", name: "Dainamikku Entori", baseDamage: 50, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "konoha-shoufuu", name: "Konoha Shoufuu", baseDamage: 100, scalingAttribute: "taijutsu", scalingPercent: 0.4 },
+    { id: "hachimon-tonkou", name: "Hachimon Tonkou", baseDamage: 0, scalingAttribute: "taijutsu", scalingPercent: 0 },
+  ],
+  yuuhi: [
+    { id: "magen-jubaku-satsu", name: "Magen: Jubaku Satsu", baseDamage: 50, scalingAttribute: "genjutsu", scalingPercent: 0.4 },
+    { id: "magen-hanagasumi", name: "Magen: Hanagasumi", baseDamage: 100, scalingAttribute: "genjutsu", scalingPercent: 0.4 },
+    { id: "magen-sanshin", name: "Magen: Sanshin", baseDamage: 150, scalingAttribute: "genjutsu", scalingPercent: 0.4 },
+  ],
+  momochi: [
+    { id: "kirigakure-no-jutsu", name: "Kirigakure no Jutsu", baseDamage: 0, scalingAttribute: "kenjutsu", scalingPercent: 0 },
+    { id: "sairento-kiringu", name: "Sairento Kiringu", baseDamage: 100, scalingAttribute: "kenjutsu", scalingPercent: 0.4 },
+    { id: "sakki", name: "Sakki", baseDamage: 0, scalingAttribute: "kenjutsu", scalingPercent: 0 },
+  ],
+};
+const BUILD_ELEMENT_SKILLS = {
+  fire: [
+    { id: "katon-endan-goukakyuu", name: "Katon: Endan - Goukakyuu", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.2 },
+    { id: "katon-housenka", name: "Katon: Housenka", baseDamage: 80, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "katon-haijingakure", name: "Katon: Haijingakure", baseDamage: 120, scalingAttribute: "ninjutsu", scalingPercent: 0.6 },
+    { id: "katon-karyuuendan", name: "Katon: Karyuuendan", baseDamage: 200, scalingAttribute: "ninjutsu", scalingPercent: 0.8 },
+  ],
+  wind: [
+    { id: "fuuton-tatsumaki-kou", name: "Fuuton: Tatsumaki Kou", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.2 },
+    { id: "fuuton-shinkuuha", name: "Fuuton: Shinkuuha", baseDamage: 80, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "fuuton-kuchiyose-kirikiri-mai", name: "Fuuton: Kuchiyose Kirikiri Mai", baseDamage: 120, scalingAttribute: "ninjutsu", scalingPercent: 0.6 },
+    { id: "fuuton-kamaitachi", name: "Fuuton: Kamaitachi", baseDamage: 200, scalingAttribute: "ninjutsu", scalingPercent: 0.8 },
+  ],
+  lightning: [
+    { id: "raiton-chidori-raikiri", name: "Raiton: Chidori / Raikiri", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.2 },
+    { id: "raiton-raikyuu", name: "Raiton: Raikyuu", baseDamage: 80, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "raiton-nagashi", name: "Raiton: Nagashi", baseDamage: 120, scalingAttribute: "ninjutsu", scalingPercent: 0.6 },
+    { id: "raiton-hebi-ikazuchi", name: "Raiton: Hebi Ikazuchi", baseDamage: 200, scalingAttribute: "ninjutsu", scalingPercent: 0.8 },
+  ],
+  water: [
+    { id: "suiton-teppodama", name: "Suiton: Teppodama", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.2 },
+    { id: "suiton-suikodan", name: "Suiton: Suikodan", baseDamage: 80, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "suiton-suirou", name: "Suiton: Suirou", baseDamage: 120, scalingAttribute: "ninjutsu", scalingPercent: 0.6 },
+    { id: "suiton-suireiha", name: "Suiton: Suireiha", baseDamage: 200, scalingAttribute: "ninjutsu", scalingPercent: 0.8 },
+  ],
+  earth: [
+    { id: "doton-doryuuheki", name: "Doton: Doryuuheki", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.2 },
+    { id: "doton-chidoukaku-kouka", name: "Doton: Chidoukaku / Kouka", baseDamage: 80, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+    { id: "doton-dorojigoku", name: "Doton: Dorojigoku", baseDamage: 0, scalingAttribute: "ninjutsu", scalingPercent: 0.6 },
+    { id: "doton-doryuudan", name: "Doton: Doryuudan", baseDamage: 200, scalingAttribute: "ninjutsu", scalingPercent: 0.8 },
+  ],
+};
+const BUILD_GENERAL_SKILLS = [
+  { id: "kage-bunshin", name: "Kage Bunshin no Jutsu", baseDamage: 60, scalingAttribute: "taijutsu", scalingPercent: 0.15, usesLineagePrimary: true },
+  { id: "rasengan", name: "Rasengan", baseDamage: 40, scalingAttribute: "ninjutsu", scalingPercent: 0.4 },
+  { id: "kiru-no-chakra", name: "Kiru no Chakra", baseDamage: 120, scalingAttribute: "kenjutsu", scalingPercent: 0.3 },
+  { id: "henge", name: "Henge no Jutsu" },
+  { id: "shousen", name: "Shousen Jutsu" },
+  { id: "fuuinjutsu", name: "Fuuinjutsu" },
+  { id: "katsuyu-katsu", name: "Katsuyu: Katsu" },
+  { id: "katsuyu", name: "Kuchiyose: Katsuyu" },
+  { id: "urushi", name: "Kuchiyose: Urushi" },
+  { id: "kawarimi", name: "Kawarimi no Jutsu", fixed: true },
+  { id: "kinobori", name: "Kinobori", fixed: true },
+];
+const BUILD_BUFF_SKILLS = [
+  { id: "samurai-saberu", name: "Samurai Saberu", effects: [{ percentStats: { kenjutsu: 10 } }] },
+];
+const BUILD_LINEAGE_BUFFS = {
+  hyuuga_souke: [
+    { id: "byakugan-focus", name: "Foco Byakugan", effects: [{ percentStats: { taijutsu: 10 } }] },
+    { id: "juuho-soushiken", name: "Juuho Soushiken", effects: [{ percentStats: { taijutsu: 12.5 } }] },
+  ],
+  hyuuga_bunke: [
+    { id: "byakugan-focus", name: "Foco Byakugan", effects: [{ percentStats: { taijutsu: 10 } }] },
+  ],
+  lotus: [
+    { id: "lotus-gates", name: "Hachimon Tonkou", effects: [{ levels: [
+      { level: 1, label: "1 Portao", percentStats: { taijutsu: 6.5 } },
+      { level: 2, label: "2 Portao", percentStats: { taijutsu: 13 } },
+      { level: 3, label: "3 Portao", percentStats: { taijutsu: 19.5 } },
+      { level: 4, label: "4 Portao", percentStats: { taijutsu: 26 } },
+      { level: 5, label: "5 Portao", percentStats: { taijutsu: 32.5 } },
+      { level: 6, label: "6 Portao", percentStats: { taijutsu: 39 } },
+    ] }] },
+  ],
+  momochi: [
+    { id: "sakki", name: "Sakki", effects: [{ percentStats: { kenjutsu: 30 } }] },
+  ],
+};
+
+function buildStorageKey(usuario) {
+  return `${BUILD_STORAGE_PREFIX}:${usuario?.username || "local"}`;
+}
+function buildClampInt(value, max = 999) {
+  const n = Number(String(value ?? "").replace(/\D/g, ""));
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(Math.floor(n), max));
+}
+function createDefaultBuild(usuario) {
+  return {
+    name: usuario?.nomeRP || usuario?.displayName || "Novo shinobi",
+    rankId: "genin",
+    lineageId: "uchiha",
+    elementId: "fire",
+    attributes: { ...BUILD_ZERO_ATTRS },
+    training: { ...BUILD_ZERO_TRAINING },
+    equipments: { weaponId: "", equipment1Id: "", equipment2Id: "", bandanaId: "", ninjaToolId: "" },
+    generalSkillIds: ["kage-bunshin", "rasengan", "kiru-no-chakra", ""],
+    buffSkillIds: [],
+    skillLevels: {},
+  };
+}
+function normalizeBuild(raw, usuario) {
+  const fallback = createDefaultBuild(usuario);
+  const base = raw && typeof raw === "object" ? raw : {};
+  return {
+    ...fallback,
+    ...base,
+    attributes: { ...fallback.attributes, ...(base.attributes || {}) },
+    training: { ...fallback.training, ...(base.training || {}) },
+    equipments: { ...fallback.equipments, ...(base.equipments || {}) },
+    generalSkillIds: Array.isArray(base.generalSkillIds) ? [...base.generalSkillIds, "", "", "", ""].slice(0, 4) : fallback.generalSkillIds,
+    buffSkillIds: Array.isArray(base.buffSkillIds) ? base.buffSkillIds : [],
+    skillLevels: { ...(base.skillLevels || {}) },
+  };
+}
+function buildHasMeaningfulData(raw, usuario) {
+  if (!raw || typeof raw !== "object") return false;
+  const build = normalizeBuild(raw, usuario);
+  const fallback = createDefaultBuild(usuario);
+  const trainingTotal = BUILD_COMBAT_ATTRS.reduce((sum, attr) => sum + Number(build.training?.[attr] || 0), 0);
+  const hasEquipment = Object.values(build.equipments || {}).some(Boolean);
+  const hasIdentityChange =
+    build.name !== fallback.name ||
+    build.rankId !== fallback.rankId ||
+    build.lineageId !== fallback.lineageId ||
+    build.elementId !== fallback.elementId;
+  return buildDistributedPoints(build) > 0 || trainingTotal > 0 || hasEquipment || hasIdentityChange;
+}
+function buildPointValue(attr, value) {
+  return (attr === "vida" || attr === "chakra") ? Number(value || 0) * 10 : Number(value || 0);
+}
+function buildDistributedPoints(build) {
+  return BUILD_ATTR_IDS.reduce((sum, attr) => sum + Number(build.attributes?.[attr] || 0), 0);
+}
+function buildEquipmentStats(equipments) {
+  const total = { ...BUILD_ZERO_ATTRS };
+  Object.values(equipments || {}).filter(Boolean).forEach(id => {
+    const item = BUILD_EQUIPMENTS.find(e => e.id === id);
+    Object.entries(item?.stats || {}).forEach(([attr, value]) => { total[attr] += buildPointValue(attr, value); });
+  });
+  return total;
+}
+function buildActiveBuffs(build) {
+  const all = [...BUILD_BUFF_SKILLS, ...(BUILD_LINEAGE_BUFFS[build.lineageId] || [])];
+  return all.filter(skill => (build.buffSkillIds || []).includes(skill.id));
+}
+function buildFinalStats(build, rank) {
+  const stats = { ...rank.baseStats };
+  const percent = {};
+  BUILD_ATTR_IDS.forEach(attr => { stats[attr] += buildPointValue(attr, build.attributes?.[attr] || 0); });
+  BUILD_COMBAT_ATTRS.forEach(attr => { stats[attr] += Number(build.training?.[attr] || 0); });
+  const equipmentStats = buildEquipmentStats(build.equipments);
+  BUILD_ATTR_IDS.forEach(attr => { stats[attr] += Number(equipmentStats[attr] || 0); });
+  buildActiveBuffs(build).forEach(skill => {
+    (skill.effects || []).forEach(effect => {
+      Object.entries(effect.stats || {}).forEach(([attr, value]) => { stats[attr] += Number(value || 0); });
+      Object.entries(effect.percentStats || {}).forEach(([attr, value]) => { percent[attr] = (percent[attr] || 0) + Number(value || 0); });
+      const level = build.skillLevels?.[skill.id];
+      const chosenLevel = (effect.levels || []).find(l => l.level === Number(level)) || (effect.levels || [])[0];
+      Object.entries(chosenLevel?.stats || {}).forEach(([attr, value]) => { stats[attr] += Number(value || 0); });
+      Object.entries(chosenLevel?.percentStats || {}).forEach(([attr, value]) => { percent[attr] = (percent[attr] || 0) + Number(value || 0); });
+    });
+  });
+  Object.entries(percent).forEach(([attr, value]) => { stats[attr] = Math.round(stats[attr] * (1 + Number(value || 0) / 100)); });
+  return stats;
+}
+function buildLineagePrimaryForKageBunshin(lineageId) {
+  return lineageId === "yuuhi" ? "genjutsu" : "taijutsu";
+}
+function buildSkillDamage(skill, finalStats, lineageId) {
+  if (!skill || skill.baseDamage === undefined) return null;
+  const attr = skill.usesLineagePrimary ? buildLineagePrimaryForKageBunshin(lineageId) : skill.scalingAttribute;
+  const base = Number(skill.baseDamage || 0);
+  const scale = Number(skill.scalingPercent || 0);
+  return { attr, value: Math.round(base + Number(finalStats[attr] || 0) * scale), base, scale };
+}
+function buildEquipmentOptions(slot, build) {
+  const type = slot === "bandanaId" ? "accessory" : "equipment";
+  const otherSlot = slot === "equipment1Id" ? "equipment2Id" : slot === "equipment2Id" ? "equipment1Id" : "";
+  const otherId = otherSlot ? build.equipments?.[otherSlot] : "";
+  const otherIsHat = otherId && (otherId === "hat" || otherId.endsWith("-hat"));
+  return BUILD_EQUIPMENTS.filter(item => {
+    if (item.type !== type) return false;
+    if (otherId && item.id === otherId) return false;
+    if (otherIsHat && (item.id === "hat" || item.id.endsWith("-hat"))) return false;
+    return true;
+  });
+}
+function BuildStepper({ label, value, max, onChange, disabled = false }) {
+  const current = Number(value || 0);
+  const set = (next) => onChange(buildClampInt(next, max));
+  return (
+    <div className="grid grid-cols-[34px_minmax(0,1fr)_34px] h-10 rounded-md border border-zinc-800 bg-black/50 overflow-hidden">
+      <button type="button" aria-label={`Diminuir ${label}`} disabled={disabled || current <= 0} onClick={() => set(current - 1)} className="mobile-tap border-r border-zinc-800 text-zinc-500 disabled:opacity-30 hover:text-orange-300">-</button>
+      <input aria-label={label} type="number" min="0" max={max} value={current} onChange={e => set(e.target.value)} disabled={disabled} className="bg-transparent text-center text-sm font-black text-orange-50 outline-none disabled:text-zinc-700" />
+      <button type="button" aria-label={`Aumentar ${label}`} disabled={disabled || current >= max} onClick={() => set(current + 1)} className="mobile-tap border-l border-zinc-800 text-zinc-500 disabled:opacity-30 hover:text-orange-300">+</button>
+    </div>
+  );
+}
+function BuildPage({ usuario, value = null, onChange = null, embedded = false }) {
+  const controlled = typeof onChange === "function";
+  const [localBuild, setLocalBuild] = useState(() => {
+    try { return normalizeBuild(JSON.parse(localStorage.getItem(buildStorageKey(usuario)) || "null"), usuario); }
+    catch { return createDefaultBuild(usuario); }
+  });
+  const build = normalizeBuild(controlled ? value : localBuild, usuario);
+  const setBuild = (updater) => {
+    const next = typeof updater === "function" ? updater(build) : updater;
+    const normalized = normalizeBuild(next, usuario);
+    if (controlled) onChange?.(normalized);
+    else setLocalBuild(normalized);
+  };
+  const [copiado, setCopiado] = useState(false);
+  const rank = BUILD_RANKS.find(r => r.id === build.rankId) || BUILD_RANKS[0];
+  const lineage = BUILD_LINEAGES.find(l => l.id === build.lineageId) || BUILD_LINEAGES[0];
+  const element = BUILD_ELEMENTS.find(e => e.id === build.elementId) || BUILD_ELEMENTS[0];
+  const distributed = buildDistributedPoints(build);
+  const pointsLeft = Math.max(0, rank.maxAttributePoints - distributed);
+  const overLimit = Math.max(0, distributed - rank.maxAttributePoints);
+  const progress = Math.min(100, distributed / rank.maxAttributePoints * 100);
+  const equipmentStats = buildEquipmentStats(build.equipments);
+  const finalStats = buildFinalStats(build, rank);
+  useEffect(() => {
+    if (controlled) return;
+    try { localStorage.setItem(buildStorageKey(usuario), JSON.stringify(build)); } catch {}
+  }, [build, controlled, usuario?.username]);
+
+  const patch = (next) => setBuild(b => ({ ...b, ...next }));
+  const patchAttr = (attr, value) => setBuild(b => ({ ...b, attributes: { ...b.attributes, [attr]: value } }));
+  const patchTraining = (attr, value) => setBuild(b => ({ ...b, training: { ...b.training, [attr]: value } }));
+  const patchEquipment = (slot, value) => setBuild(b => ({ ...b, equipments: { ...b.equipments, [slot]: value } }));
+  const autoDistribute = () => setBuild(b => {
+    const current = buildDistributedPoints(b);
+    let left = Math.max(0, (BUILD_RANKS.find(r => r.id === b.rankId) || BUILD_RANKS[0]).maxAttributePoints - current);
+    if (!left) return b;
+    const attributes = { ...b.attributes };
+    const base = Math.floor(left / BUILD_ATTR_IDS.length);
+    let rest = left % BUILD_ATTR_IDS.length;
+    BUILD_ATTR_IDS.forEach(attr => {
+      attributes[attr] += base;
+      if (rest > 0) { attributes[attr] += 1; rest -= 1; }
+    });
+    return { ...b, attributes };
+  });
+  const resetNumbers = () => setBuild(b => ({ ...b, attributes: { ...BUILD_ZERO_ATTRS }, training: { ...BUILD_ZERO_TRAINING } }));
+  const resetAll = () => setBuild(createDefaultBuild(usuario));
+  const exportSummary = () => {
+    const text = [
+      `Build: ${build.name}`,
+      `Graduacao: ${rank.name} (${distributed}/${rank.maxAttributePoints})`,
+      `Linhagem: ${lineage.name} | Elemento: ${element.name}`,
+      BUILD_ATTR_IDS.map(attr => `${attr}: ${finalStats[attr]}`).join(" | "),
+    ].join("\n");
+    if (!navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1600);
+    }).catch(() => {});
+  };
+
+  return (
+    <div className="space-y-4 fadein">
+      {!embedded && <SectionTitle icon={ISettings} sub="Calculadora de atributos e equipamentos">Build Shinobi</SectionTitle>}
+      {embedded && (
+        <div className="rounded-xl border border-orange-900/35 bg-black/45 p-4">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-orange-500 font-black">Build do membro</div>
+          <div className="text-zinc-500 text-xs mt-1">Atributos, treino e equipamentos salvos diretamente neste dossie.</div>
+        </div>
+      )}
+
+      <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,.8fr)] gap-4">
+        <section className="rounded-xl border border-orange-900/40 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-4 sm:p-5 space-y-4">
+          <div className="grid md:grid-cols-4 gap-3">
+            <div className="md:col-span-2">
+              <label className="fox-label">Nome da build</label>
+              <input value={build.name} onChange={e => patch({ name: e.target.value })} className="fox-input" />
+            </div>
+            <div>
+              <label className="fox-label">Graduacao</label>
+              <select value={build.rankId} onChange={e => patch({ rankId: e.target.value })} className="fox-input">
+                {BUILD_RANKS.map(r => <option key={r.id} value={r.id}>{r.name} - {r.maxAttributePoints} pts</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="fox-label">Nivel estimado</label>
+              <div className="h-[42px] rounded-md border border-zinc-800 bg-black/60 flex items-center px-3 text-yellow-300 font-black">{Math.floor(rank.maxAttributePoints / 5)}</div>
+            </div>
+            <div>
+              <label className="fox-label">Linhagem</label>
+              <select value={build.lineageId} onChange={e => patch({ lineageId: e.target.value, buffSkillIds: [] })} className="fox-input">
+                {BUILD_LINEAGES.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="fox-label">Elemento</label>
+              <select value={build.elementId} onChange={e => patch({ elementId: e.target.value })} className="fox-input">
+                {BUILD_ELEMENTS.map(el => <option key={el.id} value={el.id}>{el.name}</option>)}
+              </select>
+            </div>
+            <div className="md:col-span-2 rounded-lg border border-zinc-800 bg-black/45 p-3">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
+                <span>Pontos usados</span>
+                <span className={overLimit ? "text-red-300" : "text-violet-300"}>{distributed} / {rank.maxAttributePoints}</span>
+              </div>
+              <div className="h-2 rounded-full bg-zinc-900 overflow-hidden"><div className={`h-full ${overLimit ? "bg-red-500" : "bg-violet-500"}`} style={{ width: `${progress}%` }} /></div>
+              <div className="mt-2 text-xs flex justify-between"><span className="text-green-300">{pointsLeft} livres</span><span className="text-zinc-500">treino max. {rank.maxTrainableAttributePoints}</span></div>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <div className="hidden md:grid grid-cols-[1.1fr_.75fr_.8fr_.65fr_.65fr] gap-2 px-2 text-[10px] uppercase tracking-widest text-zinc-600 font-bold">
+              <span>Atributo</span><span>Treinavel</span><span>Distribuivel</span><span>Equip.</span><span>Total</span>
+            </div>
+            {BUILD_ATTRS.map(attr => {
+              const current = Number(build.attributes[attr.id] || 0);
+              const train = Number(build.training[attr.id] || 0);
+              const maxValue = Math.max(0, rank.maxAttributePoints - distributed + current);
+              const delta = buildPointValue(attr.id, current) + (attr.trainable ? train : 0) + Number(equipmentStats[attr.id] || 0);
+              return (
+                <div key={attr.id} className="grid md:grid-cols-[1.1fr_.75fr_.8fr_.65fr_.65fr] gap-2 items-center rounded-lg border border-zinc-900 bg-black/35 p-2">
+                  <div className="flex items-center gap-2 min-w-0 md:min-h-10">
+                    <span className={`w-9 h-9 rounded-lg border border-zinc-800 bg-zinc-950 grid place-items-center text-[11px] font-black ${attr.tone}`}>{attr.short}</span>
+                    <span className="font-black uppercase tracking-wider text-sm text-zinc-200 truncate">{attr.label}</span>
+                  </div>
+                  <BuildStepper label={`Treino de ${attr.label}`} value={train} max={rank.maxTrainableAttributePoints} disabled={!attr.trainable} onChange={value => patchTraining(attr.id, value)} />
+                  <BuildStepper label={attr.label} value={current} max={maxValue} onChange={value => patchAttr(attr.id, value)} />
+                  <div className="h-10 rounded-md border border-zinc-800 bg-black/50 grid place-items-center text-sm font-black text-green-300">{equipmentStats[attr.id] ? `+${equipmentStats[attr.id]}` : 0}</div>
+                  <div className="h-10 rounded-md border border-zinc-800 bg-zinc-950 grid place-items-center leading-tight">
+                    <strong className="text-green-300">{finalStats[attr.id]}</strong>
+                    <small className="text-[10px] text-zinc-600">+{delta}</small>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-2">
+            <Btn onClick={autoDistribute} variant="primary" className="justify-center"><IPlus className="w-3 h-3" /> Distribuir automatico</Btn>
+            <Btn onClick={resetNumbers} variant="ghost" className="justify-center"><IX className="w-3 h-3" /> Resetar numeros</Btn>
+            <Btn onClick={resetAll} variant="danger" className="justify-center"><ITrash className="w-3 h-3" /> Limpar build</Btn>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-xl border border-cyan-900/40 bg-cyan-950/10 p-4 space-y-3">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-cyan-400 font-black">Preview da build</div>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-2xl font-black text-orange-50 serif leading-tight">{build.name || "Novo shinobi"}</h3>
+                <div className="text-xs text-zinc-500 mt-1">{rank.name} / {lineage.name} / {element.name}</div>
+              </div>
+              <button onClick={exportSummary} className="mobile-tap rounded-lg border border-zinc-800 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-300 hover:text-orange-300">{copiado ? "Copiado" : "Copiar"}</button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {BUILD_ATTRS.map(attr => (
+                <div key={attr.id} className="rounded-lg border border-zinc-800 bg-black/45 p-3">
+                  <div className={`text-[10px] uppercase tracking-wider font-bold ${attr.tone}`}>{attr.label}</div>
+                  <div className="text-xl font-black text-orange-50">{finalStats[attr.id]}</div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-lg border border-zinc-800 bg-black/45 p-3 text-xs text-zinc-400">
+              Vida/Chakra convertem cada ponto em 10. Treino e equipamentos entram no total final.
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.22em] text-orange-500 font-black">Equipamentos</div><span className="text-[10px] text-zinc-600">mesmas regras do builder</span></div>
+            {[
+              ["equipment1Id", "Equipamento 1"],
+              ["equipment2Id", "Equipamento 2"],
+              ["bandanaId", "Bandana"],
+            ].map(([slot, label]) => (
+              <div key={slot}>
+                <label className="fox-label">{label}</label>
+                <select value={build.equipments[slot] || ""} onChange={e => patchEquipment(slot, e.target.value)} className="fox-input">
+                  <option value="">Nenhum</option>
+                  {buildEquipmentOptions(slot, build).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </div>
+            ))}
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function BuildSummaryCard({ usuario }) {
+  const hasBuild = buildHasMeaningfulData(usuario?.buildShinobi, usuario);
+  const build = normalizeBuild(usuario?.buildShinobi || null, usuario);
+  const rank = BUILD_RANKS.find(r => r.id === build.rankId) || BUILD_RANKS[0];
+  const lineage = BUILD_LINEAGES.find(l => l.id === build.lineageId) || BUILD_LINEAGES[0];
+  const element = BUILD_ELEMENTS.find(e => e.id === build.elementId) || BUILD_ELEMENTS[0];
+  const distributed = buildDistributedPoints(build);
+  const finalStats = buildFinalStats(build, rank);
+  return (
+    <div className="rounded-xl border border-violet-900/40 bg-violet-950/10 p-4">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-violet-300">Build shinobi</div>
+        <span className={`text-[9px] px-2 py-1 rounded border ${hasBuild ? "border-green-800 text-green-400" : "border-zinc-800 text-zinc-600"}`}>{hasBuild ? "Registrada" : "Pendente"}</span>
+      </div>
+      {hasBuild ? (
+        <div className="space-y-3">
+          <div>
+            <div className="text-orange-50 font-black serif text-lg leading-tight truncate" title={build.name}>{build.name}</div>
+            <div className="text-xs text-zinc-500">{rank.name} / {lineage.name} / {element.name}</div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-violet-200">{distributed}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Pontos</div></div>
+            <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-red-200">{finalStats.vida}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Vida</div></div>
+            <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-cyan-200">{finalStats.chakra}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Chakra</div></div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {BUILD_ATTRS.filter(a => a.trainable).map(attr => <InfoCell key={attr.id} label={attr.label} value={finalStats[attr.id]} />)}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-zinc-800 bg-black/45 p-3 text-zinc-500 text-sm leading-relaxed">
+          Este membro ainda nao registrou uma build no proprio dossie.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ============ JURAMENTO E PRIMEIRO ACESSO ============
 function juramentoDoUsuario(juramentados, usuario) {
   if (!usuario) return null;
@@ -7790,10 +8537,7 @@ function MissoesOperacionaisPage({ data, setData, usuario, role, onNavigate, nav
   const podeComando = !!(isRootUser(usuario) || role?.hasLeaderPerms || hasPerm(role, "manage_missions"));
   const isCapitaoDivisao = estruturaPosicaoRole(role) === "capitao_ramo";
   const minhasTodas = (data.missoes || []).filter(m => usuarioParticipaMissao(m, usuario.username));
-  const minhasAtivas = minhasTodas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status));
   const todas = data.missoes || [];
-  const aguardandoRevisao = todas.filter(m => m.status === "revisao").length;
-  const abertas = todas.filter(m => !MISSAO_STATUS_TERMINAIS.includes(m.status)).length;
   const [modo, setModo] = useState(() => podeComando ? "comando" : "minhas");
 
   useEffect(() => {
@@ -7804,32 +8548,8 @@ function MissoesOperacionaisPage({ data, setData, usuario, role, onNavigate, nav
     if (navigationRequest?.tab === "missoes" && (action.startsWith("relatorio-missao:") || action.startsWith("aceitar-missao:"))) setModo("minhas");
   }, [podeComando, navigationRequest?.token]);
 
-  const acao = podeComando
-    ? { titulo: "Criar ou comandar missão", desc: "Atribua para divisão, equipe ou membro sem entrar em Gerenciar.", label: "Abrir comando", onClick: () => setModo("comando") }
-    : { titulo: "Minhas operações", desc: "Aceite, inicie e envie relatório final das missões recebidas.", label: "Ver minhas missões", onClick: () => setModo("minhas") };
-
   return (
     <div className="space-y-4 fadein">
-      <section className="jikkai-mobile-hero relative overflow-hidden rounded-2xl border border-orange-900/45 bg-gradient-to-br from-black via-red-950/18 to-black p-5">
-        <div className="absolute -right-12 -top-16 w-52 h-52 rounded-full bg-orange-900/10 blur-3xl" />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0">
-            <div className="text-[9px] uppercase tracking-[0.3em] text-orange-600">SELO JIKKAI · MISSÕES</div>
-            <h1 className="hero-title text-3xl font-black text-orange-50 serif mt-1">Operações</h1>
-            <p className="text-zinc-500 text-sm mt-2 max-w-2xl">Missões são rotina operacional. Criação, aceite, execução e relatório ficam aqui — Gerenciar fica só para administração.</p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:min-w-[300px]">
-            <div className="rounded-xl border border-orange-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-orange-300">{minhasAtivas.length}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">minhas</div></div>
-            <div className="rounded-xl border border-purple-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-purple-300">{abertas}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">ativas</div></div>
-            <div className="rounded-xl border border-sky-900/40 bg-black/40 p-3 text-center"><div className="text-xl font-black text-sky-300">{aguardandoRevisao}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">revisão</div></div>
-          </div>
-        </div>
-        <div className="relative mt-4 flex flex-col sm:flex-row gap-2">
-          <Btn onClick={acao.onClick} variant="primary" className="justify-center"><IClipboard className="w-3 h-3" /> {acao.label}</Btn>
-          <Btn onClick={() => onNavigate?.("jikkai", "relatorios", "novo-relatorio-avulso")} variant="ghost" className="justify-center"><IFile className="w-3 h-3" /> Relatório avulso</Btn>
-        </div>
-      </section>
-
       {isCapitaoDivisao && (
         <CapitaoDashboard
           data={data}
@@ -9507,6 +10227,7 @@ function App() {
     { id: "arquivos", label: "Arquivo Público", icon: ILock },
   ] : [
     { id: "home", label: "Visão Geral", icon: IFlame },
+    { id: "perfil", label: "Perfil", icon: IUsers },
     { id: "membros", label: "Membros", icon: IUsers },
     { id: "jikkai", label: "JIKKAI", icon: ITarget },
     { id: "armas", label: "Armas", icon: IShield },
@@ -9522,7 +10243,7 @@ function App() {
 
   const mobilePrimaryIds = isContratante
     ? ["visaogeral", "jikkai", "arquivos"]
-    : ["home", "missoes", "membros"];
+    : ["home", "perfil", "missoes"];
   const mobilePrimaryTabs = TABS.filter(t => mobilePrimaryIds.includes(t.id));
   const mobileMoreTabs = TABS.filter(t => !mobilePrimaryIds.includes(t.id));
   const mobileMoreActive = mobileMoreTabs.some(t => t.id === tab);
@@ -9609,6 +10330,7 @@ function App() {
       <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 sm:pb-8">
         <div className="mb-4 flex justify-end"><PortalCodeBadge tab={tab} subTab={navigationRequest?.subTab || ""} /></div>
         {tab === "home" && !isContratante && <HomePage data={data} usuario={usuarioAtual} role={role} isLider={isLider} onNavigate={navegarPara} />}
+        {tab === "perfil" && !isContratante && <PerfilPage data={data} setData={setData} usuario={usuarioAtual} role={role} navigationRequest={navigationRequest} />}
         {tab === "historia" && !isContratante && <HistoriaPage data={data} setData={setData} role={role} usuario={usuarioAtual} navigationRequest={navigationRequest} />}
         {tab === "membros" && !isContratante && <MembrosPage data={data} setData={setData} role={role} usuario={usuarioAtual} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
         {tab === "jikkai" && <JikkaiPage data={data} setData={setData} isLider={isLider} usuario={usuarioAtual} role={role} viewerIsContratante={isContratante} navigationRequest={navigationRequest} />}
@@ -9668,5 +10390,27 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
-<script data-jikkai-map-link>(function(){function s(){try{var k='fox-portal-session-v2',m='fox-map-return-v2';var raw=sessionStorage.getItem(k)||localStorage.getItem(k);if(raw)localStorage.setItem(m,raw)}catch(e){}}function f(){if(document.querySelector('[data-map-strategic-link]'))return;var a=document.createElement('a');a.href='mapa.html';a.setAttribute('data-map-strategic-link','');a.textContent='◈ MAPA ESTRATÉGICO';a.addEventListener('click',s);a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;background:rgba(24,24,27,.96);color:#fed7aa;border:1px solid #ea580c;border-radius:6px;padding:6px 7px;font:800 8px/1 system-ui;letter-spacing:.07em;text-decoration:none;box-shadow:0 10px 24px rgba(0,0,0,.45)';document.body.appendChild(a)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f()})();</script></body>
+<script data-jikkai-map-link>
+(function(){
+  function guardarSessaoMapa(){
+    try{
+      var k='fox-portal-session-v2',m='fox-map-return-v2';
+      var raw=sessionStorage.getItem(k)||localStorage.getItem(k);
+      if(raw)localStorage.setItem(m,raw);
+    }catch(e){}
+  }
+  function montarBotaoMapa(){
+    if(document.querySelector('[data-map-strategic-link]'))return;
+    var a=document.createElement('a');
+    a.href='mapa.html';
+    a.setAttribute('data-map-strategic-link','');
+    a.setAttribute('aria-label','Abrir mapa estratégico');
+    a.innerHTML='<span style="width:30px;height:30px;border-radius:999px;border:1px solid rgba(34,211,238,.45);display:grid;place-items:center;background:rgba(34,211,238,.10);color:#67e8f9;font-size:15px">⌖</span><span style="display:grid;gap:1px"><strong style="font-size:10px;line-height:1;color:#ecfeff">MAPA</strong><small style="font-size:8px;line-height:1;color:#94a3b8;letter-spacing:.13em">ESTRATÉGICO</small></span>';
+    a.addEventListener('click',guardarSessaoMapa);
+    a.style.cssText='position:fixed;right:18px;bottom:76px;z-index:9999;display:flex;align-items:center;gap:8px;background:rgba(2,8,11,.92);color:#ecfeff;border:1px solid rgba(34,211,238,.32);border-radius:999px;padding:6px 10px 6px 6px;font:900 10px/1 system-ui;letter-spacing:.08em;text-decoration:none;box-shadow:0 18px 50px rgba(0,0,0,.5);backdrop-filter:blur(14px)';
+    document.body.appendChild(a);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',montarBotaoMapa);else montarBotaoMapa();
+})();
+</script></body>
 </html>
