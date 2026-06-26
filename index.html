@@ -776,6 +776,8 @@ function normalizarMembro(u, existente = true) {
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
+    conviteTipo: "", conviteNomeConvidado: "", conviteTituloConvidado: "", conviteVilaConvidado: "", conviteMensagemPersonalizada: "",
+    onboardingContratanteStatus: "", onboardingContratanteConcluidoEm: "",
     reputacao: "Baixo perfil", lealdade: "", conduta: "Limpo", reputacaoNota: "", lealdadeNota: "", condutaNota: "", condutaRegistros: [],
     discordId: "", discordUsername: "", discordGlobalName: "", discordTag: "", discordAvatar: "", discordVerificado: false, discordVerificadoEm: "", discordDmMissoes: true, discordDmContratos: true, discordDmRelatorios: true,
     reputacaoAtualizadaEm: "", lealdadeAtualizadaEm: "", condutaAtualizadaEm: "",
@@ -1106,8 +1108,15 @@ function codinomeDisponivelParaConvite(data, nome, convite = null) {
   const id = codinomeId(nome);
   if (!id) return false;
   if (codinomeUsadoPorOutroUsuario(data?.users || [], nome, "")) return false;
+  const reservadoContratante = conviteEhContratante(convite) && conviteCodinomeReservado(convite) && codinomeIgual(nome, conviteCodinomeReservado(convite));
   const c = (data?.codinomes || []).find(x => x.id === id || codinomeId(x.nome) === id);
-  if (!c) return false;
+  if (reservadoContratante) {
+    if (!c) return true;
+    if (c.status === "disponivel" && !c.restrito) return true;
+    if (c.status === "reservado" && convite && c.reservadoParaConvite === convite.token) return true;
+    return false;
+  }
+  if (!c) return conviteEhContratante(convite);
   if (c.status === "disponivel" && !c.restrito) return true;
   if (c.status === "reservado" && convite && c.reservadoParaConvite === convite.token) return true;
   return false;
@@ -1118,6 +1127,25 @@ function codinomesDisponiveisParaConvite(data, convite = null) {
     .filter(c => codinomeDisponivelParaConvite(data, c.nome, convite))
     .filter(c => !categoriasLiberadas.length || categoriasLiberadas.includes(c.categoria))
     .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+function conviteEhContratante(convite) {
+  return convite?.tipo === "contratante" || convite?.rolePadrao === "contratante";
+}
+function conviteNomeFormal(convite) {
+  const titulo = String(convite?.tituloConvidado || "").trim();
+  const nome = String(convite?.nomeConvidado || "").trim();
+  return [titulo, nome].filter(Boolean).join(" ").trim();
+}
+function conviteCodinomeGenerico(token) {
+  const compacto = normalizarTokenConvite(token).replace(/^SELO-/, "");
+  return compacto ? `Contratante ${compacto}` : "Contratante externo";
+}
+function conviteCodinomeReservado(convite) {
+  const reservado = codinomeNome(convite?.codinomeReservado || "");
+  const reservadoGenerico = conviteEhContratante(convite) && reservado && codinomeIgual(reservado, conviteCodinomeGenerico(convite?.token));
+  if (reservado && !reservadoGenerico) return reservado;
+  const nome = String(convite?.nomeConvidado || "").trim();
+  return nome ? codinomeNome(conviteNomeFormal(convite) || nome) : "";
 }
 function atualizarBancoCodinomeUsuario(codinomes = [], anteriorCodinome = "", novoCodinome = "", username = "", conviteId = "") {
   const lista = normalizarBancoCodinomes(codinomes, []);
@@ -1143,9 +1171,14 @@ function registrarUsuarioPorConviteEstado(data, token, cadastro) {
 
   const username = String(cadastro.username || "").trim();
   const senha = String(cadastro.password || "");
-  const nomeRP = String(cadastro.nomeRP || "").trim();
-  const displayName = String(cadastro.displayName || nomeRP || cadastro.codinome || username).trim();
-  const codinome = codinomeNome(cadastro.codinome);
+  const nomeFormalConvite = conviteNomeFormal(convite);
+  const rolePadrao = convite.rolePadrao || (convite.tipo === "contratante" ? "contratante" : "recruta");
+  const cargo = (data.roles || []).find(r => r.id === rolePadrao) || (data.roles || []).find(r => r.id === "recruta") || (data.roles || [])[0];
+  const isContratanteConvite = cargo?.id === "contratante" || conviteEhContratante(convite);
+  const nomeConviteParaCadastro = convite.nomeConvidado ? nomeFormalConvite : "";
+  const nomeRP = String(cadastro.nomeRP || cadastro.displayName || nomeConviteParaCadastro || "").trim();
+  const displayName = String(cadastro.displayName || nomeConviteParaCadastro || nomeRP || cadastro.codinome || username).trim();
+  const codinome = codinomeNome(cadastro.codinome || (isContratanteConvite ? (conviteCodinomeReservado(convite) || displayName || nomeRP) : ""));
 
   if (!/^[a-zA-Z0-9_.-]{3,24}$/.test(username)) return { error: "O username deve ter 3 a 24 caracteres e usar apenas letras, números, ponto, underline ou hífen." };
   if ((data.users || []).some(u => u.username.toLowerCase() === username.toLowerCase())) return { error: "Este username já existe." };
@@ -1153,8 +1186,6 @@ function registrarUsuarioPorConviteEstado(data, token, cadastro) {
   if (!nomeRP) return { error: "Informe seu nome de RP." };
   if (!codinomeDisponivelParaConvite(data, codinome, convite)) return { error: "Este codinome não está mais disponível." };
 
-  const rolePadrao = convite.rolePadrao || (convite.tipo === "contratante" ? "contratante" : "recruta");
-  const cargo = (data.roles || []).find(r => r.id === rolePadrao) || (data.roles || []).find(r => r.id === "recruta") || (data.roles || [])[0];
   const now = new Date().toISOString();
   const novo = normalizarMembro({
     username,
@@ -1181,6 +1212,12 @@ function registrarUsuarioPorConviteEstado(data, token, cadastro) {
     conviteId: convite.id,
     conviteToken: convite.token,
     conviteUsadoEm: now,
+    conviteTipo: convite.tipo || "",
+    conviteNomeConvidado: convite.nomeConvidado || "",
+    conviteTituloConvidado: convite.tituloConvidado || "",
+    conviteVilaConvidado: convite.vilaConvidado || "",
+    conviteMensagemPersonalizada: convite.mensagemPersonalizada || "",
+    onboardingContratanteStatus: isContratanteConvite && convite.apresentacaoContratante !== false ? "pendente" : "",
     reputacao: "Baixo perfil",
     lealdade: cargo?.id === "contratante" ? "Observado" : "Observado",
     conduta: "Limpo",
@@ -7105,9 +7142,10 @@ const BUILD_ATTR_IDS = BUILD_ATTRS.map(a => a.id);
 const BUILD_COMBAT_ATTRS = BUILD_ATTRS.filter(a => a.trainable).map(a => a.id);
 const BUILD_ZERO_ATTRS = { vida: 0, chakra: 0, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 };
 const BUILD_ZERO_TRAINING = { taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 };
+const BUILD_POINTS_PER_LEVEL = 5;
 const BUILD_RANKS = [
-  { id: "genin", name: "Genin", maxAttributePoints: 125, maxTrainableAttributePoints: 65, baseStats: { vida: 650, chakra: 650, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
-  { id: "chunnin", name: "Chunnin", maxAttributePoints: 250, maxTrainableAttributePoints: 125, baseStats: { vida: 900, chakra: 900, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
+  { id: "genin", name: "Genin", maxAttributePoints: 125, pointLevelCap: 25, bonusAttributePoints: 0, maxTrainableAttributePoints: 65, baseStats: { vida: 650, chakra: 650, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
+  { id: "chunnin", name: "Chunnin", maxAttributePoints: 280, pointLevelCap: 50, bonusAttributePoints: 30, maxTrainableAttributePoints: 125, baseStats: { vida: 750, chakra: 750, taijutsu: 0, ninjutsu: 0, genjutsu: 0, kenjutsu: 0 } },
 ];
 const BUILD_ELEMENTS = [
   { id: "fire", name: "Katon" },
@@ -7266,10 +7304,35 @@ function buildClampInt(value, max = 999) {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(Math.floor(n), max));
 }
+function buildBaseLevelForRank(rank) {
+  return Number(rank?.pointLevelCap) || Math.floor((Number(rank?.maxAttributePoints) || 0) / BUILD_POINTS_PER_LEVEL) || 1;
+}
+function buildDefaultLevel(usuario, rankId = "genin") {
+  const userLevel = buildClampInt(usuario?.level, 999);
+  if (userLevel > 0) return userLevel;
+  const rank = BUILD_RANKS.find(r => r.id === rankId) || BUILD_RANKS[0];
+  return buildBaseLevelForRank(rank);
+}
+function buildLevelValue(build, rank, usuario) {
+  const level = buildClampInt(build?.level ?? usuario?.level ?? buildBaseLevelForRank(rank), 999);
+  return Math.max(1, level);
+}
+function buildEarnedAttributePoints(build, rank, usuario) {
+  return buildLevelValue(build, rank, usuario) * BUILD_POINTS_PER_LEVEL + Number(rank?.bonusAttributePoints || 0);
+}
+function buildMaxAttributePoints(build, rank, usuario) {
+  const earned = buildEarnedAttributePoints(build, rank, usuario);
+  const rankCap = Number(rank?.maxAttributePoints) || earned;
+  return Math.max(0, Math.min(earned, rankCap));
+}
+function buildLockedAttributePoints(build, rank, usuario) {
+  return Math.max(0, buildEarnedAttributePoints(build, rank, usuario) - buildMaxAttributePoints(build, rank, usuario));
+}
 function createDefaultBuild(usuario) {
   return {
     name: usuario?.nomeRP || usuario?.displayName || "Novo shinobi",
     rankId: "genin",
+    level: buildDefaultLevel(usuario, "genin"),
     lineageId: "uchiha",
     elementId: "fire",
     attributes: { ...BUILD_ZERO_ATTRS },
@@ -7283,9 +7346,12 @@ function createDefaultBuild(usuario) {
 function normalizeBuild(raw, usuario) {
   const fallback = createDefaultBuild(usuario);
   const base = raw && typeof raw === "object" ? raw : {};
+  const rankId = base.rankId || fallback.rankId;
   return {
     ...fallback,
     ...base,
+    rankId,
+    level: buildClampInt(base.level ?? buildDefaultLevel(usuario, rankId), 999),
     attributes: { ...fallback.attributes, ...(base.attributes || {}) },
     training: { ...fallback.training, ...(base.training || {}) },
     equipments: { ...fallback.equipments, ...(base.equipments || {}) },
@@ -7303,6 +7369,7 @@ function buildHasMeaningfulData(raw, usuario) {
   const hasIdentityChange =
     build.name !== fallback.name ||
     build.rankId !== fallback.rankId ||
+    Number(build.level || 0) !== Number(fallback.level || 0) ||
     build.lineageId !== fallback.lineageId ||
     build.elementId !== fallback.elementId;
   return buildDistributedPoints(build) > 0 || trainingTotal > 0 || hasEquipment || hasIdentityChange;
@@ -7395,10 +7462,14 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
   const rank = BUILD_RANKS.find(r => r.id === build.rankId) || BUILD_RANKS[0];
   const lineage = BUILD_LINEAGES.find(l => l.id === build.lineageId) || BUILD_LINEAGES[0];
   const element = BUILD_ELEMENTS.find(e => e.id === build.elementId) || BUILD_ELEMENTS[0];
+  const buildLevel = buildLevelValue(build, rank, usuario);
+  const earnedAttributePoints = buildEarnedAttributePoints(build, rank, usuario);
+  const maxAttributePoints = buildMaxAttributePoints(build, rank, usuario);
+  const lockedAttributePoints = buildLockedAttributePoints(build, rank, usuario);
   const distributed = buildDistributedPoints(build);
-  const pointsLeft = Math.max(0, rank.maxAttributePoints - distributed);
-  const overLimit = Math.max(0, distributed - rank.maxAttributePoints);
-  const progress = Math.min(100, distributed / rank.maxAttributePoints * 100);
+  const pointsLeft = Math.max(0, maxAttributePoints - distributed);
+  const overLimit = Math.max(0, distributed - maxAttributePoints);
+  const progress = Math.min(100, distributed / Math.max(1, maxAttributePoints) * 100);
   const equipmentStats = buildEquipmentStats(build.equipments);
   const finalStats = buildFinalStats(build, rank);
   useEffect(() => {
@@ -7412,7 +7483,8 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
   const patchEquipment = (slot, value) => setBuild(b => ({ ...b, equipments: { ...b.equipments, [slot]: value } }));
   const autoDistribute = () => setBuild(b => {
     const current = buildDistributedPoints(b);
-    let left = Math.max(0, (BUILD_RANKS.find(r => r.id === b.rankId) || BUILD_RANKS[0]).maxAttributePoints - current);
+    const autoRank = BUILD_RANKS.find(r => r.id === b.rankId) || BUILD_RANKS[0];
+    let left = Math.max(0, buildMaxAttributePoints(b, autoRank, usuario) - current);
     if (!left) return b;
     const attributes = { ...b.attributes };
     const base = Math.floor(left / BUILD_ATTR_IDS.length);
@@ -7428,7 +7500,7 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
   const exportSummary = () => {
     const text = [
       `Build: ${build.name}`,
-      `Graduacao: ${rank.name} (${distributed}/${rank.maxAttributePoints})`,
+      `Graduacao: ${rank.name} | Nivel: ${buildLevel} (${distributed}/${maxAttributePoints} usados, ${lockedAttributePoints} bloqueados)`,
       `Linhagem: ${lineage.name} | Elemento: ${element.name}`,
       BUILD_ATTR_IDS.map(attr => `${attr}: ${finalStats[attr]}`).join(" | "),
     ].join("\n");
@@ -7459,12 +7531,12 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
             <div>
               <label className="fox-label">Graduacao</label>
               <select value={build.rankId} onChange={e => patch({ rankId: e.target.value })} className="fox-input">
-                {BUILD_RANKS.map(r => <option key={r.id} value={r.id}>{r.name} - {r.maxAttributePoints} pts</option>)}
+                {BUILD_RANKS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="fox-label">Nivel estimado</label>
-              <div className="h-[42px] rounded-md border border-zinc-800 bg-black/60 flex items-center px-3 text-yellow-300 font-black">{Math.floor(rank.maxAttributePoints / 5)}</div>
+              <label className="fox-label">Nivel do personagem</label>
+              <input type="number" min="1" max="999" value={buildLevel} onChange={e => patch({ level: buildClampInt(e.target.value, 999) })} className="fox-input text-yellow-300 font-black" />
             </div>
             <div>
               <label className="fox-label">Linhagem</label>
@@ -7481,21 +7553,22 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
             <div className="md:col-span-2 rounded-lg border border-zinc-800 bg-black/45 p-3">
               <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500 mb-2">
                 <span>Pontos usados</span>
-                <span className={overLimit ? "text-red-300" : "text-violet-300"}>{distributed} / {rank.maxAttributePoints}</span>
+                <span className={overLimit ? "text-red-300" : "text-violet-300"}>{distributed} / {maxAttributePoints}</span>
               </div>
               <div className="h-2 rounded-full bg-zinc-900 overflow-hidden"><div className={`h-full ${overLimit ? "bg-red-500" : "bg-violet-500"}`} style={{ width: `${progress}%` }} /></div>
-              <div className="mt-2 text-xs flex justify-between"><span className="text-green-300">{pointsLeft} livres</span><span className="text-zinc-500">treino max. {rank.maxTrainableAttributePoints}</span></div>
+              <div className="mt-2 text-xs flex justify-between gap-3"><span className={pointsLeft ? "text-green-300" : "text-zinc-500"}>{pointsLeft} livres</span><span className={lockedAttributePoints ? "text-yellow-400" : "text-zinc-500"}>{lockedAttributePoints ? `${lockedAttributePoints} bloqueados pela graduacao` : `${BUILD_POINTS_PER_LEVEL} pts por nivel`}</span></div>
+              <div className="mt-1 text-[10px] text-zinc-600">Ganho: {earnedAttributePoints} · Usavel: {maxAttributePoints} · treino max. {rank.maxTrainableAttributePoints}</div>
             </div>
           </div>
 
           <div className="grid gap-2">
             <div className="hidden md:grid grid-cols-[1.1fr_.75fr_.8fr_.65fr_.65fr] gap-2 px-2 text-[10px] uppercase tracking-widest text-zinc-600 font-bold">
-              <span>Atributo</span><span>Treinavel</span><span>Distribuivel</span><span>Equip.</span><span>Total</span>
+              <span>Atributo</span><span>Treino</span><span>Distribuivel</span><span>Equip.</span><span>Total</span>
             </div>
             {BUILD_ATTRS.map(attr => {
               const current = Number(build.attributes[attr.id] || 0);
               const train = Number(build.training[attr.id] || 0);
-              const maxValue = Math.max(0, rank.maxAttributePoints - distributed + current);
+              const maxValue = Math.max(0, maxAttributePoints - distributed + current);
               const delta = buildPointValue(attr.id, current) + (attr.trainable ? train : 0) + Number(equipmentStats[attr.id] || 0);
               return (
                 <div key={attr.id} className="grid md:grid-cols-[1.1fr_.75fr_.8fr_.65fr_.65fr] gap-2 items-center rounded-lg border border-zinc-900 bg-black/35 p-2">
@@ -7528,7 +7601,7 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-2xl font-black text-orange-50 serif leading-tight">{build.name || "Novo shinobi"}</h3>
-                <div className="text-xs text-zinc-500 mt-1">{rank.name} / {lineage.name} / {element.name}</div>
+                <div className="text-xs text-zinc-500 mt-1">Nivel {buildLevel} / {rank.name} / {lineage.name} / {element.name}</div>
               </div>
               <button onClick={exportSummary} className="mobile-tap rounded-lg border border-zinc-800 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-300 hover:text-orange-300">{copiado ? "Copiado" : "Copiar"}</button>
             </div>
@@ -7541,7 +7614,7 @@ function BuildPage({ usuario, value = null, onChange = null, embedded = false })
               ))}
             </div>
             <div className="rounded-lg border border-zinc-800 bg-black/45 p-3 text-xs text-zinc-400">
-              Vida/Chakra convertem cada ponto em 10. Treino e equipamentos entram no total final.
+              Cada nivel gera 5 pontos, mas a graduacao limita quantos podem ser gastos. Vida/Chakra convertem cada ponto em 10. Treino e equipamentos entram no total final.
             </div>
           </section>
 
@@ -7573,6 +7646,9 @@ function BuildSummaryCard({ usuario }) {
   const rank = BUILD_RANKS.find(r => r.id === build.rankId) || BUILD_RANKS[0];
   const lineage = BUILD_LINEAGES.find(l => l.id === build.lineageId) || BUILD_LINEAGES[0];
   const element = BUILD_ELEMENTS.find(e => e.id === build.elementId) || BUILD_ELEMENTS[0];
+  const buildLevel = buildLevelValue(build, rank, usuario);
+  const lockedAttributePoints = buildLockedAttributePoints(build, rank, usuario);
+  const maxAttributePoints = buildMaxAttributePoints(build, rank, usuario);
   const distributed = buildDistributedPoints(build);
   const finalStats = buildFinalStats(build, rank);
   return (
@@ -7585,10 +7661,10 @@ function BuildSummaryCard({ usuario }) {
         <div className="space-y-3">
           <div>
             <div className="text-orange-50 font-black serif text-lg leading-tight truncate" title={build.name}>{build.name}</div>
-            <div className="text-xs text-zinc-500">{rank.name} / {lineage.name} / {element.name}</div>
+            <div className="text-xs text-zinc-500">Nivel {buildLevel} / {rank.name} / {lineage.name} / {element.name}{lockedAttributePoints ? ` / ${lockedAttributePoints} bloqueados` : ""}</div>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-violet-200">{distributed}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Pontos</div></div>
+            <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-violet-200">{distributed}/{maxAttributePoints}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Pontos</div></div>
             <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-red-200">{finalStats.vida}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Vida</div></div>
             <div className="rounded-lg border border-zinc-800 bg-black/45 p-2"><div className="text-lg font-black text-cyan-200">{finalStats.chakra}</div><div className="text-[8px] uppercase tracking-wider text-zinc-600">Chakra</div></div>
           </div>
@@ -8355,10 +8431,12 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
   const [erro, setErro] = useState("");
   const cargosConvite = (data.roles || []).filter(r => r.id !== "leader" && r.hasLeaderPerms !== true);
   const cargoConvitePadrao = cargosConvite.find(r => r.id === "recruta")?.id || cargosConvite.find(r => r.id === "member")?.id || cargosConvite[0]?.id || "recruta";
+  const contratanteRoleId = cargosConvite.find(r => r.id === "contratante")?.id || "contratante";
   const [conviteAberto, setConviteAberto] = useState(false);
-  const [conviteForm, setConviteForm] = useState({ tipo: "recruta", rolePadrao: cargoConvitePadrao, nivelAcesso: 1, validadeDias: 7, categoriasLiberadas: [], discordObrigatorio: true });
+  const [conviteForm, setConviteForm] = useState({ tipo: "recruta", rolePadrao: cargoConvitePadrao, nivelAcesso: 1, validadeDias: 7, categoriasLiberadas: [], discordObrigatorio: true, nomeConvidado: "", tituloConvidado: "", vilaConvidado: "", mensagemPersonalizada: "", codinomeReservado: "" });
   const [conviteGerado, setConviteGerado] = useState(null);
   const [conviteStatus, setConviteStatus] = useState("");
+  const conviteFormEhContratante = conviteForm.tipo === "contratante" || conviteForm.rolePadrao === "contratante";
   const pendentesIniciacao = (data.users || []).filter(u => u.role !== "contratante" && u.iniciacaoStatus === "pendente");
   const focoIniciacoes = navigationAction === "iniciacoes-pendentes";
   useEffect(() => {
@@ -8371,17 +8449,43 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
   const convitesRecentes = (data.convitesEntrada || []).slice().sort((a, b) => new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0)).slice(0, 8);
   const codinomesDisponiveis = codinomesDisponiveisParaConvite(data, { categoriasLiberadas: conviteForm.categoriasLiberadas });
 
+  const alterarTipoConvite = (tipo) => {
+    setConviteForm(f => ({
+      ...f,
+      tipo,
+      rolePadrao: tipo === "contratante" ? contratanteRoleId : (f.rolePadrao === "contratante" ? cargoConvitePadrao : f.rolePadrao),
+      nivelAcesso: tipo === "contratante" ? Math.max(1, Number(f.nivelAcesso) || 1) : f.nivelAcesso,
+      discordObrigatorio: tipo === "contratante" ? false : f.discordObrigatorio,
+    }));
+    setConviteStatus("");
+  };
+
   const gerarConviteEntrada = () => {
     let token = gerarTokenConvite();
     const usados = new Set((data.convitesEntrada || []).map(c => normalizarTokenConvite(c.token)));
     while (usados.has(token)) token = gerarTokenConvite();
     const now = new Date();
     const validadeDias = Number(conviteForm.validadeDias) || 7;
+    const rolePadraoFinal = conviteFormEhContratante ? contratanteRoleId : (conviteForm.rolePadrao || cargoConvitePadrao);
+    const nomeConvidado = String(conviteForm.nomeConvidado || "").trim();
+    const tituloConvidado = String(conviteForm.tituloConvidado || "").trim();
+    const vilaConvidado = String(conviteForm.vilaConvidado || "").trim();
+    const nomeFormal = [tituloConvidado, nomeConvidado].filter(Boolean).join(" ").trim();
+    const mensagemPersonalizada = String(conviteForm.mensagemPersonalizada || "").trim();
+    const conviteTemPersonalizacao = Boolean(nomeFormal || vilaConvidado || mensagemPersonalizada || String(conviteForm.codinomeReservado || "").trim());
+    const codinomeReservado = conviteFormEhContratante ? codinomeNome(conviteForm.codinomeReservado || (nomeConvidado ? nomeFormal : "")) : "";
+    if (conviteFormEhContratante && codinomeReservado) {
+      const testeConvite = { tipo: "contratante", rolePadrao: rolePadraoFinal, token, codinomeReservado };
+      if (!codinomeDisponivelParaConvite(data, codinomeReservado, testeConvite)) {
+        setConviteStatus("O codinome reservado do contratante ja esta em uso ou bloqueado.");
+        return;
+      }
+    }
     const convite = {
       id: "convite_" + uid(),
       token,
       tipo: conviteForm.tipo || "recruta",
-      rolePadrao: conviteForm.rolePadrao || cargoConvitePadrao,
+      rolePadrao: rolePadraoFinal,
       nivelAcesso: Math.max(1, Math.min(5, Number(conviteForm.nivelAcesso) || 1)),
       status: "pendente",
       criadoPor: usuario?.username || "leader",
@@ -8392,14 +8496,23 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
       codinomeEscolhido: "",
       discordObrigatorio: conviteForm.discordObrigatorio !== false,
       categoriasLiberadas: conviteForm.categoriasLiberadas || [],
+      nomeConvidado,
+      tituloConvidado,
+      vilaConvidado,
+      mensagemPersonalizada,
+      codinomeReservado,
+      apresentacaoContratante: conviteFormEhContratante,
     };
     setData(d => ({
       ...d,
       convitesEntrada: [...(d.convitesEntrada || []), convite],
+      codinomes: conviteFormEhContratante && codinomeReservado
+        ? normalizarBancoCodinomes([...(d.codinomes || []), normalizarCodinomeEntrada({ nome: codinomeReservado, categoria: "Contratantes", descricao: "Codinome reservado por Selo de Entrada externo.", status: "reservado", reservadoParaConvite: convite.token, reservadoEm: now.toISOString(), conviteId: convite.id })], d.users || [])
+        : d.codinomes,
       activityLog: [...(d.activityLog || []), atividade("convite_criado", usuario?.username, convite.token, "Gerou um Selo de Entrada")],
     }));
     setConviteGerado(convite);
-    setConviteStatus("Selo de Entrada gerado. Envie o link para o novo membro.");
+    setConviteStatus(conviteFormEhContratante ? (conviteTemPersonalizacao ? "Selo personalizado de contratante gerado. Envie o link para o contato externo." : "Selo de contratante gerado sem tratamento personalizado. Envie o link para o contato externo.") : "Selo de Entrada gerado. Envie o link para o novo membro.");
   };
 
   const copiarLinkConvite = async (convite) => {
@@ -8486,14 +8599,27 @@ function UsuariosManager({ data, setData, usuario, navigationAction }) {
       {conviteAberto && editando === null && (
         <section className="rounded-xl border border-orange-900/60 bg-zinc-950/80 p-4 sm:p-5 fadein space-y-4">
           <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Selo de Entrada</div><h4 className="text-orange-50 font-black serif text-xl">Convite por link com codinome único</h4><p className="text-zinc-600 text-xs mt-1">O líder envia o link; o novo membro escolhe um codinome disponível, cria conta e inicia a apresentação, Discord e juramento.</p></div>
+            <div><div className="text-[9px] uppercase tracking-[0.28em] text-orange-600">Selo de Entrada</div><h4 className="text-orange-50 font-black serif text-xl">Convite por link com codinome único</h4><p className="text-zinc-600 text-xs mt-1">Gere selos para recrutas, associados ou contratantes externos com recepção personalizada.</p></div>
             <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-green-900 bg-green-950/20 text-green-300 font-black">{codinomesDisponiveis.length} codinomes liberados</span>
           </div>
           <div className="grid md:grid-cols-4 gap-3">
-            <div><label className="fox-label">Tipo de entrada</label><select value={conviteForm.tipo} onChange={e => setConviteForm({ ...conviteForm, tipo: e.target.value })} className="fox-input"><option value="recruta">Recruta</option><option value="associado">Associado</option><option value="contratante">Contratante</option><option value="membro_antigo">Membro antigo</option></select></div>
-            <div><label className="fox-label">Cargo inicial</label><select value={conviteForm.rolePadrao} onChange={e => setConviteForm({ ...conviteForm, rolePadrao: e.target.value })} className="fox-input">{cargosConvite.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
+            <div><label className="fox-label">Tipo de entrada</label><select value={conviteForm.tipo} onChange={e => alterarTipoConvite(e.target.value)} className="fox-input"><option value="recruta">Recruta</option><option value="associado">Associado</option><option value="contratante">Contratante</option><option value="membro_antigo">Membro antigo</option></select></div>
+            <div><label className="fox-label">Cargo inicial</label><select value={conviteFormEhContratante ? contratanteRoleId : conviteForm.rolePadrao} onChange={e => setConviteForm({ ...conviteForm, rolePadrao: e.target.value })} disabled={conviteFormEhContratante} className="fox-input">{cargosConvite.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
             <div><label className="fox-label">Selo de acesso</label><select value={conviteForm.nivelAcesso} onChange={e => setConviteForm({ ...conviteForm, nivelAcesso: Number(e.target.value) })} className="fox-input">{[1,2,3,4,5].map(n => <option key={n} value={n}>Nível {n}</option>)}</select></div>
             <div><label className="fox-label">Expiração</label><select value={conviteForm.validadeDias} onChange={e => setConviteForm({ ...conviteForm, validadeDias: Number(e.target.value) })} className="fox-input"><option value={1}>24 horas</option><option value={3}>3 dias</option><option value={7}>7 dias</option><option value={14}>14 dias</option></select></div>
+          </div>
+          <div className={`rounded-xl border p-4 ${conviteFormEhContratante ? "border-green-800/60 bg-green-950/10" : "border-zinc-800 bg-black/35"}`}>
+            <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+              <div><div className="text-[9px] uppercase tracking-[0.28em] text-green-500">{conviteFormEhContratante ? "Recepção de contratante" : "Recepção opcional"}</div><h5 className="text-orange-50 font-black serif">{conviteFormEhContratante ? "Selo externo personalizado" : "Mensagem de chegada"}</h5></div>
+              {conviteFormEhContratante && <span className="text-[9px] uppercase tracking-wider px-2 py-1 rounded border border-green-800 text-green-300 bg-black/50">sem juramento interno</span>}
+            </div>
+            <div className="grid md:grid-cols-4 gap-3">
+              <div><label className="fox-label">Tratamento / título opcional</label><input value={conviteForm.tituloConvidado || ""} onChange={e => setConviteForm({ ...conviteForm, tituloConvidado: e.target.value })} className="fox-input" placeholder="Ex.: Mizukage, Kazekage" /></div>
+              <div><label className="fox-label">Nome do convidado opcional</label><input value={conviteForm.nomeConvidado || ""} onChange={e => setConviteForm({ ...conviteForm, nomeConvidado: e.target.value })} className="fox-input" placeholder="Ex.: Sasuke" /></div>
+              <div><label className="fox-label">Vila / origem opcional</label><input value={conviteForm.vilaConvidado || ""} onChange={e => setConviteForm({ ...conviteForm, vilaConvidado: e.target.value })} className="fox-input" placeholder="Ex.: Kirigakure" /></div>
+              <div><label className="fox-label">Codinome reservado opcional</label><input value={conviteForm.codinomeReservado || ""} onChange={e => setConviteForm({ ...conviteForm, codinomeReservado: e.target.value })} className="fox-input" placeholder={conviteFormEhContratante ? "Vazio: contratante escolhe" : "Opcional"} /></div>
+            </div>
+            <div className="mt-3"><label className="fox-label">Mensagem personalizada</label><textarea value={conviteForm.mensagemPersonalizada || ""} onChange={e => setConviteForm({ ...conviteForm, mensagemPersonalizada: e.target.value })} className="fox-input" rows="3" placeholder={conviteFormEhContratante ? "Ex.: A névoa reconheceu seu selo. A Jikkai está pronta para receber solicitações de Kirigakure sob sigilo absoluto." : "Mensagem opcional para aparecer antes da criação do usuário."} /></div>
           </div>
           <div>
             <label className="fox-label">Categorias liberadas de codinome</label>
@@ -9798,27 +9924,52 @@ function LoginScreen({ data, onLogin }) {
   );
 }
 
+const JIKKAI_CONTRATANTE_TRANSICAO_IMG = "assets/jikkai-contractor-transition.png";
+
 function ConviteEntradaScreen({ data, token, onRegistrar, onVoltarLogin }) {
   const tokenNormalizado = normalizarTokenConvite(token);
   const convite = (data.convitesEntrada || []).find(c => normalizarTokenConvite(c.token) === tokenNormalizado);
+  const isConviteContratante = conviteEhContratante(convite);
+  const nomeRecepcao = conviteNomeFormal(convite) || convite?.nomeConvidado || "";
+  const codinomeContratante = conviteCodinomeReservado(convite);
+  const contratanteComIdentidadeFixa = isConviteContratante && Boolean(codinomeContratante);
+  const nomeCadastroInicial = isConviteContratante ? (contratanteComIdentidadeFixa ? (nomeRecepcao || codinomeContratante) : "") : nomeRecepcao;
   const [codinome, setCodinome] = useState("");
   const [buscaCodinome, setBuscaCodinome] = useState("");
-  const [form, setForm] = useState({ username: "", password: "", confirm: "", displayName: "", nomeRP: "", elemento: "", linhagem: "", vilaOrigem: "", especialidade: "" });
+  const [form, setForm] = useState({ username: "", password: "", confirm: "", displayName: nomeCadastroInicial, nomeRP: nomeCadastroInicial, elemento: "", linhagem: "", vilaOrigem: convite?.vilaConvidado || "", especialidade: "" });
   const [erro, setErro] = useState("");
   const [registrando, setRegistrando] = useState(false);
+  const [introContratante, setIntroContratante] = useState(false);
 
   const disponiveis = codinomesDisponiveisParaConvite(data, convite);
   const termo = buscaCodinome.trim().toLowerCase();
   const codinomesFiltrados = disponiveis.filter(c => !termo || [c.nome, c.categoria, c.descricao].some(v => String(v || "").toLowerCase().includes(termo)));
   const statusConvite = !convite ? "invalido" : convite.status !== "pendente" ? "usado" : conviteExpirado(convite) ? "expirado" : "ok";
+  useEffect(() => {
+    if (!isConviteContratante || statusConvite !== "ok") {
+      setIntroContratante(false);
+      return;
+    }
+    setIntroContratante(true);
+    const timer = setTimeout(() => setIntroContratante(false), 1700);
+    return () => clearTimeout(timer);
+  }, [isConviteContratante, statusConvite, tokenNormalizado]);
   const cargo = convite ? (data.roles || []).find(r => r.id === convite.rolePadrao) : null;
-  const codinomeSelecionado = disponiveis.find(c => c.nome === codinome || c.id === codinomeId(codinome));
+  const nomeLivreContratante = codinomeNome(form.displayName || form.nomeRP);
+  const codinomeSelecionado = isConviteContratante
+    ? (contratanteComIdentidadeFixa
+      ? { id: codinomeId(codinomeContratante), nome: codinomeContratante, categoria: "Contratantes", descricao: "Identidade externa reservada por este selo." }
+      : (nomeLivreContratante && codinomeDisponivelParaConvite(data, nomeLivreContratante, convite)
+        ? { id: codinomeId(nomeLivreContratante), nome: nomeLivreContratante, categoria: "Contratantes", descricao: "Identidade escolhida pelo contratante." }
+        : null))
+    : disponiveis.find(c => c.nome === codinome || c.id === codinomeId(codinome));
+  const mensagemRecepcao = convite?.mensagemPersonalizada || "Você acaba de receber o fuuinjutsu Selo Jikkai e foi liberado para utilizar nossos serviços sob sigilo absoluto.";
 
   const enviar = async (e) => {
     e.preventDefault();
     setErro("");
     if (statusConvite !== "ok") { setErro("Este selo não está disponível."); return; }
-    if (!codinomeSelecionado) { setErro("Escolha um codinome disponível antes de continuar."); return; }
+    if (!codinomeSelecionado) { setErro(isConviteContratante && !contratanteComIdentidadeFixa ? (nomeLivreContratante ? "Este nome ja esta em uso ou bloqueado. Escolha outra identidade." : "Informe o nome que deseja usar como contratante.") : "Escolha um codinome disponível antes de continuar."); return; }
     if (form.password !== form.confirm) { setErro("As senhas não conferem."); return; }
     setRegistrando(true);
     try {
@@ -9845,13 +9996,80 @@ function ConviteEntradaScreen({ data, token, onRegistrar, onVoltarLogin }) {
   if (statusConvite === "usado") return renderIndisponivel("Selo já utilizado", "Este convite já foi consumido. Solicite um novo link à liderança.");
   if (statusConvite === "expirado") return renderIndisponivel("Selo expirado", "O prazo deste convite acabou. Solicite um novo Selo de Entrada à liderança.");
 
+  if (isConviteContratante && introContratante) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black text-zinc-200 overflow-hidden fadein">
+        <img src={JIKKAI_CONTRATANTE_TRANSICAO_IMG} alt="Selo Jikkai" className="absolute inset-0 w-full h-full object-contain object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
+        <div className="absolute left-4 right-4 bottom-4 sm:left-8 sm:right-8 sm:bottom-8">
+          <div className="max-w-3xl">
+            <div className="text-[9px] uppercase tracking-[0.36em] text-orange-500 font-black">Fuuinjutsu em ativação</div>
+            <div className="mt-2 text-2xl sm:text-4xl font-black text-orange-50 serif">Selo Jikkai reconhecido</div>
+            <div className="mt-4 h-1.5 rounded-full bg-zinc-900/80 overflow-hidden">
+              <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-orange-700 via-orange-500 to-cyan-400 animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConviteContratante) {
+    const nomeAlvo = nomeRecepcao || "Contratante";
+    return (
+      <div className="min-h-screen bg-black text-zinc-200 relative overflow-y-auto">
+        <div className="fixed inset-0 opacity-22 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 16% 16%, rgba(14,165,233,.26), transparent 32%), radial-gradient(circle at 84% 74%, rgba(234,88,12,.24), transparent 34%)" }} />
+        <div className="relative min-h-screen max-w-5xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex items-center">
+          <div className="w-full grid lg:grid-cols-[minmax(0,1fr)_360px] gap-3 items-stretch">
+            <section className="rounded-2xl border border-cyan-900/50 bg-zinc-950/85 p-4 sm:p-5 shadow-2xl overflow-hidden relative">
+              <div className="absolute -right-16 -top-16 w-40 h-40 rounded-full border border-cyan-500/15 bg-cyan-500/5 blur-sm" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-800 bg-black/70 text-cyan-200 text-[9px] uppercase tracking-[0.22em] font-black">Fuuinjutsu ativo · {convite.token}</div>
+                <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black text-orange-50 serif mt-3 leading-tight">Bem-vindo, <span className="text-cyan-200">{nomeAlvo}</span>.</h1>
+                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed mt-3 max-w-2xl">{mensagemRecepcao}</p>
+                <div className="mt-4 p-4 rounded-xl border border-orange-900/50 bg-orange-950/10">
+                  <div className="text-[9px] uppercase tracking-[0.28em] text-orange-500 font-black">Selo Jikkai recebido</div>
+                  <p className="text-orange-100 text-sm leading-relaxed mt-2">A partir deste acesso, suas solicitações entram por uma mesa reservada. Você poderá consultar a vitrine pública, abrir propostas, acompanhar análise, negociar termos e verificar contratos aceitos pela liderança.</p>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-2 mt-3">
+                  {[["Sigilo", "Sua identidade externa fica protegida."],["Serviços", "Escolta, sabotagem, espionagem e operações especiais."],["Resposta", "A liderança avalia preço, risco e disponibilidade."]].map(([t,d]) => <div key={t} className="p-3 rounded-lg border border-zinc-800 bg-black/45"><div className="text-cyan-200 font-black text-sm">{t}</div><p className="text-zinc-500 text-[11px] leading-relaxed mt-1.5">{d}</p></div>)}
+                </div>
+                <div className="mt-4 text-zinc-600 text-[11px] leading-relaxed">{convite.vilaConvidado ? `Origem reconhecida: ${convite.vilaConvidado}. ` : ""}O portal organiza pedidos, status e registros para que a negociação flua sem ruído.</div>
+              </div>
+            </section>
+
+            <form onSubmit={enviar} className="rounded-2xl border border-orange-900/50 bg-zinc-950/95 p-4 shadow-2xl space-y-3">
+              <div>
+                <div className="text-[9px] uppercase tracking-[0.26em] text-orange-600">Ativar selo externo</div>
+                <h2 className="text-xl font-black text-orange-50 serif mt-1">Criar acesso</h2>
+                <p className="text-zinc-600 text-xs leading-relaxed mt-2">{contratanteComIdentidadeFixa ? "Defina apenas seu login. A identidade recebida neste selo já foi preparada pela liderança." : "Escolha como deseja ser identificado pela Jikkai e defina seu login de acesso."}</p>
+              </div>
+              <div className="p-3 rounded-xl border border-cyan-900/40 bg-cyan-950/10">
+                <div className="text-[9px] uppercase tracking-[0.24em] text-cyan-400">{contratanteComIdentidadeFixa ? "Identidade selada" : "Identidade escolhida"}</div>
+                <div className="text-xl font-black text-cyan-100 serif mt-1 truncate">{codinomeSelecionado?.nome || (contratanteComIdentidadeFixa ? nomeAlvo : "Digite seu nome")}</div>
+                <div className="text-zinc-600 text-xs mt-1">{cargo?.nome || "Contratante"} · Selo nível {convite.nivelAcesso || 1}</div>
+              </div>
+              <div><label className="fox-label">{contratanteComIdentidadeFixa ? "Nome exibido" : "Nome / identidade do contratante *"}</label><input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value, nomeRP: e.target.value })} className="fox-input" placeholder={contratanteComIdentidadeFixa ? "" : "Ex.: Naruto, Sasuke, Hinata"} /></div>
+              <div><label className="fox-label">Username de acesso *</label><input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} className="fox-input" placeholder="ex: mizukage" autoComplete="username" /></div>
+              <div className="grid sm:grid-cols-2 gap-3"><div><label className="fox-label">Senha *</label><input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="fox-input" autoComplete="new-password" /></div><div><label className="fox-label">Confirmar senha *</label><input type="password" value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })} className="fox-input" autoComplete="new-password" /></div></div>
+              <div><label className="fox-label">Vila / origem</label><input value={form.vilaOrigem} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" placeholder="Ex.: Kirigakure" /></div>
+              {erro && <div className="text-red-400 text-xs leading-relaxed">{erro}</div>}
+              <Btn type="submit" variant="primary" size="md" disabled={registrando || !codinomeSelecionado} className="w-full justify-center"><IBriefcase className="w-4 h-4" /> {registrando ? "Ativando selo..." : "Ativar selo e entrar"}</Btn>
+              <button type="button" onClick={onVoltarLogin} className="w-full text-center text-zinc-700 hover:text-zinc-500 text-[10px] uppercase tracking-wider">Já tenho acesso ao portal</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen shadow-ops-bg bg-black text-zinc-200 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto py-4 sm:py-8">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-orange-800 bg-black/70 text-orange-300 text-[10px] uppercase tracking-[0.26em] font-black">SELO DE ENTRADA · {convite.token}</div>
-          <h1 className="text-4xl sm:text-5xl font-black text-orange-50 serif mt-4">Escolha seu codinome</h1>
-          <p className="text-zinc-500 max-w-2xl mx-auto mt-3 leading-relaxed">Este nome será sua identidade permanente dentro da Jikkai. Depois do juramento, nenhum outro membro poderá usá-lo.</p>
+          <h1 className="text-4xl sm:text-5xl font-black text-orange-50 serif mt-4">{nomeRecepcao ? `Bem-vindo, ${nomeRecepcao}` : "Escolha seu codinome"}</h1>
+          <p className="text-zinc-500 max-w-2xl mx-auto mt-3 leading-relaxed">{convite?.mensagemPersonalizada || "Este nome será sua identidade permanente dentro da Jikkai. Depois do juramento, nenhum outro membro poderá usá-lo."}</p>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_420px] gap-5 items-start">
@@ -9890,6 +10108,61 @@ function ConviteEntradaScreen({ data, token, onRegistrar, onVoltarLogin }) {
             <Btn type="submit" variant="primary" size="lg" disabled={registrando || !codinomeSelecionado} className="w-full justify-center"><IShield className="w-4 h-4" /> {registrando ? "Selando..." : "Criar registro e iniciar"}</Btn>
             <button type="button" onClick={onVoltarLogin} className="w-full text-center text-zinc-700 hover:text-zinc-500 text-[10px] uppercase tracking-wider">Já tenho acesso ao portal</button>
           </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContratanteOnboardingPage({ data, usuario, onConcluir, onLogout }) {
+  const [etapa, setEtapa] = useState(0);
+  const nome = [usuario?.conviteTituloConvidado, usuario?.conviteNomeConvidado].filter(Boolean).join(" ").trim() || usuario?.displayName || usuario?.nomeRP || usuario?.codinome || "Contratante";
+  const mensagem = usuario?.conviteMensagemPersonalizada || "O Selo Jikkai reconheceu sua presença. A partir deste ponto, você fala com uma organização que vende resultado, silêncio e execução.";
+  const total = 4;
+  const avancar = () => setEtapa(v => Math.min(total - 1, v + 1));
+  const voltar = () => setEtapa(v => Math.max(0, v - 1));
+  const cards = [
+    ["Vitrine", "Veja serviços e contratos abertos sem precisar expor sua estratégia de imediato."],
+    ["Proposta", "Envie alvo, objetivo, recompensa e restrições. A liderança avalia risco e viabilidade."],
+    ["Negociação", "Acompanhe status, resposta da Jikkai e histórico do que foi combinado."],
+    ["Sigilo", "Membros comuns enxergam o mínimo. Sua identidade externa é protegida no fluxo operacional."],
+  ];
+  return (
+    <div className="min-h-screen bg-black text-zinc-200 relative overflow-hidden">
+      <div className="fixed inset-0 opacity-25 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 24% 20%, rgba(14,165,233,.32), transparent 34%), radial-gradient(circle at 80% 82%, rgba(234,88,12,.36), transparent 38%)" }} />
+      <div className="relative max-w-5xl mx-auto px-4 py-6 sm:py-10">
+        <div className="flex items-center justify-between gap-3 mb-6"><div><div className="text-[9px] uppercase tracking-[0.4em] text-cyan-400">Selo externo liberado</div><div className="text-orange-50 font-black serif text-xl">JIKKAI · Contratante</div></div><button onClick={onLogout} className="flex items-center gap-2 text-zinc-600 hover:text-red-400 text-xs uppercase tracking-wider"><ILogout className="w-4 h-4" /> Sair</button></div>
+        <div className="flex gap-1 mb-6">{Array.from({ length: total }).map((_, i) => <div key={i} className={"h-1 flex-1 rounded " + (i <= etapa ? "bg-gradient-to-r from-cyan-600 to-orange-600" : "bg-zinc-900")} />)}</div>
+        <div className="rounded-3xl border border-cyan-900/40 bg-zinc-950/90 p-5 sm:p-8 shadow-2xl">
+          {etapa === 0 && <div className="fadein text-center py-4">
+            <IBriefcase className="w-16 h-16 text-cyan-300 mx-auto mb-4" />
+            <div className="text-[10px] uppercase tracking-[0.35em] text-cyan-400">Reconhecimento confirmado</div>
+            <h1 className="text-4xl sm:text-5xl font-black text-orange-50 serif mt-3">Bem-vindo, {nome}.</h1>
+            <p className="text-zinc-300 max-w-2xl mx-auto mt-5 text-lg leading-relaxed">{mensagem}</p>
+            <div className="mt-7 grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto text-left">
+              {[["Cargo", "Contratante externo"],["Origem", usuario?.conviteVilaConvidado || usuario?.vilaOrigem || "Não declarada"],["Selo", `Nível ${usuario?.nivelAcesso || 1}`]].map(([l,v]) => <div key={l} className="p-4 rounded-xl border border-zinc-800 bg-black/45"><div className="text-[9px] uppercase tracking-wider text-cyan-500">{l}</div><div className="text-orange-50 font-bold mt-1">{v}</div></div>)}
+            </div>
+            <div className="mt-8"><Btn onClick={avancar} variant="primary" size="lg">Abrir apresentação</Btn></div>
+          </div>}
+          {etapa === 1 && <div className="fadein">
+            <div className="text-center mb-7"><ITarget className="w-14 h-14 text-orange-500 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-orange-600">Como contratar</div><h2 className="text-3xl font-black text-orange-50 serif">Da intenção ao contrato</h2></div>
+            <div className="grid sm:grid-cols-2 gap-4">{cards.map(([t,d]) => <div key={t} className="p-5 rounded-xl border border-zinc-800 bg-black/45"><div className="text-cyan-200 font-black">{t}</div><p className="text-zinc-500 text-sm leading-relaxed mt-2">{d}</p></div>)}</div>
+            <div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Entendi o fluxo</Btn></div>
+          </div>}
+          {etapa === 2 && <div className="fadein">
+            <div className="text-center mb-7"><IShield className="w-14 h-14 text-cyan-300 mx-auto mb-3" /><div className="text-[10px] uppercase tracking-[0.35em] text-cyan-400">Regras de contato</div><h2 className="text-3xl font-black text-orange-50 serif">O que a Jikkai precisa</h2></div>
+            <div className="max-w-3xl mx-auto space-y-3">
+              {["Objetivo claro: alvo, item, escolta, sabotagem, informação ou proteção.", "Limites do serviço: o que não pode ser feito e o que deve permanecer invisível.", "Recompensa e urgência: quanto mais risco, mais a liderança precisa negociar.", "Pós-contrato: acompanhe a proposta pelo portal e responda negociações quando surgirem."].map(t => <div key={t} className="flex items-start gap-3 p-4 rounded-xl border border-zinc-800 bg-black/45"><ICheck className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" /><div className="text-zinc-300 text-sm leading-relaxed">{t}</div></div>)}
+            </div>
+            <div className="flex gap-2 mt-8"><Btn onClick={voltar} variant="ghost">Voltar</Btn><Btn onClick={avancar} variant="primary" className="flex-1 justify-center">Prosseguir à mesa</Btn></div>
+          </div>}
+          {etapa === 3 && <div className="fadein text-center py-5">
+            <ICheck className="w-20 h-20 text-green-500 mx-auto mb-5" />
+            <div className="text-[10px] uppercase tracking-[0.4em] text-green-600">Passagem aberta</div>
+            <h2 className="text-4xl font-black text-orange-50 serif mt-2">A mesa de contratos está liberada</h2>
+            <p className="text-zinc-400 max-w-xl mx-auto mt-4 leading-relaxed">Você será levado para a vitrine e para os contratos. A partir dali, solicite serviços, acompanhe propostas e negocie termos com a liderança.</p>
+            <div className="mt-8"><Btn onClick={onConcluir} variant="primary" size="lg"><IBriefcase className="w-4 h-4" /> Ir para contratos</Btn></div>
+          </div>}
         </div>
       </div>
     </div>
@@ -10028,6 +10301,12 @@ function migrate(raw) {
     codinomeEscolhido: c.codinomeEscolhido || "",
     discordObrigatorio: c.discordObrigatorio !== false,
     categoriasLiberadas: Array.isArray(c.categoriasLiberadas) ? c.categoriasLiberadas : [],
+    nomeConvidado: c.nomeConvidado || "",
+    tituloConvidado: c.tituloConvidado || "",
+    vilaConvidado: c.vilaConvidado || "",
+    mensagemPersonalizada: c.mensagemPersonalizada || "",
+    codinomeReservado: c.codinomeReservado || "",
+    apresentacaoContratante: c.apresentacaoContratante !== false,
   })) : [];
   if (!raw.missoes) migrated.missoes = [];
   migrated.missoes = (raw.missoes || []).map(m => {
@@ -10641,11 +10920,12 @@ function App() {
     if (criado) {
       if (typeof window.foxStartMusic === "function") window.foxStartMusic();
       limparUrlConvite();
-      salvarSessaoPortalSnapshot({ usuario: criado, tab: "home" });
+      const tabInicial = criado.role === "contratante" ? "visaogeral" : "home";
+      salvarSessaoPortalSnapshot({ usuario: criado, tab: tabInicial });
       setUsuario(criado);
-      setTab("home");
+      setTab(tabInicial);
       setNavigationRequest(null);
-      setTerminalToast(`CODINOME ${criado.codinome} SELADO · INICIE O PROTOCOLO`);
+      setTerminalToast(criado.role === "contratante" ? `SELO EXTERNO ${criado.codinome} ATIVADO` : `CODINOME ${criado.codinome} SELADO · INICIE O PROTOCOLO`);
     }
     return { user: criado };
   };
@@ -10710,6 +10990,21 @@ function App() {
     } : u),
     activityLog: [...(d.activityLog || []), atividade("iniciacao_concluida", username, username, "Concluiu o Protocolo de Iniciação da Jikkai")],
   }));
+  const concluirOnboardingContratante = () => {
+    if (!usuarioAtual?.username) return;
+    const atualizado = { ...usuarioAtual, onboardingContratanteStatus: "concluido", onboardingContratanteConcluidoEm: new Date().toISOString() };
+    setData(d => ({
+      ...d,
+      users: d.users.map(u => u.username === usuarioAtual.username ? { ...u, onboardingContratanteStatus: "concluido", onboardingContratanteConcluidoEm: atualizado.onboardingContratanteConcluidoEm } : u),
+      activityLog: [...(d.activityLog || []), atividade("onboarding_contratante_concluido", usuarioAtual.username, usuarioAtual.username, "Concluiu a recepção externa de contratante")],
+    }));
+    setUsuario(atualizado);
+    const req = { tab: "jikkai", subTab: "contratos", action: "abrir-contratos", token: uid() };
+    setTab("jikkai");
+    setNavigationRequest(req);
+    salvarSessaoPortalSnapshot({ usuario: atualizado, tab: "jikkai", navigationRequest: req });
+    setTerminalToast("SELO EXTERNO ATIVO · MESA DE CONTRATOS LIBERADA");
+  };
 
   if (loading || !data) {
     return <ShadowBootScreen label="LIBERANDO SELO DE ACESSO" detail="localizando pergaminhos · conferindo juramento · abrindo passagem oculta" />;
@@ -10748,6 +11043,10 @@ function App() {
       onConcluir={() => concluirIniciacao(usuarioAtual.username)}
       onLogout={logoutPortal}
     />;
+  }
+
+  if (isContratante && usuarioAtual.onboardingContratanteStatus === "pendente") {
+    return <ContratanteOnboardingPage data={data} usuario={usuarioAtual} onConcluir={concluirOnboardingContratante} onLogout={logoutPortal} />;
   }
 
   const TABS = isContratante ? [
