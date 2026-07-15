@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JIKKAI Overlay</title>
+  <style>
+    :root{color-scheme:dark;--orange:#f97316;--red:#dc2626;--cyan:#22d3ee;--green:#22c55e;--muted:#94a3b8;--paper:#fff7ed}
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;color:#f8fafc;font-family:Inter,Segoe UI,Arial,sans-serif}
+    body{padding:8px}
+    button{font:inherit;color:inherit}
+    .shell{height:100%;border:1px solid rgba(249,115,22,.46);border-radius:18px;background:linear-gradient(145deg,rgba(3,7,10,.66),rgba(14,5,2,.62));box-shadow:0 20px 70px rgba(0,0,0,.42),0 0 32px rgba(249,115,22,.14);backdrop-filter:blur(12px) saturate(1.15);overflow:hidden;position:relative}
+    .shell:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.035),transparent 20%,transparent 80%,rgba(249,115,22,.05)),repeating-linear-gradient(0deg,transparent 0 27px,rgba(255,255,255,.025) 28px);opacity:.5}
+    .top{position:relative;z-index:2;height:43px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);-webkit-app-region:drag}
+    .brand{display:flex;align-items:center;gap:8px;min-width:0}
+    .sigil{width:29px;height:29px;border-radius:9px;border:1px solid rgba(249,115,22,.55);display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,rgba(249,115,22,.3),rgba(0,0,0,.74));font-weight:1000;color:#fed7aa;box-shadow:0 0 18px rgba(249,115,22,.2)}
+    .kicker{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#fb923c;font-weight:1000;line-height:1}
+    h1{margin:2px 0 0;font-family:Georgia,serif;font-size:16px;line-height:1;color:#fff7ed}
+    .top-actions{display:flex;align-items:center;gap:5px;-webkit-app-region:no-drag}
+    .mode-pill{border:1px solid rgba(34,211,238,.35);background:rgba(8,145,178,.12);color:#cffafe;border-radius:999px;padding:5px 7px;font-size:8px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;white-space:nowrap}
+    .icon-btn{width:27px;height:27px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);display:grid;place-items:center;cursor:pointer}
+    .icon-btn:hover{border-color:rgba(249,115,22,.65);color:#fed7aa}
+    .tabs{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .tab{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.24);border-radius:10px;padding:8px 4px;font-size:8px;font-weight:1000;text-transform:uppercase;letter-spacing:.1em;color:#9ca3af;cursor:pointer}
+    .tab.active{border-color:rgba(249,115,22,.68);background:rgba(249,115,22,.18);color:#ffedd5}
+    .content{position:relative;z-index:2;height:calc(100% - 43px);padding:9px;overflow:hidden}
+    .mode-panel .content{height:calc(100% - 91px)}
+    .panel-only{display:none}
+    .mode-panel .panel-only{display:grid}
+    .mode-panel .hud-only{display:none!important}
+    .mode-hud .panel-view{display:none}
+    .hud-view{height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;gap:7px}
+    .micro-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .agent{min-width:0}
+    .who{font-size:13px;font-weight:950;color:#fff7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .role{font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:.12em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sync{border:1px solid rgba(34,197,94,.35);background:rgba(22,101,52,.16);color:#bbf7d0;border-radius:999px;padding:5px 7px;font-size:8px;font-weight:1000;text-transform:uppercase;letter-spacing:.12em}
+    .mission{border:1px solid rgba(249,115,22,.4);background:linear-gradient(145deg,rgba(124,45,18,.24),rgba(0,0,0,.28));border-radius:13px;padding:10px}
+    .label{font-size:8px;text-transform:uppercase;letter-spacing:.18em;color:#fb923c;font-weight:1000}
+    .tag{font-size:8px;text-transform:uppercase;letter-spacing:.1em;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 6px;color:#fde68a;background:rgba(0,0,0,.25);font-weight:1000;white-space:nowrap}
+    .name{font-size:15px;font-weight:950;color:#f8fafc;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .desc{font-size:11px;line-height:1.32;color:#cbd5e1;margin-top:5px}
+    .muted{color:#94a3b8}
+    .progress{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:7px;border:1px solid rgba(255,255,255,.08)}
+    .progress span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--cyan));width:0}
+    .hud-foot{display:flex;align-items:end;justify-content:space-between;gap:8px;color:#a7f3d0;font-size:9px;text-transform:uppercase;letter-spacing:.11em;font-weight:1000}
+    .panel-view{height:100%;overflow:hidden}
+    .panel-tab{display:none;height:100%;overflow:hidden}
+    .panel-tab.active{display:grid;gap:8px;align-content:start}
+    .card{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.28);border-radius:14px;padding:10px}
+    .card.hot{border-color:rgba(249,115,22,.52);background:linear-gradient(145deg,rgba(124,45,18,.24),rgba(0,0,0,.26))}
+    .head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .btn{border:1px solid rgba(249,115,22,.4);background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(127,29,29,.16));border-radius:10px;padding:9px 8px;font-size:9px;font-weight:1000;text-transform:uppercase;letter-spacing:.09em;cursor:pointer}
+    .btn.primary{border-color:rgba(34,211,238,.48);background:rgba(8,145,178,.16);color:#ecfeff}
+    .btn.secondary{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#dbe4ef}
+    .btn:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.4)}
+    .list{display:grid;gap:7px}
+    .item{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);border-radius:12px;padding:9px;min-width:0}
+    .item-title{font-size:12px;font-weight:950;color:#f8fafc;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .item-meta{font-size:8px;color:#93a0b3;text-transform:uppercase;letter-spacing:.11em;margin-top:4px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .item-desc{font-size:10px;color:#cbd5e1;line-height:1.32;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+    .chip{border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(0,0,0,.22);padding:4px 6px;font-size:8px;color:#e5e7eb}
+    .map-preview{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(34,211,238,.3);border-radius:13px;overflow:hidden;background:#062226;box-shadow:inset 0 0 30px rgba(0,0,0,.45)}
+    .map-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.05) brightness(.78)}
+    .map-layer{position:absolute;inset:0}
+    .map-point{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px}
+    .map-dot{width:9px;height:9px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 14px rgba(249,115,22,.8)}
+    .map-label{padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.12);font-size:7px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000;text-shadow:0 1px 2px #000;white-space:nowrap}
+    .meeting{position:absolute;transform:translate(-50%,-50%);width:25px;height:25px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 58%,#7f1d1d);color:#111;font-size:12px;font-weight:1000;animation:ping 1.1s infinite}
+    @keyframes ping{70%{box-shadow:0 0 0 16px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
+    .member{display:flex;align-items:center;gap:8px;min-width:0}
+    .avatar{width:31px;height:34px;border-radius:9px;border:1px solid rgba(249,115,22,.35);background:linear-gradient(145deg,#18181b,#000);display:grid;place-items:center;color:#fed7aa;font-size:10px;font-weight:1000;overflow:hidden;flex:0 0 auto}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .mode-strip{position:absolute;left:8px;right:8px;bottom:7px;z-index:3;display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(0,0,0,.36);color:#a7f3d0;font-size:8px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;pointer-events:none}
+    .mode-panel .mode-strip{color:#fed7aa}
+    .empty{border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:12px;color:#94a3b8;text-align:center;background:rgba(255,255,255,.025);font-size:11px}
+    .mode-hud .tabs{display:none}
+    .mode-hud .top{height:40px;padding:7px 9px}
+    .mode-hud .content{height:calc(100% - 40px);padding:8px}
+    .mode-hud .icon-btn{display:none}
+    .mode-hud h1{font-size:15px}
+    .mode-hud .shell{background:linear-gradient(145deg,rgba(3,7,10,.52),rgba(14,5,2,.48))}
+  </style>
+</head>
+<body class="mode-hud">
+  <section class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="sigil">十</div>
+        <div>
+          <div class="kicker">JIKKAI · Modo jogo</div>
+          <h1 id="overlayTitle">HUD</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="mode-pill" id="syncState">Local</span>
+        <button class="icon-btn" id="hudBtn" title="Voltar ao HUD">-</button>
+        <button class="icon-btn" id="hideBtn" title="Ocultar overlay">×</button>
+      </div>
+    </header>
+
+    <nav class="tabs panel-only" id="tabs">
+      <button class="tab active" data-tab="agora">Agora</button>
+      <button class="tab" data-tab="missao">Missão</button>
+      <button class="tab" data-tab="mapa">Mapa</button>
+      <button class="tab" data-tab="membros">Membros</button>
+      <button class="tab" data-tab="dossie">Dossiê</button>
+    </nav>
+
+    <main class="content">
+      <section class="hud-view hud-only">
+        <div class="micro-row">
+          <div class="agent">
+            <div class="who" id="hudName">Leitura restrita</div>
+            <div class="role" id="hudRole">Sessão não identificada</div>
+          </div>
+          <span class="tag" id="hudMissionStatus">Livre</span>
+        </div>
+        <article class="mission">
+          <div class="label">Operação atual</div>
+          <div class="name" id="hudMissionTitle">Nenhuma operação ativa</div>
+          <div class="desc" id="hudObjective">Nenhuma operação ativa no momento.</div>
+          <div class="progress"><span id="hudProgress"></span></div>
+        </article>
+        <div class="hud-foot">
+          <span id="hudAlert">Alt+M abre painel</span>
+          <span>Mouse no jogo</span>
+        </div>
+      </section>
+
+      <section class="panel-view panel-only">
+        <section class="panel-tab active" data-panel="agora">
+          <article class="card hot">
+            <div class="head">
+              <div>
+                <div class="label">Agora</div>
+                <div class="name" id="nowTitle">Nenhuma operação ativa</div>
+              </div>
+              <span class="tag" id="nowStatus">Livre</span>
+            </div>
+            <div class="desc" id="nowDesc">Nenhuma operação ativa no momento.</div>
+            <div class="progress"><span id="nowProgress"></span></div>
+            <div class="actions">
+              <button class="btn primary" id="reportBtn">Relatório</button>
+              <button class="btn secondary" data-tab-jump="missao">Ver missão</button>
+            </div>
+          </article>
+          <article class="card">
+            <div class="head"><div><div class="label">Convocação</div><div class="item-title" id="meetingTitle">Nenhuma reunião marcada</div></div><span class="tag" id="meetingTag">Mapa</span></div>
+            <div class="item-desc" id="meetingDesc">Quando um capitão marcar reunião no mapa, o sinal aparece aqui.</div>
+            <div class="actions"><button class="btn primary" data-tab-jump="mapa">Abrir mapa</button><button class="btn secondary" id="centralBtn">Central</button></div>
+          </article>
+        </section>
+
+        <section class="panel-tab" data-panel="missao">
+          <div class="card hot">
+            <div class="head"><div><div class="label">Missões</div><div class="name">Fila operacional</div></div><span class="tag" id="missionCount">0</span></div>
+            <div class="list" id="missionList"></div>
+          </div>
+        </section>
+
+        <section class="panel-tab" data-panel="mapa">
+          <div class="card hot">
+            <div class="head"><div><div class="label">Mapa estratégico</div><div class="name">Sinais e pontos</div></div><span class="tag" id="mapCount">0</span></div>
+            <div class="map-preview">
+              <img alt="Mapa Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
+              <div class="map-layer" id="mapLayer"></div>
+            </div>
+            <div class="item-desc" id="mapHint">Mapa simplificado para consulta durante o jogo.</div>
+          </div>
+        </section>
+
+        <section class="panel-tab" data-panel="membros">
+          <div class="card hot">
+            <div class="head"><div><div class="label">Membros</div><div class="name">Estrutura próxima</div></div><span class="tag" id="memberCount">0</span></div>
+            <div class="list" id="memberList"></div>
+          </div>
+        </section>
+
+        <section class="panel-tab" data-panel="dossie">
+          <div class="card hot" id="dossierCard"></div>
+        </section>
+      </section>
+    </main>
+    <div class="mode-strip"><span id="mouseMode">Mouse no jogo</span><span>Esc volta ao HUD</span></div>
+  </section>
+
+  <script>
+    const STORAGE_KEY = "fox-portal-v3";
+    const SESSION_KEY = "fox-portal-session-v2";
+    const MAP_RETURN_KEY = "fox-map-return-v2";
+    const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+    const TERMINAIS = new Set(["concluida","falhou","recusada","arquivada","cancelada","encerrada"]);
+    const DEFAULT_POINTS = [
+      { id:"konoha", name:"Konohagakure", type:"vila", x:65.5, y:60.5 },
+      { id:"kiri", name:"Kirigakure", type:"vila", x:85.2, y:78.2 },
+      { id:"suna", name:"Sunagakure", type:"vila", x:24.5, y:71.2 },
+      { id:"iwa", name:"Iwagakure", type:"vila", x:22.5, y:28.5 },
+      { id:"kumo", name:"Kumogakure", type:"vila", x:86.2, y:13.5 },
+      { id:"base", name:"Esconderijo", type:"base", x:44.5, y:70.5 }
+    ];
+    const STATUS = {
+      pendente:{label:"Aguardando", priority:60, canReport:false},
+      atribuida:{label:"Atribuída", priority:50, canReport:false},
+      aceita:{label:"Aceita", priority:40, canReport:false},
+      andamento:{label:"Em andamento", priority:10, canReport:true},
+      devolvida:{label:"Devolvida", priority:20, canReport:true},
+      revisao:{label:"Em revisão", priority:30, canReport:false},
+      concluida:{label:"Concluída", priority:900, terminal:true, canReport:false},
+      falhou:{label:"Falhou", priority:910, terminal:true, canReport:false},
+      recusada:{label:"Recusada", priority:920, terminal:true, canReport:false},
+      arquivada:{label:"Arquivada", priority:930, terminal:true, canReport:false},
+      cancelada:{label:"Cancelada", priority:940, terminal:true, canReport:false},
+      encerrada:{label:"Encerrada", priority:950, terminal:true, canReport:false}
+    };
+    const $ = id => document.getElementById(id);
+    let latestUser = null;
+    let latestMission = null;
+    let latestData = {};
+
+    function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
+    function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
+    function normalizeText(v) { return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
+    function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+    function userName(user) { return user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita"; }
+    function initials(user){return userName(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
+    function roleOf(data, user){return (data?.roles || []).find(r => r.id === user?.role)}
+    function missionState(mission){return STATUS[normalizeText(mission?.status || "atribuida")] || STATUS.atribuida}
+    function participants(mission){return Array.from(new Set([...(mission?.participants || []), ...(mission?.aceites || []), mission?.assignedTo].filter(Boolean)))}
+    function participates(mission, username){return !!username && participants(mission).includes(username)}
+    function objectiveDone(o){return !!(o?.done || ["concluido","concluida"].includes(normalizeText(o?.status)))}
+    function missionProgress(mission){
+      const objetivos = Array.isArray(mission?.objetivos) ? mission.objetivos : [];
+      if (!objetivos.length) return { done:0, total:0, percent:0 };
+      const done = objetivos.filter(objectiveDone).length;
+      return { done, total:objetivos.length, percent:Math.round(done / objetivos.length * 100) };
+    }
+    function currentObjective(mission){
+      const objetivos = Array.isArray(mission?.objetivos) ? mission.objetivos : [];
+      const next = objetivos.find(o => !objectiveDone(o)) || objetivos[0];
+      return next?.text || next?.titulo || next?.nome || "Objetivo operacional ainda não definido.";
+    }
+    function activeMissions(data, username) {
+      return (data?.missoes || [])
+        .filter(m => participates(m, username) && !missionState(m).terminal && !TERMINAIS.has(normalizeText(m.status)))
+        .sort((a,b) => missionState(a).priority - missionState(b).priority || new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+    }
+    function activeMeetings(data) {
+      return (data?.mapaReunioes || [])
+        .filter(m => Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)) && new Date(m.expiresAt).getTime() > Date.now())
+        .sort((a,b) => new Date(a.expiresAt) - new Date(b.expiresAt));
+    }
+    function minutesLeft(date) { return Math.max(1, Math.ceil((new Date(date).getTime() - Date.now()) / 60000)); }
+    function saveRoute(tab = "home", subTab = "", action = "") {
+      const current = session();
+      const username = latestUser?.username || current?.username;
+      if (!username) return;
+      const payload = { username, tab, subTab, action, updatedAt: new Date().toISOString(), updatedAtMs: Date.now() };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
+    }
+    function openFullRoute(tab, subTab = "", action = "") {
+      saveRoute(tab, subTab, action);
+      window.jikkaiDesktop?.openFullPortal();
+    }
+    async function loadCloudState() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state?id=eq.1&select=data`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error("Supabase " + res.status);
+      const payload = await res.json();
+      const data = payload?.[0]?.data;
+      if (data?.users) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return data;
+    }
+    async function loadState() {
+      const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
+      try {
+        const cloud = await loadCloudState();
+        $("syncState").textContent = "Sync";
+        return cloud || local;
+      } catch {
+        $("syncState").textContent = "Local";
+        return local;
+      }
+    }
+    function avatar(user){return `<div class="avatar">${user?.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="">` : escapeHtml(initials(user))}</div>`}
+    function memberLine(user, data){
+      const role = roleOf(data, user);
+      return `<div class="item member">${avatar(user)}<div class="agent"><div class="item-title">${escapeHtml(userName(user))}</div><div class="item-meta">${escapeHtml(user?.patente || role?.nome || "Operador")}</div></div></div>`;
+    }
+    function missionItem(mission, data) {
+      const state = missionState(mission);
+      const prog = missionProgress(mission);
+      const names = participants(mission).slice(0,3).map(username => userName((data?.users || []).find(u => u.username === username) || { username }));
+      return `<article class="item">
+        <div class="head"><div><div class="item-title">${escapeHtml(mission.titulo || "Missão")}</div><div class="item-meta">${escapeHtml(state.label)} · ${escapeHtml(mission.sigilo || "sigilo comum")}</div></div><span class="tag">${prog.percent}%</span></div>
+        <div class="item-desc">${escapeHtml(currentObjective(mission))}</div>
+        <div class="progress"><span style="width:${prog.percent}%"></span></div>
+        <div class="chips">${names.length ? names.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("") : `<span class="chip">Sem participantes</span>`}</div>
+      </article>`;
+    }
+    function renderMap(data, meetings) {
+      const points = (Array.isArray(data.mapaPontos) && data.mapaPontos.length ? data.mapaPontos : DEFAULT_POINTS)
+        .filter(p => Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))).slice(0,8);
+      const color = { vila:"#f97316", base:"#a855f7", treino:"#22c55e", fuga:"#38bdf8", risco:"#ef4444", regiao:"#eab308" };
+      $("mapLayer").innerHTML = points.map(p => `
+        <div class="map-point" style="left:${Number(p.x)}%;top:${Number(p.y)}%">
+          <span class="map-dot" style="background:${color[p.type || p.tipo] || color.regiao}"></span>
+          <span class="map-label">${escapeHtml(p.name || p.nome || "Ponto")}</span>
+        </div>`).join("") + meetings.map(m => `<div class="meeting" title="Reunião" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!</div>`).join("");
+      $("mapCount").textContent = `${meetings.length} sinal${meetings.length === 1 ? "" : "is"}`;
+      $("mapHint").textContent = meetings[0] ? `Reunião por ${meetings[0].createdBy || "capitão"} · ${minutesLeft(meetings[0].expiresAt)} min restantes.` : "Mapa simplificado para consulta durante o jogo.";
+    }
+    function setTab(tab) {
+      const id = ({ missoes:"missao", relatorios:"missao" })[tab] || tab || "agora";
+      document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === id));
+      document.querySelectorAll(".panel-tab").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === id));
+    }
+    function setMode(payload = {}) {
+      const mode = payload.mode === "panel" ? "panel" : "hud";
+      document.body.classList.toggle("mode-panel", mode === "panel");
+      document.body.classList.toggle("mode-hud", mode !== "panel");
+      $("overlayTitle").textContent = mode === "panel" ? "Painel" : "HUD";
+      $("mouseMode").textContent = payload.clickThrough ? "Mouse no jogo" : "Mouse no painel";
+      if (mode === "panel") setTab(payload.section || "agora");
+    }
+    function canReport(mission){return !!mission && missionState(mission).canReport}
+    async function render() {
+      const data = await loadState();
+      latestData = data || {};
+      const current = session();
+      const user = (data?.users || []).find(u => u.username === current?.username) || current;
+      const role = roleOf(data, user);
+      const missions = activeMissions(data, user?.username);
+      const meetings = activeMeetings(data);
+      latestUser = user || null;
+      latestMission = missions[0] || null;
+      const mission = latestMission;
+      const state = missionState(mission);
+      const prog = missionProgress(mission);
+      const objective = mission ? currentObjective(mission) : "Nenhuma operação ativa no momento.";
+      const members = (data?.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
+
+      $("hudName").textContent = userName(user);
+      $("hudRole").textContent = role?.nome || user?.role || "Sessão não identificada";
+      $("hudMissionStatus").textContent = mission ? state.label : "Livre";
+      $("hudMissionTitle").textContent = mission?.titulo || "Nenhuma operação ativa";
+      $("hudObjective").textContent = objective;
+      $("hudProgress").style.width = `${prog.percent}%`;
+      $("hudAlert").textContent = meetings[0] ? `Reunião: ${minutesLeft(meetings[0].expiresAt)} min` : "Alt+M abre painel";
+
+      $("nowTitle").textContent = mission?.titulo || "Nenhuma operação ativa";
+      $("nowStatus").textContent = mission ? state.label : "Livre";
+      $("nowDesc").textContent = mission ? objective : "Nenhuma operação ativa no momento.";
+      $("nowProgress").style.width = `${prog.percent}%`;
+      $("reportBtn").disabled = !canReport(mission);
+      $("reportBtn").textContent = canReport(mission) ? "Relatório" : "Sem relatório";
+
+      $("missionCount").textContent = `${missions.length} ativa${missions.length === 1 ? "" : "s"}`;
+      $("missionList").innerHTML = missions.length ? missions.slice(0,3).map(m => missionItem(m, data)).join("") : `<div class="empty">Nenhuma missão ativa para este usuário.</div>`;
+
+      const meeting = meetings[0];
+      $("meetingTitle").textContent = meeting ? "Reunião ativa no mapa" : "Nenhuma reunião marcada";
+      $("meetingTag").textContent = meeting ? `${minutesLeft(meeting.expiresAt)} min` : "Mapa";
+      $("meetingDesc").textContent = meeting ? `Sinal de ${meeting.createdBy || "capitão"} em ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%.` : "Quando um capitão marcar reunião no mapa, o sinal aparece aqui.";
+      renderMap(data, meetings);
+
+      $("memberCount").textContent = `${members.length}`;
+      $("memberList").innerHTML = members.length ? members.slice(0,5).map(u => memberLine(u, data)).join("") : `<div class="empty">Nenhum membro visível.</div>`;
+      $("dossierCard").innerHTML = `
+        <div class="head"><div><div class="label">Meu dossiê</div><div class="name">${escapeHtml(userName(user))}</div></div><span class="tag">${escapeHtml(role?.nome || user?.role || "Acesso")}</span></div>
+        <div class="item member">${avatar(user)}<div class="agent"><div class="item-title">${escapeHtml(user?.patente || "Operador")}</div><div class="item-meta">${escapeHtml(user?.vila || user?.origem || "Origem sigilosa")} · Nível ${escapeHtml(user?.nivelAcesso || 1)}</div></div></div>
+        <div class="item-desc">${escapeHtml(user?.descricao || user?.bio || "Registro operacional ativo na Jikkai.")}</div>
+        <div class="actions"><button class="btn primary" id="centralDossierBtn">Abrir Central</button><button class="btn secondary" data-tab-jump="agora">Voltar</button></div>
+      `;
+      $("centralDossierBtn")?.addEventListener("click", () => window.jikkaiDesktop?.openPortal());
+    }
+
+    $("hideBtn").onclick = () => window.jikkaiDesktop?.hideOverlay();
+    $("hudBtn").onclick = () => window.jikkaiDesktop?.showOverlayHud();
+    $("centralBtn").onclick = () => window.jikkaiDesktop?.openPortal();
+    $("reportBtn").onclick = () => {
+      if (canReport(latestMission)) openFullRoute("missoes", "", `relatorio-missao:${latestMission.id}`);
+    };
+    document.getElementById("tabs").onclick = e => {
+      const btn = e.target.closest("[data-tab]");
+      if (btn) setTab(btn.dataset.tab);
+    };
+    document.body.addEventListener("click", e => {
+      const jump = e.target.closest("[data-tab-jump]")?.dataset.tabJump;
+      if (jump) setTab(jump);
+    });
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") window.jikkaiDesktop?.showOverlayHud();
+    });
+    window.jikkaiDesktop?.onClickThroughChanged(enabled => {
+      $("mouseMode").textContent = enabled ? "Mouse no jogo" : "Mouse no painel";
+    });
+    window.jikkaiDesktop?.onOverlayModeChanged(setMode);
+    window.addEventListener("storage", render);
+    setMode({ mode:"hud", clickThrough:true });
+    render();
+    setInterval(render, 30000);
+  </script>
+</body>
+</html>
