@@ -20,7 +20,7 @@
     .session{text-align:right;min-width:170px}
     .who{font-weight:950;color:#fff7ed;font-size:14px}
     .role{font-size:10px;color:#858b96;text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
-    .nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:1260px;margin:14px auto 0;-webkit-app-region:no-drag}
+    .nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;max-width:1260px;margin:14px auto 0;-webkit-app-region:no-drag}
     .nav button{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:10px;padding:11px 10px;text-transform:uppercase;font-size:10px;letter-spacing:.14em;font-weight:1000;cursor:pointer;color:#a1a1aa}
     .nav button.active{border-color:rgba(249,115,22,.65);background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(127,29,29,.16));color:#ffedd5}
     .layout{max-width:1260px;margin:0 auto;padding:18px}
@@ -41,6 +41,11 @@
     .btn.secondary{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#d4d4d8}
     .btn.cyan{border-color:rgba(34,211,238,.45);background:rgba(8,145,178,.14);color:#cffafe}
     .btn:hover{filter:brightness(1.14)}
+    .fox-input{width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.34);border-radius:9px;padding:10px 11px;color:#f8fafc;outline:none;font:inherit;font-size:12px}
+    .fox-input:focus{border-color:rgba(249,115,22,.72);box-shadow:0 0 0 2px rgba(249,115,22,.12)}
+    textarea.fox-input{min-height:92px;resize:vertical;line-height:1.35}
+    .field{display:grid;gap:5px}
+    .field label{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#fb923c;font-weight:1000}
     .list{display:grid;gap:9px}
     .item{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.26);border-radius:10px;padding:12px}
     .item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -64,15 +69,25 @@
     .section.active{display:block}
     .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.6fr);gap:14px}
     .map-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.55fr);gap:14px}
-    .map-view{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(249,115,22,.28);border-radius:12px;overflow:hidden;background:#062226;box-shadow:inset 0 0 45px rgba(0,0,0,.55)}
-    .map-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.95) contrast(1.04) brightness(.82)}
-    .map-layer{position:absolute;inset:0}
+    .map-view{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(249,115,22,.28);border-radius:12px;overflow:hidden;background:#062226;box-shadow:inset 0 0 45px rgba(0,0,0,.55);touch-action:none;cursor:grab}
+    .map-view.dragging{cursor:grabbing}
+    .map-world{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+    .map-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.95) contrast(1.04) brightness(.82);pointer-events:none}
+    .map-layer{position:absolute;inset:0;pointer-events:none}
+    .app-routes{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+    .app-route{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:.55;filter:drop-shadow(0 0 .8px rgba(0,0,0,.9))}
+    .map-controls{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:8}
+    .map-controls button{width:34px;height:32px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.58);border-radius:9px;color:#ffedd5;font-size:12px;font-weight:1000;cursor:pointer}
+    .map-controls button.wide{width:auto;padding:0 10px;text-transform:uppercase;letter-spacing:.1em;font-size:9px}
+    .map-controls button.active{border-color:rgba(34,211,238,.75);color:#cffafe;background:rgba(8,145,178,.22)}
     .map-marker{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
     .map-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 16px rgba(249,115,22,.9)}
     .map-name{white-space:nowrap;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.12);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;text-shadow:0 1px 2px #000;color:#fff7ed}
-    .map-meeting{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 56%,#7f1d1d);color:#111827;font-weight:1000;box-shadow:0 0 0 0 rgba(249,115,22,.7);animation:mapPing 1.05s infinite;z-index:5}
-    .map-meeting:after{content:attr(data-label);position:absolute;top:32px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.76);border:1px solid rgba(249,115,22,.55);color:#fed7aa;font-size:9px;text-transform:uppercase;letter-spacing:.12em}
+    .map-meeting{position:absolute;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 56%,#7f1d1d);color:#111827;font-weight:1000;box-shadow:0 0 0 0 rgba(249,115,22,.7);animation:mapPing 1.05s infinite;z-index:5}
+    .map-meeting:before{content:"";position:absolute;inset:-18px;border-radius:50%;border:2px solid rgba(34,211,238,.45);animation:mapRing 1.35s ease-out infinite;pointer-events:none}
+    .map-meeting-label{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.76);border:1px solid rgba(249,115,22,.55);color:#fed7aa;font-size:9px;text-transform:uppercase;letter-spacing:.12em}
     @keyframes mapPing{70%{box-shadow:0 0 0 18px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
+    @keyframes mapRing{0%{opacity:.95;transform:scale(.72)}100%{opacity:0;transform:scale(1.45)}}
     .org-board{display:grid;gap:14px}
     .command-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .command-card,.division-card,.team-card{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.28);border-radius:12px;padding:12px}
@@ -82,7 +97,8 @@
     .division-body{padding:12px;display:grid;gap:10px}
     .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
     .team-card{padding:10px}
-    .member-row{display:flex;align-items:center;gap:8px;min-width:0}
+    .member-row{display:flex;align-items:center;gap:8px;min-width:0;border:0;background:transparent;color:inherit;text-align:left;width:100%;padding:0;cursor:pointer}
+    .member-row:hover .member-name{color:#fed7aa}
     .member-row.online .avatar{border-color:rgba(34,197,94,.75);box-shadow:0 0 18px rgba(34,197,94,.18)}
     .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.2s infinite;flex:0 0 auto}
     .avatar{width:32px;height:36px;border-radius:9px;border:1px solid rgba(249,115,22,.35);background:linear-gradient(145deg,#18181b,#000);display:grid;place-items:center;color:#fed7aa;font-size:10px;font-weight:1000;overflow:hidden;flex:0 0 auto}
@@ -90,6 +106,19 @@
     .member-name{font-size:12px;font-weight:950;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .member-role{font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:#737986;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .member-stack{display:grid;gap:6px;margin-top:8px}
+    .command-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.8fr);gap:14px}
+    .command-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .command-feed{display:grid;gap:8px;max-height:320px;overflow:auto;padding-right:2px}
+    .message-card{border:1px solid rgba(34,211,238,.2);background:rgba(8,145,178,.08);border-radius:10px;padding:11px}
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.46);z-index:80;display:none;align-items:stretch;justify-content:flex-end}
+    .drawer-backdrop.show{display:flex}
+    .drawer{width:min(440px,100%);height:100%;overflow:auto;border-left:1px solid rgba(249,115,22,.45);background:linear-gradient(180deg,rgba(7,7,7,.98),rgba(0,0,0,.96));box-shadow:-24px 0 70px rgba(0,0,0,.62);padding:18px}
+    .drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+    .drawer-close{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer}
+    .rank-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0}
+    .rank-pill{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px;background:rgba(255,255,255,.025)}
+    .conduta-list{display:grid;gap:7px;margin-top:10px}
+    .conduta-list div{border-left:2px solid rgba(249,115,22,.5);padding:7px 9px;background:rgba(249,115,22,.055);color:#cbd5e1;font-size:12px;line-height:1.35}
     .empty{border:1px dashed rgba(255,255,255,.12);border-radius:12px;padding:18px;color:#858b96;text-align:center;background:rgba(255,255,255,.02)}
     .shortcut{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#9ca3af}
     .shortcut kbd{border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.04);padding:3px 7px;color:#e5e7eb;font:inherit}
@@ -118,6 +147,7 @@
         <button data-section="missoes" class="active">Missões</button>
         <button data-section="relatorios">Relatórios</button>
         <button data-section="mapa">Mapa</button>
+        <button data-section="comando" id="commandNav" hidden>Comando</button>
         <button data-section="membros">Membros</button>
       </nav>
     </header>
@@ -138,6 +168,7 @@
             <div class="metric"><strong id="metricReports">0</strong><span>Relatórios</span></div>
             <div class="metric"><strong id="metricMeetings">0</strong><span>Reuniões</span></div>
           </div>
+          <div id="commandNotice"></div>
           <div class="actions">
             <button class="btn cyan" id="toggleOverlayBtn">Abrir overlay</button>
             <button class="btn secondary" id="fullPortalBtn">Site completo</button>
@@ -186,8 +217,17 @@
           <div class="panel">
             <div class="panel-head"><div><div class="label">Mapa estratégico</div><div class="title">Reuniões e deslocamento</div></div><span class="tag" id="mapCountTag">0</span></div>
             <div class="map-view" id="appMap">
-              <img alt="Mapa Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
-              <div class="map-layer" id="appMapLayer"></div>
+              <div class="map-world" id="appMapWorld">
+                <img alt="Mapa Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
+                <svg class="app-routes" id="appRoutesSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                <div class="map-layer" id="appMapLayer"></div>
+              </div>
+              <div class="map-controls">
+                <button type="button" id="appMapMinus">−</button>
+                <button type="button" id="appMapPlus">+</button>
+                <button type="button" id="appMapFit">⌂</button>
+                <button type="button" class="wide" id="appMapRoutes">Rotas off</button>
+              </div>
             </div>
           </div>
           <aside class="panel">
@@ -200,6 +240,39 @@
         </div>
       </section>
 
+      <section id="comando" class="section">
+        <div class="command-layout">
+          <div class="panel hot">
+            <div class="panel-head">
+              <div><div class="label">Comando</div><div class="title">Entregar missão pelo APP</div></div>
+              <span class="tag" id="commandRoleTag">Restrito</span>
+            </div>
+            <div class="command-grid-2">
+              <div class="field"><label>Título da missão</label><input class="fox-input" id="cmdMissionTitle" placeholder="Ex.: Vigiar fronteira de Suna"></div>
+              <div class="field"><label>Operador principal</label><select class="fox-input" id="cmdMissionTarget"></select></div>
+            </div>
+            <div class="field" style="margin-top:10px"><label>Briefing</label><textarea class="fox-input" id="cmdMissionBrief" placeholder="Contexto, local e condição de sucesso."></textarea></div>
+            <div class="command-grid-2" style="margin-top:10px">
+              <div class="field"><label>Objetivos, um por linha</label><textarea class="fox-input" id="cmdMissionObjectives" placeholder="Encontrar o alvo&#10;Registrar prova&#10;Retornar sem exposição"></textarea></div>
+              <div class="field"><label>Sigilo</label><select class="fox-input" id="cmdMissionSigilo"><option>Restrito</option><option>Nível I</option><option>Nível II</option><option>Nível III</option><option>Nível IV</option><option>Nível V</option></select></div>
+            </div>
+            <div class="actions"><button class="btn cyan" id="cmdCreateMission">Entregar missão</button><button class="btn secondary" data-action="focus-members">Escolher membro online</button></div>
+          </div>
+          <aside class="panel">
+            <div class="panel-head"><div><div class="label">Comunicado tático</div><div class="title">Mensagem para o grupo</div></div></div>
+            <div class="field"><label>Destino</label><select class="fox-input" id="cmdMessageTarget"><option value="todos">Todos os membros</option><option value="online">Somente online agora</option></select></div>
+            <div class="field" style="margin-top:10px"><label>Mensagem</label><textarea class="fox-input" id="cmdMessageText" placeholder="Ex.: Reunião em 5 minutos. Revisem o mapa."></textarea></div>
+            <div class="actions"><button class="btn cyan" id="cmdSendMessage">Enviar comunicado</button></div>
+            <div class="label" style="margin-top:14px">Últimos comunicados</div>
+            <div class="command-feed" id="commandLog"></div>
+          </aside>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-head"><div><div class="label">Online agora</div><div class="title">Ação rápida em membros</div></div><span class="tag" id="commandOnlineTag">0</span></div>
+          <div class="team-grid" id="commandMemberList"></div>
+        </div>
+      </section>
+
       <section id="membros" class="section">
         <div class="panel">
           <div class="panel-head"><div><div class="label">Membros</div><div class="title">Quem está na JIKKAI</div></div><span class="tag" id="memberCountTag">0</span></div>
@@ -207,6 +280,20 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="drawer-backdrop" id="memberDrawer">
+    <aside class="drawer">
+      <div class="drawer-head">
+        <div>
+          <div class="label">Dossiê tático</div>
+          <div class="title" id="drawerName">Membro</div>
+          <div class="desc" id="drawerMeta"></div>
+        </div>
+        <button class="drawer-close" id="drawerClose">×</button>
+      </div>
+      <div id="drawerBody"></div>
+    </aside>
   </div>
 
   <script>
@@ -243,6 +330,8 @@
     const DEFAULT_DIVISOES = [
       { id:"divisao_central", nome:"Divisão Central", desc:"Primeira divisão operacional da Jikkai.", cor:"#D85A30", status:"ativa", capitaoUsername:"" }
     ];
+    const REPUTACAO_NIVEIS = ["Desconhecido", "Sussurros", "Temido", "Procurado", "Lenda das Sombras"];
+    const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
     const $ = id => document.getElementById(id);
     let currentData = {};
     let currentUser = null;
@@ -250,6 +339,13 @@
     let onlineUsers = new Map();
     let lastPresenceKey = "";
     let lastPresenceAt = 0;
+    let selectedMemberUsername = "";
+    let appMapScale = 1;
+    let appMapTx = 0;
+    let appMapTy = 0;
+    let appMapDragging = false;
+    let appMapDown = { x:0, y:0, tx:0, ty:0 };
+    let appRoutesVisible = false;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
@@ -274,6 +370,18 @@
       const explicit = Number(role?.ordemEstrutura);
       if (Number.isFinite(explicit)) return explicit;
       return ({ lider:0, braco_direito:5, conselheiro:10, capitao_ramo:30, operador:100, independente:150, fora:999 })[rolePosition(role)] ?? 100;
+    }
+    function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+    function hasPerm(role, perm) {
+      return !!(role?.hasLeaderPerms || (Array.isArray(role?.permissions) && role.permissions.includes(perm)));
+    }
+    function canCommandUser(user = currentUser) {
+      const role = roleOf(user);
+      const pos = rolePosition(role);
+      return !!user?.username && (role?.hasLeaderPerms || ["lider","braco_direito","conselheiro","capitao_ramo"].includes(pos) || hasPerm(role,"manage_missions") || hasPerm(role,"manage_users"));
+    }
+    function activity(tipo, alvo, descricao) {
+      return { id: uid(), tipo, ator: currentUser?.username || "app", alvo: alvo || "", descricao: descricao || "", data: new Date().toISOString() };
     }
     function findUserByIdentity(value) {
       const target = slug(value);
@@ -343,7 +451,7 @@
       if (!user) return `<div class="member-row"><div class="avatar">?</div><div><div class="member-name">Não definido</div><div class="member-role">${escapeHtml(roleText || "aguardando")}</div></div></div>`;
       const role = roleOf(user);
       const online=isOnline(user);
-      return `<div class="member-row${online?" online":""}">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}${online?" · online":""}</div></div>${online?'<span class="online-dot" title="Online no app"></span>':""}</div>`;
+      return `<button type="button" class="member-row${online?" online":""}" data-member="${escapeHtml(user.username)}">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}${online?" · online":""}</div></div>${online?'<span class="online-dot" title="Online no app"></span>':""}</button>`;
     }
     function missionState(mission){return MISSAO_STATUS[normalizeText(mission?.status || "atribuida")] || MISSAO_STATUS.atribuida}
     function canReportMission(mission){return !!mission && missionState(mission).canReport}
@@ -371,6 +479,53 @@
       const data = payload?.[0]?.data;
       if (data?.users) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       return data;
+    }
+    async function persistCloudState(nextData) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify({ id: 1, data: nextData, updated_at: new Date().toISOString() })
+      });
+      if (!res.ok) throw new Error("Supabase " + res.status);
+      return res.json().catch(()=>null);
+    }
+    async function saveState(mutator, successText = "Sincronizado") {
+      const base = currentData || {};
+      const next = mutator({
+        ...base,
+        users: Array.isArray(base.users) ? base.users.slice() : [],
+        missoes: Array.isArray(base.missoes) ? base.missoes.slice() : [],
+        appMensagens: Array.isArray(base.appMensagens) ? base.appMensagens.slice() : [],
+        activityLog: Array.isArray(base.activityLog) ? base.activityLog.slice() : []
+      });
+      currentData = next;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      $("syncState").textContent = "Salvando";
+      renderCurrent();
+      try {
+        await persistCloudState(next);
+        $("syncState").textContent = "Live";
+        if (successText) toast(successText);
+      } catch (error) {
+        console.error(error);
+        $("syncState").textContent = "Falha";
+        alert("Não consegui sincronizar agora. O dado ficou salvo localmente neste app.");
+      }
+    }
+    function toast(text) {
+      const previous = document.querySelector(".app-toast");
+      if (previous) previous.remove();
+      const node = document.createElement("div");
+      node.className = "app-toast";
+      node.textContent = text;
+      node.style.cssText = "position:fixed;right:18px;bottom:18px;z-index:120;border:1px solid rgba(34,211,238,.45);background:rgba(3,7,10,.92);color:#cffafe;border-radius:999px;padding:10px 13px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;box-shadow:0 18px 50px rgba(0,0,0,.45)";
+      document.body.appendChild(node);
+      setTimeout(()=>node.remove(),2600);
     }
     async function loadState() {
       const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
@@ -451,6 +606,93 @@
       $("reportCountTag").textContent = `${reports.length} recente${reports.length === 1 ? "" : "s"}`;
       $("reportsList").innerHTML = reports.length ? reports.slice(0,8).map(r => item(r.titulo || r.tipo || "Relatório", `${r.status || "registrado"} · ${new Date(r.createdAt || Date.now()).toLocaleDateString("pt-BR")}`, r.resumo || r.desc || r.conteudo || "")).join("") : empty("Nenhum relatório recente encontrado.");
     }
+    function messagesForUser(user = currentUser) {
+      const messages = Array.isArray(currentData.appMensagens) ? currentData.appMensagens : [];
+      return messages.filter(msg => {
+        if (!user?.username) return false;
+        if (msg.target === "todos") return true;
+        if (msg.target === "online") return isOnline(user);
+        return msg.target === user.username;
+      }).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+    }
+    function renderCommandNotice() {
+      const latest = messagesForUser()[0];
+      $("commandNotice").innerHTML = latest ? `
+        <div class="message-card" style="margin-top:12px">
+          <div class="item-row"><div><div class="item-title">${escapeHtml(latest.titulo || "Comunicado Jikkai")}</div><div class="item-meta">${escapeHtml(latest.createdBy || "comando")} · ${new Date(latest.createdAt || Date.now()).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</div></div><span class="pulse"></span></div>
+          <div class="item-desc">${escapeHtml(latest.mensagem || "")}</div>
+        </div>` : "";
+    }
+    function renderCommand() {
+      const allowed = canCommandUser();
+      $("commandNav").hidden = !allowed;
+      if (!allowed) {
+        if (document.querySelector("#comando.active")) setSection("missoes");
+        return;
+      }
+      const role = roleOf(currentUser);
+      $("commandRoleTag").textContent = role?.nome || "Comando";
+      const onlineList = members().filter(isOnline);
+      $("commandOnlineTag").textContent = `${onlineList.length} online`;
+      const target = $("cmdMissionTarget");
+      const previousTarget = target.value;
+      const orderedMembers = members().slice().sort((a,b)=>(isOnline(b)-isOnline(a)) || nameOf(a).localeCompare(nameOf(b),"pt-BR"));
+      target.innerHTML = orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${isOnline(u) ? "● " : ""}${escapeHtml(nameOf(u))} · ${escapeHtml(u.patente || roleOf(u)?.nome || "Operador")}</option>`).join("");
+      if (previousTarget && [...target.options].some(o => o.value === previousTarget)) target.value = previousTarget;
+      const msgTarget = $("cmdMessageTarget");
+      const msgPrevious = msgTarget.value;
+      msgTarget.innerHTML = `<option value="todos">Todos os membros</option><option value="online">Somente online agora</option>` + orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(nameOf(u))}</option>`).join("");
+      if (msgPrevious && [...msgTarget.options].some(o => o.value === msgPrevious)) msgTarget.value = msgPrevious;
+      $("commandMemberList").innerHTML = onlineList.length ? onlineList.map(u => `<div class="team-card">${memberLine(u, roleOf(u)?.nome || "Operador")}<div class="actions"><button class="btn secondary" data-action="cmd-target" data-id="${escapeHtml(u.username)}">Missão</button><button class="btn cyan" data-action="cmd-merit" data-id="${escapeHtml(u.username)}">Mérito</button></div></div>`).join("") : empty("Nenhum membro online no app agora.");
+      const logs = [
+        ...(currentData.appMensagens || []).map(m => ({...m, tipo:"Comunicado", texto:m.mensagem, quando:m.createdAt})),
+        ...(currentData.activityLog || []).filter(a => /app_|merito|missao_app|comunicado/i.test(`${a.tipo} ${a.descricao}`)).map(a => ({tipo:"Registro", titulo:a.descricao, texto:a.ator, quando:a.data}))
+      ].sort((a,b)=>new Date(b.quando||0)-new Date(a.quando||0)).slice(0,6);
+      $("commandLog").innerHTML = logs.length ? logs.map(log => `<div class="message-card"><div class="item-title">${escapeHtml(log.titulo || log.tipo)}</div><div class="item-meta">${escapeHtml(log.createdBy || log.texto || "Jikkai")} · ${new Date(log.quando || Date.now()).toLocaleString("pt-BR")}</div>${log.texto && log.tipo==="Comunicado" ? `<div class="item-desc">${escapeHtml(log.texto)}</div>` : ""}</div>`).join("") : empty("Nenhum comunicado recente.");
+    }
+    async function createMissionFromCommand() {
+      if (!canCommandUser()) return;
+      const titulo = $("cmdMissionTitle").value.trim();
+      const target = $("cmdMissionTarget").value;
+      if (!titulo || !target) { alert("Defina título e operador principal."); return; }
+      const objetivos = $("cmdMissionObjectives").value.split("\n").map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));
+      const now = new Date().toISOString();
+      const mission = {
+        id: uid(),
+        titulo,
+        desc: $("cmdMissionBrief").value.trim(),
+        assignedTo: target,
+        participants: [target],
+        aceites: [],
+        assignedBy: currentUser.username,
+        createdAt: now,
+        updatedAt: now,
+        objetivos,
+        status: "atribuida",
+        sigilo: $("cmdMissionSigilo").value || "Restrito",
+        source: "app_comando",
+        assignmentLabel: `Entregue por ${nameOf(currentUser)} no APP`
+      };
+      await saveState(d => ({ ...d, missoes: [...(d.missoes || []), mission], activityLog: [...(d.activityLog || []), activity("missao_app_criada", mission.id, `Entregou missão pelo APP: ${mission.titulo}`)] }), "Missão entregue");
+      $("cmdMissionTitle").value = "";
+      $("cmdMissionBrief").value = "";
+      $("cmdMissionObjectives").value = "";
+    }
+    async function sendCommandMessage() {
+      if (!canCommandUser()) return;
+      const mensagem = $("cmdMessageText").value.trim();
+      if (!mensagem) return;
+      const msg = {
+        id: "msg_"+uid(),
+        titulo: "Comunicado Jikkai",
+        mensagem,
+        target: $("cmdMessageTarget").value || "todos",
+        createdBy: currentUser.username,
+        createdAt: new Date().toISOString()
+      };
+      await saveState(d => ({ ...d, appMensagens: [msg, ...(d.appMensagens || [])].slice(0,30), activityLog: [...(d.activityLog || []), activity("comunicado_app_enviado", msg.id, `Enviou comunicado pelo APP`)] }), "Comunicado enviado");
+      $("cmdMessageText").value = "";
+    }
     function mapPoints() {
       const points = Array.isArray(currentData.mapaPontos) && currentData.mapaPontos.length ? currentData.mapaPontos : DEFAULT_MAP_POINTS;
       return points.filter(p => Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))).map(p => ({
@@ -460,6 +702,39 @@
         x:Number(p.x),
         y:Number(p.y)
       }));
+    }
+    function mapRoutes() {
+      return (Array.isArray(currentData.mapaRotas) ? currentData.mapaRotas : [])
+        .filter(r => Array.isArray(r.points) && r.points.length > 1)
+        .map(r => ({ ...r, color:r.color || "#22d3ee", points:r.points.map(p => ({ x:Number(p.x), y:Number(p.y) })).filter(p => Number.isFinite(p.x)&&Number.isFinite(p.y)) }))
+        .filter(r => r.points.length > 1);
+    }
+    function applyAppMapTransform() {
+      const world = $("appMapWorld");
+      if (!world) return;
+      world.style.transform = `translate(${appMapTx}px,${appMapTy}px) scale(${appMapScale})`;
+    }
+    function appMapZoom(next, cx = $("appMap").clientWidth / 2, cy = $("appMap").clientHeight / 2) {
+      const clamped = Math.max(1, Math.min(4.4, next));
+      const wx = (cx - appMapTx) / appMapScale;
+      const wy = (cy - appMapTy) / appMapScale;
+      appMapTx = cx - wx * clamped;
+      appMapTy = cy - wy * clamped;
+      appMapScale = clamped;
+      applyAppMapTransform();
+    }
+    function appMapFit() {
+      appMapScale = 1;
+      appMapTx = 0;
+      appMapTy = 0;
+      applyAppMapTransform();
+    }
+    function renderAppRoutes() {
+      const svg = $("appRoutesSvg");
+      if (!svg) return;
+      svg.innerHTML = appRoutesVisible ? mapRoutes().map(r => `<polyline class="app-route" points="${r.points.map(p => `${p.x},${p.y}`).join(" ")}" stroke="${escapeHtml(r.color || "#22d3ee")}" />`).join("") : "";
+      $("appMapRoutes").textContent = appRoutesVisible ? "Rotas on" : "Rotas off";
+      $("appMapRoutes").classList.toggle("active", appRoutesVisible);
     }
     function renderAppMap(activeMeetings) {
       const layer = $("appMapLayer");
@@ -472,9 +747,11 @@
         </div>
       `).join("");
       const meetingHtml = activeMeetings.map(m => `
-        <div class="map-meeting" data-label="${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!</div>
+        <div class="map-meeting" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!<span class="map-meeting-label">${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min</span></div>
       `).join("");
       layer.innerHTML = pointHtml + meetingHtml;
+      renderAppRoutes();
+      applyAppMapTransform();
     }
     function renderMap() {
       const list = meetings();
@@ -551,12 +828,96 @@
         </div>
       `;
     }
+    function openMemberDrawer(username) {
+      selectedMemberUsername = username || "";
+      renderMemberDrawer();
+      $("memberDrawer").classList.add("show");
+    }
+    function closeMemberDrawer() {
+      $("memberDrawer").classList.remove("show");
+      selectedMemberUsername = "";
+    }
+    function renderMemberDrawer() {
+      const user = userByUsername(selectedMemberUsername);
+      if (!user) return;
+      const role = roleOf(user);
+      const canEdit = canCommandUser();
+      $("drawerName").textContent = nameOf(user);
+      $("drawerMeta").textContent = `${user.patente || role?.nome || "Operador"} · ${user.vilaOrigem || user.vila || "origem sigilosa"} · nível ${user.nivelAcesso || 1}`;
+      $("drawerBody").innerHTML = `
+        <div class="rank-grid">
+          <div class="rank-pill"><div class="label">Reputação</div><div class="item-title">${escapeHtml(user.reputacao || "Desconhecido")}</div><div class="item-desc">${escapeHtml(user.reputacaoNota || "Sem justificativa registrada.")}</div></div>
+          <div class="rank-pill"><div class="label">Lealdade</div><div class="item-title">${escapeHtml(user.lealdade || "Observado")}</div><div class="item-desc">${escapeHtml(user.lealdadeNota || "Sem nota interna.")}</div></div>
+        </div>
+        <div class="panel" style="box-shadow:none;padding:12px;margin:12px 0">
+          <div class="label">Conduta esperada</div>
+          <div class="conduta-list">
+            <div>Respeitar a cadeia de comando registrada.</div>
+            <div>Preservar informação operacional e sigilo de contratos.</div>
+            <div>Registrar acontecimentos importantes após missões e encontros.</div>
+            <div>Responder pelas ações feitas em nome da Jikkai.</div>
+          </div>
+        </div>
+        ${canEdit ? `
+          <div class="command-grid-2">
+            <div class="field"><label>Reputação externa</label><select class="fox-input" id="drawerReputacao">${REPUTACAO_NIVEIS.map(n=>`<option ${n===(user.reputacao||"Desconhecido")?"selected":""}>${escapeHtml(n)}</option>`).join("")}</select></div>
+            <div class="field"><label>Lealdade interna</label><select class="fox-input" id="drawerLealdade">${LEALDADE_NIVEIS.map(n=>`<option ${n===(user.lealdade||"Observado")?"selected":""}>${escapeHtml(n)}</option>`).join("")}</select></div>
+          </div>
+          <div class="field" style="margin-top:10px"><label>Nota de conduta / mérito</label><textarea class="fox-input" id="drawerNota" placeholder="Ex.: Conduziu RP com disciplina e protegeu informação.">${escapeHtml(user.lealdadeNota || user.reputacaoNota || "")}</textarea></div>
+          <div class="actions"><button class="btn cyan" id="drawerSave">Salvar avaliação</button><button class="btn secondary" id="drawerMerit">Dar mérito rápido</button></div>
+        ` : `<div class="empty">Somente liderança/conselho/capitães autorizados alteram lealdade e conduta pelo app.</div>`}
+      `;
+      $("drawerSave")?.addEventListener("click", saveMemberAssessment);
+      $("drawerMerit")?.addEventListener("click", giveQuickMerit);
+    }
+    async function saveMemberAssessment() {
+      const username = selectedMemberUsername;
+      if (!username || !canCommandUser()) return;
+      const reputacao = $("drawerReputacao").value;
+      const lealdade = $("drawerLealdade").value;
+      const nota = $("drawerNota").value.trim();
+      await saveState(d => ({
+        ...d,
+        users: d.users.map(u => u.username === username ? {
+          ...u,
+          reputacao,
+          lealdade,
+          reputacaoNota: nota || u.reputacaoNota || "",
+          lealdadeNota: nota || u.lealdadeNota || "",
+          reputacaoAtualizadaEm: new Date().toISOString(),
+          lealdadeAtualizadaEm: new Date().toISOString()
+        } : u),
+        activityLog: [...(d.activityLog || []), activity("app_conduta_atualizada", username, `Atualizou conduta/lealdade de ${username} pelo APP`)]
+      }), "Dossiê atualizado");
+      renderMemberDrawer();
+    }
+    async function giveQuickMerit() {
+      const username = selectedMemberUsername;
+      if (!username || !canCommandUser()) return;
+      const user = userByUsername(username);
+      const current = LEALDADE_NIVEIS.indexOf(user?.lealdade || "Observado");
+      const next = LEALDADE_NIVEIS[Math.min(LEALDADE_NIVEIS.length - 1, Math.max(0,current) + 1)];
+      const reason = prompt("Mérito rápido após o RP:", "Boa conduta em operação registrada pela liderança.");
+      if (reason == null) return;
+      await saveState(d => ({
+        ...d,
+        users: d.users.map(u => u.username === username ? {
+          ...u,
+          lealdade: next,
+          lealdadeNota: reason.trim() || u.lealdadeNota || "Mérito rápido registrado pelo APP.",
+          lealdadeAtualizadaEm: new Date().toISOString()
+        } : u),
+        activityLog: [...(d.activityLog || []), activity("app_merito_registrado", username, `Registrou mérito para ${username}: ${reason.trim() || "sem detalhe"}`)]
+      }), "Mérito registrado");
+      renderMemberDrawer();
+    }
     function renderUser() {
       const s = session();
       currentUser = (currentData.users || []).find(u => u.username === s?.username) || s || null;
       const role = roleOf(currentUser);
       $("viewerName").textContent = nameOf(currentUser);
       $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
+      $("commandNav").hidden = !canCommandUser();
       publishPresence("central");
     }
     function publishPresence(section = "central") {
@@ -574,8 +935,11 @@
       renderHero();
       renderMissions();
       renderReports();
+      renderCommandNotice();
       renderMap();
       renderMembers();
+      renderCommand();
+      if ($("memberDrawer").classList.contains("show")) renderMemberDrawer();
     }
     async function render() {
       currentData = await loadState();
@@ -593,7 +957,11 @@
     document.body.addEventListener("click", async e => {
       const action = e.target.closest("[data-action]")?.dataset.action;
       const id = e.target.closest("[data-id]")?.dataset.id;
-      if (!action) return;
+      if (!action) {
+        const memberButton = e.target.closest("[data-member]");
+        if (memberButton) openMemberDrawer(memberButton.dataset.member);
+        return;
+      }
       if (action === "mission-report" && id) {
         const mission = (currentData.missoes || []).find(m => m.id === id);
         if (canReportMission(mission)) openFull("missoes", "", `relatorio-missao:${id}`);
@@ -602,12 +970,45 @@
       if (action === "hero-report" && currentMission?.id && canReportMission(currentMission)) openFull("missoes", "", `relatorio-missao:${currentMission.id}`);
       if (action === "hero-missions") setSection("missoes");
       if (action === "new-report") openFull("jikkai", "relatorios", "novo-relatorio-avulso");
+      if (action === "focus-members") setSection("membros");
+      if (action === "cmd-target" && id) { $("cmdMissionTarget").value = id; setSection("comando"); $("cmdMissionTitle").focus(); }
+      if (action === "cmd-merit" && id) { openMemberDrawer(id); setTimeout(()=>$("drawerMerit")?.click(),80); }
     });
     $("toggleOverlayBtn").onclick = () => window.jikkaiDesktop?.toggleOverlay();
     $("fullPortalBtn").onclick = () => window.jikkaiDesktop?.openFullPortal();
     $("newReportBtn").onclick = () => openFull("jikkai", "relatorios", "novo-relatorio-avulso");
     $("missionReportBtn").onclick = () => currentMission?.id && canReportMission(currentMission) ? openFull("missoes", "", `relatorio-missao:${currentMission.id}`) : openFull("jikkai", "relatorios", "novo-relatorio-avulso");
     $("openMapBtn").onclick = () => window.jikkaiDesktop?.openMap();
+    $("cmdCreateMission").onclick = createMissionFromCommand;
+    $("cmdSendMessage").onclick = sendCommandMessage;
+    $("drawerClose").onclick = closeMemberDrawer;
+    $("memberDrawer").addEventListener("mousedown", e => { if (e.target === $("memberDrawer")) closeMemberDrawer(); });
+    $("appMapMinus").onclick = () => appMapZoom(appMapScale / 1.25);
+    $("appMapPlus").onclick = () => appMapZoom(appMapScale * 1.25);
+    $("appMapFit").onclick = appMapFit;
+    $("appMapRoutes").onclick = () => { appRoutesVisible = !appRoutesVisible; renderAppRoutes(); };
+    $("appMap").addEventListener("wheel", e => {
+      e.preventDefault();
+      const rect = $("appMap").getBoundingClientRect();
+      appMapZoom(appMapScale * (e.deltaY < 0 ? 1.16 : .86), e.clientX - rect.left, e.clientY - rect.top);
+    }, { passive:false });
+    $("appMap").addEventListener("pointerdown", e => {
+      if (e.target.closest(".map-controls")) return;
+      appMapDragging = true;
+      appMapDown = { x:e.clientX, y:e.clientY, tx:appMapTx, ty:appMapTy };
+      $("appMap").classList.add("dragging");
+      $("appMap").setPointerCapture?.(e.pointerId);
+    });
+    window.addEventListener("pointermove", e => {
+      if (!appMapDragging) return;
+      appMapTx = appMapDown.tx + e.clientX - appMapDown.x;
+      appMapTy = appMapDown.ty + e.clientY - appMapDown.y;
+      applyAppMapTransform();
+    });
+    window.addEventListener("pointerup", () => {
+      appMapDragging = false;
+      $("appMap").classList.remove("dragging");
+    });
     $("shortcutStatusBtn").onclick = async () => {
       const status = await window.jikkaiDesktop?.shortcutStatus?.();
       alert(Object.entries(status || {}).map(([k,v]) => `${k}: ${v.registered?.join(", ") || "nenhum"}`).join("\n"));
