@@ -52,6 +52,7 @@ const PERMISSIONS_LIST = [
   { id: "edit_showcase",       label: "Editar Vitrine", desc: "Editar Visão Geral pública" },
   { id: "edit_gallery",        label: "Editar Galeria", desc: "Adicionar/remover imagens" },
   { id: "edit_reports",        label: "Editar Relatórios", desc: "Editar/deletar relatórios de outros" },
+  { id: "manage_map_meetings", label: "Marcar reuniões no mapa", desc: "Criar pontos de reunião no mapa estratégico" },
   { id: "manage_juramentados", label: "Gerenciar Juramentados", desc: "Remover juramentos" },
 ];
 const ALL_PERMISSIONS = PERMISSIONS_LIST.map(p => p.id);
@@ -65,7 +66,7 @@ function hasPerm(role, permId) {
 const DEFAULT_ROLES = [
   { id: "leader", nome: "Líder", hasLeaderPerms: true, protected: true, cor: "#D85A30", permissions: [] },
   { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C",
-    permissions: ["manage_users", "manage_missions"] },
+    permissions: ["manage_users", "manage_missions", "manage_map_meetings"] },
   { id: "member", nome: "Membro", hasLeaderPerms: false, protected: true, cor: "#7C2D12", permissions: [] },
   { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E", permissions: [] },
 ];
@@ -3835,7 +3836,7 @@ function migrate(raw) {
   // Rebaixa conselheiro: agora usa permissões granulares
   rolesOut = rolesOut.map(r => {
     if (r.id === "conselheiro" && r.hasLeaderPerms === true) {
-      return { ...r, hasLeaderPerms: false, permissions: r.permissions.length > 0 ? r.permissions : ["manage_users", "manage_missions"] };
+      return { ...r, hasLeaderPerms: false, permissions: Array.from(new Set([...(r.permissions.length > 0 ? r.permissions : ["manage_users", "manage_missions"]), "manage_map_meetings"])) };
     }
     return r;
   });

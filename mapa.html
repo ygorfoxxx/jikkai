@@ -68,6 +68,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .marker.fuga{background:#075985;color:#38bdf8}
 .marker.encontro{background:#4338ca;color:#818cf8}
 .marker.risco{background:#7f1d1d;color:#f87171}
+.meeting-marker{position:absolute;width:42px;height:42px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff7ed;background:radial-gradient(circle at 50% 35%,#fef3c7,#f97316 48%,#7f1d1d 100%);color:#111827;box-shadow:0 0 0 7px rgba(249,115,22,.18),0 0 32px rgba(249,115,22,.9);pointer-events:auto;display:grid;place-items:center;font-size:18px;font-weight:1000;z-index:12;animation:meetingBlink .7s ease-in-out infinite alternate}
+.meeting-marker:before,.meeting-marker:after{content:"";position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(251,146,60,.7);animation:meetingPing 1.35s ease-out infinite;pointer-events:none}
+.meeting-marker:after{inset:-23px;animation-delay:.38s;border-color:rgba(34,211,238,.45)}
+.meeting-marker span{position:relative;z-index:1}
+.meeting-marker .meeting-label{position:absolute;left:50%;top:48px;transform:translateX(-50%);white-space:nowrap;background:rgba(2,6,8,.94);border:1px solid rgba(251,146,60,.65);color:#ffedd5;padding:5px 9px;border-radius:999px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+@keyframes meetingPing{0%{opacity:.9;transform:scale(.65)}100%{opacity:0;transform:scale(1.45)}}@keyframes meetingBlink{0%{filter:brightness(.95)}100%{filter:brightness(1.38)}}
 .zoom{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;gap:7px;z-index:12}
 .zoom button{width:42px;height:42px;padding:0;font-size:18px;background:rgba(9,9,11,.92)}
 .legend{position:absolute;right:16px;bottom:16px;background:rgba(9,9,11,.92);border:1px solid #3f3f46;border-radius:9px;padding:10px;z-index:12;font-size:10px;color:#a1a1aa}
@@ -182,6 +188,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="toolbar admin-tools" id="adminTools" hidden>
       <button id="newPoint">+ Novo local</button>
       <button id="newRoute">+ Nova rota</button>
+    </div>
+    <div class="toolbar" id="meetingTools" hidden>
+      <button class="primary" id="newMeeting">+ Marcar reunião</button>
     </div>
     <div class="readonly-note" id="readonlyNote">Mapa disponível em modo somente leitura.</div>
     <div class="filters" id="filters"></div>
@@ -339,6 +348,117 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </div>
 
+<div class="modal-backdrop" id="meetingBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="kicker">Convocação cartográfica</div>
+        <h2>Marcar reunião no mapa</h2>
+      </div>
+      <button class="close" id="closeMeeting">×</button>
+    </div>
+    <form id="meetingForm">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field">
+            <label>Título</label>
+            <input id="meetingTitleInput" maxlength="90" required placeholder="Ex.: Reunião da Divisão Central">
+          </div>
+          <div class="field">
+            <label>Nível de sigilo</label>
+            <select id="meetingSigilo">
+              <option>Restrito</option>
+              <option>Nível I</option>
+              <option>Nível II</option>
+              <option>Nível III</option>
+              <option>Nível IV</option>
+              <option>Nível V</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição curta</label>
+          <input id="meetingDescInput" maxlength="180" placeholder="Concentração para início da operação.">
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Posição X</label>
+            <input id="meetingX" readonly>
+          </div>
+          <div class="field">
+            <label>Posição Y</label>
+            <input id="meetingY" readonly>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Início</label>
+            <input id="meetingStartsAt" type="datetime-local" required>
+          </div>
+          <div class="field">
+            <label>Duração</label>
+            <select id="meetingDuration">
+              <option value="15">15 minutos</option>
+              <option value="30" selected>30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="120">2 horas</option>
+              <option value="custom">Personalizada</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field" id="meetingCustomField" hidden>
+            <label>Duração personalizada (min)</label>
+            <input id="meetingCustomMinutes" type="number" min="5" max="240" step="5" value="30">
+          </div>
+          <div class="field">
+            <label>Término calculado</label>
+            <input id="meetingEndsAt" readonly>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Convocação</label>
+            <select id="meetingConvocacao">
+              <option value="Todos os disponíveis">Todos os disponíveis</option>
+              <option value="Somente divisão">Somente divisão</option>
+              <option value="Somente equipe">Somente equipe</option>
+              <option value="Liderança">Liderança</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Criador</label>
+            <input id="meetingCreator" readonly>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Divisão</label>
+            <select id="meetingDivisao"><option value="">Opcional</option></select>
+          </div>
+          <div class="field">
+            <label>Equipe</label>
+            <select id="meetingEquipe"><option value="">Opcional</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Missão relacionada</label>
+          <select id="meetingMissao"><option value="">Opcional</option></select>
+        </div>
+        <div class="field">
+          <label>Observações</label>
+          <textarea id="meetingNotes" maxlength="800" placeholder="Detalhes úteis para capitães e operadores."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" id="cancelMeeting">Cancelar</button>
+        <button type="submit" class="primary">Salvar reunião</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL="https://mhbbqtjsxruuuiqixlvc.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
@@ -379,10 +499,10 @@ const DEFAULT_POINTS=[
 
 const el=id=>document.getElementById(id);
 const shell=el("shell"),stage=el("stage"),markers=el("markers"),routesSvg=el("routesSvg"),list=el("list"),filters=el("filters");
-const detail=el("detail"),editorBackdrop=el("editorBackdrop"),authBackdrop=el("authBackdrop");
-let portalState=null,points=[],routes=[],access={user:null,role:null,canEdit:false};
+const detail=el("detail"),editorBackdrop=el("editorBackdrop"),authBackdrop=el("authBackdrop"),meetingBackdrop=el("meetingBackdrop");
+let portalState=null,points=[],routes=[],meetings=[],access={user:null,role:null,canEdit:false,canMeet:false};
 let scale=1,tx=0,ty=0,drag=false,downX=0,downY=0,startTx=0,startTy=0,moved=false;
-let active=null,filter="all",mode=null,editorDraft=null,saving=false;
+let active=null,filter="all",mode=null,editorDraft=null,meetingDraft=null,saving=false,meetingTimer=null;
 
 function setSync(text,state=""){
   el("syncText").textContent=text;
@@ -394,6 +514,9 @@ function parseSession(){
 function parseViewer(){
   try{return JSON.parse(localStorage.getItem(VIEWER_KEY)||"null")}catch{return null}
 }
+function normalizeText(v){
+  return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+}
 function resolveAccess(state){
   const viewer=parseViewer();
   const session=parseSession();
@@ -401,13 +524,25 @@ function resolveAccess(state){
   const role=user&&state?.roles?.find(r=>r.id===user.role);
   const eligible=userCanEdit(user,role);
   const canEdit=!!(eligible&&session?.username===user?.username);
-  return{user,role,eligible,canEdit};
+  const canMeet=userCanMeet(user,role);
+  return{user,role,eligible,canEdit,canMeet};
 }
 function roleCanEdit(role){
   return !!(role&&(role.hasLeaderPerms===true||role.id==="conselheiro"||(Array.isArray(role.permissions)&&role.permissions.includes("edit_map"))));
 }
 function userCanEdit(user,role){
   return String(user?.username||"").trim().toLowerCase()==="leader"||roleCanEdit(role);
+}
+function roleCanScheduleMeeting(role){
+  if(!role)return false;
+  if(roleCanEdit(role))return true;
+  const perms=Array.isArray(role.permissions)?role.permissions.map(String):[];
+  if(perms.some(p=>["manage_map_meetings","schedule_meeting","map_meeting","definir_reuniao"].includes(p)))return true;
+  const haystack=[role.id,role.nome,role.name,role.titulo,role.label,role.estruturaPosicao,role.estruturaNivel].map(normalizeText).join(" ");
+  return haystack.includes("braco_direito")||haystack.includes("braco direito")||haystack.includes("capitao")||haystack.includes("comandante")||haystack.includes("caporegime");
+}
+function userCanMeet(user,role){
+  return String(user?.username||"").trim().toLowerCase()==="leader"||roleCanScheduleMeeting(role);
 }
 function openAuth(){
   if(!access.eligible)return;
@@ -446,25 +581,81 @@ function normalizePoint(p){
 function normalizeRoute(r){
   return{kind:"route",status:"Observado",threat:"Média",sigilo:"Nível II",desc:"",type:"infiltracao",color:ROUTE_TYPES[r.type]?.color||"#f97316",points:[],...r,points:(r.points||[]).map(p=>({x:Number(p.x),y:Number(p.y)}))};
 }
+function normalizeMeeting(m){
+  const now=new Date();
+  const startsAt=new Date(m?.startsAt||m?.inicio||m?.createdAt||now).toISOString();
+  const expiresAt=new Date(m?.expiresAt||m?.termino||m?.expiraEm||new Date(new Date(startsAt).getTime()+30*60000)).toISOString();
+  return{
+    id:String(m?.id||"meeting_"+uid()),
+    kind:"meeting",
+    titulo:m?.titulo||m?.title||"Reunião Jikkai",
+    descricao:m?.descricao||m?.desc||"",
+    x:Number(m?.x),
+    y:Number(m?.y),
+    startsAt,
+    expiresAt,
+    createdAt:m?.createdAt||now.toISOString(),
+    updatedAt:m?.updatedAt||m?.createdAt||now.toISOString(),
+    createdBy:m?.createdBy||m?.autor||"",
+    sigilo:m?.sigilo||"Restrito",
+    convocacao:m?.convocacao||"Todos os disponíveis",
+    divisaoId:m?.divisaoId||"",
+    equipeId:m?.equipeId||"",
+    missaoId:m?.missaoId||"",
+    observacoes:m?.observacoes||"",
+    status:m?.status||"ativa"
+  };
+}
+function normalizeMeetings(items){
+  const now=Date.now();
+  return(Array.isArray(items)?items:[])
+    .map(normalizeMeeting)
+    .filter(m=>m.status!=="cancelada"&&m.status!=="encerrada"&&Number.isFinite(m.x)&&Number.isFinite(m.y)&&new Date(m.expiresAt).getTime()>now)
+    .sort((a,b)=>new Date(a.expiresAt)-new Date(b.expiresAt));
+}
+function meetingLabel(meeting){
+  const left=Math.max(0,new Date(meeting.expiresAt).getTime()-Date.now());
+  const minutes=Math.max(1,Math.ceil(left/60000));
+  return`${meeting.titulo||"Reunião"} · ${minutes} min`;
+}
+function scheduleMeetingTick(){
+  clearTimeout(meetingTimer);
+  if(!meetings.length)return;
+  const next=Math.min(...meetings.map(m=>new Date(m.expiresAt).getTime()-Date.now()));
+  meetingTimer=setTimeout(()=>{
+    meetings=normalizeMeetings(meetings);
+    renderMarkers();
+    scheduleMeetingTick();
+  },Math.max(1000,Math.min(next,30000)));
+}
 function applyState(state){
   portalState=state||{};
   points=(Array.isArray(portalState.mapaPontos)&&portalState.mapaPontos.length?portalState.mapaPontos:DEFAULT_POINTS).map(normalizePoint);
   routes=(Array.isArray(portalState.mapaRotas)?portalState.mapaRotas:[]).map(normalizeRoute);
+  meetings=normalizeMeetings(portalState.mapaReunioes);
   access=resolveAccess(portalState);
   el("sessionName").textContent=access.user?(access.user.codinome||access.user.displayName||access.user.username):"Leitura restrita";
   el("roleBadge").textContent=access.role?.nome||"Somente leitura";
-  el("roleBadge").className="rolebadge"+(access.canEdit?" admin":"");
+  el("roleBadge").className="rolebadge"+(access.canEdit||access.canMeet?" admin":"");
   el("adminTools").hidden=!access.canEdit;
-  el("readonlyNote").hidden=!!access.eligible;
+  el("meetingTools").hidden=!access.canMeet;
+  el("readonlyNote").hidden=!!(access.eligible||access.canMeet);
   el("detailActions").hidden=!access.canEdit;
   el("authBtn").hidden=!access.eligible;
   el("authBtn").textContent=access.canEdit?"Encerrar edição":"Ativar edição";
   render();
+  scheduleMeetingTick();
 }
 async function loadState(){
   setSync("Carregando mapa...","busy");
   let state=null;
-  if(cloudClient){
+  if(window.jikkaiDesktop?.getRealtimeState){
+    try{
+      const payload=await window.jikkaiDesktop.getRealtimeState();
+      if(payload?.data&&Object.keys(payload.data).length)state=payload.data;
+    }catch(e){console.error(e)}
+  }
+  if(!state&&cloudClient){
     try{
       const{data,error}=await cloudClient.from("fox_state").select("data").eq("id",1).single();
       if(!error&&data?.data)state=data.data;
@@ -496,6 +687,27 @@ async function persistMap(nextPoints,nextRoutes){
   }
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(portalState))}catch{}
   saving=false;setSync(cloudClient?(cloudOk?"Alterações sincronizadas":"Falha ao sincronizar"):"Alterações salvas neste dispositivo",cloudClient?(cloudOk?"ok":"err"):"ok");
+}
+async function persistMeetings(nextMeetings){
+  if(!access.canMeet)return;
+  saving=true;setSync("Salvando reunião...","busy");
+  meetings=normalizeMeetings(nextMeetings);renderMarkers();scheduleMeetingTick();
+  let base=portalState||{};
+  let cloudOk=false;
+  if(cloudClient){
+    try{
+      const{data}=await cloudClient.from("fox_state").select("data").eq("id",1).single();
+      if(data?.data)base=data.data;
+      const merged={...base,mapaReunioes:meetings,mapaAtualizadoEm:new Date().toISOString(),mapaAtualizadoPor:access.user?.username||"capitao"};
+      const{error}=await cloudClient.from("fox_state").upsert({id:1,data:merged,updated_at:new Date().toISOString()});
+      if(error)throw error;
+      portalState=merged;cloudOk=true;
+    }catch(e){console.error("Erro ao salvar reunião",e)}
+  }else{
+    portalState={...base,mapaReunioes:meetings,mapaAtualizadoEm:new Date().toISOString(),mapaAtualizadoPor:access.user?.username||"capitao"};
+  }
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(portalState))}catch{}
+  saving=false;setSync(cloudClient?(cloudOk?"Reunião sincronizada":"Falha ao sincronizar reunião"):"Reunião salva neste dispositivo",cloudClient?(cloudOk?"ok":"err"):"ok");
 }
 
 function transform(){stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
@@ -549,6 +761,16 @@ function renderMarkers(){
     m.dataset.label=p.name;m.style.left=p.x+"%";m.style.top=p.y+"%";m.textContent=POINT_TYPES[p.type]?.symbol||"●";
     m.onclick=e=>{e.stopPropagation();selectItem("point",p.id)};markers.appendChild(m);
   });
+  meetings.forEach(meeting=>{
+    const m=document.createElement("button");
+    m.className="meeting-marker";
+    m.style.left=meeting.x+"%";
+    m.style.top=meeting.y+"%";
+    m.title=`Reunião definida por ${meeting.createdBy||"capitão"}`;
+    m.innerHTML=`<span>!</span><div class="meeting-label">${escapeHtml(meetingLabel(meeting))}</div>`;
+    m.onclick=e=>e.stopPropagation();
+    markers.appendChild(m);
+  });
 }
 function svgEl(tag,attrs={}){
   const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));return n;
@@ -594,6 +816,98 @@ function startNewPoint(){
 }
 function startNewRoute(){
   if(!access.canEdit)return;closeDetail();showMode({kind:"route-new",points:[]},"Clique no mapa para traçar a rota. Adicione ao menos dois pontos.");
+}
+function startMeetingMode(){
+  if(!access.canMeet)return;
+  closeDetail();
+  showMode({kind:"meeting-new"},"Clique no mapa para definir o ponto da reunião. Esc cancela.");
+}
+function toDatetimeLocal(date){
+  const d=new Date(date);
+  d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+  return d.toISOString().slice(0,16);
+}
+function fromDatetimeLocal(value){
+  const date=value?new Date(value):new Date();
+  return Number.isNaN(date.getTime())?new Date():date;
+}
+function meetingDurationMinutes(){
+  const value=el("meetingDuration").value;
+  if(value==="custom")return Math.max(5,Math.min(240,Number(el("meetingCustomMinutes").value)||30));
+  return Number(value)||30;
+}
+function updateMeetingEnds(){
+  el("meetingCustomField").hidden=el("meetingDuration").value!=="custom";
+  const start=fromDatetimeLocal(el("meetingStartsAt").value);
+  const end=new Date(start.getTime()+meetingDurationMinutes()*60000);
+  el("meetingEndsAt").value=end.toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});
+}
+function fillMeetingSelect(id,items,labelFn){
+  const select=el(id);
+  const current=select.value;
+  select.innerHTML='<option value="">Opcional</option>';
+  (Array.isArray(items)?items:[]).forEach((item,index)=>{
+    const value=item.id||item.username||`item_${index}`;
+    const option=document.createElement("option");
+    option.value=value;
+    option.textContent=labelFn(item,index);
+    if(value===current)option.selected=true;
+    select.appendChild(option);
+  });
+}
+function populateMeetingRefs(){
+  fillMeetingSelect("meetingDivisao",portalState?.divisoes||portalState?.clas||[],d=>d.nome||d.name||d.id||"Divisão");
+  fillMeetingSelect("meetingEquipe",portalState?.trios||portalState?.equipes||[],t=>t.nome||t.name||t.id||"Equipe");
+  fillMeetingSelect("meetingMissao",portalState?.missoes||[],m=>m.titulo||m.nome||m.id||"Missão");
+}
+function openMeetingEditor(pos){
+  if(!access.canMeet)return;
+  meetingDraft={id:"meeting_"+uid(),x:pos.x,y:pos.y,createdAt:new Date().toISOString()};
+  populateMeetingRefs();
+  el("meetingTitleInput").value="";
+  el("meetingDescInput").value="";
+  el("meetingX").value=pos.x.toFixed(2);
+  el("meetingY").value=pos.y.toFixed(2);
+  el("meetingStartsAt").value=toDatetimeLocal(new Date());
+  el("meetingDuration").value="30";
+  el("meetingCustomMinutes").value="30";
+  el("meetingSigilo").value="Restrito";
+  el("meetingConvocacao").value="Todos os disponíveis";
+  el("meetingNotes").value="";
+  el("meetingCreator").value=access.user?.username||"capitao";
+  updateMeetingEnds();
+  meetingBackdrop.classList.add("show");
+  setTimeout(()=>el("meetingTitleInput").focus(),40);
+}
+function closeMeetingEditor(){meetingBackdrop.classList.remove("show");meetingDraft=null}
+async function saveMeeting(e){
+  e.preventDefault();
+  if(!meetingDraft||!access.canMeet)return;
+  const start=fromDatetimeLocal(el("meetingStartsAt").value);
+  const expiresAt=new Date(start.getTime()+meetingDurationMinutes()*60000);
+  const now=new Date().toISOString();
+  const meeting={
+    id:meetingDraft.id,
+    titulo:el("meetingTitleInput").value.trim()||"Reunião Jikkai",
+    descricao:el("meetingDescInput").value.trim(),
+    x:Number(el("meetingX").value),
+    y:Number(el("meetingY").value),
+    startsAt:start.toISOString(),
+    expiresAt:expiresAt.toISOString(),
+    createdAt:meetingDraft.createdAt||now,
+    updatedAt:now,
+    createdBy:access.user?.username||"capitao",
+    sigilo:el("meetingSigilo").value||"Restrito",
+    convocacao:el("meetingConvocacao").value||"Todos os disponíveis",
+    divisaoId:el("meetingDivisao").value||"",
+    equipeId:el("meetingEquipe").value||"",
+    missaoId:el("meetingMissao").value||"",
+    observacoes:el("meetingNotes").value.trim(),
+    status:"ativa"
+  };
+  if(!Number.isFinite(meeting.x)||!Number.isFinite(meeting.y))return;
+  closeMeetingEditor();
+  await persistMeetings([...meetings.filter(m=>m.id!==meeting.id),meeting]);
 }
 function finishRouteDrawing(){
   if(!mode?.kind?.startsWith("route-")||mode.points.length<2){alert("Adicione pelo menos dois pontos à rota.");return}
@@ -682,6 +996,8 @@ window.addEventListener("pointerup",e=>{
     cancelMode();openEditor(draft,true);
   }else if(mode.kind==="point-reposition"){
     const draft={...mode.draft,x:pos.x,y:pos.y,updatedBy:access.user?.username,updatedAt:new Date().toISOString()};cancelMode();openEditor(draft,false);
+  }else if(mode.kind==="meeting-new"){
+    cancelMode();openMeetingEditor(pos);
   }else if(mode.kind.startsWith("route-")){
     mode.points.push(pos);renderRoutes();
   }
@@ -690,15 +1006,19 @@ shell.addEventListener("wheel",e=>{e.preventDefault();const r=shell.getBoundingC
 
 el("plus").onclick=()=>zoom(scale*1.25);el("minus").onclick=()=>zoom(scale/1.25);el("fit").onclick=el("reset").onclick=center;
 el("menu").onclick=()=>el("panel").classList.toggle("open");
-el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;
+el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;el("newMeeting").onclick=startMeetingMode;
 el("modeCancel").onclick=cancelMode;el("modeUndo").onclick=undoRoutePoint;el("modeFinish").onclick=finishRouteDrawing;
 el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;
 el("fPhase").addEventListener("change",()=>populateStrategicLinks(el("fPhase").value,""));
 el("editSelected").onclick=editSelected;el("deleteSelected").onclick=deleteSelected;
 el("authBtn").onclick=openAuth;el("closeAuth").onclick=closeAuth;el("cancelAuth").onclick=closeAuth;el("authForm").onsubmit=submitAuth;
+el("closeMeeting").onclick=closeMeetingEditor;el("cancelMeeting").onclick=closeMeetingEditor;el("meetingForm").onsubmit=saveMeeting;
+el("meetingDuration").addEventListener("change",updateMeetingEnds);el("meetingCustomMinutes").addEventListener("input",updateMeetingEnds);el("meetingStartsAt").addEventListener("change",updateMeetingEnds);
 el("fType").addEventListener("change",()=>{if(editorDraft?.kind==="route"){const c=ROUTE_TYPES[el("fType").value]?.color;if(c)el("fColor").value=c}});
 editorBackdrop.addEventListener("mousedown",e=>{if(e.target===editorBackdrop)closeEditor()});
 authBackdrop.addEventListener("mousedown",e=>{if(e.target===authBackdrop)closeAuth()});
+meetingBackdrop.addEventListener("mousedown",e=>{if(e.target===meetingBackdrop)closeMeetingEditor()});
+window.addEventListener("keydown",e=>{if(e.key==="Escape"&&mode){cancelMode()}});
 window.addEventListener("resize",center);
 
 (async()=>{
@@ -709,7 +1029,11 @@ window.addEventListener("resize",center);
       applyState(portalState);
     }
   });
-  if(cloudClient){
+  if(window.jikkaiDesktop?.onRealtimeState){
+    window.jikkaiDesktop.onRealtimeState(payload=>{
+      if(saving)return;const state=payload?.data;if(state)applyState(state);
+    });
+  }else if(cloudClient){
     cloudClient.channel("fox_map_changes").on("postgres_changes",{event:"*",schema:"public",table:"fox_state"},payload=>{
       if(saving)return;const state=payload.new?.data;if(state)applyState(state);
     }).subscribe();

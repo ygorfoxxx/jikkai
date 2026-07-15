@@ -25,8 +25,8 @@ if (!html.includes("// ESTRUTURA HIERARQUICA v2")) {
 
   const rolesBlock = String.raw`const DEFAULT_ROLES = [
   { id: "leader", nome: "Líder", hasLeaderPerms: true, protected: true, cor: "#D85A30", permissions: [], estruturaPosicao: "lider", ordemEstrutura: 0 },
-  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C", permissions: ["manage_users", "manage_missions"], estruturaPosicao: "conselheiro", ordemEstrutura: 10 },
-  { id: "capitao", nome: "Capitão", hasLeaderPerms: false, protected: true, cor: "#C2410C", permissions: [], estruturaPosicao: "capitao_ramo", ordemEstrutura: 30 },
+  { id: "conselheiro", nome: "Conselheiro", hasLeaderPerms: false, protected: true, cor: "#B91C1C", permissions: ["manage_users", "manage_missions", "manage_map_meetings"], estruturaPosicao: "conselheiro", ordemEstrutura: 10 },
+  { id: "capitao", nome: "Capitão", hasLeaderPerms: false, protected: true, cor: "#C2410C", permissions: ["manage_map_meetings"], estruturaPosicao: "capitao_ramo", ordemEstrutura: 30 },
   { id: "member", nome: "Membro", hasLeaderPerms: false, protected: true, cor: "#7C2D12", permissions: [], estruturaPosicao: "operador", ordemEstrutura: 100 },
   { id: "contratante", nome: "Contratante", hasLeaderPerms: false, protected: true, cor: "#22C55E", permissions: [], estruturaPosicao: "fora", ordemEstrutura: 999 },
 ];
@@ -441,8 +441,8 @@ function ordemEstruturaRole(role) {
   }
   rolesOut = rolesOut.map(r => {
     if (r.id === "leader") return { ...r, hasLeaderPerms: true, protected: true, estruturaPosicao: "lider", ordemEstrutura: 0 };
-    if (r.id === "conselheiro") return { ...r, hasLeaderPerms: false, protected: true, estruturaPosicao: "conselheiro", ordemEstrutura: Number(r.ordemEstrutura) || 10, permissions: r.permissions.length ? r.permissions : ["manage_users", "manage_missions"] };
-    if (r.id === "capitao") return { ...r, protected: true, estruturaPosicao: "capitao_ramo", ordemEstrutura: Number(r.ordemEstrutura) || 30 };
+    if (r.id === "conselheiro") return { ...r, hasLeaderPerms: false, protected: true, estruturaPosicao: "conselheiro", ordemEstrutura: Number(r.ordemEstrutura) || 10, permissions: Array.from(new Set([...(r.permissions.length ? r.permissions : ["manage_users", "manage_missions"]), "manage_map_meetings"])) };
+    if (r.id === "capitao") return { ...r, protected: true, estruturaPosicao: "capitao_ramo", ordemEstrutura: Number(r.ordemEstrutura) || 30, permissions: Array.from(new Set([...(r.permissions || []), "manage_map_meetings"])) };
     if (r.id === "member") return { ...r, protected: true, estruturaPosicao: r.estruturaPosicao || "operador", ordemEstrutura: Number(r.ordemEstrutura) || 100 };
     if (r.id === "contratante") return { ...r, protected: true, estruturaPosicao: "fora", ordemEstrutura: 999 };
     return { ...r, estruturaPosicao: normalizarPosicaoEstrutura(r), ordemEstrutura: ordemEstruturaRole(r) };

@@ -21,6 +21,29 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
   minimizePortal: () => ipcRenderer.invoke("main:minimize"),
   hidePortal: () => ipcRenderer.invoke("main:hide"),
   toggleMaximizePortal: () => ipcRenderer.invoke("main:toggle-maximize"),
+  getRealtimeState: () => ipcRenderer.invoke("realtime:get-state"),
+  updatePresence: (profile) => ipcRenderer.invoke("presence:update", profile || {}),
+  getPresence: () => ipcRenderer.invoke("presence:list"),
+  onRealtimeState: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("realtime:state", listener);
+    return () => ipcRenderer.removeListener("realtime:state", listener);
+  },
+  onRealtimeStatus: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("realtime:status", listener);
+    return () => ipcRenderer.removeListener("realtime:status", listener);
+  },
+  onPresenceChanged: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("presence:changed", listener);
+    return () => ipcRenderer.removeListener("presence:changed", listener);
+  },
+  onRealtimeAlert: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("realtime:alert", listener);
+    return () => ipcRenderer.removeListener("realtime:alert", listener);
+  },
   onClickThroughChanged: (callback) => {
     const listener = (_event, enabled) => callback(Boolean(enabled));
     ipcRenderer.on("overlay:click-through", listener);

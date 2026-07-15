@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, globalShortcut, ipcMain, protocol, net, screen
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
+const { RealtimeService } = require("./realtime/realtime-service");
 
 const APP_ROOT = path.resolve(__dirname, "..");
 const APP_SCHEME = "jikkai";
@@ -29,6 +30,7 @@ let overlayMode = "hud";
 let overlaySection = "agora";
 let isQuitting = false;
 let shortcutStatus = {};
+let realtimeService = null;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -49,6 +51,12 @@ if (!gotSingleInstanceLock) {
 
 function appUrl(page = "app.html") {
   return `${APP_SCHEME}://${APP_HOST}/${page.replace(/^\/+/, "")}`;
+}
+
+function broadcastToWindows(channel, payload) {
+  BrowserWindow.getAllWindows().forEach(window => {
+    if (!window.isDestroyed()) window.webContents.send(channel, payload);
+  });
 }
 
 function resolveAppFile(requestUrl) {
@@ -308,6 +316,14 @@ ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
 ipcMain.handle("main:open-full-portal", () => ensureMainWindow("index.html"));
 ipcMain.handle("main:open-map", () => ensureMainWindow("mapa.html"));
 ipcMain.handle("main:shortcuts", () => shortcutStatus);
+ipcMain.handle("realtime:get-state", async () => {
+  if (!realtimeService) return { data: {}, updatedAt: "", source: "offline" };
+  const cached = realtimeService.getState();
+  if (!cached.data || !Object.keys(cached.data).length) await realtimeService.refresh("ipc");
+  return realtimeService.getState();
+});
+ipcMain.handle("presence:update", (_event, profile = {}) => realtimeService?.updatePresence(profile) || []);
+ipcMain.handle("presence:list", () => realtimeService?.getPresence() || { users: [], updatedAt: new Date().toISOString() });
 ipcMain.handle("main:reload", () => {
   if (mainWindow) mainWindow.reload();
 });
@@ -329,6 +345,7 @@ ipcMain.handle("main:toggle-maximize", () => {
 
 app.on("before-quit", () => {
   isQuitting = true;
+  realtimeService?.stop();
 });
 
 app.on("second-instance", () => {
@@ -337,6 +354,8 @@ app.on("second-instance", () => {
 
 app.whenReady().then(async () => {
   await registerAppProtocol();
+  realtimeService = new RealtimeService({ broadcast: broadcastToWindows });
+  realtimeService.start();
   createMenu();
   createTray();
   createMainWindow();

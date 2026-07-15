@@ -83,6 +83,8 @@
     .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
     .team-card{padding:10px}
     .member-row{display:flex;align-items:center;gap:8px;min-width:0}
+    .member-row.online .avatar{border-color:rgba(34,197,94,.75);box-shadow:0 0 18px rgba(34,197,94,.18)}
+    .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.2s infinite;flex:0 0 auto}
     .avatar{width:32px;height:36px;border-radius:9px;border:1px solid rgba(249,115,22,.35);background:linear-gradient(145deg,#18181b,#000);display:grid;place-items:center;color:#fed7aa;font-size:10px;font-weight:1000;overflow:hidden;flex:0 0 auto}
     .avatar img{width:100%;height:100%;object-fit:cover}
     .member-name{font-size:12px;font-weight:950;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -245,6 +247,9 @@
     let currentData = {};
     let currentUser = null;
     let currentMission = null;
+    let onlineUsers = new Map();
+    let lastPresenceKey = "";
+    let lastPresenceAt = 0;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
@@ -333,10 +338,12 @@
     }
     function userByUsername(username){return (currentData.users || []).find(u => u.username === username)}
     function memberAvatar(user){return `<div class="avatar">${user?.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="">` : escapeHtml(initials(user))}</div>`}
+    function isOnline(user){return !!user?.username&&onlineUsers.has(user.username)}
     function memberLine(user, roleText = "") {
       if (!user) return `<div class="member-row"><div class="avatar">?</div><div><div class="member-name">Não definido</div><div class="member-role">${escapeHtml(roleText || "aguardando")}</div></div></div>`;
       const role = roleOf(user);
-      return `<div class="member-row">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}</div></div></div>`;
+      const online=isOnline(user);
+      return `<div class="member-row${online?" online":""}">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}${online?" · online":""}</div></div>${online?'<span class="online-dot" title="Online no app"></span>':""}</div>`;
     }
     function missionState(mission){return MISSAO_STATUS[normalizeText(mission?.status || "atribuida")] || MISSAO_STATUS.atribuida}
     function canReportMission(mission){return !!mission && missionState(mission).canReport}
@@ -367,8 +374,21 @@
     }
     async function loadState() {
       const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
+      if (window.jikkaiDesktop?.getRealtimeState) {
+        try {
+          const payload = await window.jikkaiDesktop.getRealtimeState();
+          if (payload?.data?.users) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.data));
+            $("syncState").textContent = "Live";
+            return payload.data;
+          }
+        } catch {}
+      }
       try { const cloud = await loadCloudState(); $("syncState").textContent = "Sync"; return cloud || local; }
       catch { $("syncState").textContent = "Local"; return local; }
+    }
+    function setOnlineUsers(payload = {}) {
+      onlineUsers = new Map((payload.users || []).filter(u => u.username).map(u => [u.username, u]));
     }
     function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
     function item(title, meta, desc, actions = "") {
@@ -465,7 +485,8 @@
     }
     function renderMembers() {
       const list = members();
-      $("memberCountTag").textContent = `${list.length} membro${list.length === 1 ? "" : "s"}`;
+      const onlineCount = list.filter(isOnline).length;
+      $("memberCountTag").textContent = `${list.length} membro${list.length === 1 ? "" : "s"} · ${onlineCount} online`;
       if (!list.length) {
         $("membersList").innerHTML = empty("Nenhum membro visível.");
         return;
@@ -536,15 +557,29 @@
       const role = roleOf(currentUser);
       $("viewerName").textContent = nameOf(currentUser);
       $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
+      publishPresence("central");
     }
-    async function render() {
-      currentData = await loadState();
+    function publishPresence(section = "central") {
+      if (!currentUser?.username || !window.jikkaiDesktop?.updatePresence) return;
+      const role = roleOf(currentUser);
+      const payload = { username: currentUser.username, codinome: nameOf(currentUser), role: role?.nome || currentUser.role || "", section };
+      const key = JSON.stringify(payload);
+      if (key === lastPresenceKey && Date.now() - lastPresenceAt < 30000) return;
+      lastPresenceKey = key;
+      lastPresenceAt = Date.now();
+      window.jikkaiDesktop.updatePresence(payload).then(setOnlineUsers).catch(()=>{});
+    }
+    function renderCurrent() {
       renderUser();
       renderHero();
       renderMissions();
       renderReports();
       renderMap();
       renderMembers();
+    }
+    async function render() {
+      currentData = await loadState();
+      renderCurrent();
     }
     function setSection(id) {
       document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));
@@ -579,9 +614,24 @@
     };
     window.addEventListener("hashchange", () => setSection((location.hash || "#missoes").slice(1)));
     window.addEventListener("storage", render);
+    window.jikkaiDesktop?.onRealtimeState?.(payload => {
+      if (!payload?.data?.users) return;
+      currentData = payload.data;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+      $("syncState").textContent = "Live";
+      renderCurrent();
+    });
+    window.jikkaiDesktop?.onPresenceChanged?.(payload => {
+      setOnlineUsers(payload);
+      renderMembers();
+    });
+    window.jikkaiDesktop?.getPresence?.()?.then(payload => {
+      setOnlineUsers(payload);
+      renderMembers();
+    }).catch(()=>{});
     setSection((location.hash || "#missoes").slice(1));
     render();
-    setInterval(render, 30000);
+    if (!window.jikkaiDesktop?.onRealtimeState) setInterval(render, 30000);
   </script>
 </body>
 </html>
