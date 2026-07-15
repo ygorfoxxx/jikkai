@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JIKKAI Overlay</title>
+  <style>
+    :root{color-scheme:dark;--orange:#f97316;--red:#dc2626;--cyan:#22d3ee;--green:#22c55e;--muted:#8b96a8}
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;font-family:Inter,Segoe UI,Arial,sans-serif;color:#fff}
+    body{padding:10px}
+    button{font:inherit;color:inherit}
+    .shell{height:100%;border:1px solid rgba(249,115,22,.42);border-radius:18px;background:linear-gradient(158deg,rgba(2,6,10,.97),rgba(11,3,2,.95));box-shadow:0 24px 80px rgba(0,0,0,.72),0 0 34px rgba(249,115,22,.18);overflow:hidden}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08);-webkit-app-region:drag}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .sigil{width:38px;height:38px;border-radius:12px;border:1px solid rgba(249,115,22,.5);display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,rgba(249,115,22,.28),rgba(0,0,0,.92));font-weight:1000;color:#fed7aa;box-shadow:0 0 22px rgba(249,115,22,.18)}
+    .kicker{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:#fb923c;font-weight:1000}
+    h1{margin:1px 0 0;font-family:Georgia,serif;font-size:20px;line-height:1;color:#fff7ed}
+    .icon-btn{width:34px;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.04);display:grid;place-items:center;cursor:pointer;-webkit-app-region:no-drag}
+    .icon-btn:hover{border-color:rgba(249,115,22,.6);color:#fed7aa}
+    .content{height:calc(100% - 63px);padding:11px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(249,115,22,.7) rgba(255,255,255,.05)}
+    .status{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.035);padding:10px}
+    .who{font-size:14px;font-weight:950;color:#ffedd5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .role{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:2px}
+    .pill{border:1px solid rgba(34,211,238,.38);background:rgba(34,211,238,.08);color:#cffafe;border-radius:999px;padding:6px 9px;font-size:9px;text-transform:uppercase;font-weight:1000;letter-spacing:.12em}
+    .mission{margin-top:10px;border:1px solid rgba(249,115,22,.58);border-radius:16px;background:linear-gradient(145deg,rgba(124,45,18,.32),rgba(0,0,0,.4));padding:13px;box-shadow:0 0 0 1px rgba(249,115,22,.12),0 0 30px rgba(249,115,22,.14)}
+    .card{margin-top:9px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.3);padding:11px}
+    .card.alert{border-color:rgba(34,211,238,.45);box-shadow:0 0 26px rgba(34,211,238,.08)}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+    .label{font-size:9px;text-transform:uppercase;letter-spacing:.2em;color:#fb923c;font-weight:1000}
+    .tag{font-size:9px;text-transform:uppercase;letter-spacing:.12em;border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:4px 7px;color:#fde68a;background:rgba(255,255,255,.04);font-weight:1000}
+    .name{font-size:16px;font-weight:950;color:#f8fafc;line-height:1.15}
+    .desc{font-size:12px;line-height:1.35;color:#a8b0bd;margin-top:6px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
+    .metric{border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.035);padding:8px;text-align:center}
+    .metric strong{display:block;color:#fed7aa;font-size:18px;line-height:1}
+    .metric span{display:block;color:#6f7888;font-size:8px;text-transform:uppercase;letter-spacing:.12em;margin-top:5px;font-weight:1000}
+    .meeting-pulse{width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.15s infinite}
+    @keyframes pulse{70%{box-shadow:0 0 0 13px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .btn{border:1px solid rgba(249,115,22,.38);background:linear-gradient(135deg,rgba(249,115,22,.24),rgba(127,29,29,.2));border-radius:12px;padding:10px 9px;font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}
+    .btn.primary{grid-column:1/-1;padding:12px 10px;border-color:rgba(34,211,238,.5);background:linear-gradient(135deg,rgba(8,145,178,.28),rgba(124,45,18,.25));color:#ecfeff}
+    .btn.secondary{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d7dee9}
+    .btn:hover{filter:brightness(1.14)}
+    .shortcuts{margin-top:10px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px}
+    .shortcut{display:flex;justify-content:space-between;gap:8px;color:#737d8d;font-size:10px;margin-top:6px}
+    .shortcut kbd{border:1px solid rgba(255,255,255,.1);border-radius:7px;background:rgba(255,255,255,.04);padding:3px 6px;color:#cbd5e1;font:inherit}
+    .click-through{position:sticky;bottom:0;margin:10px -11px -11px;padding:9px 12px;background:rgba(8,3,2,.96);border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.12em;display:none}
+    .click-through.on{display:block;color:#67e8f9}
+  </style>
+</head>
+<body>
+  <section class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="sigil">十</div>
+        <div>
+          <div class="kicker">JIKKAI · Modo jogo</div>
+          <h1>Overlay</h1>
+        </div>
+      </div>
+      <button class="icon-btn" id="hideBtn" title="Ocultar overlay">×</button>
+    </header>
+
+    <main class="content">
+      <section class="status">
+        <div>
+          <div class="who" id="viewerName">Leitura restrita</div>
+          <div class="role" id="viewerRole">Portal não autenticado</div>
+        </div>
+        <span class="pill" id="syncState">Local</span>
+      </section>
+
+      <section class="mission">
+        <div class="head">
+          <div class="label">Missão em evidência</div>
+          <div class="tag" id="missionStatus">Aguardando</div>
+        </div>
+        <div class="name" id="missionTitle">Sem missão ativa</div>
+        <div class="desc" id="missionDesc">Abra o portal para aceitar missão, ver objetivos ou enviar relatório.</div>
+        <div class="actions">
+          <button class="btn primary" id="reportBtn">Criar relatório</button>
+          <button class="btn" id="openMissionsBtn">Missões</button>
+          <button class="btn secondary" id="openContractsBtn">Membros</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="metric"><strong id="missionsCount">0</strong><span>Missões</span></div>
+        <div class="metric"><strong id="contractsCount">0</strong><span>Contratos</span></div>
+        <div class="metric"><strong id="meetingsCount">0</strong><span>Reuniões</span></div>
+      </section>
+
+      <section class="card alert">
+        <div class="head">
+          <div class="label">Mapa e reunião</div>
+          <div class="meeting-pulse" id="meetingPulse"></div>
+        </div>
+        <div class="name" id="meetingTitle">Nenhuma reunião marcada</div>
+        <div class="desc" id="meetingDesc">Quando um capitão marcar reunião no mapa, o sinal aparece aqui.</div>
+        <div class="actions">
+          <button class="btn primary" id="openMapBtn">Abrir mapa estratégico</button>
+        </div>
+      </section>
+
+      <section class="actions">
+        <button class="btn secondary" id="openPortalBtn">Portal</button>
+        <button class="btn secondary" id="clickThroughBtn">Mouse passa</button>
+        <button class="btn secondary" id="refreshBtn">Atualizar</button>
+        <button class="btn secondary" id="hideBottomBtn">Ocultar</button>
+      </section>
+
+      <section class="shortcuts">
+        <div class="shortcut"><span>Abrir/fechar overlay</span><kbd>Alt+J</kbd></div>
+        <div class="shortcut"><span>Somente visual</span><kbd>Alt+K</kbd></div>
+        <div class="shortcut"><span>Abrir app</span><kbd>Alt+M</kbd></div>
+      </section>
+      <div class="click-through" id="clickThroughState">Modo somente visual ativo. Use Ctrl+Shift+K para voltar a clicar.</div>
+    </main>
+  </section>
+
+  <script>
+    const STORAGE_KEY = "fox-portal-v3";
+    const SESSION_KEY = "fox-portal-session-v2";
+    const MAP_RETURN_KEY = "fox-map-return-v2";
+    const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+    const TERMINAIS = new Set(["concluida","falhou","cancelada","encerrada"]);
+    const $ = id => document.getElementById(id);
+    let latestUser = null;
+    let latestMission = null;
+
+    function parseJson(value, fallback = null) {
+      try { return value ? JSON.parse(value) : fallback; } catch { return fallback; }
+    }
+    function session() {
+      return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY));
+    }
+    function saveRoute(tab = "home", subTab = "", action = "") {
+      const current = session();
+      const username = latestUser?.username || current?.username;
+      if (!username) return;
+      const payload = { username, tab, subTab, action, updatedAt: new Date().toISOString(), updatedAtMs: Date.now() };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
+    }
+    function openFullRoute(tab, subTab = "", action = "") {
+      saveRoute(tab, subTab, action);
+      window.jikkaiDesktop?.openFullPortal();
+    }
+    function minutesLeft(date) {
+      return Math.max(1, Math.ceil((new Date(date).getTime() - Date.now()) / 60000));
+    }
+    function normalizeText(v) {
+      return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    }
+    function userName(user) {
+      return user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita";
+    }
+    function participates(mission, username) {
+      if (!username) return false;
+      return mission?.assignedTo === username || (mission?.participants || []).includes(username) || (mission?.aceites || []).includes(username);
+    }
+    function activeMeetings(data) {
+      return (data?.mapaReunioes || [])
+        .filter(m => Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)) && new Date(m.expiresAt).getTime() > Date.now())
+        .sort((a,b) => new Date(a.expiresAt) - new Date(b.expiresAt));
+    }
+    function activeMissions(data, username) {
+      return (data?.missoes || [])
+        .filter(m => participates(m, username) && !TERMINAIS.has(normalizeText(m.status)))
+        .sort((a,b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+    }
+    async function loadCloudState() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state?id=eq.1&select=data`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error("Supabase " + res.status);
+      const payload = await res.json();
+      const data = payload?.[0]?.data;
+      if (data?.users) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return data;
+    }
+    async function loadState() {
+      const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
+      try {
+        const cloud = await loadCloudState();
+        $("syncState").textContent = "Sync";
+        return cloud || local;
+      } catch {
+        $("syncState").textContent = "Local";
+        return local;
+      }
+    }
+    async function render() {
+      const data = await loadState();
+      const current = session();
+      const user = (data?.users || []).find(u => u.username === current?.username) || current;
+      const role = (data?.roles || []).find(r => r.id === user?.role);
+      const meetings = activeMeetings(data);
+      const missions = activeMissions(data, user?.username);
+      const contracts = (data?.contratos || []).filter(c => ["Aberto","Em Andamento","Proposta"].includes(c.status || ""));
+      latestUser = user || null;
+      latestMission = missions[0] || null;
+
+      $("viewerName").textContent = userName(user);
+      $("viewerRole").textContent = role?.nome || user?.role || "Portal não autenticado";
+      $("missionsCount").textContent = missions.length;
+      $("contractsCount").textContent = contracts.length;
+      $("meetingsCount").textContent = meetings.length;
+
+      const mission = latestMission;
+      $("missionStatus").textContent = mission?.status || "Aguardando";
+      $("missionTitle").textContent = mission?.titulo || "Sem missão ativa";
+      $("missionDesc").textContent = mission?.desc || "Abra o portal para aceitar missão, ver objetivos ou enviar relatório.";
+      $("reportBtn").textContent = mission ? "Relatório da missão" : "Criar relatório";
+
+      const meeting = meetings[0];
+      $("meetingPulse").style.display = meeting ? "block" : "none";
+      $("meetingTitle").textContent = meeting ? "Reunião ativa no mapa" : "Nenhuma reunião marcada";
+      $("meetingDesc").textContent = meeting ? `Sinal de ${meeting.createdBy || "capitão"} · expira em ${minutesLeft(meeting.expiresAt)} min · ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%.` : "Quando um capitão marcar reunião no mapa, o sinal aparece aqui.";
+      $("openMapBtn").textContent = meeting ? "Ver reunião no mapa" : "Abrir mapa estratégico";
+    }
+
+    $("hideBtn").onclick = () => window.jikkaiDesktop?.hideOverlay();
+    $("hideBottomBtn").onclick = () => window.jikkaiDesktop?.hideOverlay();
+    $("openMapBtn").onclick = () => window.jikkaiDesktop?.openApp("mapa");
+    $("openPortalBtn").onclick = () => window.jikkaiDesktop?.openApp("missoes");
+    $("openMissionsBtn").onclick = () => window.jikkaiDesktop?.openApp("missoes");
+    $("openContractsBtn").onclick = () => window.jikkaiDesktop?.openApp("membros");
+    $("reportBtn").onclick = () => {
+      if (latestMission?.id) openFullRoute("missoes", "", `relatorio-missao:${latestMission.id}`);
+      else openFullRoute("jikkai", "relatorios", "novo-relatorio-avulso");
+    };
+    $("clickThroughBtn").onclick = () => window.jikkaiDesktop?.toggleClickThrough();
+    $("refreshBtn").onclick = render;
+    window.jikkaiDesktop?.onClickThroughChanged(enabled => {
+      $("clickThroughState").classList.toggle("on", enabled);
+      $("clickThroughBtn").textContent = enabled ? "Voltar clique" : "Mouse passa";
+    });
+    window.addEventListener("storage", render);
+    render();
+    setInterval(render, 30000);
+  </script>
+</body>
+</html>

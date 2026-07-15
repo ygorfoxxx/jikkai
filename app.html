@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JIKKAI App</title>
+  <style>
+    :root{color-scheme:dark;--bg:#030303;--panel:#090909;--line:#242424;--orange:#f97316;--red:#dc2626;--cyan:#22d3ee;--green:#22c55e;--muted:#8a8f9c}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:#f4f4f5;font-family:Inter,Segoe UI,Arial,sans-serif}
+    body{overflow-x:hidden}
+    button{font:inherit;color:inherit}
+    .app{min-height:100vh;background:radial-gradient(circle at 80% 0,rgba(249,115,22,.13),transparent 28%),linear-gradient(180deg,#050505,#000)}
+    .topbar{position:sticky;top:0;z-index:30;padding:16px 76px 12px 18px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(3,3,3,.84);backdrop-filter:blur(18px);-webkit-app-region:drag}
+    .top-row{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:1260px;margin:0 auto}
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .sigil{width:42px;height:42px;border-radius:13px;border:1px solid rgba(249,115,22,.45);display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,rgba(249,115,22,.24),rgba(0,0,0,.85));font-weight:1000;color:#fed7aa;box-shadow:0 0 28px rgba(249,115,22,.12)}
+    .kicker{font-size:9px;text-transform:uppercase;letter-spacing:.25em;color:#fb923c;font-weight:1000}
+    h1{margin:2px 0 0;font-family:Georgia,serif;font-size:25px;line-height:1;color:#fff7ed}
+    .session{text-align:right;min-width:170px}
+    .who{font-weight:950;color:#fff7ed;font-size:14px}
+    .role{font-size:10px;color:#858b96;text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+    .nav{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:1260px;margin:14px auto 0;-webkit-app-region:no-drag}
+    .nav button{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:10px;padding:11px 10px;text-transform:uppercase;font-size:10px;letter-spacing:.14em;font-weight:1000;cursor:pointer;color:#a1a1aa}
+    .nav button.active{border-color:rgba(249,115,22,.65);background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(127,29,29,.16));color:#ffedd5}
+    .layout{max-width:1260px;margin:0 auto;padding:18px}
+    .hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);gap:14px;margin-bottom:14px}
+    .panel{border:1px solid rgba(255,255,255,.08);background:rgba(9,9,9,.88);border-radius:12px;padding:15px;box-shadow:0 18px 60px rgba(0,0,0,.24)}
+    .panel.hot{border-color:rgba(249,115,22,.42);background:linear-gradient(145deg,rgba(124,45,18,.2),rgba(9,9,9,.94))}
+    .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .label{font-size:9px;letter-spacing:.22em;color:#fb923c;text-transform:uppercase;font-weight:1000}
+    .title{font-size:20px;font-weight:950;color:#f8fafc;line-height:1.15}
+    .desc{font-size:13px;line-height:1.45;color:#a8b0bd;margin-top:6px}
+    .tag{border:1px solid rgba(255,255,255,.11);border-radius:999px;padding:5px 8px;font-size:10px;text-transform:uppercase;font-weight:1000;letter-spacing:.11em;color:#fde68a;background:rgba(255,255,255,.04);white-space:nowrap}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .metric{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);border-radius:10px;padding:12px;text-align:center}
+    .metric strong{display:block;font-size:25px;color:#fed7aa;line-height:1}
+    .metric span{display:block;margin-top:6px;color:#737986;font-size:9px;text-transform:uppercase;letter-spacing:.14em;font-weight:1000}
+    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .btn{border:1px solid rgba(249,115,22,.42);background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(127,29,29,.16));border-radius:9px;padding:10px 12px;text-transform:uppercase;letter-spacing:.11em;font-size:10px;font-weight:1000;cursor:pointer}
+    .btn.secondary{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.035);color:#d4d4d8}
+    .btn.cyan{border-color:rgba(34,211,238,.45);background:rgba(8,145,178,.14);color:#cffafe}
+    .btn:hover{filter:brightness(1.14)}
+    .list{display:grid;gap:9px}
+    .item{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.26);border-radius:10px;padding:12px}
+    .item-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .item-title{font-weight:950;color:#f8fafc;font-size:14px;line-height:1.2}
+    .item-meta{font-size:10px;color:#737986;text-transform:uppercase;letter-spacing:.11em;margin-top:5px;font-weight:900}
+    .item-desc{font-size:12px;color:#a8b0bd;line-height:1.4;margin-top:7px}
+    .mission-card{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.28);border-radius:12px;padding:13px}
+    .mission-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .mission-title{font-size:16px;font-weight:950;color:#f8fafc;line-height:1.15}
+    .mission-meta{font-size:10px;color:#737986;text-transform:uppercase;letter-spacing:.11em;margin-top:5px;font-weight:900}
+    .progress{height:7px;border-radius:999px;background:#171717;border:1px solid rgba(255,255,255,.08);overflow:hidden;margin-top:10px}
+    .progress span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--cyan));width:0}
+    .objective-list{display:grid;gap:6px;margin-top:10px}
+    .objective{display:flex;gap:8px;align-items:flex-start;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(255,255,255,.025);padding:8px;color:#cbd5e1;font-size:12px}
+    .objective.done{color:#86efac;text-decoration:line-through;text-decoration-color:rgba(34,197,94,.55)}
+    .check{width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,255,255,.16);display:grid;place-items:center;flex:0 0 auto;font-size:10px;color:#111;background:#111827}
+    .objective.done .check{background:var(--green);border-color:var(--green)}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .chip{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);border-radius:999px;padding:5px 8px;font-size:10px;color:#d4d4d8}
+    .section{display:none}
+    .section.active{display:block}
+    .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.6fr);gap:14px}
+    .map-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.55fr);gap:14px}
+    .map-view{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(249,115,22,.28);border-radius:12px;overflow:hidden;background:#062226;box-shadow:inset 0 0 45px rgba(0,0,0,.55)}
+    .map-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.95) contrast(1.04) brightness(.82)}
+    .map-layer{position:absolute;inset:0}
+    .map-marker{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
+    .map-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 16px rgba(249,115,22,.9)}
+    .map-name{white-space:nowrap;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.12);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;text-shadow:0 1px 2px #000;color:#fff7ed}
+    .map-meeting{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 56%,#7f1d1d);color:#111827;font-weight:1000;box-shadow:0 0 0 0 rgba(249,115,22,.7);animation:mapPing 1.05s infinite;z-index:5}
+    .map-meeting:after{content:attr(data-label);position:absolute;top:32px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.76);border:1px solid rgba(249,115,22,.55);color:#fed7aa;font-size:9px;text-transform:uppercase;letter-spacing:.12em}
+    @keyframes mapPing{70%{box-shadow:0 0 0 18px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
+    .org-board{display:grid;gap:14px}
+    .command-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .command-card,.division-card,.team-card{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.28);border-radius:12px;padding:12px}
+    .division-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+    .division-card{overflow:hidden;padding:0;border-color:rgba(249,115,22,.22)}
+    .division-head{padding:13px;background:linear-gradient(135deg,rgba(249,115,22,.16),rgba(0,0,0,.42));border-bottom:1px solid rgba(255,255,255,.08)}
+    .division-body{padding:12px;display:grid;gap:10px}
+    .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
+    .team-card{padding:10px}
+    .member-row{display:flex;align-items:center;gap:8px;min-width:0}
+    .avatar{width:32px;height:36px;border-radius:9px;border:1px solid rgba(249,115,22,.35);background:linear-gradient(145deg,#18181b,#000);display:grid;place-items:center;color:#fed7aa;font-size:10px;font-weight:1000;overflow:hidden;flex:0 0 auto}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .member-name{font-size:12px;font-weight:950;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .member-role{font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:#737986;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .member-stack{display:grid;gap:6px;margin-top:8px}
+    .empty{border:1px dashed rgba(255,255,255,.12);border-radius:12px;padding:18px;color:#858b96;text-align:center;background:rgba(255,255,255,.02)}
+    .shortcut{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#9ca3af}
+    .shortcut kbd{border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.04);padding:3px 7px;color:#e5e7eb;font:inherit}
+    .pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.65);animation:pulse 1.2s infinite}
+    @keyframes pulse{70%{box-shadow:0 0 0 12px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+    @media(max-width:900px){.hero,.split,.map-layout{grid-template-columns:1fr}.command-grid{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,1fr)}.top-row{align-items:flex-start}.session{text-align:left}.grid{grid-template-columns:1fr 1fr}.topbar{padding-right:70px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="top-row">
+        <div class="brand">
+          <div class="sigil">十</div>
+          <div>
+            <div class="kicker">F.O.X. · Aplicativo operacional</div>
+            <h1>JIKKAI</h1>
+          </div>
+        </div>
+        <div class="session">
+          <div class="who" id="viewerName">Leitura restrita</div>
+          <div class="role" id="viewerRole">Sessão não identificada</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button data-section="missoes" class="active">Missões</button>
+        <button data-section="relatorios">Relatórios</button>
+        <button data-section="mapa">Mapa</button>
+        <button data-section="membros">Membros</button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="hero">
+        <div class="panel hot" id="missionHero"></div>
+        <aside class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="label">Resumo rápido</div>
+              <div class="title">Operação de campo</div>
+            </div>
+            <span class="tag" id="syncState">Local</span>
+          </div>
+          <div class="grid">
+            <div class="metric"><strong id="metricMissions">0</strong><span>Missões</span></div>
+            <div class="metric"><strong id="metricReports">0</strong><span>Relatórios</span></div>
+            <div class="metric"><strong id="metricMeetings">0</strong><span>Reuniões</span></div>
+          </div>
+          <div class="actions">
+            <button class="btn cyan" id="toggleOverlayBtn">Abrir overlay</button>
+            <button class="btn secondary" id="fullPortalBtn">Site completo</button>
+          </div>
+        </aside>
+      </section>
+
+      <section id="missoes" class="section active">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><div><div class="label">Minhas missões</div><div class="title">Prioridade do jogador</div></div><span class="tag" id="missionCountTag">0</span></div>
+            <div class="list" id="missionsList"></div>
+          </div>
+          <aside class="panel">
+            <div class="label">Atalhos no jogo</div>
+            <div class="shortcut"><span>Overlay</span><kbd>Alt+J</kbd></div>
+            <div class="shortcut"><span>Mouse passa</span><kbd>Alt+K</kbd></div>
+            <div class="shortcut"><span>Abrir app</span><kbd>Alt+M</kbd></div>
+            <div class="shortcut"><span>Alternativa</span><kbd>Ctrl+Alt+J/K/M</kbd></div>
+            <div class="actions">
+              <button class="btn secondary" id="shortcutStatusBtn">Ver atalhos</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="relatorios" class="section">
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><div><div class="label">Relatórios</div><div class="title">Registro rápido</div></div><span class="tag" id="reportCountTag">0</span></div>
+            <div class="actions" style="margin-top:0;margin-bottom:12px">
+              <button class="btn cyan" id="newReportBtn">Relatório avulso</button>
+              <button class="btn" id="missionReportBtn">Relatório da missão</button>
+            </div>
+            <div class="list" id="reportsList"></div>
+          </div>
+          <aside class="panel">
+            <div class="label">Uso ideal</div>
+            <p class="desc">Use esta aba para abrir relatório sem atravessar o portal inteiro. O formulário completo continua no site, mas o APP te leva direto ao ponto.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="mapa" class="section">
+        <div class="map-layout">
+          <div class="panel">
+            <div class="panel-head"><div><div class="label">Mapa estratégico</div><div class="title">Reuniões e deslocamento</div></div><span class="tag" id="mapCountTag">0</span></div>
+            <div class="map-view" id="appMap">
+              <img alt="Mapa Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
+              <div class="map-layer" id="appMapLayer"></div>
+            </div>
+          </div>
+          <aside class="panel">
+            <div class="panel-head"><div><div class="label">Reuniões</div><div class="title">Sinais ativos</div></div></div>
+            <div class="list" id="meetingsList"></div>
+            <div class="actions">
+              <button class="btn secondary" id="openMapBtn">Mapa completo</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="membros" class="section">
+        <div class="panel">
+          <div class="panel-head"><div><div class="label">Membros</div><div class="title">Quem está na JIKKAI</div></div><span class="tag" id="memberCountTag">0</span></div>
+          <div class="list" id="membersList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "fox-portal-v3";
+    const SESSION_KEY = "fox-portal-session-v2";
+    const MAP_RETURN_KEY = "fox-map-return-v2";
+    const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+    const TERMINAIS = new Set(["concluida","falhou","cancelada","encerrada"]);
+    const DEFAULT_MAP_POINTS = [
+      { id:"konoha", name:"Konohagakure", type:"vila", x:65.5, y:60.5 },
+      { id:"kiri", name:"Kirigakure", type:"vila", x:85.2, y:78.2 },
+      { id:"suna", name:"Sunagakure", type:"vila", x:24.5, y:71.2 },
+      { id:"iwa", name:"Iwagakure", type:"vila", x:22.5, y:28.5 },
+      { id:"kumo", name:"Kumogakure", type:"vila", x:86.2, y:13.5 },
+      { id:"vale", name:"Vale do Fim", type:"regiao", x:49.4, y:49.6 },
+      { id:"morte", name:"Floresta da Morte", type:"regiao", x:59.7, y:45.5 },
+      { id:"base", name:"Esconderijo", type:"base", x:44.5, y:70.5 }
+    ];
+    const DEFAULT_DIVISOES = [
+      { id:"divisao_central", nome:"Divisão Central", desc:"Primeira divisão operacional da Jikkai.", cor:"#D85A30", status:"ativa", capitaoUsername:"" }
+    ];
+    const $ = id => document.getElementById(id);
+    let currentData = {};
+    let currentUser = null;
+    let currentMission = null;
+
+    function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
+    function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
+    function normalizeText(v) { return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
+    function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+    function nameOf(user){return user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita"}
+    function roleOf(user){return (currentData.roles || []).find(r => r.id === user?.role)}
+    function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
+    function slug(v){return normalizeText(v).replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")}
+    function rolePosition(role) {
+      const explicit = String(role?.estruturaPosicao || role?.estruturaNivel || "").trim();
+      if (explicit) return explicit;
+      const text = normalizeText(`${role?.id || ""} ${role?.nome || ""}`);
+      if (role?.hasLeaderPerms || text.includes("lider")) return "lider";
+      if (text.includes("braco")) return "braco_direito";
+      if (text.includes("conselheiro")) return "conselheiro";
+      if (text.includes("capitao") || text.includes("caporegime") || text.includes("comandante")) return "capitao_ramo";
+      if (text.includes("contratante")) return "fora";
+      return "operador";
+    }
+    function roleOrder(role) {
+      const explicit = Number(role?.ordemEstrutura);
+      if (Number.isFinite(explicit)) return explicit;
+      return ({ lider:0, braco_direito:5, conselheiro:10, capitao_ramo:30, operador:100, independente:150, fora:999 })[rolePosition(role)] ?? 100;
+    }
+    function findUserByIdentity(value) {
+      const target = slug(value);
+      if (!target) return null;
+      return (currentData.users || []).find(u => [u.username, u.codinome, u.displayName, u.nomeRP, u.nome].some(v => slug(v) === target)) || null;
+    }
+    function isCaptain(user) {
+      return rolePosition(roleOf(user)) === "capitao_ramo";
+    }
+    function identityMatchesDivision(value, division) {
+      const target = slug(value);
+      return !!target && [division?.id, division?.nome, division?.ramoId].some(v => slug(v) === target);
+    }
+    function inferDivisionCaptain(division, index = 0) {
+      const users = members();
+      const divId = division?.id || `divisao_${slug(division?.nome) || index}`;
+      const base = { ...division, id: divId };
+      const direct = findUserByIdentity(division?.capitaoUsername || division?.capitao || "");
+      if (direct && direct.role !== "contratante" && direct.status !== "Oculto") return direct.username;
+      const linked = users.find(u => isCaptain(u) && [u.divisaoId, u.ramoId, u.cla].some(v => identityMatchesDivision(v, base)));
+      if (linked) return linked.username;
+      const teamCaptain = teamsRaw().filter(t => (t.divisaoId || t.ramoId || divId) === divId).flatMap(t => t.membros || []).map(m => m.username ? userByUsername(m.username) : findUserByIdentity(m.nome)).find(u => u && isCaptain(u));
+      if (teamCaptain) return teamCaptain.username;
+      const captains = users.filter(isCaptain);
+      const rawDivs = Array.isArray(currentData.divisoes) && currentData.divisoes.length ? currentData.divisoes : DEFAULT_DIVISOES;
+      return rawDivs.length === 1 && captains.length === 1 ? captains[0].username : "";
+    }
+    function divisions() {
+      const raw = Array.isArray(currentData.divisoes) && currentData.divisoes.length ? currentData.divisoes : DEFAULT_DIVISOES;
+      return raw.map((d,i)=>({
+        id:d.id || `divisao_${slug(d.nome) || i}`,
+        nome:d.nome || `Divisão ${i+1}`,
+        desc:d.desc || d.descricao || "Divisão operacional da Jikkai.",
+        cor:d.cor || ["#D85A30","#B91C1C","#7C2D12","#EA580C"][i%4],
+        status:d.status || "ativa",
+        capitaoUsername:d.capitaoUsername || d.capitao || inferDivisionCaptain(d,i)
+      }));
+    }
+    function teamsRaw(){return Array.isArray(currentData.trios) ? currentData.trios : []}
+    function teams() {
+      const divs = divisions();
+      const defaultDivision = divs[0]?.id || "divisao_central";
+      return teamsRaw().map((t,i)=>{
+        const membros = (t.membros || []).map(m => {
+          const user = m.username ? userByUsername(m.username) : findUserByIdentity(m.nome);
+          return { ...m, username:m.username || user?.username || "", papel:m.papel || m.nivel || "Soldado" };
+        });
+        const leader = membros.find(m => normalizeText(m.papel).includes("lider") || normalizeText(m.papel).includes("líder"));
+        return {
+          ...t,
+          id:t.id || `equipe_${slug(t.nome) || i}`,
+          nome:t.nome || `Equipe ${i+1}`,
+          desc:t.desc || t.descricao || "Equipe operacional da Jikkai.",
+          cor:t.cor || "#D85A30",
+          divisaoId:t.divisaoId || t.ramoId || defaultDivision,
+          tipo:t.tipo || "Ataque",
+          status:t.status || "Ativa",
+          liderUsername:t.liderUsername || leader?.username || "",
+          membros
+        };
+      });
+    }
+    function userByUsername(username){return (currentData.users || []).find(u => u.username === username)}
+    function memberAvatar(user){return `<div class="avatar">${user?.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="">` : escapeHtml(initials(user))}</div>`}
+    function memberLine(user, roleText = "") {
+      if (!user) return `<div class="member-row"><div class="avatar">?</div><div><div class="member-name">Não definido</div><div class="member-role">${escapeHtml(roleText || "aguardando")}</div></div></div>`;
+      const role = roleOf(user);
+      return `<div class="member-row">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}</div></div></div>`;
+    }
+    function participates(mission, username){return !!username && (mission?.assignedTo === username || (mission?.participants || []).includes(username) || (mission?.aceites || []).includes(username))}
+    function myMissions(){return (currentData.missoes || []).filter(m => participates(m, currentUser?.username) && !TERMINAIS.has(normalizeText(m.status))).sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0))}
+    function myReports(){return (currentData.relatorios || []).filter(r => !currentUser?.username || r.autor === currentUser.username || r.createdBy === currentUser.username).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0))}
+    function meetings(){return (currentData.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()).sort((a,b)=>new Date(a.expiresAt)-new Date(b.expiresAt))}
+    function members(){return (currentData.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto")}
+    function saveRoute(tab, subTab = "", action = "") {
+      const username = currentUser?.username || session()?.username;
+      if (!username) return;
+      const payload = { username, tab, subTab, action, updatedAt: new Date().toISOString(), updatedAtMs: Date.now() };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
+    }
+    function openFull(tab, subTab = "", action = "") {
+      saveRoute(tab, subTab, action);
+      window.jikkaiDesktop?.openFullPortal();
+    }
+    async function loadCloudState() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state?id=eq.1&select=data`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }, cache: "no-store" });
+      if (!res.ok) throw new Error("Supabase " + res.status);
+      const payload = await res.json();
+      const data = payload?.[0]?.data;
+      if (data?.users) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return data;
+    }
+    async function loadState() {
+      const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
+      try { const cloud = await loadCloudState(); $("syncState").textContent = "Sync"; return cloud || local; }
+      catch { $("syncState").textContent = "Local"; return local; }
+    }
+    function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
+    function item(title, meta, desc, actions = "") {
+      return `<article class="item"><div class="item-row"><div><div class="item-title">${escapeHtml(title)}</div><div class="item-meta">${escapeHtml(meta)}</div></div>${actions}</div>${desc ? `<div class="item-desc">${escapeHtml(desc)}</div>` : ""}</article>`;
+    }
+    function missionParticipants(mission) {
+      return Array.from(new Set([...(mission.participants || []), mission.assignedTo].filter(Boolean)));
+    }
+    function missionCard(mission) {
+      const objetivos = Array.isArray(mission.objetivos) ? mission.objetivos : [];
+      const done = objetivos.filter(o => o.done).length;
+      const progress = objetivos.length ? Math.round(done / objetivos.length * 100) : 0;
+      const participants = missionParticipants(mission);
+      const participantNames = participants.map(username => nameOf(userByUsername(username) || { username }));
+      const objectivesHtml = objetivos.length ? `<div class="objective-list">${objetivos.map(o => `<div class="objective ${o.done ? "done" : ""}"><span class="check">${o.done ? "✓" : ""}</span><span>${escapeHtml(o.text || o.titulo || "Objetivo")}</span></div>`).join("")}</div>` : "";
+      return `
+        <article class="mission-card">
+          <div class="mission-top">
+            <div>
+              <div class="mission-title">${escapeHtml(mission.titulo || "Missão")}</div>
+              <div class="mission-meta">${escapeHtml(mission.assignmentLabel || "Operadores selecionados")} · ${escapeHtml(mission.status || "ativa")} · ${escapeHtml(mission.sigilo || "sigilo comum")}</div>
+            </div>
+            <button class="btn cyan" data-action="mission-report" data-id="${escapeHtml(mission.id)}">Relatório</button>
+          </div>
+          ${mission.desc ? `<div class="item-desc">${escapeHtml(mission.desc)}</div>` : ""}
+          <div class="progress"><span style="width:${progress}%"></span></div>
+          <div class="item-meta">${done}/${objetivos.length || 0} objetivos · ${progress}%</div>
+          ${objectivesHtml}
+          <div class="chips">${participantNames.length ? participantNames.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("") : `<span class="chip">Sem participantes definidos</span>`}</div>
+        </article>
+      `;
+    }
+    function routeButtons(mission) {
+      return `<button class="btn cyan" data-action="mission-report" data-id="${escapeHtml(mission.id)}">Relatório</button><button class="btn secondary" data-action="full-mission">Portal</button>`;
+    }
+    function renderHero() {
+      const active = myMissions();
+      currentMission = active[0] || null;
+      $("missionHero").innerHTML = currentMission ? `
+        <div class="panel-head"><div><div class="label">Missão mais importante agora</div><div class="title">${escapeHtml(currentMission.titulo || "Missão ativa")}</div></div><span class="tag">${escapeHtml(currentMission.status || "ativa")}</span></div>
+        <p class="desc">${escapeHtml(currentMission.desc || "Operação em andamento. Abra relatório ao finalizar.")}</p>
+        <div class="actions"><button class="btn cyan" data-action="hero-report">Relatório da missão</button><button class="btn secondary" data-action="hero-missions">Ver missões</button></div>
+      ` : `
+        <div class="panel-head"><div><div class="label">Pronto para operação</div><div class="title">Nenhuma missão ativa</div></div><span class="tag">Livre</span></div>
+        <p class="desc">Quando uma missão for atribuída, ela aparece aqui primeiro. O APP evita você se perder no portal completo.</p>
+        <div class="actions"><button class="btn cyan" data-action="hero-missions">Abrir missões</button><button class="btn secondary" data-action="new-report">Relatório avulso</button></div>
+      `;
+    }
+    function renderMissions() {
+      const active = myMissions();
+      $("metricMissions").textContent = active.length;
+      $("missionCountTag").textContent = `${active.length} ativa${active.length === 1 ? "" : "s"}`;
+      $("missionsList").innerHTML = active.length ? active.map(missionCard).join("") : empty("Nenhuma missão ativa para este usuário.");
+    }
+    function renderReports() {
+      const reports = myReports();
+      $("metricReports").textContent = reports.length;
+      $("reportCountTag").textContent = `${reports.length} recente${reports.length === 1 ? "" : "s"}`;
+      $("reportsList").innerHTML = reports.length ? reports.slice(0,8).map(r => item(r.titulo || r.tipo || "Relatório", `${r.status || "registrado"} · ${new Date(r.createdAt || Date.now()).toLocaleDateString("pt-BR")}`, r.resumo || r.desc || r.conteudo || "")).join("") : empty("Nenhum relatório recente encontrado.");
+    }
+    function mapPoints() {
+      const points = Array.isArray(currentData.mapaPontos) && currentData.mapaPontos.length ? currentData.mapaPontos : DEFAULT_MAP_POINTS;
+      return points.filter(p => Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y))).map(p => ({
+        id:p.id || p.name || p.nome,
+        name:p.name || p.nome || "Ponto",
+        type:p.type || p.tipo || "regiao",
+        x:Number(p.x),
+        y:Number(p.y)
+      }));
+    }
+    function renderAppMap(activeMeetings) {
+      const layer = $("appMapLayer");
+      if (!layer) return;
+      const colorByType = { vila:"#f97316", base:"#a855f7", treino:"#22c55e", fuga:"#38bdf8", risco:"#ef4444", regiao:"#eab308" };
+      const pointHtml = mapPoints().map(p => `
+        <div class="map-marker" style="left:${p.x}%;top:${p.y}%">
+          <span class="map-dot" style="background:${colorByType[p.type] || colorByType.regiao}"></span>
+          <span class="map-name">${escapeHtml(p.name)}</span>
+        </div>
+      `).join("");
+      const meetingHtml = activeMeetings.map(m => `
+        <div class="map-meeting" data-label="${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!</div>
+      `).join("");
+      layer.innerHTML = pointHtml + meetingHtml;
+    }
+    function renderMap() {
+      const list = meetings();
+      $("metricMeetings").textContent = list.length;
+      $("mapCountTag").textContent = `${list.length} ativa${list.length === 1 ? "" : "s"}`;
+      $("meetingsList").innerHTML = list.length ? list.map(m => item("Reunião marcada no mapa", `${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min restantes`, `Sinal criado por ${m.createdBy || "capitão"} em ${Number(m.x).toFixed(1)}%, ${Number(m.y).toFixed(1)}%.`, `<span class="pulse"></span>`)).join("") : empty("Nenhuma reunião ativa no mapa.");
+      renderAppMap(list);
+    }
+    function renderMembers() {
+      const list = members();
+      $("memberCountTag").textContent = `${list.length} membro${list.length === 1 ? "" : "s"}`;
+      if (!list.length) {
+        $("membersList").innerHTML = empty("Nenhum membro visível.");
+        return;
+      }
+      const ordered = users => users.slice().sort((a,b)=>roleOrder(roleOf(a))-roleOrder(roleOf(b)) || nameOf(a).localeCompare(nameOf(b), "pt-BR"));
+      const posOf = user => rolePosition(roleOf(user));
+      const leadership = {
+        lider: ordered(list.filter(u => posOf(u) === "lider")),
+        conselheiro: ordered(list.filter(u => posOf(u) === "conselheiro")),
+        braco: ordered(list.filter(u => posOf(u) === "braco_direito"))
+      };
+      const divs = divisions();
+      const teamList = teams();
+      const usernamesInTeams = new Set(teamList.flatMap(t => (t.membros || []).map(m => m.username).filter(Boolean)));
+      const loose = ordered(list.filter(u => !["lider","braco_direito","conselheiro","fora","oculto"].includes(posOf(u)) && !usernamesInTeams.has(u.username)));
+      const commandCard = (title, subtitle, users) => `
+        <div class="command-card">
+          <div class="label">${escapeHtml(title)}</div>
+          <div class="desc" style="margin-top:2px">${escapeHtml(subtitle)}</div>
+          <div class="member-stack">${users.length ? users.map(u => memberLine(u)).join("") : memberLine(null, "não definido")}</div>
+        </div>
+      `;
+      const teamCard = team => {
+        const leader = userByUsername(team.liderUsername) || findUserByIdentity(team.liderUsername);
+        const teamMembers = (team.membros || []).map(m => ({ record:m, user:userByUsername(m.username) })).filter(x => x.user);
+        const body = [
+          leader ? `<div class="member-stack"><div class="label">Líder</div>${memberLine(leader, "Líder da equipe")}</div>` : "",
+          teamMembers.length ? `<div class="member-stack">${teamMembers.map(({record,user}) => memberLine(user, record.papel || "Soldado")).join("")}</div>` : `<div class="empty" style="padding:10px">Equipe sem integrantes.</div>`
+        ].join("");
+        return `<div class="team-card"><div class="item-row"><div><div class="item-title">${escapeHtml(team.nome)}</div><div class="item-meta">${escapeHtml(team.tipo || "Equipe")} · ${escapeHtml(team.status || "Ativa")}</div></div><span class="tag">${teamMembers.length}</span></div>${body}</div>`;
+      };
+      const divisionCard = division => {
+        const captain = userByUsername(division.capitaoUsername) || findUserByIdentity(division.capitaoUsername) || list.find(u => posOf(u) === "capitao_ramo" && (u.divisaoId === division.id || u.ramoId === division.id));
+        const divisionTeams = teamList.filter(t => t.divisaoId === division.id);
+        const soldiers = new Set(divisionTeams.flatMap(t => (t.membros || []).map(m => m.username).filter(Boolean)));
+        return `
+          <article class="division-card" style="border-color:${escapeHtml(division.cor || "#D85A30")}88">
+            <div class="division-head" style="background:linear-gradient(135deg,${escapeHtml(division.cor || "#D85A30")}30,rgba(0,0,0,.45))">
+              <div class="label">Divisão</div>
+              <div class="title">${escapeHtml(division.nome)}</div>
+              <div class="item-meta">${divisionTeams.length} equipe${divisionTeams.length === 1 ? "" : "s"} · ${soldiers.size} soldado${soldiers.size === 1 ? "" : "s"} · ${escapeHtml(division.status || "ativa")}</div>
+            </div>
+            <div class="division-body">
+              <div class="command-card">
+                <div class="label">Capitão</div>
+                <div class="member-stack">${memberLine(captain, "Capitão da divisão")}</div>
+              </div>
+              <div class="team-grid">${divisionTeams.length ? divisionTeams.map(teamCard).join("") : `<div class="empty">Nenhuma equipe criada nesta divisão.</div>`}</div>
+            </div>
+          </article>
+        `;
+      };
+      $("membersList").innerHTML = `
+        <div class="org-board">
+          <div class="command-grid">
+            ${commandCard("Líder", "Topo da organização", leadership.lider)}
+            ${commandCard("Conselheiro", "Conselho e revisão", leadership.conselheiro)}
+            ${commandCard("Braço Direito", "Comando direto", leadership.braco)}
+          </div>
+          <div class="division-grid">${divs.length ? divs.map(divisionCard).join("") : empty("Nenhuma divisão criada.")}</div>
+          ${loose.length ? `<div class="panel" style="box-shadow:none"><div class="panel-head"><div><div class="label">Sem equipe</div><div class="title">Membros aguardando alocação</div></div><span class="tag">${loose.length}</span></div><div class="team-grid">${loose.map(u => `<div class="team-card">${memberLine(u, roleOf(u)?.nome || "Operador")}</div>`).join("")}</div></div>` : ""}
+        </div>
+      `;
+    }
+    function renderUser() {
+      const s = session();
+      currentUser = (currentData.users || []).find(u => u.username === s?.username) || s || null;
+      const role = roleOf(currentUser);
+      $("viewerName").textContent = nameOf(currentUser);
+      $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
+    }
+    async function render() {
+      currentData = await loadState();
+      renderUser();
+      renderHero();
+      renderMissions();
+      renderReports();
+      renderMap();
+      renderMembers();
+    }
+    function setSection(id) {
+      document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));
+      document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.section === id));
+      if (location.hash !== `#${id}`) history.replaceState(null, "", `#${id}`);
+    }
+    document.getElementById("nav").onclick = e => {
+      const btn = e.target.closest("button[data-section]");
+      if (btn) setSection(btn.dataset.section);
+    };
+    document.body.addEventListener("click", async e => {
+      const action = e.target.closest("[data-action]")?.dataset.action;
+      const id = e.target.closest("[data-id]")?.dataset.id;
+      if (!action) return;
+      if (action === "mission-report" && id) openFull("missoes", "", `relatorio-missao:${id}`);
+      if (action === "full-mission") openFull("missoes", "", "minhas-missoes");
+      if (action === "hero-report" && currentMission?.id) openFull("missoes", "", `relatorio-missao:${currentMission.id}`);
+      if (action === "hero-missions") setSection("missoes");
+      if (action === "new-report") openFull("jikkai", "relatorios", "novo-relatorio-avulso");
+    });
+    $("toggleOverlayBtn").onclick = () => window.jikkaiDesktop?.toggleOverlay();
+    $("fullPortalBtn").onclick = () => window.jikkaiDesktop?.openFullPortal();
+    $("newReportBtn").onclick = () => openFull("jikkai", "relatorios", "novo-relatorio-avulso");
+    $("missionReportBtn").onclick = () => currentMission?.id ? openFull("missoes", "", `relatorio-missao:${currentMission.id}`) : openFull("jikkai", "relatorios", "novo-relatorio-avulso");
+    $("openMapBtn").onclick = () => window.jikkaiDesktop?.openMap();
+    $("shortcutStatusBtn").onclick = async () => {
+      const status = await window.jikkaiDesktop?.shortcutStatus?.();
+      alert(Object.entries(status || {}).map(([k,v]) => `${k}: ${v.registered?.join(", ") || "nenhum"}`).join("\n"));
+    };
+    window.addEventListener("hashchange", () => setSection((location.hash || "#missoes").slice(1)));
+    window.addEventListener("storage", render);
+    setSection((location.hash || "#missoes").slice(1));
+    render();
+    setInterval(render, 30000);
+  </script>
+</body>
+</html>
