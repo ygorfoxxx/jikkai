@@ -3725,6 +3725,58 @@ function familiaDoMembro(data, membro) {
   return (data.clas || []).find(c => c.id === membro?.cla);
 }
 
+function papelIndicaCapitao(papel) {
+  const p = slugEstrutura(papel);
+  return p.includes("capitao") || p.includes("caporegime") || p.includes("comandante");
+}
+
+function usuarioTemPosicaoCapitao(data, user) {
+  const role = (data.roles || DEFAULT_ROLES).find(r => r.id === user?.role);
+  return estruturaPosicaoRole(role) === "capitao_ramo";
+}
+
+function identidadeBateDivisao(valor, divisao) {
+  if (!valor || !divisao) return false;
+  const alvo = slugEstrutura(valor);
+  return [divisao.id, divisao.nome, divisao.ramoId].some(v => v && slugEstrutura(v) === alvo);
+}
+
+function inferirCapitaoDivisao(data, divisao, index = 0) {
+  const users = data.users || [];
+  const trios = data.trios || DEFAULT_TRIOS;
+  const divisoesRaw = Array.isArray(data.divisoes) && data.divisoes.length ? data.divisoes : DEFAULT_DIVISOES;
+  const divId = divisao?.id || "divisao_" + (slugEstrutura(divisao?.nome) || index);
+  const divisaoBase = { ...divisao, id: divId };
+  const porUsername = username => users.find(u => u.username === username && u.role !== "contratante" && u.status !== "Oculto");
+  const capitaoDireto = divisao?.capitaoUsername || divisao?.capitao || "";
+  const diretoEncontrado = porUsername(capitaoDireto) || usuarioPorIdentidade(users, capitaoDireto);
+  const direto = diretoEncontrado?.role !== "contratante" && diretoEncontrado?.status !== "Oculto" ? diretoEncontrado : null;
+  if (direto) return direto.username;
+
+  const porVinculoDireto = users.find(u =>
+    u.role !== "contratante" &&
+    u.status !== "Oculto" &&
+    usuarioTemPosicaoCapitao(data, u) &&
+    [u.divisaoId, u.ramoId, u.cla].some(v => identidadeBateDivisao(v, divisaoBase))
+  );
+  if (porVinculoDireto) return porVinculoDireto.username;
+
+  const equipesDaDivisao = trios.filter(t => (t.divisaoId || t.ramoId || divisoesRaw[0]?.id || "divisao_central") === divId);
+  for (const equipe of equipesDaDivisao) {
+    const lider = porUsername(equipe.liderUsername);
+    if (lider && usuarioTemPosicaoCapitao(data, lider)) return lider.username;
+    for (const membro of (equipe.membros || [])) {
+      const user = membro.username ? porUsername(membro.username) : usuarioPorIdentidade(users, membro.nome);
+      if (!user || user.role === "contratante" || user.status === "Oculto") continue;
+      if (papelIndicaCapitao(membro.papel) || usuarioTemPosicaoCapitao(data, user)) return user.username;
+    }
+  }
+
+  const capitaesVisiveis = users.filter(u => u.role !== "contratante" && u.status !== "Oculto" && usuarioTemPosicaoCapitao(data, u));
+  if (divisoesRaw.length === 1 && capitaesVisiveis.length === 1) return capitaesVisiveis[0].username;
+  return "";
+}
+
 function divisoesJikkai(data) {
   const base = Array.isArray(data.divisoes) && data.divisoes.length ? data.divisoes : DEFAULT_DIVISOES;
   return base.map((d, i) => ({
@@ -3733,7 +3785,7 @@ function divisoesJikkai(data) {
     desc: d.desc || d.descricao || "Divisão operacional da Jikkai.",
     cor: d.cor || ["#D85A30", "#B91C1C", "#7C2D12", "#EA580C"][i % 4],
     status: d.status || "ativa",
-    capitaoUsername: d.capitaoUsername || d.capitao || "",
+    capitaoUsername: d.capitaoUsername || d.capitao || inferirCapitaoDivisao(data, d, i),
   }));
 }
 

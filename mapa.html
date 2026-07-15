@@ -118,6 +118,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .marker:after{content:attr(data-label);position:absolute;left:50%;top:33px;transform:translateX(-50%);white-space:nowrap;background:rgba(2,6,8,.62);border:1px solid rgba(255,255,255,.13);color:#fff;padding:4px 8px;border-radius:999px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:.88;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.38);text-shadow:0 1px 2px #000,0 0 8px #000}
 .marker:hover:after,.marker.active:after{opacity:1;background:rgba(2,6,8,.94);border-color:color-mix(in srgb,var(--accent,var(--orange)) 58%,rgba(255,255,255,.14));color:#fff7ed}
 .marker.vila{--accent:#ea580c}.marker.regiao{--accent:#f59e0b}.marker.base{--accent:#a855f7}.marker.treino{--accent:#22c55e}.marker.fuga{--accent:#38bdf8}.marker.encontro{--accent:#818cf8}.marker.risco{--accent:#ef4444}
+.meeting-marker{position:absolute;width:42px;height:42px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff7ed;background:radial-gradient(circle at 50% 35%,#fef3c7,#f97316 48%,#7f1d1d 100%);color:#111827;box-shadow:0 0 0 7px rgba(249,115,22,.18),0 0 32px rgba(249,115,22,.9);pointer-events:auto;display:grid;place-items:center;font-size:18px;font-weight:1000;z-index:12;animation:meetingBlink .7s ease-in-out infinite alternate}
+.meeting-marker:before,.meeting-marker:after{content:"";position:absolute;inset:-12px;border-radius:50%;border:2px solid rgba(251,146,60,.7);animation:meetingPing 1.35s ease-out infinite;pointer-events:none}
+.meeting-marker:after{inset:-23px;animation-delay:.38s;border-color:rgba(34,211,238,.45)}
+.meeting-marker span{position:relative;z-index:1}
+.meeting-marker .meeting-label{position:absolute;left:50%;top:48px;transform:translateX(-50%);white-space:nowrap;background:rgba(2,6,8,.94);border:1px solid rgba(251,146,60,.65);color:#ffedd5;padding:5px 9px;border-radius:999px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+@keyframes meetingPing{0%{opacity:.9;transform:scale(.65)}100%{opacity:0;transform:scale(1.45)}}@keyframes meetingBlink{0%{filter:brightness(.95)}100%{filter:brightness(1.38)}}
 .top-dock{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:16;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.09);border-radius:999px;background:rgba(2,10,13,.62);backdrop-filter:blur(18px);padding:8px 10px;box-shadow:0 18px 50px rgba(0,0,0,.28)}
 .dock-chip{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;color:#dbeafe;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.1em}
 .dock-chip.active{color:#ecfeff;background:rgba(34,211,238,.11);border:1px solid rgba(34,211,238,.35)}
@@ -213,6 +219,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button id="newPoint">+ Novo local</button>
       <button id="newRoute">+ Nova rota</button>
     </div>
+    <div class="toolbar" id="meetingTools" hidden>
+      <button class="primary" id="newMeeting">Definir reunião</button>
+    </div>
     <div class="readonly-note" id="readonlyNote">Mapa disponível em modo somente leitura.</div>
     <div class="searchbar">
       <span>⌕</span>
@@ -238,6 +247,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <button id="railAuth" title="Ativar edição" hidden>⚙</button>
       <button id="railNewPoint" title="Novo local" hidden>＋</button>
       <button id="railNewRoute" title="Nova rota" hidden>⌁</button>
+      <button id="railMeeting" title="Definir reunião" hidden>⌖</button>
       <button id="railFit" title="Centralizar">◎</button>
     </div>
     <div class="stage" id="stage">
@@ -394,6 +404,7 @@ const cloudClient=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPA
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const MAP_W=1500;
 const MAP_H=1206;
+const MEETING_DURATION_MS=8*60*1000;
 
 const POINT_TYPES={
   vila:{label:"Vila",symbol:"◆",color:"#c2410c"},
@@ -1610,9 +1621,10 @@ let slpPublicRoutes=[];
 const el=id=>document.getElementById(id);
 const shell=el("shell"),stage=el("stage"),markers=el("markers"),routesSvg=el("routesSvg"),list=el("list"),filters=el("filters");
 const detail=el("detail"),editorBackdrop=el("editorBackdrop"),authBackdrop=el("authBackdrop");
-let portalState=null,points=[],routes=[],access={user:null,role:null,canEdit:false};
+let portalState=null,points=[],routes=[],meetings=[],access={user:null,role:null,canEdit:false,canMeet:false};
 let scale=1,tx=0,ty=0,drag=false,downX=0,downY=0,startTx=0,startTy=0,moved=false;
 let active=null,filter="all",query="",mode=null,editorDraft=null,saving=false,pickRequest=null,pickMode=false;
+let meetingTimer=null;
 
 function setSync(text,state=""){
   el("syncText").textContent=text;
@@ -1662,10 +1674,27 @@ function resolveAccess(state){
   const role=user&&state?.roles?.find(r=>r.id===user.role);
   const eligible=roleCanEdit(role);
   const canEdit=!!(eligible&&session?.username===user?.username);
-  return{user,role,eligible,canEdit};
+  const canMeet=!!(user&&roleCanScheduleMeeting(role));
+  return{user,role,eligible,canEdit,canMeet};
 }
 function roleCanEdit(role){
   return !!(role&&(role.hasLeaderPerms===true||role.id==="conselheiro"||(Array.isArray(role.permissions)&&role.permissions.includes("edit_map"))));
+}
+function roleCanScheduleMeeting(role){
+  if(!role)return false;
+  if(roleCanEdit(role))return true;
+  const perms=Array.isArray(role.permissions)?role.permissions:[];
+  if(perms.some(p=>["schedule_meeting","map_meeting","definir_reuniao"].includes(String(p))))return true;
+  const haystack=[
+    role.id,
+    role.nome,
+    role.name,
+    role.titulo,
+    role.label,
+    role.estruturaPosicao,
+    role.estruturaNivel
+  ].map(normalizeText).join(" ");
+  return haystack.includes("capitao")||haystack.includes("comandante")||haystack.includes("caporegime");
 }
 function openAuth(){
   if(!access.eligible)return;
@@ -1703,6 +1732,38 @@ function normalizePoint(p){
 }
 function normalizeRoute(r){
   return{kind:"route",status:"Observado",threat:"Média",sigilo:"Nível II",desc:"",type:"infiltracao",color:ROUTE_TYPES[r.type]?.color||"#f97316",points:[],...r,points:(r.points||[]).map(p=>({x:Number(p.x),y:Number(p.y),label:p.label||"",pointId:p.pointId||""}))};
+}
+function normalizeMeeting(m){
+  const expiresAt=m?.expiresAt||m?.expiraEm||"";
+  return{
+    id:String(m?.id||"meeting_"+uid()),
+    kind:"meeting",
+    x:Number(m?.x),
+    y:Number(m?.y),
+    createdBy:m?.createdBy||m?.autor||"",
+    createdAt:m?.createdAt||new Date().toISOString(),
+    expiresAt
+  };
+}
+function normalizeMeetings(items){
+  const now=Date.now();
+  return(Array.isArray(items)?items:[])
+    .map(normalizeMeeting)
+    .filter(m=>Number.isFinite(m.x)&&Number.isFinite(m.y)&&new Date(m.expiresAt).getTime()>now);
+}
+function meetingLabel(meeting){
+  const left=Math.max(0,new Date(meeting.expiresAt).getTime()-Date.now());
+  return`REUNIÃO - ${Math.max(1,Math.ceil(left/60000))} MIN`;
+}
+function scheduleMeetingTick(){
+  clearTimeout(meetingTimer);
+  if(!meetings.length)return;
+  const next=Math.min(...meetings.map(m=>new Date(m.expiresAt).getTime()-Date.now()));
+  meetingTimer=setTimeout(()=>{
+    meetings=normalizeMeetings(meetings);
+    renderMarkers();
+    scheduleMeetingTick();
+  },Math.max(1000,Math.min(next,30000)));
 }
 function decodeSlpBase64(value){
   const clean=String(value||"").replace(/-/g,"+").replace(/_/g,"/");
@@ -1776,16 +1837,19 @@ function applyState(state){
   const sourcePoints=Array.isArray(portalState.mapaPontos)&&portalState.mapaPontos.length?portalState.mapaPontos:DEFAULT_POINTS;
   points=sourcePoints.map(normalizePoint);
   routes=mergeMapDefaults(Array.isArray(portalState.mapaRotas)?portalState.mapaRotas:[],activeDefaultRoutes()).map(normalizeRoute);
+  meetings=normalizeMeetings(portalState.mapaReunioes);
   access=resolveAccess(portalState);
   el("sessionName").textContent=access.user?(access.user.codinome||access.user.displayName||access.user.username):"Leitura restrita";
   el("roleBadge").textContent=access.role?.nome||"Somente leitura";
   el("roleBadge").className="rolebadge"+(access.canEdit?" admin":"");
   el("adminTools").hidden=!access.canEdit;
+  const canMeet=!pickMode&&access.canMeet;
+  el("meetingTools").hidden=!canMeet;
   if(pickMode){
     el("readonlyNote").hidden=false;
     el("readonlyNote").textContent="Modo selecao de local ativo: toque em um ponto ou rota e use o botao do detalhe para voltar ao relatorio.";
   }else{
-    el("readonlyNote").hidden=!!access.eligible;
+    el("readonlyNote").hidden=!!(access.eligible||access.canMeet);
     el("readonlyNote").textContent="Mapa disponivel em modo somente leitura.";
   }
   el("detailActions").hidden=!access.canEdit;
@@ -1795,10 +1859,12 @@ function applyState(state){
   el("railAuth").classList.toggle("active",access.canEdit);
   el("railNewPoint").hidden=!access.canEdit;
   el("railNewRoute").hidden=!access.canEdit;
+  el("railMeeting").hidden=!canMeet;
   el("statPoints").textContent=points.length;
   el("statRoutes").textContent=routes.length;
   el("statLinks").textContent=(portalState.missoes||[]).length+(portalState.relatorios||[]).length+(portalState.contratos||[]).length;
   render();
+  scheduleMeetingTick();
 }
 async function loadState(){
   setSync("Carregando mapa...","busy");
@@ -1835,6 +1901,29 @@ async function persistMap(nextPoints,nextRoutes){
   }
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(portalState))}catch{}
   saving=false;setSync(cloudClient?(cloudOk?"Alterações sincronizadas":"Falha ao sincronizar"):"Alterações salvas neste dispositivo",cloudClient?(cloudOk?"ok":"err"):"ok");
+}
+async function persistMeetings(nextMeetings){
+  if(!access.canMeet)return;
+  saving=true;setSync("Sinalizando reunião...","busy");
+  meetings=normalizeMeetings(nextMeetings);
+  renderMarkers();
+  scheduleMeetingTick();
+  let base=portalState||{};
+  let cloudOk=false;
+  let merged={...base,mapaReunioes:meetings,mapaAtualizadoEm:new Date().toISOString(),mapaAtualizadoPor:access.user?.username||"capitao"};
+  if(cloudClient){
+    try{
+      const{data}=await cloudClient.from("fox_state").select("data").eq("id",1).single();
+      if(data?.data)base=data.data;
+      merged={...base,mapaReunioes:meetings,mapaAtualizadoEm:new Date().toISOString(),mapaAtualizadoPor:access.user?.username||"capitao"};
+      const{error}=await cloudClient.from("fox_state").upsert({id:1,data:merged,updated_at:new Date().toISOString()});
+      if(error)throw error;
+      cloudOk=true;
+    }catch(e){console.error("Erro ao sinalizar reunião",e)}
+  }
+  portalState=merged;
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(portalState))}catch{}
+  saving=false;setSync(cloudClient?(cloudOk?"Reunião sinalizada":"Reunião salva neste dispositivo"):"Reunião sinalizada",cloudClient&& !cloudOk?"err":"ok");
 }
 
 function transform(){stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
@@ -2092,6 +2181,16 @@ function renderMarkers(){
     m.dataset.label=p.name;m.style.left=p.x+"%";m.style.top=p.y+"%";m.style.setProperty("--accent",cfg.color||"#f97316");m.textContent=cfg.symbol||"●";
     m.onclick=e=>{e.stopPropagation();selectItem("point",p.id)};markers.appendChild(m);
   });
+  meetings.forEach(meeting=>{
+    const m=document.createElement("button");
+    m.className="meeting-marker";
+    m.style.left=meeting.x+"%";
+    m.style.top=meeting.y+"%";
+    m.title=`Reunião definida por ${meeting.createdBy||"capitão"}`;
+    m.innerHTML=`<span>!</span><div class="meeting-label">${escapeHtml(meetingLabel(meeting))}</div>`;
+    m.onclick=e=>e.stopPropagation();
+    markers.appendChild(m);
+  });
 }
 function svgEl(tag,attrs={}){
   const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));return n;
@@ -2103,29 +2202,26 @@ function renderRoutes(){
     const pts=r.points.map(p=>{const q=pctToPx(p);return`${q.x},${q.y}`}).join(" ");
     const color=r.color||ROUTE_TYPES[r.type]?.color||"#f97316";
     const isActive=active?.kind==="route"&&active.id===r.id;
-    if(isActive)routesSvg.appendChild(svgEl("polyline",{points:pts,class:"route-halo",stroke:color,"stroke-width":18}));
+    if(!isActive)return;
+    routesSvg.appendChild(svgEl("polyline",{points:pts,class:"route-halo",stroke:color,"stroke-width":18}));
     const visible=svgEl("polyline",{
       points:pts,
-      class:"route-visible"+(isActive?" route-active":""),
+      class:"route-visible route-active",
       stroke:color,
       style:`color:${color}`,
-      "stroke-width":isActive?8:3,
-      "stroke-dasharray":!isActive||r.type==="fuga"?"12 7":""
+      "stroke-width":8,
+      "stroke-dasharray":r.type==="fuga"?"12 7":""
     });
     const hit=svgEl("polyline",{points:pts,class:"route-hit"});
     hit.addEventListener("click",e=>{e.stopPropagation();selectItem("route",r.id)});
     routesSvg.appendChild(visible);routesSvg.appendChild(hit);
     const mid=pctToPx(r.points[Math.floor(r.points.length/2)]);
-    if(isActive||filter==="route"){
-      const label=svgEl("text",{x:mid.x,y:mid.y-16,class:"route-label"+(isActive?" route-active":""),"text-anchor":"middle"});label.textContent=r.name;routesSvg.appendChild(label);
-    }
-    if(isActive){
-      r.points.forEach((p,i)=>{
-        const q=pctToPx(p);
-        routesSvg.appendChild(svgEl("circle",{cx:q.x,cy:q.y,r:14,class:"route-node"}));
-        const t=svgEl("text",{x:q.x,y:q.y,class:"route-node-text"});t.textContent=String(i+1);routesSvg.appendChild(t);
-      });
-    }
+    const label=svgEl("text",{x:mid.x,y:mid.y-16,class:"route-label route-active","text-anchor":"middle"});label.textContent=r.name;routesSvg.appendChild(label);
+    r.points.forEach((p,i)=>{
+      const q=pctToPx(p);
+      routesSvg.appendChild(svgEl("circle",{cx:q.x,cy:q.y,r:14,class:"route-node"}));
+      const t=svgEl("text",{x:q.x,y:q.y,class:"route-node-text"});t.textContent=String(i+1);routesSvg.appendChild(t);
+    });
   });
   if(mode?.kind?.startsWith("route-")&&mode.points?.length){
     const pts=mode.points.map(p=>{const q=pctToPx(p);return`${q.x},${q.y}`}).join(" ");
@@ -2161,6 +2257,11 @@ function startNewPoint(){
 }
 function startNewRoute(){
   if(!access.canEdit)return;closeDetail();showMode({kind:"route-new",points:[]},"Clique no mapa para traçar a rota. Adicione ao menos dois pontos.");
+}
+function startMeetingMode(){
+  if(!access.canMeet)return;
+  closeDetail();
+  showMode({kind:"meeting-new"},"Clique no ponto do mapa onde a reunião deve apitar por alguns minutos.");
 }
 function finishRouteDrawing(){
   if(!mode?.kind?.startsWith("route-")||mode.points.length<2){alert("Adicione pelo menos dois pontos à rota.");return}
@@ -2238,6 +2339,9 @@ window.addEventListener("pointerup",e=>{
     cancelMode();openEditor(draft,true);
   }else if(mode.kind==="point-reposition"){
     const draft={...mode.draft,x:pos.x,y:pos.y,updatedBy:access.user?.username,updatedAt:new Date().toISOString()};cancelMode();openEditor(draft,false);
+  }else if(mode.kind==="meeting-new"){
+    const meeting={id:"meeting_"+uid(),kind:"meeting",x:pos.x,y:pos.y,createdBy:access.user?.username||"capitao",createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+MEETING_DURATION_MS).toISOString()};
+    cancelMode();persistMeetings([...meetings,meeting]);
   }else if(mode.kind.startsWith("route-")){
     mode.points.push(pos);renderRoutes();
   }
@@ -2249,9 +2353,9 @@ function closePanel(){if(window.innerWidth<=1120)el("panel").classList.remove("o
 function togglePanel(){if(window.innerWidth<=1120){document.body.classList.remove("panel-collapsed");el("panel").classList.toggle("open")}else document.body.classList.toggle("panel-collapsed")}
 el("plus").onclick=()=>zoom(scale*1.25);el("minus").onclick=()=>zoom(scale/1.25);el("fit").onclick=el("reset").onclick=center;
 el("railFit").onclick=center;el("railPanel").onclick=togglePanel;el("panelClose").onclick=closePanel;
-el("railNewPoint").onclick=startNewPoint;el("railNewRoute").onclick=startNewRoute;el("railAuth").onclick=openAuth;
+el("railNewPoint").onclick=startNewPoint;el("railNewRoute").onclick=startNewRoute;el("railMeeting").onclick=startMeetingMode;el("railAuth").onclick=openAuth;
 el("menu").onclick=openPanel;
-el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;
+el("closeDetail").onclick=closeDetail;el("newPoint").onclick=startNewPoint;el("newRoute").onclick=startNewRoute;el("newMeeting").onclick=startMeetingMode;
 el("modeCancel").onclick=cancelMode;el("modeUndo").onclick=undoRoutePoint;el("modeFinish").onclick=finishRouteDrawing;
 el("closeEditor").onclick=closeEditor;el("cancelEditor").onclick=closeEditor;el("editorForm").onsubmit=saveEditor;el("repositionBtn").onclick=repositionDraft;
 el("editSelected").onclick=editSelected;el("deleteSelected").onclick=deleteSelected;
