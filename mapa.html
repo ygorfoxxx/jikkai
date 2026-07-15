@@ -465,6 +465,8 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const STORAGE_KEY="fox-portal-v3";
 const SESSION_KEY="fox-map-session";
 const VIEWER_KEY="fox-map-viewer";
+const PORTAL_SESSION_KEY="fox-portal-session-v2";
+const MAP_RETURN_KEY="fox-map-return-v2";
 const cloudClient=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
@@ -509,21 +511,38 @@ function setSync(text,state=""){
   el("syncDot").className="sync-dot"+(state?" "+state:"");
 }
 function parseSession(){
-  try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null")}catch{return null}
+  try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||sessionStorage.getItem(PORTAL_SESSION_KEY)||localStorage.getItem(PORTAL_SESSION_KEY)||localStorage.getItem(MAP_RETURN_KEY)||"null")}catch{return null}
 }
 function parseViewer(){
-  try{return JSON.parse(localStorage.getItem(VIEWER_KEY)||"null")}catch{return null}
+  try{return JSON.parse(localStorage.getItem(VIEWER_KEY)||localStorage.getItem(PORTAL_SESSION_KEY)||localStorage.getItem(MAP_RETURN_KEY)||"null")}catch{return null}
 }
 function normalizeText(v){
   return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 }
+function isRootUser(user) {
+  return String(user?.username || "").trim().toLowerCase() === "leader";
+}
+function rootMapRole(role = {}) {
+  return {
+    ...(role || {}),
+    id: role?.id || "leader",
+    nome: role?.nome || "Lider raiz",
+    estruturaPosicao: role?.estruturaPosicao || "lider",
+    hasLeaderPerms: true,
+    permissions: Array.from(new Set([...(Array.isArray(role?.permissions) ? role.permissions : []), "edit_map", "manage_map_meetings"])),
+    rootAccess: true
+  };
+}
 function resolveAccess(state){
   const viewer=parseViewer();
   const session=parseSession();
-  const user=viewer&&state?.users?.find(u=>u.username===viewer.username);
-  const role=user&&state?.roles?.find(r=>r.id===user.role);
+  const identity=viewer||session;
+  let user=identity&&state?.users?.find(u=>u.username===identity.username);
+  if(!user&&isRootUser(identity))user={...identity,username:"leader",role:identity?.role||"leader",codinome:identity?.codinome||identity?.displayName||"Leader"};
+  let role=user&&state?.roles?.find(r=>r.id===user.role);
+  if(isRootUser(user))role=rootMapRole(role);
   const eligible=userCanEdit(user,role);
-  const canEdit=!!(eligible&&session?.username===user?.username);
+  const canEdit=!!(eligible&&(session?.username===user?.username||isRootUser(user)));
   const canMeet=userCanMeet(user,role);
   return{user,role,eligible,canEdit,canMeet};
 }

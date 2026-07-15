@@ -80,6 +80,8 @@
     .map-controls button{width:34px;height:32px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.58);border-radius:9px;color:#ffedd5;font-size:12px;font-weight:1000;cursor:pointer}
     .map-controls button.wide{width:auto;padding:0 10px;text-transform:uppercase;letter-spacing:.1em;font-size:9px}
     .map-controls button.active{border-color:rgba(34,211,238,.75);color:#cffafe;background:rgba(8,145,178,.22)}
+    .map-view.placing{cursor:crosshair}
+    .map-mode-hint{position:absolute;left:10px;bottom:10px;z-index:8;border:1px solid rgba(34,211,238,.45);background:rgba(0,0,0,.72);border-radius:999px;padding:7px 10px;color:#cffafe;font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000}
     .map-marker{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
     .map-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 16px rgba(249,115,22,.9)}
     .map-name{white-space:nowrap;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.12);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;text-shadow:0 1px 2px #000;color:#fff7ed}
@@ -227,13 +229,16 @@
                 <button type="button" id="appMapPlus">+</button>
                 <button type="button" id="appMapFit">⌂</button>
                 <button type="button" class="wide" id="appMapRoutes">Rotas off</button>
+                <button type="button" class="wide" id="appMapMeeting" hidden>Reuniao</button>
               </div>
+              <div class="map-mode-hint" id="appMapModeHint" hidden>Clique no mapa para marcar reuniao</div>
             </div>
           </div>
           <aside class="panel">
             <div class="panel-head"><div><div class="label">Reuniões</div><div class="title">Sinais ativos</div></div></div>
             <div class="list" id="meetingsList"></div>
             <div class="actions">
+              <button class="btn cyan" id="appCreateMeetingBtn" hidden>Definir reuniao</button>
               <button class="btn secondary" id="openMapBtn">Mapa completo</button>
             </div>
           </aside>
@@ -332,6 +337,7 @@
     ];
     const REPUTACAO_NIVEIS = ["Desconhecido", "Sussurros", "Temido", "Procurado", "Lenda das Sombras"];
     const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
+    const ROOT_PERMISSIONS = ["manage_users", "manage_missions", "manage_roles", "manage_map_meetings", "edit_map", "edit_reports", "edit_contracts", "edit_jikkai"];
     const $ = id => document.getElementById(id);
     let currentData = {};
     let currentUser = null;
@@ -346,6 +352,7 @@
     let appMapDragging = false;
     let appMapDown = { x:0, y:0, tx:0, ty:0 };
     let appRoutesVisible = false;
+    let appMapMeetingMode = false;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
@@ -353,6 +360,32 @@
     function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
     function nameOf(user){return user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita"}
     function roleOf(user){return (currentData.roles || []).find(r => r.id === user?.role)}
+    function isRootUser(user) {
+      return String(user?.username || "").trim().toLowerCase() === "leader";
+    }
+    function rootRole(role = {}) {
+      return {
+        ...(role || {}),
+        id: role?.id || "leader",
+        nome: role?.nome || "Lider raiz",
+        estruturaPosicao: role?.estruturaPosicao || "lider",
+        ordemEstrutura: 0,
+        hasLeaderPerms: true,
+        permissions: Array.from(new Set([...(Array.isArray(role?.permissions) ? role.permissions : []), ...ROOT_PERMISSIONS])),
+        rootAccess: true
+      };
+    }
+    function effectiveRole(user) {
+      const role = roleOf(user);
+      return isRootUser(user) ? rootRole(role) : role;
+    }
+    function resolveSessionUser() {
+      const s = session();
+      const found = (currentData.users || []).find(u => u.username === s?.username);
+      if (found) return found;
+      if (isRootUser(s)) return { ...s, username:"leader", role:s?.role || "leader", codinome:s?.codinome || s?.displayName || "Leader" };
+      return s || null;
+    }
     function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
     function slug(v){return normalizeText(v).replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")}
     function rolePosition(role) {
@@ -376,9 +409,13 @@
       return !!(role?.hasLeaderPerms || (Array.isArray(role?.permissions) && role.permissions.includes(perm)));
     }
     function canCommandUser(user = currentUser) {
-      const role = roleOf(user);
+      const role = effectiveRole(user);
       const pos = rolePosition(role);
       return !!user?.username && (role?.hasLeaderPerms || ["lider","braco_direito","conselheiro","capitao_ramo"].includes(pos) || hasPerm(role,"manage_missions") || hasPerm(role,"manage_users"));
+    }
+    function canManageMap(user = currentUser) {
+      const role = effectiveRole(user);
+      return !!user?.username && (canCommandUser(user) || hasPerm(role, "manage_map_meetings") || hasPerm(role, "edit_map"));
     }
     function activity(tipo, alvo, descricao) {
       return { id: uid(), tipo, ator: currentUser?.username || "app", alvo: alvo || "", descricao: descricao || "", data: new Date().toISOString() };
@@ -389,7 +426,7 @@
       return (currentData.users || []).find(u => [u.username, u.codinome, u.displayName, u.nomeRP, u.nome].some(v => slug(v) === target)) || null;
     }
     function isCaptain(user) {
-      return rolePosition(roleOf(user)) === "capitao_ramo";
+      return rolePosition(effectiveRole(user)) === "capitao_ramo";
     }
     function identityMatchesDivision(value, division) {
       const target = slug(value);
@@ -449,7 +486,7 @@
     function isOnline(user){return !!user?.username&&onlineUsers.has(user.username)}
     function memberLine(user, roleText = "") {
       if (!user) return `<div class="member-row"><div class="avatar">?</div><div><div class="member-name">Não definido</div><div class="member-role">${escapeHtml(roleText || "aguardando")}</div></div></div>`;
-      const role = roleOf(user);
+      const role = effectiveRole(user);
       const online=isOnline(user);
       return `<button type="button" class="member-row${online?" online":""}" data-member="${escapeHtml(user.username)}">${memberAvatar(user)}<div class="min-w-0"><div class="member-name">${escapeHtml(nameOf(user))}</div><div class="member-role">${escapeHtml(roleText || user.patente || role?.nome || "Operador")}${online?" · online":""}</div></div>${online?'<span class="online-dot" title="Online no app"></span>':""}</button>`;
     }
@@ -500,6 +537,7 @@
         ...base,
         users: Array.isArray(base.users) ? base.users.slice() : [],
         missoes: Array.isArray(base.missoes) ? base.missoes.slice() : [],
+        mapaReunioes: Array.isArray(base.mapaReunioes) ? base.mapaReunioes.slice() : [],
         appMensagens: Array.isArray(base.appMensagens) ? base.appMensagens.slice() : [],
         activityLog: Array.isArray(base.activityLog) ? base.activityLog.slice() : []
       });
@@ -630,20 +668,20 @@
         if (document.querySelector("#comando.active")) setSection("missoes");
         return;
       }
-      const role = roleOf(currentUser);
+      const role = effectiveRole(currentUser);
       $("commandRoleTag").textContent = role?.nome || "Comando";
       const onlineList = members().filter(isOnline);
       $("commandOnlineTag").textContent = `${onlineList.length} online`;
       const target = $("cmdMissionTarget");
       const previousTarget = target.value;
       const orderedMembers = members().slice().sort((a,b)=>(isOnline(b)-isOnline(a)) || nameOf(a).localeCompare(nameOf(b),"pt-BR"));
-      target.innerHTML = orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${isOnline(u) ? "● " : ""}${escapeHtml(nameOf(u))} · ${escapeHtml(u.patente || roleOf(u)?.nome || "Operador")}</option>`).join("");
+      target.innerHTML = orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${isOnline(u) ? "● " : ""}${escapeHtml(nameOf(u))} · ${escapeHtml(u.patente || effectiveRole(u)?.nome || "Operador")}</option>`).join("");
       if (previousTarget && [...target.options].some(o => o.value === previousTarget)) target.value = previousTarget;
       const msgTarget = $("cmdMessageTarget");
       const msgPrevious = msgTarget.value;
       msgTarget.innerHTML = `<option value="todos">Todos os membros</option><option value="online">Somente online agora</option>` + orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(nameOf(u))}</option>`).join("");
       if (msgPrevious && [...msgTarget.options].some(o => o.value === msgPrevious)) msgTarget.value = msgPrevious;
-      $("commandMemberList").innerHTML = onlineList.length ? onlineList.map(u => `<div class="team-card">${memberLine(u, roleOf(u)?.nome || "Operador")}<div class="actions"><button class="btn secondary" data-action="cmd-target" data-id="${escapeHtml(u.username)}">Missão</button><button class="btn cyan" data-action="cmd-merit" data-id="${escapeHtml(u.username)}">Mérito</button></div></div>`).join("") : empty("Nenhum membro online no app agora.");
+      $("commandMemberList").innerHTML = onlineList.length ? onlineList.map(u => `<div class="team-card">${memberLine(u, effectiveRole(u)?.nome || "Operador")}<div class="actions"><button class="btn secondary" data-action="cmd-target" data-id="${escapeHtml(u.username)}">Missão</button><button class="btn cyan" data-action="cmd-merit" data-id="${escapeHtml(u.username)}">Mérito</button></div></div>`).join("") : empty("Nenhum membro online no app agora.");
       const logs = [
         ...(currentData.appMensagens || []).map(m => ({...m, tipo:"Comunicado", texto:m.mensagem, quando:m.createdAt})),
         ...(currentData.activityLog || []).filter(a => /app_|merito|missao_app|comunicado/i.test(`${a.tipo} ${a.descricao}`)).map(a => ({tipo:"Registro", titulo:a.descricao, texto:a.ator, quando:a.data}))
@@ -736,6 +774,54 @@
       $("appMapRoutes").textContent = appRoutesVisible ? "Rotas on" : "Rotas off";
       $("appMapRoutes").classList.toggle("active", appRoutesVisible);
     }
+    function setAppMapMeetingMode(enabled) {
+      appMapMeetingMode = !!enabled && canManageMap();
+      $("appMap")?.classList.toggle("placing", appMapMeetingMode);
+      if ($("appMapModeHint")) $("appMapModeHint").hidden = !appMapMeetingMode;
+      if ($("appMapMeeting")) {
+        $("appMapMeeting").classList.toggle("active", appMapMeetingMode);
+        $("appMapMeeting").textContent = appMapMeetingMode ? "Clique" : "Reuniao";
+      }
+    }
+    function appMapEventPosition(event) {
+      const rect = $("appMap").getBoundingClientRect();
+      const x = ((event.clientX - rect.left - appMapTx) / appMapScale) / rect.width * 100;
+      const y = ((event.clientY - rect.top - appMapTy) / appMapScale) / rect.height * 100;
+      return {
+        x: Math.max(0, Math.min(100, x)),
+        y: Math.max(0, Math.min(100, y))
+      };
+    }
+    async function createMeetingFromApp(pos) {
+      if (!canManageMap()) return;
+      const title = prompt("Titulo da reuniao no mapa:", "Reuniao Jikkai");
+      if (title === null) { setAppMapMeetingMode(false); return; }
+      const rawMinutes = prompt("Duracao do sinal em minutos:", "10");
+      if (rawMinutes === null) { setAppMapMeetingMode(false); return; }
+      const minutes = Math.max(5, Math.min(120, Number(rawMinutes) || 10));
+      const now = new Date();
+      const meeting = {
+        id: "meeting_" + uid(),
+        kind: "meeting",
+        titulo: title.trim() || "Reuniao Jikkai",
+        descricao: "Sinal definido pelo aplicativo durante o roleplay.",
+        x: Number(pos.x.toFixed(2)),
+        y: Number(pos.y.toFixed(2)),
+        startsAt: now.toISOString(),
+        expiresAt: new Date(now.getTime() + minutes * 60000).toISOString(),
+        createdAt: now.toISOString(),
+        createdBy: currentUser?.username || "leader",
+        sigilo: "Restrito",
+        convocacao: "Todos os disponiveis",
+        source: "app_mapa"
+      };
+      await saveState(d => ({
+        ...d,
+        mapaReunioes: [...(d.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()), meeting],
+        activityLog: [...(d.activityLog || []), activity("app_reuniao_mapa", meeting.id, `Marcou reuniao no mapa pelo APP: ${meeting.titulo}`)]
+      }), "Reuniao marcada");
+      setAppMapMeetingMode(false);
+    }
     function renderAppMap(activeMeetings) {
       const layer = $("appMapLayer");
       if (!layer) return;
@@ -755,9 +841,13 @@
     }
     function renderMap() {
       const list = meetings();
+      const manage = canManageMap();
       $("metricMeetings").textContent = list.length;
       $("mapCountTag").textContent = `${list.length} ativa${list.length === 1 ? "" : "s"}`;
       $("meetingsList").innerHTML = list.length ? list.map(m => item("Reunião marcada no mapa", `${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min restantes`, `Sinal criado por ${m.createdBy || "capitão"} em ${Number(m.x).toFixed(1)}%, ${Number(m.y).toFixed(1)}%.`, `<span class="pulse"></span>`)).join("") : empty("Nenhuma reunião ativa no mapa.");
+      if ($("appMapMeeting")) $("appMapMeeting").hidden = !manage;
+      if ($("appCreateMeetingBtn")) $("appCreateMeetingBtn").hidden = !manage;
+      if (!manage && appMapMeetingMode) setAppMapMeetingMode(false);
       renderAppMap(list);
     }
     function renderMembers() {
@@ -768,8 +858,8 @@
         $("membersList").innerHTML = empty("Nenhum membro visível.");
         return;
       }
-      const ordered = users => users.slice().sort((a,b)=>roleOrder(roleOf(a))-roleOrder(roleOf(b)) || nameOf(a).localeCompare(nameOf(b), "pt-BR"));
-      const posOf = user => rolePosition(roleOf(user));
+      const ordered = users => users.slice().sort((a,b)=>roleOrder(effectiveRole(a))-roleOrder(effectiveRole(b)) || nameOf(a).localeCompare(nameOf(b), "pt-BR"));
+      const posOf = user => rolePosition(effectiveRole(user));
       const leadership = {
         lider: ordered(list.filter(u => posOf(u) === "lider")),
         conselheiro: ordered(list.filter(u => posOf(u) === "conselheiro")),
@@ -824,7 +914,7 @@
             ${commandCard("Braço Direito", "Comando direto", leadership.braco)}
           </div>
           <div class="division-grid">${divs.length ? divs.map(divisionCard).join("") : empty("Nenhuma divisão criada.")}</div>
-          ${loose.length ? `<div class="panel" style="box-shadow:none"><div class="panel-head"><div><div class="label">Sem equipe</div><div class="title">Membros aguardando alocação</div></div><span class="tag">${loose.length}</span></div><div class="team-grid">${loose.map(u => `<div class="team-card">${memberLine(u, roleOf(u)?.nome || "Operador")}</div>`).join("")}</div></div>` : ""}
+          ${loose.length ? `<div class="panel" style="box-shadow:none"><div class="panel-head"><div><div class="label">Sem equipe</div><div class="title">Membros aguardando alocação</div></div><span class="tag">${loose.length}</span></div><div class="team-grid">${loose.map(u => `<div class="team-card">${memberLine(u, effectiveRole(u)?.nome || "Operador")}</div>`).join("")}</div></div>` : ""}
         </div>
       `;
     }
@@ -840,7 +930,7 @@
     function renderMemberDrawer() {
       const user = userByUsername(selectedMemberUsername);
       if (!user) return;
-      const role = roleOf(user);
+      const role = effectiveRole(user);
       const canEdit = canCommandUser();
       $("drawerName").textContent = nameOf(user);
       $("drawerMeta").textContent = `${user.patente || role?.nome || "Operador"} · ${user.vilaOrigem || user.vila || "origem sigilosa"} · nível ${user.nivelAcesso || 1}`;
@@ -912,9 +1002,8 @@
       renderMemberDrawer();
     }
     function renderUser() {
-      const s = session();
-      currentUser = (currentData.users || []).find(u => u.username === s?.username) || s || null;
-      const role = roleOf(currentUser);
+      currentUser = resolveSessionUser();
+      const role = effectiveRole(currentUser);
       $("viewerName").textContent = nameOf(currentUser);
       $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
       $("commandNav").hidden = !canCommandUser();
@@ -922,7 +1011,7 @@
     }
     function publishPresence(section = "central") {
       if (!currentUser?.username || !window.jikkaiDesktop?.updatePresence) return;
-      const role = roleOf(currentUser);
+      const role = effectiveRole(currentUser);
       const payload = { username: currentUser.username, codinome: nameOf(currentUser), role: role?.nome || currentUser.role || "", section };
       const key = JSON.stringify(payload);
       if (key === lastPresenceKey && Date.now() - lastPresenceAt < 30000) return;
@@ -981,19 +1070,27 @@
     $("openMapBtn").onclick = () => window.jikkaiDesktop?.openMap();
     $("cmdCreateMission").onclick = createMissionFromCommand;
     $("cmdSendMessage").onclick = sendCommandMessage;
+    $("appCreateMeetingBtn").onclick = () => { setSection("mapa"); setAppMapMeetingMode(true); };
     $("drawerClose").onclick = closeMemberDrawer;
     $("memberDrawer").addEventListener("mousedown", e => { if (e.target === $("memberDrawer")) closeMemberDrawer(); });
     $("appMapMinus").onclick = () => appMapZoom(appMapScale / 1.25);
     $("appMapPlus").onclick = () => appMapZoom(appMapScale * 1.25);
     $("appMapFit").onclick = appMapFit;
     $("appMapRoutes").onclick = () => { appRoutesVisible = !appRoutesVisible; renderAppRoutes(); };
+    $("appMapMeeting").onclick = () => setAppMapMeetingMode(!appMapMeetingMode);
     $("appMap").addEventListener("wheel", e => {
       e.preventDefault();
       const rect = $("appMap").getBoundingClientRect();
       appMapZoom(appMapScale * (e.deltaY < 0 ? 1.16 : .86), e.clientX - rect.left, e.clientY - rect.top);
     }, { passive:false });
+    $("appMap").addEventListener("click", e => {
+      if (!appMapMeetingMode || e.target.closest(".map-controls")) return;
+      e.preventDefault();
+      createMeetingFromApp(appMapEventPosition(e));
+    });
     $("appMap").addEventListener("pointerdown", e => {
       if (e.target.closest(".map-controls")) return;
+      if (appMapMeetingMode) return;
       appMapDragging = true;
       appMapDown = { x:e.clientX, y:e.clientY, tx:appMapTx, ty:appMapTy };
       $("appMap").classList.add("dragging");
