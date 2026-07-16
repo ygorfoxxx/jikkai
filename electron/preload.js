@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
   openMap: () => ipcRenderer.invoke("main:open-map"),
   reloadPortal: () => ipcRenderer.invoke("main:reload"),
   shortcutStatus: () => ipcRenderer.invoke("main:shortcuts"),
+  getDesktopPreferences: () => ipcRenderer.invoke("desktop:get-preferences"),
+  updateDesktopPreferences: (patch) => ipcRenderer.invoke("desktop:update-preferences", patch || {}),
   minimizePortal: () => ipcRenderer.invoke("main:minimize"),
   hidePortal: () => ipcRenderer.invoke("main:hide"),
   toggleMaximizePortal: () => ipcRenderer.invoke("main:toggle-maximize"),
@@ -53,6 +55,16 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
     const listener = (_event, payload) => callback(payload || {});
     ipcRenderer.on("overlay:mode", listener);
     return () => ipcRenderer.removeListener("overlay:mode", listener);
+  },
+  onDesktopPreferencesChanged: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("desktop:preferences", listener);
+    return () => ipcRenderer.removeListener("desktop:preferences", listener);
+  },
+  onOverlaySearch: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on("overlay:search", listener);
+    return () => ipcRenderer.removeListener("overlay:search", listener);
   }
 });
 

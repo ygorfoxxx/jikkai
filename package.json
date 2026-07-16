@@ -1,6 +1,6 @@
 {
   "name": "jikkai-portal-desktop",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Aplicativo desktop do portal JIKKAI com overlay tatico para jogo.",
   "main": "electron/main.js",
   "private": true,

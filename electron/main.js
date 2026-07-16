@@ -13,7 +13,8 @@ const PORTAL_SHORTCUT = "CommandOrControl+Shift+M";
 const SHORTCUT_GROUPS = {
   overlay: ["CommandOrControl+Shift+J", "Alt+J", "CommandOrControl+Alt+J"],
   clickThrough: ["CommandOrControl+Shift+K", "Alt+K", "CommandOrControl+Alt+K"],
-  app: ["CommandOrControl+Shift+M", "Alt+M", "CommandOrControl+Alt+M"]
+  app: ["CommandOrControl+Shift+M", "Alt+M", "CommandOrControl+Alt+M"],
+  search: ["Alt+F", "CommandOrControl+Alt+F"]
 };
 const SMOKE_TEST = process.argv.includes("--smoke-test");
 const DEV_MODE = process.argv.includes("--dev");
@@ -21,6 +22,14 @@ const START_MINIMIZED = !DEV_MODE && !SMOKE_TEST && !process.argv.includes("--sh
 const gotSingleInstanceLock = SMOKE_TEST || app.requestSingleInstanceLock();
 const HUD_SIZE = { width: 370, height: 188 };
 const PANEL_SIZE = { width: 500, height: 660 };
+const DEFAULT_DESKTOP_PREFS = {
+  overlay: {
+    hud: { bounds: null, opacity: 0.92, scale: 1, side: "right", locked: false, displayId: null },
+    panel: { bounds: null, opacity: 0.92, scale: 1, side: "right", locked: false, displayId: null },
+    clickThrough: true,
+    lastSection: "agora"
+  }
+};
 
 let mainWindow = null;
 let overlayWindow = null;
@@ -28,6 +37,7 @@ let tray = null;
 let overlayClickThrough = true;
 let overlayMode = "hud";
 let overlaySection = "agora";
+let desktopPrefs = structuredClone(DEFAULT_DESKTOP_PREFS);
 let isQuitting = false;
 let shortcutStatus = {};
 let realtimeService = null;
@@ -57,6 +67,52 @@ function broadcastToWindows(channel, payload) {
   BrowserWindow.getAllWindows().forEach(window => {
     if (!window.isDestroyed()) window.webContents.send(channel, payload);
   });
+}
+
+function prefsFilePath() {
+  return path.join(app.getPath("userData"), "jikkai-desktop-preferences.json");
+}
+
+function mergePrefs(base, patch) {
+  if (!patch || typeof patch !== "object") return base;
+  const next = Array.isArray(base) ? base.slice() : { ...(base || {}) };
+  Object.entries(patch).forEach(([key, value]) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      next[key] = mergePrefs(next[key] || {}, value);
+    } else {
+      next[key] = value;
+    }
+  });
+  return next;
+}
+
+function loadDesktopPrefs() {
+  try {
+    const raw = fs.readFileSync(prefsFilePath(), "utf8");
+    return mergePrefs(structuredClone(DEFAULT_DESKTOP_PREFS), JSON.parse(raw));
+  } catch {
+    return structuredClone(DEFAULT_DESKTOP_PREFS);
+  }
+}
+
+function saveDesktopPrefs() {
+  try {
+    fs.mkdirSync(path.dirname(prefsFilePath()), { recursive: true });
+    fs.writeFileSync(prefsFilePath(), JSON.stringify(desktopPrefs, null, 2), "utf8");
+  } catch (error) {
+    console.error("JIKKAI preferences save failed", error);
+  }
+}
+
+function updateDesktopPrefs(patch = {}) {
+  desktopPrefs = mergePrefs(desktopPrefs, patch);
+  saveDesktopPrefs();
+  broadcastToWindows("desktop:preferences", desktopPrefs);
+  return desktopPrefs;
+}
+
+function overlayPrefs(mode = overlayMode) {
+  return desktopPrefs.overlay?.[mode] || DEFAULT_DESKTOP_PREFS.overlay[mode];
 }
 
 function resolveAppFile(requestUrl) {
@@ -142,7 +198,7 @@ function createOverlayWindow() {
     frame: false,
     transparent: true,
     backgroundColor: "#00000000",
-    resizable: false,
+    resizable: true,
     maximizable: false,
     minimizable: false,
     skipTaskbar: true,
@@ -159,9 +215,20 @@ function createOverlayWindow() {
 
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayWindow.setOpacity(overlayPrefs("hud").opacity || 0.92);
+  overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
   applyWindowNavigationRules(overlayWindow);
   overlayWindow.loadURL(appUrl("overlay.html"));
+  overlayWindow.on("moved", () => {
+    if (!overlayWindow || overlayWindow.isDestroyed()) return;
+    if (overlayPrefs(overlayMode).locked) return;
+    updateDesktopPrefs({ overlay: { [overlayMode]: { bounds: overlayWindow.getBounds(), displayId: screen.getDisplayMatching(overlayWindow.getBounds()).id } } });
+  });
+  overlayWindow.on("resized", () => {
+    if (!overlayWindow || overlayWindow.isDestroyed()) return;
+    if (overlayPrefs(overlayMode).locked) return;
+    updateDesktopPrefs({ overlay: { [overlayMode]: { bounds: overlayWindow.getBounds(), displayId: screen.getDisplayMatching(overlayWindow.getBounds()).id } } });
+  });
   overlayWindow.on("closed", () => {
     overlayWindow = null;
   });
@@ -173,14 +240,29 @@ function ensureOverlayWindow() {
 }
 
 function overlayBounds(mode = overlayMode) {
-  const workArea = screen.getPrimaryDisplay().workArea;
+  const prefs = overlayPrefs(mode);
+  if (prefs?.bounds && Number.isFinite(Number(prefs.bounds.width)) && Number.isFinite(Number(prefs.bounds.height))) {
+    const display = screen.getDisplayMatching(prefs.bounds);
+    const bounded = {
+      width: Math.max(mode === "panel" ? 420 : 240, Math.round(prefs.bounds.width)),
+      height: Math.max(mode === "panel" ? 420 : 140, Math.round(prefs.bounds.height)),
+      x: Math.round(prefs.bounds.x),
+      y: Math.round(prefs.bounds.y)
+    };
+    if (bounded.x + bounded.width < display.bounds.x + 60 || bounded.x > display.bounds.x + display.bounds.width - 60) bounded.x = display.workArea.x + 20;
+    if (bounded.y + bounded.height < display.bounds.y + 60 || bounded.y > display.bounds.y + display.bounds.height - 60) bounded.y = display.workArea.y + 20;
+    return bounded;
+  }
+  const preferredDisplay = screen.getAllDisplays().find(display => display.id === prefs?.displayId) || screen.getPrimaryDisplay();
+  const workArea = preferredDisplay.workArea;
   const size = mode === "panel"
     ? { width: PANEL_SIZE.width, height: Math.min(PANEL_SIZE.height, Math.max(520, workArea.height - 56)) }
     : HUD_SIZE;
+  const side = prefs?.side === "left" ? "left" : "right";
   return {
     width: size.width,
     height: size.height,
-    x: Math.max(workArea.x + 10, workArea.x + workArea.width - size.width - 22),
+    x: side === "left" ? workArea.x + 22 : Math.max(workArea.x + 10, workArea.x + workArea.width - size.width - 22),
     y: workArea.y + (mode === "panel" ? 24 : 34)
   };
 }
@@ -188,8 +270,9 @@ function overlayBounds(mode = overlayMode) {
 function sendOverlayState() {
   if (!overlayWindow) return;
   const send = () => {
-    overlayWindow.webContents.send("overlay:mode", { mode: overlayMode, section: overlaySection, clickThrough: overlayClickThrough });
+    overlayWindow.webContents.send("overlay:mode", { mode: overlayMode, section: overlaySection, clickThrough: overlayClickThrough, preferences: desktopPrefs });
     overlayWindow.webContents.send("overlay:click-through", overlayClickThrough);
+    overlayWindow.webContents.send("desktop:preferences", desktopPrefs);
   };
   if (overlayWindow.webContents.isLoading()) overlayWindow.webContents.once("did-finish-load", send);
   else send();
@@ -199,8 +282,10 @@ function applyOverlayMode(mode = "hud", section = overlaySection) {
   const overlay = ensureOverlayWindow();
   overlayMode = mode === "panel" ? "panel" : "hud";
   overlaySection = section || (overlayMode === "panel" ? "agora" : overlaySection);
-  overlayClickThrough = overlayMode === "hud";
+  if (overlayMode === "panel") updateDesktopPrefs({ overlay: { lastSection: overlaySection } });
+  overlayClickThrough = overlayMode === "hud" ? Boolean(desktopPrefs.overlay?.clickThrough ?? true) : false;
   overlay.setBounds(overlayBounds(overlayMode), false);
+  overlay.setOpacity(overlayPrefs(overlayMode).opacity || 0.92);
   overlay.setFocusable(!overlayClickThrough);
   overlay.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
   overlay.setAlwaysOnTop(true, "screen-saver");
@@ -211,6 +296,7 @@ function applyOverlayMode(mode = "hud", section = overlaySection) {
 
 function setOverlayClickThrough(enabled) {
   overlayClickThrough = Boolean(enabled);
+  updateDesktopPrefs({ overlay: { clickThrough: overlayClickThrough } });
   if (!overlayWindow) return overlayClickThrough;
   overlayWindow.setFocusable(!overlayClickThrough);
   overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
@@ -300,7 +386,11 @@ function registerShortcuts() {
   shortcutStatus = {};
   registerShortcutGroup("overlay", SHORTCUT_GROUPS.overlay, () => toggleOverlay());
   registerShortcutGroup("clickThrough", SHORTCUT_GROUPS.clickThrough, () => toggleOverlayInteraction());
-  registerShortcutGroup("app", SHORTCUT_GROUPS.app, () => showOverlayPanel("agora"));
+  registerShortcutGroup("app", SHORTCUT_GROUPS.app, () => showOverlayPanel(desktopPrefs.overlay?.lastSection || "agora"));
+  registerShortcutGroup("search", SHORTCUT_GROUPS.search, () => {
+    showOverlayPanel("busca");
+    if (overlayWindow) overlayWindow.webContents.send("overlay:search");
+  });
   console.log("JIKKAI shortcuts", JSON.stringify(shortcutStatus));
 }
 
@@ -316,6 +406,8 @@ ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
 ipcMain.handle("main:open-full-portal", () => ensureMainWindow("index.html"));
 ipcMain.handle("main:open-map", () => ensureMainWindow("mapa.html"));
 ipcMain.handle("main:shortcuts", () => shortcutStatus);
+ipcMain.handle("desktop:get-preferences", () => desktopPrefs);
+ipcMain.handle("desktop:update-preferences", (_event, patch = {}) => updateDesktopPrefs(patch));
 ipcMain.handle("realtime:get-state", async () => {
   if (!realtimeService) return { data: {}, updatedAt: "", source: "offline" };
   const cached = realtimeService.getState();
@@ -354,6 +446,9 @@ app.on("second-instance", () => {
 
 app.whenReady().then(async () => {
   await registerAppProtocol();
+  desktopPrefs = loadDesktopPrefs();
+  overlayClickThrough = Boolean(desktopPrefs.overlay?.clickThrough ?? true);
+  overlaySection = desktopPrefs.overlay?.lastSection || "agora";
   realtimeService = new RealtimeService({ broadcast: broadcastToWindows });
   realtimeService.start();
   createMenu();

@@ -71,7 +71,7 @@
     .map-preview{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(34,211,238,.3);border-radius:13px;overflow:hidden;background:#062226;box-shadow:inset 0 0 30px rgba(0,0,0,.45)}
     .map-preview.placing{cursor:crosshair;border-color:rgba(249,115,22,.75);box-shadow:inset 0 0 30px rgba(0,0,0,.45),0 0 24px rgba(249,115,22,.14)}
     .map-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.05) brightness(.78)}
-    .map-layer{position:absolute;inset:0}
+    .map-layer{position:absolute;inset:0;pointer-events:none}
     .map-point{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px}
     .map-dot{width:9px;height:9px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 14px rgba(249,115,22,.8)}
     .map-label{padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.12);font-size:7px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000;text-shadow:0 1px 2px #000;white-space:nowrap}
@@ -86,6 +86,10 @@
     .mode-strip{position:absolute;left:8px;right:8px;bottom:7px;z-index:3;display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(0,0,0,.36);color:#a7f3d0;font-size:8px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;pointer-events:none}
     .mode-panel .mode-strip{color:#fed7aa}
     .empty{border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:12px;color:#94a3b8;text-align:center;background:rgba(255,255,255,.025);font-size:11px}
+    .overlay-toast{position:absolute;left:16px;right:16px;bottom:16px;z-index:6;border:1px solid rgba(34,211,238,.45);border-radius:999px;background:rgba(0,0,0,.72);color:#cffafe;padding:8px 10px;text-align:center;text-transform:uppercase;letter-spacing:.1em;font-size:8px;font-weight:1000}
+    .meeting-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+    .meeting-actions button{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.26);border-radius:9px;padding:7px 5px;color:#e5e7eb;font-size:8px;text-transform:uppercase;letter-spacing:.08em;font-weight:1000}
+    .meeting-actions button.active{border-color:rgba(34,211,238,.65);background:rgba(8,145,178,.18);color:#cffafe}
     .mode-hud .tabs{display:none}
     .mode-hud .top{height:40px;padding:7px 9px}
     .mode-hud .content{height:calc(100% - 40px);padding:8px}
@@ -117,6 +121,7 @@
       <button class="tab" data-tab="missao">Missão</button>
       <button class="tab" data-tab="mapa">Mapa</button>
       <button class="tab" data-tab="comando" id="commandTab" hidden>Comando</button>
+      <button class="tab" data-tab="busca">Busca</button>
       <button class="tab" data-tab="membros">Membros</button>
       <button class="tab" data-tab="dossie">Dossiê</button>
     </nav>
@@ -162,6 +167,7 @@
           <article class="card">
             <div class="head"><div><div class="label">Convocação</div><div class="item-title" id="meetingTitle">Nenhuma reunião marcada</div></div><span class="tag" id="meetingTag">Mapa</span></div>
             <div class="item-desc" id="meetingDesc">Quando um capitão marcar reunião no mapa, o sinal aparece aqui.</div>
+            <div id="meetingActions"></div>
             <div class="actions"><button class="btn primary" data-tab-jump="mapa">Abrir mapa</button><button class="btn secondary" data-tab-jump="missao">Painel</button></div>
           </article>
         </section>
@@ -201,6 +207,14 @@
           </div>
         </section>
 
+        <section class="panel-tab" data-panel="busca">
+          <div class="card hot">
+            <div class="head"><div><div class="label">Busca universal</div><div class="name">Alt+F</div></div><span class="tag">Jikkai</span></div>
+            <div class="field"><label>Procurar</label><input class="input" id="ovSearchInput" placeholder="Codinome, missao, local, reuniao, rota, relatorio, equipe..."></div>
+            <div class="list" id="ovSearchResults" style="margin-top:8px"></div>
+          </div>
+        </section>
+
         <section class="panel-tab" data-panel="membros">
           <div class="card hot">
             <div class="head"><div><div class="label">Membros</div><div class="name">Estrutura próxima</div></div><span class="tag" id="memberCount">0</span></div>
@@ -225,6 +239,7 @@
     const TERMINAIS = new Set(["concluida","falhou","recusada","arquivada","cancelada","encerrada"]);
     const ROOT_PERMISSIONS = ["manage_users", "manage_missions", "manage_roles", "manage_map_meetings", "edit_map", "edit_reports", "edit_contracts", "edit_jikkai"];
     const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
+    const MEETING_RESPONSE_LABELS = { ciente:"Ciente", caminho:"A caminho", local:"No local", ausente:"Nao poderei comparecer" };
     const DEFAULT_POINTS = [
       { id:"konoha", name:"Konohagakure", type:"vila", x:65.5, y:60.5 },
       { id:"kiri", name:"Kirigakure", type:"vila", x:85.2, y:78.2 },
@@ -333,6 +348,12 @@
         .filter(m => Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y)) && new Date(m.expiresAt).getTime() > Date.now())
         .sort((a,b) => new Date(a.expiresAt) - new Date(b.expiresAt));
     }
+    function meetingResponse(meeting, username = latestUser?.username) {
+      return meeting?.responses?.[username]?.status || "";
+    }
+    function responseName(status) {
+      return MEETING_RESPONSE_LABELS[status] || "Sem resposta";
+    }
     function minutesLeft(date) { return Math.max(1, Math.ceil((new Date(date).getTime() - Date.now()) / 60000)); }
     function saveRoute(tab = "home", subTab = "", action = "") {
       const current = session();
@@ -393,9 +414,20 @@
       try {
         await persistCloudState(next);
         $("syncState").textContent = successText;
+        overlayToast(successText);
       } catch {
         $("syncState").textContent = "Local";
+        overlayToast("Salvo localmente");
       }
+    }
+    function overlayToast(text) {
+      const old = document.querySelector(".overlay-toast");
+      if (old) old.remove();
+      const node = document.createElement("div");
+      node.className = "overlay-toast";
+      node.textContent = text;
+      document.querySelector(".shell").appendChild(node);
+      setTimeout(()=>node.remove(),2200);
     }
     async function loadState() {
       const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
@@ -454,6 +486,23 @@
     function membersOf(data) {
       return (data?.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
     }
+    function overlaySearchItems(data = latestData) {
+      const points = (Array.isArray(data.mapaPontos) && data.mapaPontos.length ? data.mapaPontos : DEFAULT_POINTS);
+      return [
+        ...membersOf(data).map(u => ({ type:"Membro", title:userName(u), meta:u.patente || effectiveRole(data,u)?.nome || "Operador", text:[u.username,u.nomeRP,u.especialidade].join(" "), tab:"dossie", member:u.username })),
+        ...(data.missoes || []).map(m => ({ type:"Missao", title:m.titulo || "Missao", meta:m.status || "operacional", text:[m.desc,m.sigilo].join(" "), tab:"missao" })),
+        ...points.map(p => ({ type:"Local", title:p.name || p.nome || "Ponto", meta:p.type || p.tipo || "Mapa", text:p.id || "", tab:"mapa" })),
+        ...activeMeetings(data).map(m => ({ type:"Reuniao", title:m.titulo || "Reuniao", meta:`${minutesLeft(m.expiresAt)} min`, text:[m.descricao,m.createdBy].join(" "), tab:"mapa" })),
+        ...(data.relatorios || []).map(r => ({ type:"Relatorio", title:r.titulo || r.tipo || "Relatorio", meta:r.status || "registro", text:[r.resumo,r.desc,r.conteudo,r.autor].join(" "), tab:"missao" })),
+        ...(data.trios || data.equipes || []).map(t => ({ type:"Equipe", title:t.nome || t.name || "Equipe", meta:t.tipo || "Equipe", text:[t.desc,t.status].join(" "), tab:"membros" }))
+      ];
+    }
+    function renderOverlaySearch() {
+      const input = $("ovSearchInput");
+      const q = normalizeText(input?.value || "");
+      const results = overlaySearchItems().filter(item => !q || normalizeText([item.type,item.title,item.meta,item.text].join(" ")).includes(q)).slice(0,10);
+      $("ovSearchResults").innerHTML = results.length ? results.map(item => `<button class="item" data-ov-search-tab="${escapeHtml(item.tab)}" data-member="${item.member ? escapeHtml(item.member) : ""}"><div class="label">${escapeHtml(item.type)}</div><div class="item-title">${escapeHtml(item.title)}</div><div class="item-meta">${escapeHtml(item.meta || "")}</div></button>`).join("") : `<div class="empty">Nada encontrado.</div>`;
+    }
     function renderCommandPanel(data, user) {
       const allowed = canCommand(user, data);
       $("commandTab").hidden = !allowed;
@@ -476,6 +525,8 @@
       const id = ({ missoes:"missao", relatorios:"missao" })[tab] || tab || "agora";
       document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === id));
       document.querySelectorAll(".panel-tab").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === id));
+      const prefPromise = window.jikkaiDesktop?.updateDesktopPreferences?.({ overlay: { lastSection:id } });
+      prefPromise?.catch?.(()=>{});
     }
     function setMode(payload = {}) {
       const mode = payload.mode === "panel" ? "panel" : "hud";
@@ -489,7 +540,7 @@
     function publishPresence(section = "overlay") {
       if (!latestUser?.username || !window.jikkaiDesktop?.updatePresence) return;
       const role = effectiveRole(latestData, latestUser);
-      const payload = { username: latestUser.username, codinome: userName(latestUser), role: role?.nome || latestUser.role || "", section };
+      const payload = { username: latestUser.username, codinome: userName(latestUser), role: role?.nome || latestUser.role || "", section, availability: latestUser.appDisponibilidade || latestUser.disponibilidade || "Disponivel" };
       const key = JSON.stringify(payload);
       if (key === lastPresenceKey && Date.now() - lastPresenceAt < 30000) return;
       lastPresenceKey = key;
@@ -534,8 +585,10 @@
       $("meetingTitle").textContent = meeting ? "Reunião ativa no mapa" : "Nenhuma reunião marcada";
       $("meetingTag").textContent = meeting ? `${minutesLeft(meeting.expiresAt)} min` : "Mapa";
       $("meetingDesc").textContent = meeting ? `Sinal de ${meeting.createdBy || "capitão"} em ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%.` : "Quando um capitão marcar reunião no mapa, o sinal aparece aqui.";
+      $("meetingActions").innerHTML = meeting ? `<div class="meeting-actions">${Object.entries(MEETING_RESPONSE_LABELS).map(([key,label]) => `<button class="${meetingResponse(meeting)===key?"active":""}" data-meeting-response="${key}" data-id="${escapeHtml(meeting.id)}">${escapeHtml(label)}</button>`).join("")}</div>` : "";
       renderMap(data, meetings);
       renderCommandPanel(data, user);
+      renderOverlaySearch();
       if (overlayMeetingMode) setOverlayMeetingMode(true);
 
       $("memberCount").textContent = `${members.length}`;
@@ -648,6 +701,20 @@
       }), "Reuniao");
       setOverlayMeetingMode(false);
     }
+    async function saveOverlayMeetingResponse(meetingId, status) {
+      if (!latestUser?.username || !meetingId || !MEETING_RESPONSE_LABELS[status]) return;
+      await saveState(d => ({
+        ...d,
+        mapaReunioes: (d.mapaReunioes || []).map(m => m.id === meetingId ? {
+          ...m,
+          responses: {
+            ...(m.responses || {}),
+            [latestUser.username]: { status, at: new Date().toISOString(), name: userName(latestUser) }
+          }
+        } : m),
+        activityLog: [...(d.activityLog || []), activity("overlay_reuniao_confirmacao", meetingId, `${userName(latestUser)}: ${responseName(status)}`)]
+      }), responseName(status));
+    }
     async function quickOverlayMerit(username) {
       if (!username || !canCommand()) return;
       const user = (latestData.users || []).find(u => u.username === username);
@@ -677,7 +744,12 @@
     };
     $("ovCreateMission").onclick = createOverlayMission;
     $("ovSendMessage").onclick = sendOverlayMessage;
-    $("ovMeetingMode").onclick = () => { setTab("mapa"); setOverlayMeetingMode(!overlayMeetingMode); };
+    $("ovSearchInput").addEventListener("input", renderOverlaySearch);
+    $("ovMeetingMode").onclick = () => {
+      setTab("mapa");
+      if (overlayMeetingMode) { overlayToast("Clique dentro do mapa"); return; }
+      setOverlayMeetingMode(true);
+    };
     document.querySelector(".map-preview").addEventListener("click", e => {
       if (!overlayMeetingMode) return;
       e.preventDefault();
@@ -688,6 +760,11 @@
       if (btn) setTab(btn.dataset.tab);
     };
     document.body.addEventListener("click", e => {
+      const meetingResponseButton = e.target.closest("[data-meeting-response]");
+      if (meetingResponseButton) {
+        saveOverlayMeetingResponse(meetingResponseButton.dataset.id, meetingResponseButton.dataset.meetingResponse);
+        return;
+      }
       const jump = e.target.closest("[data-tab-jump]")?.dataset.tabJump;
       if (jump) setTab(jump);
       const member = e.target.closest("[data-member]")?.dataset.member;
@@ -696,6 +773,8 @@
         renderData(latestData);
         setTab("dossie");
       }
+      const searchTab = e.target.closest("[data-ov-search-tab]")?.dataset.ovSearchTab;
+      if (searchTab) setTab(searchTab);
       const merit = e.target.closest("[data-overlay-merit]")?.dataset.overlayMerit;
       if (merit) quickOverlayMerit(merit);
       const commandTarget = e.target.closest("[data-command-target]")?.dataset.commandTarget;
@@ -712,6 +791,10 @@
       $("mouseMode").textContent = enabled ? "Mouse no jogo" : "Mouse no painel";
     });
     window.jikkaiDesktop?.onOverlayModeChanged(setMode);
+    window.jikkaiDesktop?.onOverlaySearch?.(() => {
+      setTab("busca");
+      setTimeout(()=>$("ovSearchInput")?.focus(),40);
+    });
     window.addEventListener("storage", render);
     window.jikkaiDesktop?.onRealtimeState?.(payload => {
       if (!payload?.data?.users) return;
