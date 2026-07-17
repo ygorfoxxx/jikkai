@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
   hideOverlay: () => ipcRenderer.invoke("overlay:hide"),
   toggleOverlay: () => ipcRenderer.invoke("overlay:toggle"),
   showOverlayHud: () => ipcRenderer.invoke("overlay:show-hud"),
-  showOverlayPanel: (section) => ipcRenderer.invoke("overlay:show-panel", section || "agora"),
+  showOverlayPanel: (section) => ipcRenderer.invoke("overlay:show-panel", section || "missao"),
   toggleClickThrough: () => ipcRenderer.invoke("overlay:toggle-click-through"),
   openApp: (section) => ipcRenderer.invoke("main:open-app", section || ""),
   openPortal: () => ipcRenderer.invoke("main:open-portal"),

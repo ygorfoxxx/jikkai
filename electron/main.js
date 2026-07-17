@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, globalShortcut, ipcMain, protocol, net, screen, shell, Tray, nativeImage } = require("electron");
+const { app, BrowserWindow, Menu, Notification, globalShortcut, ipcMain, protocol, net, screen, shell, Tray, nativeImage } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -27,7 +27,7 @@ const DEFAULT_DESKTOP_PREFS = {
     hud: { bounds: null, opacity: 0.92, scale: 1, side: "right", locked: false, displayId: null },
     panel: { bounds: null, opacity: 0.92, scale: 1, side: "right", locked: false, displayId: null },
     clickThrough: true,
-    lastSection: "agora"
+    lastSection: "missao"
   }
 };
 
@@ -36,11 +36,12 @@ let overlayWindow = null;
 let tray = null;
 let overlayClickThrough = true;
 let overlayMode = "hud";
-let overlaySection = "agora";
+let overlaySection = "missao";
 let desktopPrefs = structuredClone(DEFAULT_DESKTOP_PREFS);
 let isQuitting = false;
 let shortcutStatus = {};
 let realtimeService = null;
+let lastNativeOperationalAlert = "";
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -64,9 +65,33 @@ function appUrl(page = "app.html") {
 }
 
 function broadcastToWindows(channel, payload) {
+  if (channel === "realtime:alert") showNativeOperationalAlert(payload);
   BrowserWindow.getAllWindows().forEach(window => {
     if (!window.isDestroyed()) window.webContents.send(channel, payload);
   });
+}
+
+function showNativeOperationalAlert(payload = {}) {
+  const meeting = payload?.meeting;
+  if (!meeting || !Notification.isSupported()) return;
+  const alertId = String(meeting.id || payload.createdAt || "meeting");
+  if (alertId === lastNativeOperationalAlert) return;
+  lastNativeOperationalAlert = alertId;
+  const expiresAt = new Date(meeting.expiresAt).getTime();
+  const minutes = Number.isFinite(expiresAt)
+    ? Math.max(1, Math.ceil((expiresAt - Date.now()) / 60000))
+    : "";
+  const details = [
+    meeting.descricao || "Ponto de encontro definido no mapa.",
+    minutes ? `${minutes} min restantes` : "Reunião em andamento"
+  ].join(" · ");
+  const notification = new Notification({
+    title: "JIKKAI · REUNIÃO ATIVA",
+    body: `${meeting.titulo || "Ponto de encontro"}\n${details}`,
+    silent: false
+  });
+  notification.on("click", () => showOverlayPanel("mapa"));
+  notification.show();
 }
 
 function prefsFilePath() {
@@ -281,9 +306,10 @@ function sendOverlayState() {
 function applyOverlayMode(mode = "hud", section = overlaySection) {
   const overlay = ensureOverlayWindow();
   overlayMode = mode === "panel" ? "panel" : "hud";
-  overlaySection = section || (overlayMode === "panel" ? "agora" : overlaySection);
+  overlaySection = section || (overlayMode === "panel" ? "missao" : overlaySection);
   if (overlayMode === "panel") updateDesktopPrefs({ overlay: { lastSection: overlaySection } });
   overlayClickThrough = overlayMode === "hud" ? Boolean(desktopPrefs.overlay?.clickThrough ?? true) : false;
+  overlay.setMinimumSize(overlayMode === "panel" ? 420 : 300, overlayMode === "panel" ? 420 : 150);
   overlay.setBounds(overlayBounds(overlayMode), false);
   overlay.setOpacity(overlayPrefs(overlayMode).opacity || 0.92);
   overlay.setFocusable(!overlayClickThrough);
@@ -313,7 +339,7 @@ function showOverlayHud() {
   return true;
 }
 
-function showOverlayPanel(section = "agora") {
+function showOverlayPanel(section = "missao") {
   const overlay = ensureOverlayWindow();
   applyOverlayMode("panel", section);
   overlay.show();
@@ -332,11 +358,20 @@ function toggleOverlay() {
 }
 
 function toggleOverlayInteraction() {
-  if (!overlayWindow || !overlayWindow.isVisible()) return showOverlayPanel(overlaySection || "agora");
-  if (overlayClickThrough || overlayMode === "hud") {
-    showOverlayPanel(overlaySection || "agora");
-    return false;
+  if (!overlayWindow || !overlayWindow.isVisible()) return showOverlayPanel(overlaySection || "missao");
+  if (overlayMode === "hud") {
+    const enabled = !overlayClickThrough;
+    setOverlayClickThrough(enabled);
+    if (enabled) {
+      overlayWindow.showInactive();
+    } else {
+      overlayWindow.show();
+      overlayWindow.focus();
+      overlayWindow.moveTop();
+    }
+    return enabled;
   }
+  if (overlayClickThrough) return setOverlayClickThrough(false);
   showOverlayHud();
   return true;
 }
@@ -352,7 +387,7 @@ function createTray() {
   tray = new Tray(icon);
   tray.setToolTip("JIKKAI - Portal");
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Painel tatico", click: () => showOverlayPanel("agora") },
+    { label: "Painel tatico", click: () => showOverlayPanel("missao") },
     { label: "Central operacional", click: () => ensureMainWindow("app.html") },
     { label: "Portal completo", click: () => ensureMainWindow("index.html") },
     { label: "Abrir mapa", click: () => ensureMainWindow("mapa.html") },
@@ -386,7 +421,7 @@ function registerShortcuts() {
   shortcutStatus = {};
   registerShortcutGroup("overlay", SHORTCUT_GROUPS.overlay, () => toggleOverlay());
   registerShortcutGroup("clickThrough", SHORTCUT_GROUPS.clickThrough, () => toggleOverlayInteraction());
-  registerShortcutGroup("app", SHORTCUT_GROUPS.app, () => showOverlayPanel(desktopPrefs.overlay?.lastSection || "agora"));
+  registerShortcutGroup("app", SHORTCUT_GROUPS.app, () => showOverlayPanel(desktopPrefs.overlay?.lastSection || "missao"));
   registerShortcutGroup("search", SHORTCUT_GROUPS.search, () => {
     showOverlayPanel("busca");
     if (overlayWindow) overlayWindow.webContents.send("overlay:search");
@@ -399,7 +434,7 @@ ipcMain.handle("overlay:hide", () => {
   if (overlayWindow) overlayWindow.hide();
 });
 ipcMain.handle("overlay:show-hud", () => showOverlayHud());
-ipcMain.handle("overlay:show-panel", (_event, section = "agora") => showOverlayPanel(section || "agora"));
+ipcMain.handle("overlay:show-panel", (_event, section = "missao") => showOverlayPanel(section || "missao"));
 ipcMain.handle("overlay:toggle-click-through", () => toggleOverlayInteraction());
 ipcMain.handle("main:open-app", (_event, section = "") => showOverlayPanel(section || "agora"));
 ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
@@ -448,7 +483,7 @@ app.whenReady().then(async () => {
   await registerAppProtocol();
   desktopPrefs = loadDesktopPrefs();
   overlayClickThrough = Boolean(desktopPrefs.overlay?.clickThrough ?? true);
-  overlaySection = desktopPrefs.overlay?.lastSection || "agora";
+  overlaySection = desktopPrefs.overlay?.lastSection || "missao";
   realtimeService = new RealtimeService({ broadcast: broadcastToWindows });
   realtimeService.start();
   createMenu();

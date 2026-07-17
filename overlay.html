@@ -8,11 +8,13 @@
     :root{color-scheme:dark;--orange:#f97316;--red:#dc2626;--cyan:#22d3ee;--green:#22c55e;--muted:#94a3b8;--paper:#fff7ed}
     *{box-sizing:border-box}
     html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;color:#f8fafc;font-family:Inter,Segoe UI,Arial,sans-serif}
-    body{padding:8px}
+    body{padding:8px;user-select:none}
     button{font:inherit;color:inherit}
-    .shell{height:100%;border:1px solid rgba(249,115,22,.46);border-radius:18px;background:linear-gradient(145deg,rgba(3,7,10,.66),rgba(14,5,2,.62));box-shadow:0 20px 70px rgba(0,0,0,.42),0 0 32px rgba(249,115,22,.14);backdrop-filter:blur(12px) saturate(1.15);overflow:hidden;position:relative}
+    .mode-panel{user-select:text}
+    .shell{height:100%;border:1px solid rgba(249,115,22,.46);border-radius:18px;background:linear-gradient(145deg,rgba(3,7,10,.72),rgba(14,5,2,.68));box-shadow:0 20px 70px rgba(0,0,0,.42),0 0 32px rgba(249,115,22,.14);backdrop-filter:blur(12px) saturate(1.15);overflow:hidden;position:relative;display:flex;flex-direction:column}
     .shell:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,.035),transparent 20%,transparent 80%,rgba(249,115,22,.05)),repeating-linear-gradient(0deg,transparent 0 27px,rgba(255,255,255,.025) 28px);opacity:.5}
-    .top{position:relative;z-index:2;height:43px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);-webkit-app-region:drag}
+    .top{position:relative;z-index:2;flex:0 0 43px;height:43px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(90deg,rgba(249,115,22,.08),transparent 52%);-webkit-app-region:drag;cursor:grab}
+    .top:active{cursor:grabbing}
     .brand{display:flex;align-items:center;gap:8px;min-width:0}
     .sigil{width:29px;height:29px;border-radius:9px;border:1px solid rgba(249,115,22,.55);display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,rgba(249,115,22,.3),rgba(0,0,0,.74));font-weight:1000;color:#fed7aa;box-shadow:0 0 18px rgba(249,115,22,.2)}
     .kicker{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#fb923c;font-weight:1000;line-height:1}
@@ -21,16 +23,26 @@
     .mode-pill{border:1px solid rgba(34,211,238,.35);background:rgba(8,145,178,.12);color:#cffafe;border-radius:999px;padding:5px 7px;font-size:8px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;white-space:nowrap}
     .icon-btn{width:27px;height:27px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);display:grid;place-items:center;cursor:pointer}
     .icon-btn:hover{border-color:rgba(249,115,22,.65);color:#fed7aa}
-    .tabs{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:5px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .tab{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.24);border-radius:10px;padding:8px 4px;font-size:8px;font-weight:1000;text-transform:uppercase;letter-spacing:.1em;color:#9ca3af;cursor:pointer}
-    .tab.active{border-color:rgba(249,115,22,.68);background:rgba(249,115,22,.18);color:#ffedd5}
-    .content{position:relative;z-index:2;height:calc(100% - 43px);padding:9px;overflow:hidden}
-    .mode-panel .content{height:calc(100% - 91px)}
+    .tabs{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:5px;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.12)}
+    .tab{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.24);border-radius:10px;padding:8px 4px;font-size:8px;font-weight:1000;text-transform:uppercase;letter-spacing:.1em;color:#9ca3af;cursor:pointer;transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease}
+    .tab:hover{border-color:rgba(249,115,22,.4);color:#fed7aa;transform:translateY(-1px)}
+    .tab.active{border-color:rgba(249,115,22,.68);background:linear-gradient(135deg,rgba(249,115,22,.23),rgba(127,29,29,.14));color:#ffedd5;box-shadow:inset 0 0 16px rgba(249,115,22,.08)}
+    .content{position:relative;z-index:2;flex:1;min-height:0;height:calc(100% - 43px);padding:9px;overflow:hidden}
+    .mode-panel .content{height:calc(100% - 91px);padding-bottom:10px}
     .panel-only{display:none}
     .mode-panel .panel-only{display:grid}
     .mode-panel .hud-only{display:none!important}
     .mode-hud .panel-view{display:none}
     .hud-view{height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;gap:7px}
+    .hud-view.meeting-active .mission{border-color:rgba(34,211,238,.76);background:linear-gradient(145deg,rgba(8,70,83,.48),rgba(0,0,0,.34));box-shadow:inset 0 0 26px rgba(34,211,238,.08),0 0 22px rgba(34,211,238,.12);animation:hudMeetingGlow 1.8s ease-in-out infinite}
+    .hud-view.meeting-active .mission:before{content:"";position:absolute;inset:0;border-radius:13px;border:1px solid rgba(34,211,238,.35);pointer-events:none;animation:hudMeetingRing 1.8s ease-out infinite}
+    .hud-view.meeting-active .mission{position:relative}
+    .hud-view.meeting-active .label{color:#67e8f9}
+    .hud-view.meeting-active .tag{border-color:rgba(34,211,238,.72);background:rgba(8,145,178,.2);color:#cffafe}
+    .hud-view.meeting-active .progress span{background:linear-gradient(90deg,#22d3ee,#a5f3fc);box-shadow:0 0 12px rgba(34,211,238,.55)}
+    .hud-view.meeting-active .hud-foot{color:#a5f3fc}
+    @keyframes hudMeetingGlow{50%{filter:brightness(1.08)}}
+    @keyframes hudMeetingRing{0%{opacity:.75;transform:scale(.98)}100%{opacity:0;transform:scale(1.015)}}
     .micro-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
     .agent{min-width:0}
     .who{font-size:13px;font-weight:950;color:#fff7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -40,18 +52,21 @@
     .label{font-size:8px;text-transform:uppercase;letter-spacing:.18em;color:#fb923c;font-weight:1000}
     .tag{font-size:8px;text-transform:uppercase;letter-spacing:.1em;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 6px;color:#fde68a;background:rgba(0,0,0,.25);font-weight:1000;white-space:nowrap}
     .name{font-size:15px;font-weight:950;color:#f8fafc;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .desc{font-size:11px;line-height:1.32;color:#cbd5e1;margin-top:5px}
+    .desc{font-size:11px;line-height:1.32;color:#cbd5e1;margin-top:5px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
     .muted{color:#94a3b8}
     .progress{height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:7px;border:1px solid rgba(255,255,255,.08)}
     .progress span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--cyan));width:0}
-    .hud-foot{display:flex;align-items:end;justify-content:space-between;gap:8px;color:#a7f3d0;font-size:9px;text-transform:uppercase;letter-spacing:.11em;font-weight:1000}
-    .panel-view{height:100%;overflow:hidden}
-    .panel-tab{display:none;height:100%;overflow:auto;padding-right:2px}
-    .panel-tab.active{display:grid;gap:8px;align-content:start}
-    .card{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.28);border-radius:14px;padding:10px}
-    .card.hot{border-color:rgba(249,115,22,.52);background:linear-gradient(145deg,rgba(124,45,18,.24),rgba(0,0,0,.26))}
+    .hud-foot{display:flex;align-items:end;justify-content:space-between;gap:8px;color:#a7f3d0;font-size:9px;text-transform:uppercase;letter-spacing:.11em;font-weight:1000;min-width:0}
+    .hud-foot span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .hud-hint{flex:0 0 auto;color:#94a3b8;font-size:8px;white-space:nowrap}
+    .panel-view{height:100%;min-height:0;overflow:hidden}
+    .panel-tab{display:none;height:100%;overflow:auto;padding:1px 2px 8px 1px;scrollbar-width:thin;scrollbar-color:rgba(249,115,22,.45) rgba(0,0,0,.18)}
+    .panel-tab.active{display:grid;gap:9px;align-content:start;animation:panelIn .18s ease-out}
+    @keyframes panelIn{from{opacity:.45;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .card{border:1px solid rgba(255,255,255,.09);background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.29));border-radius:14px;padding:10px}
+    .card.hot{border-color:rgba(249,115,22,.52);background:linear-gradient(145deg,rgba(124,45,18,.28),rgba(0,0,0,.3));box-shadow:inset 0 0 26px rgba(249,115,22,.035)}
     .head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
-    .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:7px;margin-top:8px}
     .btn{border:1px solid rgba(249,115,22,.4);background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(127,29,29,.16));border-radius:10px;padding:9px 8px;font-size:9px;font-weight:1000;text-transform:uppercase;letter-spacing:.09em;cursor:pointer}
     .btn.primary{border-color:rgba(34,211,238,.48);background:rgba(8,145,178,.16);color:#ecfeff}
     .btn.secondary{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#dbe4ef}
@@ -70,12 +85,16 @@
     .chip{border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(0,0,0,.22);padding:4px 6px;font-size:8px;color:#e5e7eb}
     .map-preview{position:relative;aspect-ratio:1500/1206;border:1px solid rgba(34,211,238,.3);border-radius:13px;overflow:hidden;background:#062226;box-shadow:inset 0 0 30px rgba(0,0,0,.45)}
     .map-preview.placing{cursor:crosshair;border-color:rgba(249,115,22,.75);box-shadow:inset 0 0 30px rgba(0,0,0,.45),0 0 24px rgba(249,115,22,.14)}
+    .map-preview.placing:after{content:"CLIQUE PARA POSICIONAR";position:absolute;left:50%;top:12px;transform:translateX(-50%);border:1px solid rgba(249,115,22,.72);border-radius:999px;background:rgba(18,7,2,.86);color:#fed7aa;padding:5px 8px;font-size:7px;letter-spacing:.13em;font-weight:1000;white-space:nowrap;pointer-events:none;box-shadow:0 0 18px rgba(249,115,22,.18)}
     .map-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.05) brightness(.78)}
     .map-layer{position:absolute;inset:0;pointer-events:none}
     .map-point{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px}
     .map-dot{width:9px;height:9px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 14px rgba(249,115,22,.8)}
     .map-label{padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.66);border:1px solid rgba(255,255,255,.12);font-size:7px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000;text-shadow:0 1px 2px #000;white-space:nowrap}
     .meeting{position:absolute;transform:translate(-50%,-50%);width:25px;height:25px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 58%,#7f1d1d);color:#111;font-size:12px;font-weight:1000;animation:ping 1.1s infinite}
+    .meeting:before,.meeting:after{content:"";position:absolute;inset:-7px;border:1px solid rgba(249,115,22,.7);border-radius:50%;animation:meetingPulse 1.6s ease-out infinite;pointer-events:none}
+    .meeting:after{animation-delay:.8s}
+    @keyframes meetingPulse{0%{opacity:.9;transform:scale(.45)}100%{opacity:0;transform:scale(1.7)}}
     @keyframes ping{70%{box-shadow:0 0 0 16px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
     .member{display:flex;align-items:center;gap:8px;min-width:0}
     button.member{width:100%;text-align:left;color:inherit;cursor:pointer}
@@ -83,20 +102,69 @@
     .online-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:ping 1.2s infinite;flex:0 0 auto}
     .avatar{width:31px;height:34px;border-radius:9px;border:1px solid rgba(249,115,22,.35);background:linear-gradient(145deg,#18181b,#000);display:grid;place-items:center;color:#fed7aa;font-size:10px;font-weight:1000;overflow:hidden;flex:0 0 auto}
     .avatar img{width:100%;height:100%;object-fit:cover}
-    .mode-strip{position:absolute;left:8px;right:8px;bottom:7px;z-index:3;display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(0,0,0,.36);color:#a7f3d0;font-size:8px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;pointer-events:none}
-    .mode-panel .mode-strip{color:#fed7aa}
+    .dossier-shell{display:grid;gap:10px}
+    .dossier-toolbar{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+    .dossier-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .dossier-card{position:relative;min-height:0;display:grid;grid-template-rows:auto auto auto 1fr;align-content:start;border:1px solid rgba(249,115,22,.28);border-radius:12px;background:linear-gradient(145deg,rgba(23,15,10,.88),rgba(0,0,0,.72));padding:9px;text-align:left;color:inherit;overflow:hidden;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 14px 36px rgba(0,0,0,.22);transition:transform .16s ease,border-color .16s ease,background .16s ease}
+    .dossier-card:before{content:"JIKKAI";position:absolute;right:-18px;top:16px;transform:rotate(28deg);border:1px solid rgba(249,115,22,.22);color:rgba(251,146,60,.26);padding:3px 22px;font-size:7px;letter-spacing:.22em;font-weight:1000}
+    .dossier-card:hover{border-color:rgba(249,115,22,.7);background:linear-gradient(145deg,rgba(39,20,11,.92),rgba(0,0,0,.75));transform:translateY(-2px)}
+    .dossier-photo{width:100%;aspect-ratio:4/5;border:1px solid rgba(255,247,237,.16);border-radius:8px;background:radial-gradient(circle at 50% 20%,rgba(249,115,22,.22),rgba(0,0,0,.75));display:grid;place-items:center;overflow:hidden;color:#fed7aa;font:1000 22px Georgia,serif;margin-bottom:8px}
+    .dossier-photo img{width:100%;height:100%;object-fit:contain;object-position:center;padding:4px}
+    .dossier-name{font:950 15px/1.05 Georgia,serif;color:#fff7ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dossier-meta{font-size:8px;color:#a7b0c0;text-transform:uppercase;letter-spacing:.1em;margin-top:4px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .dossier-stamps{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+    .stamp{border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(0,0,0,.28);padding:3px 5px;font-size:7px;text-transform:uppercase;letter-spacing:.09em;font-weight:1000;color:#dbe4ef}
+    .stamp.hot{border-color:rgba(249,115,22,.48);color:#fed7aa;background:rgba(124,45,18,.2)}
+    .stamp.live{border-color:rgba(34,197,94,.48);color:#bbf7d0;background:rgba(22,101,52,.16)}
+    .dossier-expanded{display:grid;gap:8px}
+    .dossier-file{border:1px solid rgba(249,115,22,.28);border-radius:13px;background:linear-gradient(145deg,rgba(255,247,237,.07),rgba(0,0,0,.7));padding:10px;box-shadow:inset 0 0 34px rgba(249,115,22,.035)}
+    .dossier-file-head{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:start}
+    .dossier-portrait{width:100%;height:auto;aspect-ratio:4/5;max-height:190px;border:1px solid rgba(255,247,237,.18);border-radius:9px;background:linear-gradient(145deg,#23140c,#030303);display:grid;place-items:center;overflow:hidden;color:#fed7aa;font:1000 30px Georgia,serif}
+    .dossier-portrait img{width:100%;height:100%;object-fit:contain;object-position:center;padding:5px}
+    .dossier-code{font:950 23px/1.02 Georgia,serif;color:#fff7ed;margin-top:5px;word-break:break-word}
+    .dossier-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+    .dossier-field{border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(0,0,0,.23);padding:8px;min-width:0}
+    .dossier-field strong{display:block;color:#fff7ed;font-size:11px;line-height:1.2;margin-top:3px;word-break:break-word}
+    .redacted{display:inline-block;min-width:72px;border-radius:4px;background:linear-gradient(90deg,#020202,#18181b);color:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+    .dossier-copy{font-size:10px;line-height:1.35;color:#cbd5e1;margin-top:7px}
+    .dossier-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
     .empty{border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:12px;color:#94a3b8;text-align:center;background:rgba(255,255,255,.025);font-size:11px}
     .overlay-toast{position:absolute;left:16px;right:16px;bottom:16px;z-index:6;border:1px solid rgba(34,211,238,.45);border-radius:999px;background:rgba(0,0,0,.72);color:#cffafe;padding:8px 10px;text-align:center;text-transform:uppercase;letter-spacing:.1em;font-size:8px;font-weight:1000}
+    .meeting-composer{border:1px solid rgba(249,115,22,.52);border-radius:13px;background:linear-gradient(145deg,rgba(75,30,10,.72),rgba(0,0,0,.78));padding:10px;box-shadow:inset 0 0 26px rgba(249,115,22,.06);animation:panelIn .16s ease-out}
+    .meeting-composer[hidden]{display:none}
+    .meeting-composer .head{align-items:center;margin-bottom:8px}
+    .meeting-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .meeting-coords{border:1px solid rgba(34,211,238,.2);border-radius:9px;background:rgba(8,145,178,.08);color:#a5f3fc;padding:7px;font-size:8px;line-height:1.3;text-transform:uppercase;letter-spacing:.1em;font-weight:900;margin-top:8px}
+    .meeting-people{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:124px;overflow:auto;margin-top:5px;padding-right:2px}
+    .meeting-person{display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.24);padding:6px;color:#e5e7eb;font-size:9px;min-width:0;cursor:pointer}
+    .meeting-person input{accent-color:var(--orange);flex:0 0 auto}
+    .meeting-person span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .priority-alerts{display:grid;gap:7px;margin-bottom:9px}
+    .priority-alerts:empty{display:none}
+    .priority-card{position:relative;border:1px solid rgba(249,115,22,.52);border-radius:13px;background:linear-gradient(145deg,rgba(100,33,12,.38),rgba(0,0,0,.38));padding:10px;overflow:hidden;box-shadow:inset 0 0 24px rgba(249,115,22,.05)}
+    .priority-card.meeting-alert{border-color:rgba(34,211,238,.55);background:linear-gradient(145deg,rgba(8,70,83,.38),rgba(0,0,0,.38))}
+    .priority-card .alert-line{display:flex;align-items:center;gap:7px;color:#fed7aa;font-size:8px;text-transform:uppercase;letter-spacing:.14em;font-weight:1000}
+    .priority-card.meeting-alert .alert-line{color:#a5f3fc}
+    .alert-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 0 rgba(249,115,22,.75);animation:alertPulse 1s infinite;flex:0 0 auto}
+    .meeting-alert .alert-dot{background:var(--cyan);box-shadow:0 0 0 0 rgba(34,211,238,.75)}
+    @keyframes alertPulse{70%{box-shadow:0 0 0 9px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
+    .priority-card .alert-title{font-size:14px;font-weight:950;color:#fff7ed;line-height:1.12;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .priority-card .alert-desc{font-size:10px;color:#cbd5e1;line-height:1.3;margin-top:4px}
+    .priority-card .actions{margin-top:8px}
+    .meeting-composer .actions{margin-top:9px}
+    .meeting-composer .icon-btn{width:24px;height:24px;border-radius:8px}
     .meeting-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
     .meeting-actions button{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.26);border-radius:9px;padding:7px 5px;color:#e5e7eb;font-size:8px;text-transform:uppercase;letter-spacing:.08em;font-weight:1000}
     .meeting-actions button.active{border-color:rgba(34,211,238,.65);background:rgba(8,145,178,.18);color:#cffafe}
     .mode-hud .tabs{display:none}
-    .mode-hud .top{height:40px;padding:7px 9px}
+    .mode-hud .top{flex-basis:40px;height:40px;padding:7px 9px}
     .mode-hud .content{height:calc(100% - 40px);padding:8px}
     .mode-hud .icon-btn{display:none}
     .mode-hud h1{font-size:15px}
     .mode-hud .shell{background:linear-gradient(145deg,rgba(3,7,10,.52),rgba(14,5,2,.48))}
-    .mode-hud .mode-strip{display:none}
+    .mode-hud.mode-interactive .shell{border-color:rgba(34,211,238,.58);box-shadow:0 20px 70px rgba(0,0,0,.42),0 0 34px rgba(34,211,238,.18)}
+    .mode-hud.mode-interactive .top{background:linear-gradient(90deg,rgba(34,211,238,.12),transparent 52%)}
+    @media(max-width:380px){.dossier-gallery{grid-template-columns:1fr}.dossier-file-head{grid-template-columns:92px minmax(0,1fr)}.dossier-grid{grid-template-columns:1fr}.dossier-code{font-size:19px}}
   </style>
 </head>
 <body class="mode-hud">
@@ -117,17 +185,16 @@
     </header>
 
     <nav class="tabs panel-only" id="tabs">
-      <button class="tab active" data-tab="agora">Agora</button>
-      <button class="tab" data-tab="missao">Missão</button>
+      <button class="tab active" data-tab="missao">Missão</button>
       <button class="tab" data-tab="mapa">Mapa</button>
       <button class="tab" data-tab="comando" id="commandTab" hidden>Comando</button>
       <button class="tab" data-tab="busca">Busca</button>
       <button class="tab" data-tab="membros">Membros</button>
-      <button class="tab" data-tab="dossie">Dossiê</button>
+      <button class="tab" data-tab="dossies">Dossiês</button>
     </nav>
 
     <main class="content">
-      <section class="hud-view hud-only">
+      <section class="hud-view hud-only" id="hudView">
         <div class="micro-row">
           <div class="agent">
             <div class="who" id="hudName">Leitura restrita</div>
@@ -135,44 +202,21 @@
           </div>
           <span class="tag" id="hudMissionStatus">Livre</span>
         </div>
-        <article class="mission">
-          <div class="label">Operação atual</div>
+        <article class="mission" id="hudOperation">
+          <div class="label" id="hudOperationLabel">Operação atual</div>
           <div class="name" id="hudMissionTitle">Nenhuma operação ativa</div>
           <div class="desc" id="hudObjective">Nenhuma operação ativa no momento.</div>
           <div class="progress"><span id="hudProgress"></span></div>
         </article>
         <div class="hud-foot">
-          <span id="hudAlert">Alt+M abre painel</span>
-          <span>Mouse no jogo</span>
+          <span id="hudAlert">Sem alertas operacionais</span>
+          <span class="hud-hint" id="hudHint">ALT+M · PAINEL</span>
         </div>
       </section>
 
       <section class="panel-view panel-only">
-        <section class="panel-tab active" data-panel="agora">
-          <article class="card hot">
-            <div class="head">
-              <div>
-                <div class="label">Agora</div>
-                <div class="name" id="nowTitle">Nenhuma operação ativa</div>
-              </div>
-              <span class="tag" id="nowStatus">Livre</span>
-            </div>
-            <div class="desc" id="nowDesc">Nenhuma operação ativa no momento.</div>
-            <div class="progress"><span id="nowProgress"></span></div>
-            <div class="actions">
-              <button class="btn primary" id="reportBtn">Relatório</button>
-              <button class="btn secondary" data-tab-jump="missao">Ver missão</button>
-            </div>
-          </article>
-          <article class="card">
-            <div class="head"><div><div class="label">Convocação</div><div class="item-title" id="meetingTitle">Nenhuma reunião marcada</div></div><span class="tag" id="meetingTag">Mapa</span></div>
-            <div class="item-desc" id="meetingDesc">Quando um capitão marcar reunião no mapa, o sinal aparece aqui.</div>
-            <div id="meetingActions"></div>
-            <div class="actions"><button class="btn primary" data-tab-jump="mapa">Abrir mapa</button><button class="btn secondary" data-tab-jump="missao">Painel</button></div>
-          </article>
-        </section>
-
-        <section class="panel-tab" data-panel="missao">
+        <section class="panel-tab active" data-panel="missao">
+          <div class="priority-alerts" id="ovPriorityAlerts"></div>
           <div class="card hot">
             <div class="head"><div><div class="label">Missões</div><div class="name">Fila operacional</div></div><span class="tag" id="missionCount">0</span></div>
             <div class="list" id="missionList"></div>
@@ -187,7 +231,27 @@
               <div class="map-layer" id="mapLayer"></div>
             </div>
             <div class="item-desc" id="mapHint">Mapa simplificado para consulta durante o jogo.</div>
-            <div class="actions"><button class="btn primary" id="ovMeetingMode" hidden>Definir reuniao</button><button class="btn secondary" data-tab-jump="agora">Voltar</button></div>
+            <div class="actions"><button class="btn primary" id="ovMeetingMode" hidden>Definir reuniao</button><button class="btn secondary" data-tab-jump="missao">Voltar</button></div>
+          </div>
+          <div class="meeting-composer" id="ovMeetingComposer" hidden>
+            <div class="head">
+              <div><div class="label">Convocacao cartografica</div><div class="item-title">Confirmar reuniao</div></div>
+              <button class="icon-btn" id="ovMeetingCancel" type="button" title="Cancelar marcacao">X</button>
+            </div>
+            <div class="field"><label for="ovMeetingTitle">Titulo</label><input class="input" id="ovMeetingTitle" maxlength="90" placeholder="Ex.: Reuniao da Divisao Central"></div>
+            <div class="field"><label for="ovMeetingDescription">Descricao curta</label><textarea class="input" id="ovMeetingDescription" maxlength="180" placeholder="Concentracao para inicio da operacao."></textarea></div>
+            <div class="meeting-form-grid">
+              <div class="field"><label for="ovMeetingDuration">Duracao</label><select class="input" id="ovMeetingDuration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="120">2 horas</option></select></div>
+              <div class="field"><label for="ovMeetingSecrecy">Sigilo</label><select class="input" id="ovMeetingSecrecy"><option>Restrito</option><option>Nivel I</option><option>Nivel II</option><option>Nivel III</option><option>Nivel IV</option><option>Nivel V</option></select></div>
+            </div>
+            <div class="meeting-form-grid">
+              <div class="field"><label for="ovMeetingAudience">Convocacao</label><select class="input" id="ovMeetingAudience"><option value="todos">Todos os disponiveis</option><option value="equipe">Somente equipe</option><option value="pessoas">Pessoas especificas</option><option value="lideranca">Lideranca</option></select></div>
+              <div class="field" id="ovMeetingTeamField" hidden><label for="ovMeetingTeam">Equipe</label><select class="input" id="ovMeetingTeam"><option value="">Selecione a equipe</option></select></div>
+            </div>
+            <div class="field" id="ovMeetingPeopleField" hidden><label>Pessoas selecionadas</label><div class="meeting-people" id="ovMeetingPeople"></div></div>
+            <div class="field"><label for="ovMeetingMission">Missao relacionada</label><select class="input" id="ovMeetingMission"><option value="">Opcional</option></select></div>
+            <div class="meeting-coords" id="ovMeetingCoords">Posicao selecionada no mapa.</div>
+            <div class="actions"><button class="btn secondary" id="ovMeetingCancelBottom" type="button">Cancelar</button><button class="btn primary" id="ovMeetingSave" type="button">Salvar reuniao</button></div>
           </div>
         </section>
 
@@ -203,7 +267,7 @@
             <div class="head"><div><div class="label">Comunicado</div><div class="item-title">Mensagem rapida</div></div></div>
             <div class="field"><label>Destino</label><select class="input" id="ovMessageTarget"><option value="todos">Todos</option><option value="online">Online agora</option></select></div>
             <div class="field"><label>Texto</label><textarea class="input" id="ovMessageText" placeholder="Mensagem curta para membros no app."></textarea></div>
-            <div class="actions"><button class="btn primary" id="ovSendMessage">Enviar</button><button class="btn secondary" data-tab-jump="agora">Agora</button></div>
+            <div class="actions"><button class="btn primary" id="ovSendMessage">Enviar</button><button class="btn secondary" data-tab-jump="missao">Missoes</button></div>
           </div>
         </section>
 
@@ -222,12 +286,11 @@
           </div>
         </section>
 
-        <section class="panel-tab" data-panel="dossie">
-          <div class="card hot" id="dossierCard"></div>
+        <section class="panel-tab" data-panel="dossies">
+          <div class="dossier-shell" id="dossierPanel"></div>
         </section>
       </section>
     </main>
-    <div class="mode-strip"><span id="mouseMode">Mouse no painel</span><span>Esc HUD</span></div>
   </section>
 
   <script>
@@ -235,7 +298,7 @@
     const SESSION_KEY = "fox-portal-session-v2";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
     const TERMINAIS = new Set(["concluida","falhou","recusada","arquivada","cancelada","encerrada"]);
     const ROOT_PERMISSIONS = ["manage_users", "manage_missions", "manage_roles", "manage_map_meetings", "edit_map", "edit_reports", "edit_contracts", "edit_jikkai"];
     const LEALDADE_NIVEIS = ["Observado", "Recruta", "Juramentado", "Veterano", "Pilar da F.O.X."];
@@ -270,7 +333,12 @@
     let onlineUsers = new Map();
     let lastPresenceKey = "";
     let lastPresenceAt = 0;
+    let lastLocalStateAt = 0;
+    let localStateRevision = 0;
+    let lastOperationalSignature = "";
     let overlayMeetingMode = false;
+    let overlayMeetingDraft = null;
+    let meetingSaveInProgress = false;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
@@ -355,6 +423,12 @@
       return MEETING_RESPONSE_LABELS[status] || "Sem resposta";
     }
     function minutesLeft(date) { return Math.max(1, Math.ceil((new Date(date).getTime() - Date.now()) / 60000)); }
+    function meetingProgress(meeting) {
+      const start = new Date(meeting?.startsAt || meeting?.createdAt || Date.now()).getTime();
+      const end = new Date(meeting?.expiresAt || Date.now()).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 100;
+      return Math.max(0, Math.min(100, ((end - Date.now()) / (end - start)) * 100));
+    }
     function saveRoute(tab = "home", subTab = "", action = "") {
       const current = session();
       const username = latestUser?.username || current?.username;
@@ -380,24 +454,37 @@
       return data;
     }
     async function persistCloudState(nextData) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "resolution=merge-duplicates,return=representation"
-        },
-        body: JSON.stringify({ id: 1, data: nextData, updated_at: new Date().toISOString() })
+      const headers = {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      };
+      const payload = { data: nextData, updated_at: new Date().toISOString() };
+      const patchResponse = await fetch(`${SUPABASE_URL}/rest/v1/fox_state?id=eq.1`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error("Supabase " + res.status);
-      return res.json().catch(()=>null);
+      if (patchResponse.ok) return true;
+
+      const patchError = await patchResponse.text().catch(() => "");
+      const upsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/fox_state`, {
+        method: "POST",
+        headers: { ...headers, Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ id: 1, ...payload })
+      });
+      if (upsertResponse.ok) return true;
+
+      const upsertError = await upsertResponse.text().catch(() => "");
+      throw new Error(`Supabase ${upsertResponse.status}: ${upsertError || patchError || "falha ao gravar"}`);
     }
     function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
     function activity(tipo, alvo, descricao) {
       return { id: uid(), tipo, ator: latestUser?.username || "overlay", alvo: alvo || "", descricao: descricao || "", data: new Date().toISOString() };
     }
     async function saveState(mutator, successText = "Sync") {
+      const revision = ++localStateRevision;
       const base = latestData || {};
       const next = mutator({
         ...base,
@@ -408,16 +495,22 @@
         activityLog: Array.isArray(base.activityLog) ? base.activityLog.slice() : []
       });
       latestData = next;
+      lastLocalStateAt = Date.now();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       $("syncState").textContent = "Salvando";
       renderData(next);
       try {
         await persistCloudState(next);
-        $("syncState").textContent = successText;
-        overlayToast(successText);
-      } catch {
+        if (revision === localStateRevision) {
+          $("syncState").textContent = successText;
+          overlayToast(successText);
+        }
+        return true;
+      } catch (error) {
+        console.error("JIKKAI saveState", error);
         $("syncState").textContent = "Local";
-        overlayToast("Salvo localmente");
+        overlayToast("Salvo localmente - sincronizacao indisponivel");
+        return false;
       }
     }
     function overlayToast(text) {
@@ -479,9 +572,40 @@
         <div class="map-point" style="left:${Number(p.x)}%;top:${Number(p.y)}%">
           <span class="map-dot" style="background:${color[p.type || p.tipo] || color.regiao}"></span>
           <span class="map-label">${escapeHtml(p.name || p.nome || "Ponto")}</span>
-        </div>`).join("") + meetings.map(m => `<div class="meeting" title="Reunião" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!</div>`).join("");
+        </div>`).join("") + meetings.map(m => `<div class="meeting" title="${escapeHtml(m.titulo || "Reunião")}" aria-label="${escapeHtml(m.titulo || "Reunião")}" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!</div>`).join("");
       $("mapCount").textContent = `${meetings.length} sinal${meetings.length === 1 ? "" : "is"}`;
       $("mapHint").textContent = meetings[0] ? `Reunião por ${meetings[0].createdBy || "capitão"} · ${minutesLeft(meetings[0].expiresAt)} min restantes.` : "Mapa simplificado para consulta durante o jogo.";
+    }
+    function renderPriorityAlerts(data, mission, meetings) {
+      const alerts = [];
+      if (mission) {
+        const state = missionState(mission);
+        alerts.push(`<article class="priority-card">
+          <div class="alert-line"><span class="alert-dot"></span>Missao prioritaria - ${escapeHtml(state.label)}</div>
+          <div class="alert-title">${escapeHtml(mission.titulo || "Operacao")}</div>
+          <div class="alert-desc">${escapeHtml(currentObjective(mission))}</div>
+          <div class="actions"><button class="btn primary" data-tab-jump="missao">Abrir missao</button><span class="tag">${missionProgress(mission).percent}%</span></div>
+        </article>`);
+      }
+      meetings.slice(0, 2).forEach(meeting => {
+        alerts.push(`<article class="priority-card meeting-alert">
+          <div class="alert-line"><span class="alert-dot"></span>Reuniao ativa - ${minutesLeft(meeting.expiresAt)} min</div>
+          <div class="alert-title">${escapeHtml(meeting.titulo || "Reuniao Jikkai")}</div>
+          <div class="alert-desc">Sinal em ${Number(meeting.x).toFixed(1)}% x ${Number(meeting.y).toFixed(1)}% - ${escapeHtml(meeting.descricao || "Compareca ao ponto marcado no mapa.")}</div>
+          <div class="actions"><button class="btn primary" data-tab-jump="mapa">Abrir mapa</button><div class="meeting-actions">${latestUser?.username ? Object.entries(MEETING_RESPONSE_LABELS).map(([key,label]) => `<button class="${meetingResponse(meeting)===key?"active":""}" data-meeting-response="${key}" data-id="${escapeHtml(meeting.id)}">${escapeHtml(label)}</button>`).join("") : ""}</div></div>
+        </article>`);
+      });
+      $("ovPriorityAlerts").innerHTML = alerts.join("");
+    }
+    function notifyOperationalChanges(mission, meetings) {
+      const signature = [mission?.id || "", ...meetings.map(meeting => meeting.id)].join("|");
+      if (lastOperationalSignature && signature !== lastOperationalSignature) {
+        const previousIds = new Set(lastOperationalSignature.split("|").filter(Boolean));
+        const newMeeting = meetings.find(meeting => !previousIds.has(meeting.id));
+        if (newMeeting) overlayToast(`Reuniao ativa: ${newMeeting.titulo || "ponto marcado no mapa"}`);
+        else if (mission && !previousIds.has(mission.id)) overlayToast(`Nova missao: ${mission.titulo || "operacao atribuida"}`);
+      }
+      lastOperationalSignature = signature;
     }
     function membersOf(data) {
       return (data?.users || []).filter(u => u.role !== "contratante" && u.status !== "Oculto");
@@ -489,7 +613,7 @@
     function overlaySearchItems(data = latestData) {
       const points = (Array.isArray(data.mapaPontos) && data.mapaPontos.length ? data.mapaPontos : DEFAULT_POINTS);
       return [
-        ...membersOf(data).map(u => ({ type:"Membro", title:userName(u), meta:u.patente || effectiveRole(data,u)?.nome || "Operador", text:[u.username,u.nomeRP,u.especialidade].join(" "), tab:"dossie", member:u.username })),
+        ...membersOf(data).map(u => ({ type:"Membro", title:userName(u), meta:u.patente || effectiveRole(data,u)?.nome || "Operador", text:[u.username,u.nomeRP,u.especialidade].join(" "), tab:"dossies", member:u.username })),
         ...(data.missoes || []).map(m => ({ type:"Missao", title:m.titulo || "Missao", meta:m.status || "operacional", text:[m.desc,m.sigilo].join(" "), tab:"missao" })),
         ...points.map(p => ({ type:"Local", title:p.name || p.nome || "Ponto", meta:p.type || p.tipo || "Mapa", text:p.id || "", tab:"mapa" })),
         ...activeMeetings(data).map(m => ({ type:"Reuniao", title:m.titulo || "Reuniao", meta:`${minutesLeft(m.expiresAt)} min`, text:[m.descricao,m.createdBy].join(" "), tab:"mapa" })),
@@ -507,7 +631,7 @@
       const allowed = canCommand(user, data);
       $("commandTab").hidden = !allowed;
       if (!allowed) {
-        if (document.querySelector('[data-panel="comando"].active')) setTab("agora");
+        if (document.querySelector('[data-panel="comando"].active')) setTab("missao");
         return;
       }
       const role = effectiveRole(data, user);
@@ -521,8 +645,97 @@
       if (msgPrevious && [...$("ovMessageTarget").options].some(o => o.value === msgPrevious)) $("ovMessageTarget").value = msgPrevious;
       $("ovMeetingMode").hidden = !allowed;
     }
+    function divisionName(data, user) {
+      const divisions = [...(data?.divisoes || []), ...(data?.clas || [])];
+      const target = normalizeText(user?.divisaoId || user?.ramoId || user?.cla || "");
+      const found = divisions.find(d => target && [d.id,d.nome,d.name,d.ramoId].some(v => normalizeText(v) === target));
+      return found?.nome || found?.name || user?.divisaoNome || user?.cla || "Divisao nao registrada";
+    }
+    function teamName(data, user) {
+      const teams = [...(data?.trios || []), ...(data?.equipes || [])];
+      const found = teams.find(t => t.liderUsername === user?.username || (t.membros || []).some(m => (m.username || m.nome) === user?.username));
+      return found?.nome || found?.name || "Sem equipe";
+    }
+    function userMission(data, user) {
+      return activeMissions(data, user?.username)[0] || null;
+    }
+    function canSeeDossierSensitive(data, viewer, subject) {
+      return !!subject?.username && (viewer?.username === subject.username || canCommand(viewer, data));
+    }
+    function redactedValue(value, allowed) {
+      return allowed ? escapeHtml(value || "Nao registrado") : `<span class="redacted">restrito</span>`;
+    }
+    function dossierPhoto(user, className = "dossier-photo") {
+      return `<div class="${className}">${user?.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="">` : escapeHtml(initials(user))}</div>`;
+    }
+    function dossierGalleryCard(data, user) {
+      const role = effectiveRole(data, user);
+      const mission = userMission(data, user);
+      const online = isOnline(user);
+      return `<button type="button" class="dossier-card" data-dossier-member="${escapeHtml(user.username)}">
+        ${dossierPhoto(user)}
+        <div class="dossier-name">${escapeHtml(userName(user))}</div>
+        <div class="dossier-meta">${escapeHtml(user.patente || role?.nome || "Operador")} · ${escapeHtml(divisionName(data, user))}</div>
+        <div class="dossier-stamps">
+          <span class="stamp ${online ? "live" : ""}">${online ? "Online" : "Offline"}</span>
+          <span class="stamp hot">Acesso ${escapeHtml(user.nivelAcesso || 1)}</span>
+          ${mission ? `<span class="stamp">Missao ativa</span>` : `<span class="stamp">Sem missao</span>`}
+        </div>
+      </button>`;
+    }
+    function renderDossierGallery(data, members) {
+      return `<div class="card hot">
+        <div class="head"><div><div class="label">Arquivo visual</div><div class="name">Dossies Jikkai</div></div><span class="tag">${members.length}</span></div>
+        <div class="dossier-toolbar"><div class="item-meta">Bingo Book interno · fichas operacionais</div><button class="btn secondary" data-tab-jump="membros">Estrutura</button></div>
+      </div>
+      <div class="dossier-gallery">${members.length ? members.map(user => dossierGalleryCard(data, user)).join("") : `<div class="empty">Nenhum membro visivel.</div>`}</div>`;
+    }
+    function renderExpandedDossier(data, viewer, subject) {
+      const role = effectiveRole(data, subject);
+      const allowed = canSeeDossierSensitive(data, viewer, subject);
+      const mission = userMission(data, subject);
+      const reports = (data?.relatorios || []).filter(r => r.autor === subject.username || r.createdBy === subject.username).length;
+      const commandAllowed = canCommand(viewer, data) && !!subject?.username;
+      return `<div class="dossier-expanded">
+        <div class="dossier-toolbar"><button class="btn secondary" data-dossier-back>Voltar aos dossies</button><button class="btn secondary" data-tab-jump="membros">Estrutura</button></div>
+        <article class="dossier-file">
+          <div class="dossier-file-head">
+            ${dossierPhoto(subject, "dossier-portrait")}
+            <div>
+              <span class="stamp hot">${allowed ? "CONFIDENCIAL" : "RESTRITO"}</span>
+              <div class="dossier-code">${escapeHtml(userName(subject))}</div>
+              <div class="dossier-meta">${escapeHtml(subject.patente || role?.nome || "Operador")} · ${escapeHtml(divisionName(data, subject))}</div>
+              <div class="dossier-copy">${escapeHtml(subject.descricao || subject.bio || "Registro operacional interno da Jikkai. Dados sensiveis seguem sob sigilo.")}</div>
+              <div class="dossier-stamps"><span class="stamp ${isOnline(subject) ? "live" : ""}">${isOnline(subject) ? "Online" : "Offline"}</span><span class="stamp">Equipe: ${escapeHtml(teamName(data, subject))}</span></div>
+            </div>
+          </div>
+          <div class="dossier-grid">
+            <div class="dossier-field"><div class="label">Origem</div><strong>${redactedValue(subject.vilaOrigem || subject.vila, false)}</strong></div>
+            <div class="dossier-field"><div class="label">Registro</div><strong>${redactedValue(subject.username, allowed)}</strong></div>
+            <div class="dossier-field"><div class="label">Reputacao</div><strong>${redactedValue(subject.reputacao || "Desconhecido", allowed)}</strong></div>
+            <div class="dossier-field"><div class="label">Lealdade</div><strong>${redactedValue(subject.lealdade || "Observado", allowed)}</strong></div>
+            <div class="dossier-field"><div class="label">Capacidade</div><strong>${redactedValue(subject.especialidade || subject.classe || subject.funcao || "Em analise", false)}</strong></div>
+            <div class="dossier-field"><div class="label">Operacao</div><strong>${mission ? escapeHtml(mission.titulo || "Missao ativa") : "Sem missao ativa"}</strong></div>
+            <div class="dossier-field"><div class="label">Relatorios</div><strong>${allowed ? reports : `<span class="redacted">restrito</span>`}</strong></div>
+            <div class="dossier-field"><div class="label">Status</div><strong>${escapeHtml(subject.appDisponibilidade || subject.disponibilidade || "Disponivel")}</strong></div>
+          </div>
+          <div class="dossier-section-title"><div class="label">Notas internas</div><span class="tag">${allowed ? "visivel" : "censurado"}</span></div>
+          <div class="dossier-copy">${allowed ? escapeHtml(subject.lealdadeNota || subject.reputacaoNota || "Nenhuma nota interna registrada.") : "DADO RESTRITO · OLHOS DO LIDER"}</div>
+          ${commandAllowed ? `<div class="actions"><button class="btn primary" data-overlay-merit="${escapeHtml(subject.username)}">Merito</button><button class="btn secondary" data-command-target="${escapeHtml(subject.username)}">Missao</button></div>` : ""}
+        </article>
+      </div>`;
+    }
+    function renderDossierPanel(data, viewer, members) {
+      const subject = latestDossierUsername ? members.find(u => u.username === latestDossierUsername) : null;
+      $("dossierPanel").innerHTML = subject ? renderExpandedDossier(data, viewer, subject) : renderDossierGallery(data, members);
+    }
+    function defaultPanel() {
+      if (latestMission || activeMissions(latestData, latestUser?.username).length) return "missao";
+      if (activeMeetings(latestData).length) return "mapa";
+      return "membros";
+    }
     function setTab(tab) {
-      const id = ({ missoes:"missao", relatorios:"missao" })[tab] || tab || "agora";
+      const id = ({ agora:"missao", missoes:"missao", relatorios:"missao", dossie:"dossies" })[tab] || tab || defaultPanel();
       document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === id));
       document.querySelectorAll(".panel-tab").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === id));
       const prefPromise = window.jikkaiDesktop?.updateDesktopPreferences?.({ overlay: { lastSection:id } });
@@ -532,9 +745,9 @@
       const mode = payload.mode === "panel" ? "panel" : "hud";
       document.body.classList.toggle("mode-panel", mode === "panel");
       document.body.classList.toggle("mode-hud", mode !== "panel");
+      document.body.classList.toggle("mode-interactive", payload.clickThrough === false);
       $("overlayTitle").textContent = mode === "panel" ? "Painel" : "HUD";
-      $("mouseMode").textContent = payload.clickThrough ? "Mouse no jogo" : "Mouse no painel";
-      if (mode === "panel") setTab(payload.section || "agora");
+      if (mode === "panel") setTab(payload.section || defaultPanel());
     }
     function canReport(mission){return !!mission && missionState(mission).canReport}
     function publishPresence(section = "overlay") {
@@ -565,27 +778,33 @@
 
       $("hudName").textContent = userName(user);
       $("hudRole").textContent = role?.nome || user?.role || "Sessão não identificada";
-      $("hudMissionStatus").textContent = mission ? state.label : "Livre";
-      $("hudMissionTitle").textContent = mission?.titulo || "Nenhuma operação ativa";
-      $("hudObjective").textContent = objective;
-      $("hudProgress").style.width = `${prog.percent}%`;
-      $("hudAlert").textContent = meetings[0] ? `Reunião: ${minutesLeft(meetings[0].expiresAt)} min` : "Alt+M abre painel";
-
-      $("nowTitle").textContent = mission?.titulo || "Nenhuma operação ativa";
-      $("nowStatus").textContent = mission ? state.label : "Livre";
-      $("nowDesc").textContent = mission ? objective : "Nenhuma operação ativa no momento.";
-      $("nowProgress").style.width = `${prog.percent}%`;
-      $("reportBtn").disabled = !canReport(mission);
-      $("reportBtn").textContent = canReport(mission) ? "Relatório" : "Sem relatório";
+      const meeting = meetings[0] || null;
+      $("hudView").classList.toggle("meeting-active", Boolean(meeting));
+      if (meeting) {
+        const response = latestUser?.username ? responseName(meetingResponse(meeting)) : "Sem resposta";
+        const meetingDetails = meeting.descricao || "Ponto marcado no mapa. Use ALT+M para abrir a localização.";
+        $("hudMissionStatus").textContent = "Reunião";
+        $("hudOperationLabel").textContent = "Reunião ativa · ponto no mapa";
+        $("hudMissionTitle").textContent = meeting.titulo || "Ponto de encontro Jikkai";
+        $("hudObjective").textContent = `${meetingDetails} · ${minutesLeft(meeting.expiresAt)} min restantes · ${response}`;
+        $("hudProgress").style.width = `${meetingProgress(meeting)}%`;
+        $("hudAlert").textContent = `REUNIÃO ATIVA · ${minutesLeft(meeting.expiresAt)} MIN`;
+        $("hudHint").textContent = "ALT+M · MAPA";
+      } else {
+        $("hudMissionStatus").textContent = mission ? state.label : "Livre";
+        $("hudOperationLabel").textContent = "Operação atual";
+        $("hudMissionTitle").textContent = mission?.titulo || "Nenhuma operação ativa";
+        $("hudObjective").textContent = objective;
+        $("hudProgress").style.width = `${prog.percent}%`;
+        $("hudAlert").textContent = mission ? `MISSÃO: ${mission.titulo || "OPERAÇÃO ATIVA"}` : "Sem alertas operacionais";
+        $("hudHint").textContent = "ALT+M · PAINEL";
+      }
 
       $("missionCount").textContent = `${missions.length} ativa${missions.length === 1 ? "" : "s"}`;
       $("missionList").innerHTML = missions.length ? missions.slice(0,3).map(m => missionItem(m, data)).join("") : `<div class="empty">Nenhuma missão ativa para este usuário.</div>`;
 
-      const meeting = meetings[0];
-      $("meetingTitle").textContent = meeting ? "Reunião ativa no mapa" : "Nenhuma reunião marcada";
-      $("meetingTag").textContent = meeting ? `${minutesLeft(meeting.expiresAt)} min` : "Mapa";
-      $("meetingDesc").textContent = meeting ? `Sinal de ${meeting.createdBy || "capitão"} em ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%.` : "Quando um capitão marcar reunião no mapa, o sinal aparece aqui.";
-      $("meetingActions").innerHTML = meeting ? `<div class="meeting-actions">${Object.entries(MEETING_RESPONSE_LABELS).map(([key,label]) => `<button class="${meetingResponse(meeting)===key?"active":""}" data-meeting-response="${key}" data-id="${escapeHtml(meeting.id)}">${escapeHtml(label)}</button>`).join("")}</div>` : "";
+      renderPriorityAlerts(data, mission, meetings);
+      notifyOperationalChanges(mission, meetings);
       renderMap(data, meetings);
       renderCommandPanel(data, user);
       renderOverlaySearch();
@@ -593,16 +812,8 @@
 
       $("memberCount").textContent = `${members.length}`;
       $("memberList").innerHTML = members.length ? members.slice(0,5).map(u => memberLine(u, data)).join("") : `<div class="empty">Nenhum membro visível.</div>`;
-      const dossierUser = (data?.users || []).find(u => u.username === latestDossierUsername) || user;
-      const dossierRole = effectiveRole(data, dossierUser);
-      const commandAllowed = canCommand(user, data) && !!dossierUser?.username;
-      $("dossierCard").innerHTML = `
-        <div class="head"><div><div class="label">${dossierUser?.username === user?.username ? "Meu dossiê" : "Dossiê de membro"}</div><div class="name">${escapeHtml(userName(dossierUser))}</div></div><span class="tag">${escapeHtml(dossierRole?.nome || dossierUser?.role || "Acesso")}</span></div>
-        <div class="item member">${avatar(dossierUser)}<div class="agent"><div class="item-title">${escapeHtml(dossierUser?.patente || "Operador")}</div><div class="item-meta">${escapeHtml(dossierUser?.vila || dossierUser?.vilaOrigem || "Origem sigilosa")} · Nível ${escapeHtml(dossierUser?.nivelAcesso || 1)}</div></div></div>
-        <div class="chips"><span class="chip">${escapeHtml(dossierUser?.reputacao || "Desconhecido")}</span><span class="chip">${escapeHtml(dossierUser?.lealdade || "Observado")}</span></div>
-        <div class="item-desc">${escapeHtml(dossierUser?.lealdadeNota || dossierUser?.reputacaoNota || dossierUser?.descricao || dossierUser?.bio || "Registro operacional ativo na Jikkai.")}</div>
-        ${commandAllowed ? `<div class="actions"><button class="btn primary" data-overlay-merit="${escapeHtml(dossierUser.username)}">Merito</button><button class="btn secondary" data-command-target="${escapeHtml(dossierUser.username)}">Missao</button></div>` : `<div class="actions"><button class="btn primary" data-tab-jump="membros">Membros</button><button class="btn secondary" data-tab-jump="agora">Voltar</button></div>`}
-      `;
+      renderDossierPanel(data, user, members);
+
     }
     async function createOverlayMission() {
       if (!canCommand()) return;
@@ -658,48 +869,139 @@
     function setOverlayMeetingMode(enabled) {
       overlayMeetingMode = !!enabled && canCommand();
       document.querySelector(".map-preview")?.classList.toggle("placing", overlayMeetingMode);
-      if ($("mapHint") && overlayMeetingMode) $("mapHint").textContent = "Clique no mapa para marcar a reuniao.";
+      if ($("mapHint")) {
+        const meeting = activeMeetings(latestData)[0];
+        $("mapHint").textContent = overlayMeetingMode
+          ? "Clique no mapa para marcar a reuniao."
+          : meeting
+            ? `Reuniao por ${meeting.createdBy || "capitao"} · ${minutesLeft(meeting.expiresAt)} min restantes.`
+            : "Mapa simplificado para consulta durante o jogo.";
+      }
       if ($("ovMeetingMode")) {
         $("ovMeetingMode").classList.toggle("active", overlayMeetingMode);
         $("ovMeetingMode").textContent = overlayMeetingMode ? "Clique no mapa" : "Definir reuniao";
       }
     }
     function overlayMapPosition(event) {
-      const rect = document.querySelector(".map-preview").getBoundingClientRect();
+      const map = document.querySelector(".map-preview");
+      const rect = map.getBoundingClientRect();
       return {
         x: Math.max(0, Math.min(100, (event.clientX - rect.left) / rect.width * 100)),
         y: Math.max(0, Math.min(100, (event.clientY - rect.top) / rect.height * 100))
       };
     }
-    async function createOverlayMeeting(pos) {
+    function fillOverlayMeetingSelect(id, items, labelFn) {
+      const select = $(id);
+      if (!select) return;
+      select.innerHTML = '<option value="">Opcional</option>';
+      (Array.isArray(items) ? items : []).forEach((item, index) => {
+        const value = item.id || item.username || `item_${index}`;
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = labelFn(item, index);
+        select.appendChild(option);
+      });
+    }
+    function populateOverlayMeetingRefs() {
+      fillOverlayMeetingSelect("ovMeetingTeam", latestData?.trios || latestData?.equipes || [], item => item.nome || item.name || item.id || "Equipe");
+      fillOverlayMeetingSelect("ovMeetingMission", latestData?.missoes || [], item => item.titulo || item.nome || item.id || "Missao");
+      const people = membersOf(latestData);
+      $("ovMeetingPeople").innerHTML = people.length ? people.map(item => `<label class="meeting-person"><input type="checkbox" value="${escapeHtml(item.username)}"><span>${escapeHtml(userName(item))}</span></label>`).join("") : `<div class="empty">Nenhum membro disponivel.</div>`;
+    }
+    function updateOverlayMeetingAudience() {
+      const audience = $("ovMeetingAudience").value;
+      $("ovMeetingTeamField").hidden = audience !== "equipe";
+      $("ovMeetingPeopleField").hidden = audience !== "pessoas";
+      if (audience === "pessoas") populateOverlayMeetingRefs();
+    }
+    function selectedOverlayMeetingPeople() {
+      return Array.from(document.querySelectorAll("#ovMeetingPeople input:checked")).map(input => input.value).filter(Boolean);
+    }
+    function closeOverlayMeetingComposer() {
+      overlayMeetingDraft = null;
+      if ($("ovMeetingComposer")) $("ovMeetingComposer").hidden = true;
+      setOverlayMeetingMode(false);
+    }
+    function openOverlayMeetingComposer(pos) {
       if (!canCommand()) return;
-      const title = prompt("Titulo da reuniao:", "Reuniao Jikkai");
-      if (title === null) { setOverlayMeetingMode(false); return; }
-      const rawMinutes = prompt("Duracao do sinal em minutos:", "10");
-      if (rawMinutes === null) { setOverlayMeetingMode(false); return; }
-      const minutes = Math.max(5, Math.min(120, Number(rawMinutes) || 10));
+      overlayMeetingDraft = { id: "meeting_" + uid(), x: pos.x, y: pos.y, createdAt: new Date().toISOString() };
+      populateOverlayMeetingRefs();
+      $("ovMeetingTitle").value = "";
+      $("ovMeetingDescription").value = "";
+      $("ovMeetingDuration").value = "30";
+      $("ovMeetingAudience").value = "todos";
+      $("ovMeetingTeam").value = "";
+      $("ovMeetingSecrecy").value = "Restrito";
+      updateOverlayMeetingAudience();
+      $("ovMeetingCoords").textContent = `Posicao definida: X ${pos.x.toFixed(2)}% - Y ${pos.y.toFixed(2)}%`;
+      setOverlayMeetingMode(false);
+      $("ovMeetingComposer").hidden = false;
+      setTimeout(() => $("ovMeetingTitle")?.focus(), 40);
+    }
+    function overlayMeetingMinutes() {
+      return Math.max(5, Math.min(240, Number($("ovMeetingDuration")?.value) || 30));
+    }
+    async function saveOverlayMeeting() {
+      if (!overlayMeetingDraft || !canCommand() || meetingSaveInProgress) return;
+      const title = $("ovMeetingTitle").value.trim();
+      if (!title) {
+        overlayToast("Informe um titulo para a reuniao");
+        $("ovMeetingTitle").focus();
+        return;
+      }
+      const minutes = overlayMeetingMinutes();
+      const audience = $("ovMeetingAudience").value;
+      const recipients = audience === "pessoas" ? selectedOverlayMeetingPeople() : [];
+      const teamId = audience === "equipe" ? $("ovMeetingTeam").value : "";
+      if (audience === "equipe" && !teamId) {
+        overlayToast("Selecione a equipe da reuniao");
+        $("ovMeetingTeam").focus();
+        return;
+      }
+      if (audience === "pessoas" && !recipients.length) {
+        overlayToast("Selecione ao menos uma pessoa");
+        return;
+      }
       const now = new Date();
       const meeting = {
-        id: "meeting_" + uid(),
+        id: overlayMeetingDraft.id,
         kind: "meeting",
-        titulo: title.trim() || "Reuniao Jikkai",
-        descricao: "Sinal definido pelo overlay durante o roleplay.",
-        x: Number(pos.x.toFixed(2)),
-        y: Number(pos.y.toFixed(2)),
+        titulo: title,
+        descricao: $("ovMeetingDescription").value.trim(),
+        x: Number(overlayMeetingDraft.x.toFixed(2)),
+        y: Number(overlayMeetingDraft.y.toFixed(2)),
         startsAt: now.toISOString(),
         expiresAt: new Date(now.getTime() + minutes * 60000).toISOString(),
-        createdAt: now.toISOString(),
+        createdAt: overlayMeetingDraft.createdAt || now.toISOString(),
+        updatedAt: now.toISOString(),
         createdBy: latestUser?.username || "leader",
-        sigilo: "Restrito",
-        convocacao: "Todos os disponiveis",
+        sigilo: $("ovMeetingSecrecy").value || "Restrito",
+        convocacao: ({ todos:"Todos os disponiveis", equipe:"Somente equipe", pessoas:"Pessoas especificas", lideranca:"Lideranca" })[audience] || "Todos os disponiveis",
+        equipeId: teamId,
+        destinatarios: recipients,
+        missaoId: $("ovMeetingMission").value || "",
+        status: "ativa",
         source: "overlay_mapa"
       };
-      await saveState(d => ({
-        ...d,
-        mapaReunioes: [...(d.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()), meeting],
-        activityLog: [...(d.activityLog || []), activity("overlay_reuniao_mapa", meeting.id, `Marcou reuniao pelo overlay: ${meeting.titulo}`)]
-      }), "Reuniao");
-      setOverlayMeetingMode(false);
+      const saveButton = $("ovMeetingSave");
+      meetingSaveInProgress = true;
+      saveButton.disabled = true;
+      saveButton.textContent = "Salvando...";
+      try {
+        await saveState(d => ({
+          ...d,
+          mapaReunioes: [...(d.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()), meeting],
+          activityLog: [...(d.activityLog || []), activity("overlay_reuniao_mapa", meeting.id, `Marcou reuniao pelo overlay: ${meeting.titulo}`)]
+        }), "Reuniao");
+        closeOverlayMeetingComposer();
+      } catch (error) {
+        console.error("JIKKAI meeting save", error);
+        overlayToast("Nao foi possivel salvar a reuniao");
+      } finally {
+        meetingSaveInProgress = false;
+        saveButton.disabled = false;
+        saveButton.textContent = "Salvar reuniao";
+      }
     }
     async function saveOverlayMeetingResponse(meetingId, status) {
       if (!latestUser?.username || !meetingId || !MEETING_RESPONSE_LABELS[status]) return;
@@ -739,22 +1041,35 @@
 
     $("hideBtn").onclick = () => window.jikkaiDesktop?.hideOverlay();
     $("hudBtn").onclick = () => window.jikkaiDesktop?.showOverlayHud();
-    $("reportBtn").onclick = () => {
-      if (canReport(latestMission)) openFullRoute("missoes", "", `relatorio-missao:${latestMission.id}`);
-    };
     $("ovCreateMission").onclick = createOverlayMission;
     $("ovSendMessage").onclick = sendOverlayMessage;
     $("ovSearchInput").addEventListener("input", renderOverlaySearch);
-    $("ovMeetingMode").onclick = () => {
-      setTab("mapa");
-      if (overlayMeetingMode) { overlayToast("Clique dentro do mapa"); return; }
-      setOverlayMeetingMode(true);
-    };
-    document.querySelector(".map-preview").addEventListener("click", e => {
-      if (!overlayMeetingMode) return;
+    $("ovMeetingMode").onclick = e => {
       e.preventDefault();
-      createOverlayMeeting(overlayMapPosition(e));
-    });
+      e.stopPropagation();
+      setTab("mapa");
+      if (overlayMeetingMode) { overlayToast("Clique em qualquer ponto do mapa"); return; }
+      setOverlayMeetingMode(true);
+      overlayToast("Modo de marcacao ativo");
+    };
+    $("ovMeetingCancel").onclick = closeOverlayMeetingComposer;
+    $("ovMeetingCancelBottom").onclick = closeOverlayMeetingComposer;
+    $("ovMeetingSave").onclick = saveOverlayMeeting;
+    $("ovMeetingAudience").addEventListener("change", updateOverlayMeetingAudience);
+    const overlayMap = document.querySelector(".map-preview");
+    let lastOverlayMapPlacement = 0;
+    const handleOverlayMapPlacement = e => {
+      if (!overlayMeetingMode) return;
+      if (typeof e.button === "number" && e.button !== 0) return;
+      const now = Date.now();
+      if (now - lastOverlayMapPlacement < 240) return;
+      lastOverlayMapPlacement = now;
+      e.preventDefault();
+      e.stopPropagation();
+      openOverlayMeetingComposer(overlayMapPosition(e));
+    };
+    overlayMap.addEventListener("pointerup", handleOverlayMapPlacement, true);
+    overlayMap.addEventListener("click", handleOverlayMapPlacement, true);
     document.getElementById("tabs").onclick = e => {
       const btn = e.target.closest("[data-tab]");
       if (btn) setTab(btn.dataset.tab);
@@ -765,13 +1080,27 @@
         saveOverlayMeetingResponse(meetingResponseButton.dataset.id, meetingResponseButton.dataset.meetingResponse);
         return;
       }
+      const dossierBack = e.target.closest("[data-dossier-back]");
+      if (dossierBack) {
+        latestDossierUsername = "";
+        renderData(latestData);
+        setTab("dossies");
+        return;
+      }
+      const dossierMember = e.target.closest("[data-dossier-member]")?.dataset.dossierMember;
+      if (dossierMember) {
+        latestDossierUsername = dossierMember;
+        renderData(latestData);
+        setTab("dossies");
+        return;
+      }
       const jump = e.target.closest("[data-tab-jump]")?.dataset.tabJump;
       if (jump) setTab(jump);
       const member = e.target.closest("[data-member]")?.dataset.member;
       if (member) {
         latestDossierUsername = member;
         renderData(latestData);
-        setTab("dossie");
+        setTab("dossies");
       }
       const searchTab = e.target.closest("[data-ov-search-tab]")?.dataset.ovSearchTab;
       if (searchTab) setTab(searchTab);
@@ -788,19 +1117,43 @@
       if (e.key === "Escape") window.jikkaiDesktop?.showOverlayHud();
     });
     window.jikkaiDesktop?.onClickThroughChanged(enabled => {
-      $("mouseMode").textContent = enabled ? "Mouse no jogo" : "Mouse no painel";
+      document.body.classList.toggle("mode-interactive", !enabled);
     });
     window.jikkaiDesktop?.onOverlayModeChanged(setMode);
     window.jikkaiDesktop?.onOverlaySearch?.(() => {
       setTab("busca");
       setTimeout(()=>$("ovSearchInput")?.focus(),40);
     });
+    function mergeRealtimeState(remoteData) {
+      if (!remoteData || !lastLocalStateAt || Date.now() - lastLocalStateAt > 10000) return remoteData;
+      const localMeetings = Array.isArray(latestData?.mapaReunioes) ? latestData.mapaReunioes : [];
+      const remoteMeetings = Array.isArray(remoteData.mapaReunioes) ? remoteData.mapaReunioes : [];
+      const remoteById = new Map(remoteMeetings.map(meeting => [meeting.id, meeting]));
+      const mergedMeetings = remoteMeetings.map(remoteMeeting => {
+        const localMeeting = localMeetings.find(meeting => meeting.id === remoteMeeting.id);
+        if (!localMeeting) return remoteMeeting;
+        const localTime = new Date(localMeeting.updatedAt || localMeeting.createdAt || 0).getTime();
+        const remoteTime = new Date(remoteMeeting.updatedAt || remoteMeeting.createdAt || 0).getTime();
+        return localTime > remoteTime ? localMeeting : remoteMeeting;
+      });
+      localMeetings.forEach(localMeeting => {
+        if (new Date(localMeeting.expiresAt).getTime() > Date.now() && !remoteById.has(localMeeting.id)) mergedMeetings.push(localMeeting);
+      });
+      return { ...remoteData, mapaReunioes: mergedMeetings };
+    }
     window.addEventListener("storage", render);
     window.jikkaiDesktop?.onRealtimeState?.(payload => {
       if (!payload?.data?.users) return;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.data));
+      const data = mergeRealtimeState(payload.data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       $("syncState").textContent = "Live";
-      renderData(payload.data);
+      renderData(data);
+    });
+    window.jikkaiDesktop?.onRealtimeAlert?.(payload => {
+      if (payload?.type !== "map.meeting") return;
+      const title = payload.meeting?.titulo || "ponto de encontro Jikkai";
+      overlayToast(`Reuniao ativa: ${title}`);
+      if (latestData) renderData(latestData);
     });
     window.jikkaiDesktop?.onPresenceChanged?.(payload => {
       setOnlineUsers(payload);
@@ -812,7 +1165,9 @@
     }).catch(()=>{});
     setMode({ mode:"hud", clickThrough:true });
     render();
-    if (!window.jikkaiDesktop?.onRealtimeState) setInterval(render, 30000);
+    setInterval(() => {
+      if (latestData) renderData(latestData);
+    }, 5000);
   </script>
 </body>
 </html>

@@ -20,6 +20,7 @@ class NotificationService {
       title: active.titulo || "Reuniao marcada no mapa",
       message: active.descricao || "Um ponto de encontro foi definido no mapa estrategico.",
       meeting: active,
+      source: event.source || "realtime",
       createdAt: new Date().toISOString()
     });
   }
