@@ -83,13 +83,20 @@
     .map-view.placing{cursor:crosshair}
     .map-mode-hint{position:absolute;left:10px;bottom:10px;z-index:8;border:1px solid rgba(34,211,238,.45);background:rgba(0,0,0,.72);border-radius:999px;padding:7px 10px;color:#cffafe;font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000}
     .map-marker{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;pointer-events:none}
-    .map-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff7ed;background:var(--orange);box-shadow:0 0 16px rgba(249,115,22,.9)}
+    .map-dot{width:7px;height:7px;border-radius:50%;border:1px solid #fff7ed;background:var(--orange);box-shadow:0 0 10px rgba(249,115,22,.9)}
     .map-name{white-space:nowrap;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.12);font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:1000;text-shadow:0 1px 2px #000;color:#fff7ed}
-    .map-meeting{position:absolute;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 56%,#7f1d1d);color:#111827;font-weight:1000;box-shadow:0 0 0 0 rgba(249,115,22,.7);animation:mapPing 1.05s infinite;z-index:5}
-    .map-meeting:before{content:"";position:absolute;inset:-18px;border-radius:50%;border:2px solid rgba(34,211,238,.45);animation:mapRing 1.35s ease-out infinite;pointer-events:none}
-    .map-meeting-label{position:absolute;top:36px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.76);border:1px solid rgba(249,115,22,.55);color:#fed7aa;font-size:9px;text-transform:uppercase;letter-spacing:.12em}
-    @keyframes mapPing{70%{box-shadow:0 0 0 18px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
+    .map-meeting{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid #fff7ed;background:radial-gradient(circle,#fde68a,#f97316 56%,#7f1d1d);color:#111827;font-size:11px;font-weight:1000;box-shadow:0 0 0 0 rgba(249,115,22,.7);animation:mapPing 1.05s infinite;z-index:5}
+    .map-meeting:before{content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(34,211,238,.45);animation:mapRing 1.35s ease-out infinite;pointer-events:none}
+    .map-meeting-label{position:absolute;top:24px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.76);border:1px solid rgba(249,115,22,.55);color:#fed7aa;font-size:8px;text-transform:uppercase;letter-spacing:.12em}
+    .map-member-location{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;z-index:6;pointer-events:none}
+    .map-member-dot{width:15px;height:15px;border-radius:50%;border:2px solid #ecfeff;background:radial-gradient(circle,#22d3ee,#0e7490 70%);box-shadow:0 0 0 0 rgba(34,211,238,.72);animation:mapMemberPulse 1.4s infinite}
+    .map-member-name{position:absolute;top:16px;left:50%;transform:translateX(-50%);white-space:nowrap;border:1px solid rgba(34,211,238,.48);background:rgba(0,0,0,.72);color:#ecfeff;border-radius:999px;padding:2px 5px;font-size:8px;text-transform:uppercase;letter-spacing:.09em;font-weight:1000;text-shadow:0 1px 2px #000}
+    .map-sos{position:absolute;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;display:grid;place-items:center;border:1px solid #fecaca;background:radial-gradient(circle,#fee2e2,#ef4444 58%,#7f1d1d);color:#111;font-size:10px;font-weight:1000;z-index:7;box-shadow:0 0 0 0 rgba(239,68,68,.82);animation:mapSos 1s infinite;pointer-events:none}
+    .map-sos-label{position:absolute;top:20px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.78);border:1px solid rgba(239,68,68,.65);color:#fecaca;font-size:8px;text-transform:uppercase;letter-spacing:.1em}
+    @keyframes mapMemberPulse{70%{box-shadow:0 0 0 10px rgba(34,211,238,0)}100%{box-shadow:0 0 0 0 rgba(34,211,238,0)}}
+    @keyframes mapPing{70%{box-shadow:0 0 0 12px rgba(249,115,22,0)}100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}}
     @keyframes mapRing{0%{opacity:.95;transform:scale(.72)}100%{opacity:0;transform:scale(1.45)}}
+    @keyframes mapSos{70%{box-shadow:0 0 0 12px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
     .org-board{display:grid;gap:14px}
     .command-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     .command-card,.division-card,.team-card{border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.28);border-radius:12px;padding:12px}
@@ -154,6 +161,36 @@
     .search-result{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.035);padding:10px;text-align:left;color:inherit;cursor:pointer}
     .search-result:hover{border-color:rgba(34,211,238,.5)}
     .empty{border:1px dashed rgba(255,255,255,.12);border-radius:12px;padding:18px;color:#858b96;text-align:center;background:rgba(255,255,255,.02)}
+    .field-now{display:grid;gap:14px}
+    .field-hero{border:1px solid rgba(34,211,238,.3);background:linear-gradient(135deg,rgba(8,70,83,.28),rgba(9,9,9,.9));border-radius:14px;padding:18px;position:relative;overflow:hidden}
+    .field-hero:after{content:"FIELD OS";position:absolute;right:-20px;top:18px;transform:rotate(27deg);font-size:10px;letter-spacing:.3em;color:rgba(165,243,252,.22);border:1px solid rgba(34,211,238,.18);padding:5px 25px}
+    .field-hero .title{font-size:24px;max-width:760px}
+    .field-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px}
+    .field-mode{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+    .field-mode button,.quick-action,.phase-button{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);border-radius:9px;padding:9px 10px;color:#d4d4d8;font-size:10px;font-weight:1000;cursor:pointer}
+    .field-mode button.active{border-color:rgba(34,211,238,.72);background:rgba(8,145,178,.18);color:#cffafe}
+    .quick-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-top:10px}
+    .quick-action{display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;text-transform:uppercase;letter-spacing:.06em}
+    .quick-action .quick-icon{font-size:15px;color:#fed7aa}
+    .quick-action.urgent{border-color:rgba(220,38,38,.45);color:#fecaca}
+    .quick-action.urgent .quick-icon{color:#fca5a5}
+    .quick-signal{display:flex;align-items:center;justify-content:space-between;gap:8px;border-left:2px solid var(--cyan);background:rgba(8,145,178,.08);padding:8px 10px;border-radius:7px;color:#cffafe;font-size:11px}
+    .timer-list{display:grid;gap:7px;margin-top:10px}
+    .timer-card{border:1px solid rgba(249,115,22,.24);border-radius:10px;padding:10px;background:rgba(124,45,18,.1)}
+    .timer-card.critical{border-color:rgba(220,38,38,.7);background:rgba(127,29,29,.2);animation:timerAlert 1.2s ease-in-out infinite}
+    .timer-card .timer-time{font-size:25px;font-weight:1000;color:#ffedd5;letter-spacing:.04em}
+    .timer-bar{height:5px;border-radius:99px;background:#171717;overflow:hidden;margin-top:8px}.timer-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--cyan))}
+    @keyframes timerAlert{50%{filter:brightness(1.18)}}
+    .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px;margin-top:10px}
+    .preset-grid button{border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.035);padding:9px;text-align:left;color:#d4d4d8;cursor:pointer}.preset-grid button:hover{border-color:rgba(249,115,22,.6)}
+    .preset-grid strong{display:block;color:#fff7ed;font-size:11px}.preset-grid small{display:block;margin-top:3px;color:#858b96;font-size:9px}
+    .phase-rail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px}.phase-rail .tag{color:#a5f3fc;border-color:rgba(34,211,238,.4)}
+    button.objective{width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}.objective:focus-visible,.quick-action:focus-visible,.field-mode button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+    .training-board{display:grid;gap:14px}.training-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;border:1px solid rgba(34,211,238,.28);border-radius:12px;background:rgba(8,145,178,.08);padding:14px;text-align:center}.training-score .score{font-size:34px;font-weight:1000;color:#fff7ed}.training-score .fighter{font-size:14px;font-weight:950;color:#cffafe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.training-score .versus{font-size:10px;color:#fb923c;font-weight:1000}.training-controls{display:flex;flex-wrap:wrap;gap:8px}.training-controls .btn{min-width:112px}.training-round{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#a5f3fc;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000}.training-member-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;max-height:220px;overflow:auto;padding-right:2px;margin-top:6px}.training-member-choice{display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22);border-radius:9px;padding:8px;color:#d4d4d8;font-size:11px;font-weight:900}.training-member-choice input{accent-color:var(--orange);flex:0 0 auto}.training-score-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}.training-score-row{border:1px solid rgba(34,211,238,.24);border-radius:10px;background:rgba(8,145,178,.08);padding:10px}.training-score-row strong{display:block;font-size:13px;color:#cffafe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.training-score-row span{display:block;font-size:26px;font-weight:1000;color:#fff7ed;margin-top:4px}
+    .more-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}.more-grid button{text-align:left;min-height:68px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.035);padding:12px;cursor:pointer}.more-grid button strong{display:block;color:#fff7ed;font-size:13px}.more-grid button span{display:block;color:#858b96;font-size:10px;margin-top:5px;line-height:1.35}
+    .field-composer{border:1px solid rgba(34,211,238,.28);border-radius:10px;background:rgba(8,145,178,.08);padding:10px;margin-top:10px}.field-composer[hidden]{display:none}
+    .shortcut-settings{display:grid;gap:7px;margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px}.shortcut-row{display:grid;grid-template-columns:minmax(0,1fr) 190px auto;gap:7px;align-items:center;border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px;background:rgba(0,0,0,.18)}.shortcut-row strong{font-size:11px;color:#fff7ed}.shortcut-row small{display:block;color:#858b96;font-size:9px;margin-top:2px}.shortcut-row select{min-width:0}.shortcut-row .btn{padding:8px 9px;font-size:9px}@media(max-width:700px){.shortcut-row{grid-template-columns:1fr}.shortcut-row .btn{width:100%}}
+    .combat-mode .app{filter:saturate(.72)}.combat-mode .panel,.combat-mode .field-hero{backdrop-filter:none;box-shadow:none}.combat-mode .field-hero:after{display:none}.combat-mode *{animation:none!important;transition:none!important}
     .shortcut{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#9ca3af}
     .shortcut kbd{border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.04);padding:3px 7px;color:#e5e7eb;font:inherit}
     .pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.65);animation:pulse 1.2s infinite}
@@ -178,13 +215,12 @@
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button data-section="missoes" class="active">Missões</button>
-                <button data-section="equipe">Equipe</button>
-<button data-section="relatorios">Relatórios</button>
+        <button data-section="agora" class="active">Agora</button>
+        <button data-section="missoes">Missão</button>
+        <button data-section="equipe">Equipe</button>
         <button data-section="mapa">Mapa</button>
+        <button data-section="mais">Mais</button>
         <button data-section="comando" id="commandNav" hidden>Comando</button>
-        <button data-section="membros">Membros</button>
-              <button data-section="dossies">Dossi&ecirc;s</button>
 </nav>
     </header>
 
@@ -212,7 +248,32 @@
         </aside>
       </section>
 
-      <section id="missoes" class="section active">
+      <section id="agora" class="section active">
+        <div class="field-now">
+          <div class="field-hero" id="nowHero"></div>
+          <div class="field-grid">
+            <div class="panel">
+              <div class="panel-head"><div><div class="label">Ações rápidas</div><div class="title">Comunicação de campo</div></div><span class="tag" id="quickModeTag">RP seguro</span></div>
+              <div class="desc">Um toque registra seu estado sem exigir texto. No RP seguro, o sinal é pessoal até você confirmar a origem em RP.</div>
+              <div class="quick-actions" id="quickActionsGrid"></div>
+              <div id="quickSignalStatus" style="margin-top:9px"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div><div class="label">Cronômetros</div><div class="title">Tempo de campo</div></div><span class="tag" id="timerCountTag">0</span></div>
+              <div id="activeTimersList" class="timer-list"></div>
+              <div class="label" style="margin-top:14px">Iniciar em um clique</div>
+              <div class="preset-grid" id="timerPresetGrid"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><div class="label">Modo operacional</div><div class="title">Como esta sessão funciona</div></div><span class="tag" id="combatModeTag">Normal</span></div>
+            <div class="field-mode" id="fieldModeControls"></div>
+            <div class="actions"><button class="btn secondary" id="combatModeBtn" data-action="toggle-combat">Ativar Modo Combate</button><button class="btn secondary" data-action="open-overlay">Abrir HUD</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="missoes" class="section">
         <div class="split">
           <div class="panel">
             <div class="panel-head"><div><div class="label">Minhas missões</div><div class="title">Prioridade do jogador</div></div><span class="tag" id="missionCountTag">0</span></div>
@@ -228,6 +289,11 @@
               <button class="btn secondary" id="shortcutStatusBtn">Ver atalhos</button>
             </div>
           </aside>
+        </div>
+      </section>
+      <section id="treino" class="section">
+        <div class="training-board">
+          <div class="panel hot" id="trainingPanel"></div>
         </div>
       </section>
       <section id="equipe" class="section">
@@ -267,7 +333,7 @@
             <div class="panel-head"><div><div class="label">Mapa estratégico</div><div class="title">Reuniões e deslocamento</div></div><span class="tag" id="mapCountTag">0</span></div>
             <div class="map-view" id="appMap">
               <div class="map-world" id="appMapWorld">
-                <img alt="Mapa Shinobi Legends" src="https://slpforge.xyz/images/map/map_base_low.webp">
+                <img alt="Mapa Shinobi Legends" src="assets/map_base_low.webp" onerror="this.onerror=null;this.src='https://slpforge.xyz/images/map/map_base_low.webp'">
                 <svg class="app-routes" id="appRoutesSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
                 <div class="map-layer" id="appMapLayer"></div>
               </div>
@@ -284,9 +350,21 @@
           <aside class="panel">
             <div class="panel-head"><div><div class="label">Reuniões</div><div class="title">Sinais ativos</div></div></div>
             <div class="list" id="meetingsList"></div>
+            <div class="field-composer" id="appMeetingComposer" hidden><div class="panel-head"><div><div class="label">Novo sinal</div><div class="title">Confirmar reunião</div></div><button class="drawer-close" type="button" id="appMeetingCancel">×</button></div><div class="field"><label>Duração</label><select class="fox-input" id="appMeetingDuration"><option value="5">5 minutos</option><option value="10">10 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">60 minutos</option></select></div><div class="field" style="margin-top:8px"><label>Título opcional</label><input class="fox-input" id="appMeetingTitle" placeholder="Ponto de encontro Jikkai"></div><div class="actions"><button class="btn cyan" id="appMeetingSave">Confirmar reunião</button></div></div>
             <div class="actions">
               <button class="btn cyan" id="appCreateMeetingBtn" hidden>Definir reuniao</button>
               <button class="btn secondary" id="openMapBtn">Mapa completo</button>
+            </div>
+            <div class="field-composer" style="display:block;margin-top:10px">
+              <div class="panel-head"><div><div class="label">Localizacao ao vivo</div><div class="item-title" id="nativeLocationStatus">Rastreador desligado</div></div></div>
+              <p class="desc">Modo posicao: injeta somente o leitor de coordenadas, sem hook de video.</p>
+              <div class="actions"><button class="btn cyan" data-action="start-location">Ativar localizacao</button></div>
+            </div>
+            <div class="field-composer" id="appPointComposer" hidden>
+              <div class="panel-head"><div><div class="label">Salvar ponto atual</div><div class="item-title">Cartografia de campo</div></div></div>
+              <div class="field"><label>Nome do ponto</label><input class="fox-input" id="appPointName" placeholder="Casa, Ponto 3, Quartel general..."></div>
+              <div class="field" style="margin-top:8px"><label>Tipo</label><select class="fox-input" id="appPointType"><option value="base">Base</option><option value="casa">Casa</option><option value="encontro">Ponto de encontro</option><option value="treino">Treino</option><option value="risco">Risco</option><option value="regiao">Outro</option></select></div>
+              <div class="actions"><button class="btn cyan" data-action="save-current-point">Salvar aqui</button></div>
             </div>
           </aside>
         </div>
@@ -300,14 +378,17 @@
               <span class="tag" id="commandRoleTag">Restrito</span>
             </div>
             <div class="command-grid-2">
-              <div class="field"><label>Título da missão</label><input class="fox-input" id="cmdMissionTitle" placeholder="Ex.: Vigiar fronteira de Suna"></div>
+              <div class="field"><label>Tipo da operação</label><select class="fox-input" id="cmdMissionPreset"></select></div>
               <div class="field"><label>Operador principal</label><select class="fox-input" id="cmdMissionTarget"></select></div>
             </div>
-            <div class="field" style="margin-top:10px"><label>Briefing</label><textarea class="fox-input" id="cmdMissionBrief" placeholder="Contexto, local e condição de sucesso."></textarea></div>
-            <div class="command-grid-2" style="margin-top:10px">
-              <div class="field"><label>Objetivos, um por linha</label><textarea class="fox-input" id="cmdMissionObjectives" placeholder="Encontrar o alvo&#10;Registrar prova&#10;Retornar sem exposição"></textarea></div>
-              <div class="field"><label>Sigilo</label><select class="fox-input" id="cmdMissionSigilo"><option>Restrito</option><option>Nível I</option><option>Nível II</option><option>Nível III</option><option>Nível IV</option><option>Nível V</option></select></div>
-            </div>
+            <details style="margin-top:10px"><summary class="chip" style="display:inline-flex;cursor:pointer">Adicionar detalhes</summary>
+              <div class="field" style="margin-top:10px"><label>Título opcional</label><input class="fox-input" id="cmdMissionTitle" placeholder="Gerado automaticamente pelo preset"></div>
+              <div class="field" style="margin-top:10px"><label>Briefing opcional</label><textarea class="fox-input" id="cmdMissionBrief" placeholder="Contexto, local e condição de sucesso."></textarea></div>
+              <div class="command-grid-2" style="margin-top:10px">
+                <div class="field"><label>Objetivos opcionais, um por linha</label><textarea class="fox-input" id="cmdMissionObjectives" placeholder="Usará os objetivos padrão do preset"></textarea></div>
+                <div class="field"><label>Sigilo</label><select class="fox-input" id="cmdMissionSigilo"><option>Restrito</option><option>Nível I</option><option>Nível II</option><option>Nível III</option><option>Nível IV</option><option>Nível V</option></select></div>
+              </div>
+            </details>
             <div class="actions"><button class="btn cyan" id="cmdCreateMission">Entregar missão</button><button class="btn secondary" data-action="focus-members">Escolher membro online</button></div>
           </div>
           <aside class="panel">
@@ -343,6 +424,17 @@
           <div class="dossier-grid" id="dossierGrid"></div>
         </div>
       </section>
+      <section id="mais" class="section">
+        <div class="panel" style="margin-bottom:12px"><div class="panel-head"><div><div class="label">Configuracoes locais</div><div class="title">Atalhos do JIKKAI</div></div><button class="btn secondary" data-action="reset-shortcuts">Restaurar padroes</button></div><div class="desc">Use combinacoes com Alt, Ctrl ou Shift. Os fallbacks antigos continuam disponiveis.</div><div class="shortcut-settings" id="shortcutSettings"></div></div>
+        <div class="panel hot"><div class="panel-head"><div><div class="label">Arquivo e ferramentas</div><div class="title">Mais</div></div><span class="tag">Acesso rápido</span></div><div class="more-grid">
+          <button data-action="more-section" data-target="relatorios"><strong>Relatórios</strong><span>Rascunhos automáticos e registros enviados.</span></button>
+          <button data-action="more-section" data-target="membros"><strong>Membros</strong><span>Estrutura e presença online no app.</span></button>
+          <button data-action="more-section" data-target="dossies"><strong>Dossiês</strong><span>Arquivo visual e observações rápidas.</span></button>
+          <button data-action="open-search"><strong>Busca universal</strong><span>Codinome, missão, mapa, reunião e equipe.</span></button>
+          <button data-action="open-full-portal"><strong>Portal completo</strong><span>Fluxos administrativos e arquivos avançados.</span></button>
+          <button data-action="shortcut-settings"><strong>Atalhos</strong><span>Ver fallbacks registrados e restaurar padrões.</span></button>
+        </div></div>
+      </section>
     </main>
   </div>
 
@@ -368,8 +460,14 @@
     </div>
   </div>
 
+  <script src="assets/js/rule-timer-presets.js"></script>
+  <script src="assets/js/field-state.js"></script>
+  <script src="assets/js/training.js"></script>
+  <script src="assets/js/quick-actions.js"></script>
+  <script src="assets/js/auto-report.js"></script>
   <script>
     const STORAGE_KEY = "fox-portal-v3";
+    const GOOD_STORAGE_KEY = "fox-portal-v3-good";
     const SESSION_KEY = "fox-portal-session-v2";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
@@ -408,6 +506,19 @@
     const MEETING_RESPONSE_LABELS = { ciente:"Ciente", caminho:"A caminho", local:"No local", ausente:"Nao poderei comparecer" };
     const ROOT_PERMISSIONS = ["manage_users", "manage_missions", "manage_roles", "manage_map_meetings", "edit_map", "edit_reports", "edit_contracts", "edit_jikkai"];
     const $ = id => document.getElementById(id);
+    const FIELD = window.JikkaiFieldState;
+    const FIELD_TIMERS = window.JikkaiRuleTimers;
+    const TRAINING = window.JikkaiTraining;
+    const QUICK_ACTIONS = window.JikkaiQuickActions;
+    const AUTO_REPORT = window.JikkaiAutoReport;
+    const COMBAT_MODE_KEY = "jikkai-field-combat-mode";
+    const LOCATION_CALIBRATION_KEY = "jikkai-location-calibration-v1";
+    const DEFAULT_LOCATION_CALIBRATION = { minX:-6000, maxX:6000, minY:-6000, maxY:6000, invertY:true };
+    const MAP_DISTANCE_PER_PERCENT = 85;
+    const MEETING_SIGNAL_STATUS = { ciente:"ciente", caminho:"caminho", local:"local" };
+    const SHARED_SIGNAL_ACTIONS = new Set(["ciente","caminho","local","aguardando","area_limpa","apoio","ferido","recuar","silencio","objetivo"]);
+    const SHORTCUT_OPTIONS = { overlay:["", "Alt+J", "CommandOrControl+Shift+J", "CommandOrControl+Alt+J"], clickThrough:["", "Alt+K", "CommandOrControl+Shift+K", "CommandOrControl+Alt+K"], app:["", "Alt+M", "CommandOrControl+Shift+M", "CommandOrControl+Alt+M"], search:["", "Alt+F", "CommandOrControl+Alt+F"], sos:["", "Alt+Backspace", "CommandOrControl+Alt+Backspace"], quickActions:["", "Alt+Q", "CommandOrControl+Alt+Q"], combat:["", "Alt+R", "CommandOrControl+Alt+R"], hide:["", "Alt+H", "CommandOrControl+Alt+H"] };
+    const SHORTCUT_LABELS = { overlay:"Mostrar HUD", clickThrough:"Liberar ou bloquear mouse", app:"Abrir painel", search:"Abrir busca", sos:"SOS com posicao", quickActions:"Acoes rapidas", combat:"Modo Combate", hide:"Ocultar imediatamente" };
     let currentData = {};
     let currentUser = null;
     let currentMission = null;
@@ -422,12 +533,53 @@
     let appMapDown = { x:0, y:0, tx:0, ty:0 };
     let appRoutesVisible = false;
     let appMapMeetingMode = false;
+    let appMeetingDraft = null;
+    let lastQuickSignalId = "";
+    let trainingRematch = null;
+    let desktopPreferences = {};
+    let nativeLocation = null;
+    let nativeLocationTrackerRequested = false;
+    let lastAutoMeetingResponseKey = "";
+    let lastTrailAt = 0;
+    let lastTrailPoint = null;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
     function normalizeText(v) { return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
     function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-    function nameOf(user){return user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita"}
+    function hasUsableUsers(data) {
+      return Array.isArray(data?.users) && data.users.some(user => user?.username && user.role !== "contratante");
+    }
+    function rememberGoodState(data) {
+      if (!hasUsableUsers(data)) return;
+      try { localStorage.setItem(GOOD_STORAGE_KEY, JSON.stringify(data)); } catch {}
+    }
+    function readGoodState() {
+      const saved = parseJson(localStorage.getItem(GOOD_STORAGE_KEY), null);
+      return hasUsableUsers(saved) ? saved : null;
+    }
+    function protectCoreState(candidate, fallback = null) {
+      const incoming = candidate && typeof candidate === "object" ? candidate : {};
+      if (hasUsableUsers(incoming)) {
+        rememberGoodState(incoming);
+        return incoming;
+      }
+      const local = parseJson(localStorage.getItem(STORAGE_KEY), null);
+      const donor = [fallback, currentData, local, readGoodState()].find(hasUsableUsers);
+      if (!donor) return incoming;
+      const repaired = {
+        ...incoming,
+        users: Array.isArray(donor.users) ? donor.users : [],
+        roles: Array.isArray(incoming.roles) && incoming.roles.length ? incoming.roles : (donor.roles || []),
+        trios: Array.isArray(incoming.trios) && incoming.trios.length ? incoming.trios : (donor.trios || []),
+        clas: Array.isArray(incoming.clas) && incoming.clas.length ? incoming.clas : (donor.clas || []),
+        divisoes: Array.isArray(incoming.divisoes) && incoming.divisoes.length ? incoming.divisoes : (donor.divisoes || []),
+        juramentados: Array.isArray(incoming.juramentados) && incoming.juramentados.length ? incoming.juramentados : (donor.juramentados || []),
+      };
+      rememberGoodState(repaired);
+      return repaired;
+    }
+    function nameOf(user){return isRootUser(user) && !String(user?.codinome || "").trim() ? "Viper" : (user?.codinome || user?.displayName || user?.nomeRP || user?.username || "Leitura restrita")}
     function roleOf(user){return (currentData.roles || []).find(r => r.id === user?.role)}
     function isRootUser(user) {
       return String(user?.username || "").trim().toLowerCase() === "leader";
@@ -452,7 +604,7 @@
       const s = session();
       const found = (currentData.users || []).find(u => u.username === s?.username);
       if (found) return found;
-      if (isRootUser(s)) return { ...s, username:"leader", role:s?.role || "leader", codinome:s?.codinome || s?.displayName || "Leader" };
+      if (isRootUser(s)) return { ...s, username:"leader", role:s?.role || "leader", codinome:s?.codinome || "Viper", displayName:s?.displayName || "Viper" };
       return s || null;
     }
     function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
@@ -561,7 +713,12 @@
     }
     function missionState(mission){return MISSAO_STATUS[normalizeText(mission?.status || "atribuida")] || MISSAO_STATUS.atribuida}
     function canReportMission(mission){return !!mission && missionState(mission).canReport}
-    function participates(mission, username){return !!username && (mission?.assignedTo === username || (mission?.participants || []).includes(username) || (mission?.aceites || []).includes(username))}
+    function participates(mission, username){
+      if (!username) return false;
+      if (mission?.assignedTo === username || (mission?.participants || []).includes(username) || (mission?.aceites || []).includes(username)) return true;
+      const teamId = String(mission?.assignedTo || "").startsWith("team:") ? String(mission.assignedTo).slice(5) : "";
+      return !!teamId && (teams().find(team => team.id === teamId)?.membros || []).some(member => member.username === username);
+    }
     function myMissions(){return (currentData.missoes || []).filter(m => participates(m, currentUser?.username) && !missionState(m).terminal && !TERMINAIS.has(normalizeText(m.status))).sort((a,b)=>missionState(a).priority-missionState(b).priority || new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0))}
     function myReports(){return (currentData.relatorios || []).filter(r => !currentUser?.username || r.autor === currentUser.username || r.createdBy === currentUser.username).sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0))}
     function meetings(){return (currentData.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()).sort((a,b)=>new Date(a.expiresAt)-new Date(b.expiresAt))}
@@ -585,6 +742,43 @@
     function statusOf(user) {
       return user?.appDisponibilidade || user?.disponibilidade || "Disponivel";
     }
+    function fieldModeOf(user = currentUser) {
+      return user?.appModoCampo === "training" ? "training" : "rp";
+    }
+    function combatModeActive() {
+      return localStorage.getItem(COMBAT_MODE_KEY) === "1";
+    }
+    function applyCombatMode() {
+      document.body.classList.toggle("combat-mode", combatModeActive());
+      const tag = $("combatModeTag");
+      const button = $("combatModeBtn");
+      if (tag) tag.textContent = combatModeActive() ? "Combate" : "Normal";
+      if (button) button.textContent = combatModeActive() ? "Sair do Modo Combate" : "Ativar Modo Combate";
+    }
+    function activeTrainingFor(username = currentUser?.username) {
+      return (currentData.trainingSessions || []).filter(session => (session.participants || []).includes(username) && ["ativo", "pausado"].includes(session.status)).sort((a,b)=>new Date(b.createdAt || 0) - new Date(a.createdAt || 0))[0] || null;
+    }
+    function activeFieldTimers() {
+      return (currentData.fieldTimers || []).filter(timer => ["ativo", "pausado"].includes(timer.status) && !FIELD_TIMERS.isExpired(timer)).sort((a,b)=>new Date(a.endsAt || 0) - new Date(b.endsAt || 0));
+    }
+    function signalVisibleTo(signal, user = currentUser) {
+      if (!signal || signal.status === "desfeito") return false;
+      if (new Date(signal.expiresAt || 0).getTime() <= Date.now()) return false;
+      if (signal.username === user?.username) return true;
+      return signal.visibility === "compartilhado" || signal.visibility === "equipe";
+    }
+    function signalOwnerName(signal) {
+      return nameOf(userByUsername(signal?.username) || { username: signal?.username });
+    }
+    function signalDisplay(signal) {
+      return signal ? `${signalOwnerName(signal)}: ${signal.label || signal.actionId || "Sinal"}` : "";
+    }
+    function visibleQuickSignals() {
+      return (currentData.quickSignals || []).filter(signal => signalVisibleTo(signal)).sort((a,b)=>new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    function namesForTraining(session) {
+      return (session?.participants || []).map(username => nameOf(userByUsername(username) || { username }));
+    }
     function saveRoute(tab, subTab = "", action = "") {
       const username = currentUser?.username || session()?.username;
       if (!username) return;
@@ -602,35 +796,48 @@
       if (!res.ok) throw new Error("Supabase " + res.status);
       const payload = await res.json();
       const data = payload?.[0]?.data;
-      if (data?.users) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      return data;
+      const repaired = protectCoreState(data, parseJson(localStorage.getItem(STORAGE_KEY), null));
+      if (hasUsableUsers(repaired)) localStorage.setItem(STORAGE_KEY, JSON.stringify(repaired));
+      return repaired;
     }
     async function persistCloudState(nextData) {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state`, {
+      const body = JSON.stringify({ id: 1, data: nextData, updated_at: new Date().toISOString() });
+      const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=representation" };
+      let res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state?id=eq.1`, { method: "PATCH", headers, body });
+      if (!res.ok) res = await fetch(`${SUPABASE_URL}/rest/v1/fox_state`, {
         method: "POST",
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "resolution=merge-duplicates,return=representation"
-        },
-        body: JSON.stringify({ id: 1, data: nextData, updated_at: new Date().toISOString() })
+        headers: { ...headers, Prefer: "resolution=merge-duplicates,return=representation" },
+        body
       });
       if (!res.ok) throw new Error("Supabase " + res.status);
       return res.json().catch(()=>null);
     }
     async function saveState(mutator, successText = "Sincronizado") {
       const base = currentData || {};
-      const next = mutator({
+      let next = FIELD.normalizeState(mutator({
         ...base,
         users: Array.isArray(base.users) ? base.users.slice() : [],
         missoes: Array.isArray(base.missoes) ? base.missoes.slice() : [],
         mapaReunioes: Array.isArray(base.mapaReunioes) ? base.mapaReunioes.slice() : [],
         appMensagens: Array.isArray(base.appMensagens) ? base.appMensagens.slice() : [],
-        activityLog: Array.isArray(base.activityLog) ? base.activityLog.slice() : []
-      });
+        activityLog: Array.isArray(base.activityLog) ? base.activityLog.slice() : [],
+        relatorios: Array.isArray(base.relatorios) ? base.relatorios.slice() : [],
+        trainingSessions: Array.isArray(base.trainingSessions) ? base.trainingSessions.slice() : [],
+        quickSignals: Array.isArray(base.quickSignals) ? base.quickSignals.slice() : [],
+        fieldTimers: Array.isArray(base.fieldTimers) ? base.fieldTimers.slice() : [],
+        mapaPontos: Array.isArray(base.mapaPontos) ? base.mapaPontos.slice() : [],
+        fieldTrails: Array.isArray(base.fieldTrails) ? base.fieldTrails.slice() : [],
+        fieldEvents: Array.isArray(base.fieldEvents) ? base.fieldEvents.slice() : []
+      }));
+      next = FIELD.normalizeState(protectCoreState(next, base));
+      if (!hasUsableUsers(next)) {
+        $("syncState").textContent = "Protegido";
+        toast("Sync bloqueado: base sem membros");
+        return false;
+      }
       currentData = next;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      rememberGoodState(next);
       $("syncState").textContent = "Salvando";
       renderCurrent();
       try {
@@ -654,19 +861,20 @@
       setTimeout(()=>node.remove(),2600);
     }
     async function loadState() {
-      const local = parseJson(localStorage.getItem(STORAGE_KEY), {});
+      const local = protectCoreState(parseJson(localStorage.getItem(STORAGE_KEY), {}), readGoodState());
       if (window.jikkaiDesktop?.getRealtimeState) {
         try {
           const payload = await window.jikkaiDesktop.getRealtimeState();
-          if (payload?.data?.users) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.data));
+          const protectedPayload = protectCoreState(payload?.data, local);
+          if (hasUsableUsers(protectedPayload)) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(protectedPayload));
             $("syncState").textContent = "Live";
-            return payload.data;
+            return FIELD.normalizeState(protectedPayload);
           }
         } catch {}
       }
-      try { const cloud = await loadCloudState(); $("syncState").textContent = "Sync"; return cloud || local; }
-      catch { $("syncState").textContent = "Local"; return local; }
+      try { const cloud = await loadCloudState(); $("syncState").textContent = "Sync"; return FIELD.normalizeState(cloud || local); }
+      catch { $("syncState").textContent = "Local"; return FIELD.normalizeState(local); }
     }
     function setOnlineUsers(payload = {}) {
       onlineUsers = new Map((payload.users || []).filter(u => u.username).map(u => [u.username, u]));
@@ -678,15 +886,242 @@
     function missionParticipants(mission) {
       return Array.from(new Set([...(mission.participants || []), mission.assignedTo].filter(Boolean)));
     }
+    function renderNow() {
+      const mission = myMissions()[0] || null;
+      const meeting = meetings()[0] || null;
+      const training = activeTrainingFor();
+      const timer = activeFieldTimers()[0] || null;
+      const team = memberTeam();
+      const mode = fieldModeOf();
+      const currentObjective = mission?.objetivos?.find(objective => !objective.done)?.text || mission?.objetivos?.[0]?.text || "Nenhum objetivo pendente.";
+      let eyebrow = "Pronto para operação";
+      let title = "O que você precisa fazer agora?";
+      let description = "Escolha uma ação rápida ou inicie um treino. O app mantém o detalhe avançado fora do seu caminho.";
+      let status = "Disponível";
+      if (meeting) {
+        eyebrow = "Reunião ativa";
+        title = meeting.titulo || "Ponto de encontro Jikkai";
+        description = `${meeting.descricao || "Ponto marcado no mapa."} · ${Math.max(1, Math.ceil((new Date(meeting.expiresAt).getTime() - Date.now()) / 60000))} min restantes.`;
+        status = "Mapa";
+      } else if (training) {
+        const names = namesForTraining(training);
+        const scoreboard = (training.participants || []).map((username, index) => `${names[index] || username} ${Number(training.scores?.[username] || 0)}`).join(" · ");
+        eyebrow = "Treino em andamento";
+        title = scoreboard || "Treino em andamento";
+        description = `Rodada ${training.round || 1} · ${TRAINING.formatSeconds(TRAINING.elapsedSeconds(training))}`;
+        status = "Treino";
+      } else if (mission) {
+        eyebrow = "Missão atual";
+        title = mission.titulo || "Operação de campo";
+        description = `${currentObjective} · Fase: ${mission.phase || "Preparação"}.`;
+        status = missionState(mission).label;
+      } else if (timer) {
+        eyebrow = "Cronômetro ativo";
+        title = timer.nome || "Tempo de campo";
+        description = `${FIELD_TIMERS.formatSeconds(FIELD_TIMERS.remainingSeconds(timer))} restantes · ${timer.descricao || ""}`;
+        status = "Cronômetro";
+      }
+      const quickPrimary = meeting ? `<button class="btn cyan" data-action="open-map-section">Abrir mapa</button>` : training ? `<button class="btn cyan" data-action="open-training-section">Continuar treino</button>` : mission ? `<button class="btn cyan" data-action="open-mission-section">Continuar missão</button>` : `<button class="btn cyan" data-action="open-training-section">Iniciar treino</button>`;
+      const quickSecondary = mission ? `<button class="btn secondary" data-action="quick-signal" data-signal="objetivo">Registrar situação</button>` : `<button class="btn secondary" data-action="open-overlay">Abrir HUD</button>`;
+      const quickTertiary = meeting ? `<button class="btn secondary" data-action="meeting-response-now" data-id="${escapeHtml(meeting.id)}" data-status="ciente">Ciente</button>` : `<button class="btn secondary" data-action="open-map-section">Abrir mapa</button>`;
+      $("nowHero").innerHTML = `<div class="panel-head"><div><div class="label">${escapeHtml(eyebrow)}</div><div class="title">${escapeHtml(title)}</div><div class="desc">${escapeHtml(description)}</div></div><span class="tag">${escapeHtml(status)}</span></div><div class="actions">${quickPrimary}${quickSecondary}${quickTertiary}</div><div class="chips"><span class="chip">${escapeHtml(nameOf(currentUser))}</span><span class="chip">${escapeHtml(team?.nome || memberDivision()?.nome || "Sem equipe")}</span><span class="chip">${escapeHtml(statusOf(currentUser))}</span></div>`;
+      $("quickModeTag").textContent = mode === "training" ? "Modo treino" : "RP seguro";
+      $("fieldModeControls").innerHTML = `<button class="${mode === "rp" ? "active" : ""}" data-action="field-mode" data-mode="rp">Modo RP seguro</button><button class="${mode === "training" ? "active" : ""}" data-action="field-mode" data-mode="training">Modo treino</button>`;
+      $("quickActionsGrid").innerHTML = QUICK_ACTIONS.ACTIONS.map(action => `<button class="quick-action ${action.category === "urgente" ? "urgent" : ""}" data-action="quick-signal" data-signal="${action.id}"><span class="quick-icon">${action.icon}</span><span>${escapeHtml(action.label)}</span></button>`).join("");
+      const signals = visibleQuickSignals();
+      $("quickSignalStatus").innerHTML = signals[0] ? `<div class="quick-signal"><span>${escapeHtml(signalDisplay(signals[0]))}</span><button class="btn secondary" data-action="undo-signal" data-id="${escapeHtml(signals[0].id)}">Desfazer</button></div>` : empty("Nenhum sinal ativo.");
+      renderTimers();
+      renderTrainingPanel();
+      applyCombatMode();
+    }
+    function renderTimers() {
+      const timers = activeFieldTimers();
+      $("timerCountTag").textContent = `${timers.length}`;
+      $("activeTimersList").innerHTML = timers.length ? timers.slice(0,3).map(timer => {
+        const remaining = FIELD_TIMERS.remainingSeconds(timer);
+        const total = Math.max(1, Number(timer.durationMinutes) * 60);
+        const critical = remaining <= 60;
+        const chain = timer.chainNextPresetId ? `<button class="btn secondary" data-action="start-timer" data-preset="${escapeHtml(timer.chainNextPresetId)}">Próximo</button>` : "";
+        return `<article class="timer-card ${critical ? "critical" : ""}"><div class="item-row"><div><div class="item-title">${escapeHtml(timer.nome || "Cronômetro")}</div><div class="item-meta">${escapeHtml(timer.status === "pausado" ? "Pausado" : "Em andamento")} · ${escapeHtml(timer.createdBy || "campo")}</div></div><div class="timer-time">${FIELD_TIMERS.formatSeconds(remaining)}</div></div><div class="timer-bar"><span style="width:${Math.max(0, Math.min(100, remaining / total * 100))}%"></span></div><div class="actions"><button class="btn secondary" data-action="toggle-timer" data-id="${escapeHtml(timer.id)}">${timer.status === "pausado" ? "Retomar" : "Pausar"}</button><button class="btn secondary" data-action="stop-timer" data-id="${escapeHtml(timer.id)}">Encerrar</button>${chain}</div></article>`;
+      }).join("") : empty("Nenhum cronômetro ativo.");
+      const presets = ["perseguicao", "retirada", "cerco", "treino_5", "crash"].map(id => FIELD_TIMERS.getPreset(id)).filter(Boolean);
+      $("timerPresetGrid").innerHTML = presets.map(preset => `<button data-action="start-timer" data-preset="${preset.id}"><strong>${escapeHtml(preset.nome)}</strong><small>${preset.minutos} min · ${escapeHtml(preset.descricao)}</small></button>`).join("");
+    }
+    function renderShortcutSettings() {
+      const node = $("shortcutSettings");
+      if (!node) return;
+      const custom = desktopPreferences.shortcuts || {};
+      node.innerHTML = Object.entries(SHORTCUT_OPTIONS).map(([group, options]) => `<div class="shortcut-row"><div><strong>${escapeHtml(SHORTCUT_LABELS[group] || group)}</strong><small>Personalizado apenas neste computador</small></div><select class="fox-input" data-shortcut-group="${group}">${options.map(option => `<option value="${escapeHtml(option)}" ${String(custom[group] || "") === option ? "selected" : ""}>${escapeHtml(option || "Padrao + fallbacks")}</option>`).join("")}</select><button class="btn secondary" data-action="save-shortcut" data-shortcut-group="${group}">Aplicar</button></div>`).join("");
+    }
+    async function saveShortcut(group) {
+      const select = document.querySelector(`[data-shortcut-group="${CSS.escape(group)}"]`);
+      if (!select || !window.jikkaiDesktop?.updateShortcut) return;
+      const result = await window.jikkaiDesktop.updateShortcut(group, select.value);
+      if (!result?.ok) { alert(result?.error || "Nao foi possivel registrar o atalho."); return; }
+      desktopPreferences.shortcuts = { ...(desktopPreferences.shortcuts || {}), [group]: select.value || null };
+      renderShortcutSettings();
+      toast("Atalho atualizado");
+    }
+    async function resetShortcuts() {
+      if (!window.jikkaiDesktop?.resetShortcuts) return;
+      await window.jikkaiDesktop.resetShortcuts();
+      desktopPreferences.shortcuts = {};
+      renderShortcutSettings();
+      toast("Atalhos restaurados");
+    }
+    function renderTrainingPanel() {
+      const panel = $("trainingPanel");
+      if (!panel) return;
+      const active = activeTrainingFor();
+      if (!active) {
+        const opponents = members().filter(user => user.username !== currentUser?.username);
+        const selectedNow = new Set(Array.from(document.querySelectorAll("[data-training-member]:checked")).map(input => input.value));
+        const rematch = trainingRematch ? `<div class="message-card"><div class="item-title">Treino encerrado</div><div class="item-desc">Revanche pronta com a mesma modalidade e participantes.</div><div class="actions"><button class="btn cyan" data-action="training-rematch">Iniciar revanche</button></div></div>` : "";
+        const people = opponents.map(user => `<label class="training-member-choice"><input type="checkbox" data-training-member value="${escapeHtml(user.username)}" ${selectedNow.has(user.username) ? "checked" : ""}><span>${escapeHtml(nameOf(user))}</span></label>`).join("");
+        panel.innerHTML = `<div class="panel-head"><div><div class="label">Treino e PvP</div><div class="title">Sessao com multiplos membros</div></div><span class="tag">Modo treino</span></div><div class="command-grid-2"><div class="field"><label>Modalidade</label><select class="fox-input" id="trainingModalidade">${TRAINING.MODALIDADES.map(mode => `<option>${escapeHtml(mode)}</option>`).join("")}</select></div><div class="field"><label>Duração</label><select class="fox-input" id="trainingDuration"><option value="3">3 minutos</option><option value="5" selected>5 minutos</option><option value="10">10 minutos</option><option value="0">Sem limite</option></select></div></div><div class="field" style="margin-top:10px"><label>Participantes</label><div class="training-member-grid">${people || `<div class="empty">Nenhum membro disponível.</div>`}</div></div><div class="actions"><button class="btn cyan" data-action="start-training" ${opponents.length ? "" : "disabled"}>Iniciar treino</button></div>${rematch}`;
+        return;
+      }
+      const names = namesForTraining(active);
+      const remaining = active.durationMinutes ? TRAINING.formatSeconds(TRAINING.remainingSeconds(active)) : TRAINING.formatSeconds(TRAINING.elapsedSeconds(active));
+      const rows = (active.participants || []).map((username, index) => `<div class="training-score-row"><strong>${escapeHtml(names[index] || username)}</strong><span>${Number(active.scores?.[username] || 0)}</span><button class="btn cyan" data-action="training-point" data-user="${escapeHtml(username)}">+1 ponto</button></div>`).join("");
+      panel.innerHTML = `<div class="panel-head"><div><div class="label">Treino em andamento</div><div class="title">${escapeHtml(active.modalidade || "Treino")}</div></div><span class="tag">${escapeHtml(active.status === "pausado" ? "Pausado" : "Rodada " + active.round)}</span></div><div class="training-round"><span>Rodada ${active.round || 1}</span><span>${escapeHtml(active.status === "pausado" ? "Pausado" : "Cronometro ativo")} · ${remaining}</span></div><div class="training-score-list">${rows}</div><div class="training-controls"><button class="btn secondary" data-action="training-pause">${active.status === "pausado" ? "Retomar" : "Pausar"}</button><button class="btn secondary" data-action="training-round">Próxima rodada</button><button class="btn secondary" data-action="finish-training">Finalizar e gerar relatório</button></div>`;
+    }
+    async function saveQuickSignal(actionId) {
+      if (!currentUser?.username || !QUICK_ACTIONS.getAction(actionId)) return;
+      const mode = fieldModeOf();
+      const meeting = meetings()[0] || null;
+      const meetingStatus = meeting ? MEETING_SIGNAL_STATUS[actionId] : "";
+      const signal = QUICK_ACTIONS.createSignal({
+        actionId,
+        username: currentUser.username,
+        mode,
+        missionId: myMissions()[0]?.id || "",
+        meetingId: meeting?.id || "",
+        visibility: SHARED_SIGNAL_ACTIONS.has(actionId) ? "compartilhado" : "",
+        ttlMinutes: meetingStatus && meeting ? Math.max(1, Math.ceil((new Date(meeting.expiresAt).getTime() - Date.now()) / 60000)) : 10
+      });
+      lastQuickSignalId = signal.id;
+      await saveState(d => {
+        const now = new Date().toISOString();
+        const activeSignals = (d.quickSignals || []).filter(item => {
+          if (new Date(item.expiresAt || 0).getTime() <= Date.now()) return false;
+          if (item.username !== currentUser.username) return true;
+          if (item.actionId !== actionId) return true;
+          return (item.meetingId || "") !== (meeting?.id || "");
+        });
+        return {
+          ...d,
+          mapaReunioes: meetingStatus ? (d.mapaReunioes || []).map(m => m.id === meeting.id ? {
+            ...m,
+            updatedAt: now,
+            responses: {
+              ...(m.responses || {}),
+              [currentUser.username]: { status: meetingStatus, at: now, name: nameOf(currentUser) }
+            }
+          } : m) : (d.mapaReunioes || []),
+          quickSignals: [signal, ...activeSignals].slice(0, 80),
+          fieldEvents: [...(d.fieldEvents || []), activity("sinal_rapido", signal.id, `${signal.label} registrado no modo ${mode}`)],
+          activityLog: meetingStatus ? [...(d.activityLog || []), activity("app_reuniao_confirmacao", meeting.id, `${nameOf(currentUser)}: ${responseName(meetingStatus)}`)] : (d.activityLog || [])
+        };
+      }, meetingStatus ? `Reuniao: ${responseName(meetingStatus)}` : signal.label);
+    }
+    async function undoQuickSignal(id) {
+      if (!id || !currentUser?.username) return;
+      await saveState(d => ({ ...d, quickSignals: (d.quickSignals || []).map(signal => signal.id === id && signal.username === currentUser.username ? { ...signal, status: "desfeito", expiresAt: new Date().toISOString() } : signal) }), "Sinal desfeito");
+    }
+    async function startFieldTimer(presetId) {
+      const timer = FIELD_TIMERS.createTimer({ presetId, createdBy: currentUser?.username || "app", mode: fieldModeOf() });
+      await saveState(d => ({ ...d, fieldTimers: [...(d.fieldTimers || []).filter(item => !FIELD_TIMERS.isExpired(item)), timer], fieldEvents: [...(d.fieldEvents || []), activity("cronometro_iniciado", timer.id, `Iniciou ${timer.nome}`)] }), `${timer.nome} iniciado`);
+    }
+    async function toggleFieldTimer(id) {
+      const timer = (currentData.fieldTimers || []).find(item => item.id === id);
+      if (!timer) return;
+      const now = new Date();
+      const remaining = FIELD_TIMERS.remainingSeconds(timer, now.getTime());
+      const next = timer.status === "pausado" ? { ...timer, status: "ativo", startedAt: now.toISOString(), endsAt: new Date(now.getTime() + remaining * 1000).toISOString(), pausedAt: null } : { ...timer, status: "pausado", elapsedSeconds: FIELD_TIMERS.elapsedSeconds(timer, now.getTime()), pausedAt: now.toISOString() };
+      await saveState(d => ({ ...d, fieldTimers: (d.fieldTimers || []).map(item => item.id === id ? next : item) }), next.status === "pausado" ? "Cronômetro pausado" : "Cronômetro retomado");
+    }
+    async function stopFieldTimer(id) {
+      await saveState(d => ({ ...d, fieldTimers: (d.fieldTimers || []).map(item => item.id === id ? { ...item, status: "encerrado", endedAt: new Date().toISOString() } : item), fieldEvents: [...(d.fieldEvents || []), activity("cronometro_encerrado", id, "Encerrou cronômetro de campo")] }), "Cronômetro encerrado");
+    }
+    async function saveFieldMode(mode) {
+      if (!currentUser?.username || !["rp", "training"].includes(mode)) return;
+      await saveState(d => ({ ...d, users: (d.users || []).map(user => user.username === currentUser.username ? { ...user, appModoCampo: mode } : user) }), mode === "training" ? "Modo treino ativado" : "Modo RP seguro ativado");
+    }
+    async function startTraining() {
+      if (!currentUser?.username) return;
+      const selected = Array.from(document.querySelectorAll("[data-training-member]:checked")).map(input => input.value).filter(Boolean);
+      if (!selected.length) { toast("Selecione ao menos um participante"); return; }
+      const participants = Array.from(new Set([currentUser.username, ...selected]));
+      const session = TRAINING.createSession({ createdBy: currentUser.username, participants, modalidade: $("trainingModalidade")?.value || "1x1", durationMinutes: Number($("trainingDuration")?.value ?? 5) });
+      trainingRematch = null;
+      await saveState(d => ({ ...d, users: (d.users || []).map(user => user.username === currentUser.username ? { ...user, appModoCampo: "training" } : user), trainingSessions: [...(d.trainingSessions || []), session], fieldEvents: [...(d.fieldEvents || []), activity("treino_iniciado", session.id, `Iniciou treino ${session.modalidade}`)] }), "Treino iniciado");
+    }
+    async function updateTraining(mutator, successText = "Treino atualizado") {
+      const active = activeTrainingFor();
+      if (!active) return;
+      await saveState(d => ({ ...d, trainingSessions: (d.trainingSessions || []).map(session => session.id === active.id ? mutator(session) : session) }), successText);
+    }
+    async function trainingPoint(username) { if (username) await updateTraining(session => TRAINING.addPoint(session, username), "Ponto registrado"); }
+    async function trainingPause() { await updateTraining(session => session.status === "pausado" ? TRAINING.resume(session) : TRAINING.pause(session), "Treino atualizado"); }
+    async function trainingRound() { await updateTraining(session => TRAINING.nextRound(session), "Próxima rodada"); }
+    async function finishTraining() {
+      const active = activeTrainingFor();
+      if (!active) return;
+      const now = new Date();
+      const finished = { ...active, status: "encerrado", endedAt: now.toISOString(), elapsedSeconds: TRAINING.elapsedSeconds(active, now.getTime()), eventTimeline: [...(active.eventTimeline || []), { type: "finished", at: now.toISOString(), by: currentUser.username }] };
+      const names = Object.fromEntries((active.participants || []).map(username => [username, nameOf(userByUsername(username) || { username })]));
+      const report = AUTO_REPORT.buildTrainingReport(finished, names, currentUser.username, now);
+      trainingRematch = finished;
+      await saveState(d => ({ ...d, trainingSessions: (d.trainingSessions || []).map(session => session.id === active.id ? finished : session), relatorios: [report, ...(d.relatorios || [])], fieldEvents: [...(d.fieldEvents || []), activity("treino_finalizado", active.id, "Finalizou treino e gerou relatório preliminar")] }), "Treino finalizado · relatório rascunho criado");
+    }
+    async function rematchTraining() {
+      if (!trainingRematch) return;
+      const session = TRAINING.createSession({ createdBy: currentUser.username, participants: trainingRematch.participants, modalidade: trainingRematch.modalidade, durationMinutes: trainingRematch.durationMinutes });
+      await saveState(d => ({ ...d, trainingSessions: [...(d.trainingSessions || []), session] }), "Revanche iniciada");
+      trainingRematch = null;
+    }
+    async function saveMissionObjective(missionId, index) {
+      const mission = (currentData.missoes || []).find(item => item.id === missionId);
+      if (!mission || !mission.objetivos?.[index]) return;
+      const now = new Date().toISOString();
+      const done = !mission.objetivos[index].done;
+      const objetivos = mission.objetivos.map((objective, currentIndex) => currentIndex === index ? { ...objective, done } : objective);
+      await saveState(d => ({ ...d, missoes: (d.missoes || []).map(item => item.id === missionId ? { ...item, objetivos, updatedAt: now, eventTimeline: [...(item.eventTimeline || []), { type: done ? "objective_done" : "objective_undone", index, at: now, by: currentUser.username }] } : item), fieldEvents: [...(d.fieldEvents || []), activity(done ? "objetivo_concluido" : "objetivo_desfeito", missionId, `${done ? "Concluiu" : "Desfez"} objetivo ${index + 1}`)] }), done ? "Objetivo concluído" : "Objetivo reaberto");
+    }
+    async function startMission(missionId) {
+      const now = new Date().toISOString();
+      await saveState(d => ({ ...d, missoes: (d.missoes || []).map(item => item.id === missionId ? { ...item, status: "andamento", startedAt: item.startedAt || now, phase: item.phase || "Preparação", updatedAt: now, eventTimeline: [...(item.eventTimeline || []), { type: "started", at: now, by: currentUser.username }] } : item) }), "Operação iniciada");
+    }
+    async function advanceMissionPhase(missionId) {
+      const mission = (currentData.missoes || []).find(item => item.id === missionId);
+      if (!mission) return;
+      const phase = FIELD.nextPhase(mission.phase || "Preparação");
+      const now = new Date().toISOString();
+      await saveState(d => ({ ...d, missoes: (d.missoes || []).map(item => item.id === missionId ? { ...item, phase, status: phase === "Encerrada" ? "encerrada" : "andamento", startedAt: item.startedAt || now, updatedAt: now, eventTimeline: [...(item.eventTimeline || []), { type: "phase", phase, at: now, by: currentUser.username }] } : item) }), `Fase: ${phase}`);
+    }
+    async function finishMissionWithReport(missionId) {
+      const mission = (currentData.missoes || []).find(item => item.id === missionId);
+      if (!mission) return;
+      const now = new Date();
+      const finished = { ...mission, status: "concluida", phase: "Encerrada", endedAt: now.toISOString(), updatedAt: now.toISOString(), eventTimeline: [...(mission.eventTimeline || []), { type: "finished", at: now.toISOString(), by: currentUser.username }] };
+      const report = AUTO_REPORT.buildMissionReport(finished, currentUser.username, now);
+      await saveState(d => ({ ...d, missoes: (d.missoes || []).map(item => item.id === missionId ? finished : item), relatorios: [report, ...(d.relatorios || [])], fieldEvents: [...(d.fieldEvents || []), activity("missao_finalizada", missionId, "Finalizou missão e gerou relatório preliminar")] }), "Missão finalizada · relatório rascunho criado");
+    }
+    async function submitAutoReport(reportId) {
+      await saveState(d => ({ ...d, relatorios: (d.relatorios || []).map(report => report.id === reportId ? { ...report, status: "enviado", submittedAt: new Date().toISOString(), updatedAt: new Date().toISOString() } : report) }), "Relatório enviado");
+    }
     function missionCard(mission) {
       const objetivos = Array.isArray(mission.objetivos) ? mission.objetivos : [];
       const done = objetivos.filter(o => o.done).length;
       const progress = objetivos.length ? Math.round(done / objetivos.length * 100) : 0;
       const participants = missionParticipants(mission);
       const participantNames = participants.map(username => nameOf(userByUsername(username) || { username }));
-      const objectivesHtml = objetivos.length ? `<div class="objective-list">${objetivos.map(o => `<div class="objective ${o.done ? "done" : ""}"><span class="check">${o.done ? "✓" : ""}</span><span>${escapeHtml(o.text || o.titulo || "Objetivo")}</span></div>`).join("")}</div>` : "";
+      const objectivesHtml = objetivos.length ? `<div class="objective-list">${objetivos.map((o,index) => `<button type="button" class="objective ${o.done ? "done" : ""}" data-action="toggle-objective" data-id="${escapeHtml(mission.id)}" data-index="${index}"><span class="check">${o.done ? "✓" : ""}</span><span>${escapeHtml(o.text || o.titulo || "Objetivo")}</span></button>`).join("")}</div>` : "";
       const state = missionState(mission);
       const reportAction = canReportMission(mission) ? `<button class="btn cyan" data-action="mission-report" data-id="${escapeHtml(mission.id)}">Relatório</button>` : `<span class="tag">${escapeHtml(state.label)}</span>`;
+      const allDone = objetivos.length > 0 && done === objetivos.length;
+      const fieldActions = `<div class="phase-rail"><span class="tag">Fase: ${escapeHtml(mission.phase || "Preparação")}</span>${state.terminal ? "" : `<button class="phase-button" data-action="advance-phase" data-id="${escapeHtml(mission.id)}">Avançar fase</button>`}</div><div class="actions">${state.label === "Aguardando" || state.label === "Atribuída" ? `<button class="btn cyan" data-action="start-mission" data-id="${escapeHtml(mission.id)}">Iniciar operação</button>` : ""}${allDone && !state.terminal ? `<button class="btn cyan" data-action="finish-mission" data-id="${escapeHtml(mission.id)}">Finalizar e gerar relatório</button>` : ""}</div>`;
       return `
         <article class="mission-card">
           <div class="mission-top">
@@ -700,6 +1135,7 @@
           <div class="progress"><span style="width:${progress}%"></span></div>
           <div class="item-meta">${done}/${objetivos.length || 0} objetivos · ${progress}%</div>
           ${objectivesHtml}
+          ${mission.fieldMode ? fieldActions : ""}
           <div class="chips">${participantNames.length ? participantNames.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("") : `<span class="chip">Sem participantes definidos</span>`}</div>
         </article>
       `;
@@ -730,7 +1166,7 @@
       const reports = myReports();
       $("metricReports").textContent = reports.length;
       $("reportCountTag").textContent = `${reports.length} recente${reports.length === 1 ? "" : "s"}`;
-      $("reportsList").innerHTML = reports.length ? reports.slice(0,8).map(r => item(r.titulo || r.tipo || "Relatório", `${r.status || "registrado"} · ${new Date(r.createdAt || Date.now()).toLocaleDateString("pt-BR")}`, r.resumo || r.desc || r.conteudo || "")).join("") : empty("Nenhum relatório recente encontrado.");
+      $("reportsList").innerHTML = reports.length ? reports.slice(0,8).map(r => item(r.titulo || r.tipo || "Relatório", `${r.status || "registrado"}${r.auto ? " · rascunho automático" : ""} · ${new Date(r.createdAt || Date.now()).toLocaleDateString("pt-BR")}`, r.resumo || r.desc || r.conteudo || "", r.auto && r.status === "rascunho" ? `<button class="btn cyan" data-action="submit-report" data-id="${escapeHtml(r.id)}">Enviar relatório</button>` : "")).join("") : empty("Nenhum relatório recente encontrado.");
     }
     function messagesForUser(user = currentUser) {
       const messages = Array.isArray(currentData.appMensagens) ? currentData.appMensagens : [];
@@ -760,10 +1196,17 @@
       $("commandRoleTag").textContent = role?.nome || "Comando";
       const onlineList = members().filter(isOnline);
       $("commandOnlineTag").textContent = `${onlineList.length} online`;
+      const presetSelect = $("cmdMissionPreset");
+      if (presetSelect) {
+        const previousPreset = presetSelect.value || "vigilancia";
+        presetSelect.innerHTML = FIELD.MISSION_PRESETS.map(preset => `<option value="${escapeHtml(preset.id)}">${escapeHtml(preset.nome)}</option>`).join("");
+        presetSelect.value = FIELD.MISSION_PRESETS.some(preset => preset.id === previousPreset) ? previousPreset : "vigilancia";
+      }
       const target = $("cmdMissionTarget");
       const previousTarget = target.value;
       const orderedMembers = members().slice().sort((a,b)=>(isOnline(b)-isOnline(a)) || nameOf(a).localeCompare(nameOf(b),"pt-BR"));
-      target.innerHTML = orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${isOnline(u) ? "● " : ""}${escapeHtml(nameOf(u))} · ${escapeHtml(u.patente || effectiveRole(u)?.nome || "Operador")}</option>`).join("");
+      const teamOptions = teams().map(team => `<option value="team:${escapeHtml(team.id)}">◆ ${escapeHtml(team.nome)} · equipe</option>`).join("");
+      target.innerHTML = orderedMembers.map(u => `<option value="${escapeHtml(u.username)}">${isOnline(u) ? "● " : ""}${escapeHtml(nameOf(u))} · ${escapeHtml(u.patente || effectiveRole(u)?.nome || "Operador")}</option>`).join("") + teamOptions;
       if (previousTarget && [...target.options].some(o => o.value === previousTarget)) target.value = previousTarget;
       const msgTarget = $("cmdMessageTarget");
       const msgPrevious = msgTarget.value;
@@ -778,27 +1221,17 @@
     }
     async function createMissionFromCommand() {
       if (!canCommandUser()) return;
-      const titulo = $("cmdMissionTitle").value.trim();
       const target = $("cmdMissionTarget").value;
-      if (!titulo || !target) { alert("Defina título e operador principal."); return; }
-      const objetivos = $("cmdMissionObjectives").value.split("\n").map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));
-      const now = new Date().toISOString();
-      const mission = {
-        id: uid(),
-        titulo,
-        desc: $("cmdMissionBrief").value.trim(),
-        assignedTo: target,
-        participants: [target],
-        aceites: [],
-        assignedBy: currentUser.username,
-        createdAt: now,
-        updatedAt: now,
-        objetivos,
-        status: "atribuida",
-        sigilo: $("cmdMissionSigilo").value || "Restrito",
-        source: "app_comando",
-        assignmentLabel: `Entregue por ${nameOf(currentUser)} no APP`
-      };
+      const presetId = $("cmdMissionPreset")?.value || "livre";
+      if (!target) { alert("Escolha um membro ou equipe."); return; }
+      const teamId = target.startsWith("team:") ? target.slice(5) : "";
+      const team = teamId ? teams().find(item => item.id === teamId) : null;
+      const teamParticipants = team ? (team.membros || []).map(member => member.username).filter(Boolean) : [];
+      const generated = FIELD.createMissionFromPreset({ presetId, target: team ? `team:${team.id}` : target, participants: teamParticipants, assignedBy: currentUser.username, sigilo: $("cmdMissionSigilo")?.value || "Restrito" });
+      const customTitle = $("cmdMissionTitle").value.trim();
+      const customBrief = $("cmdMissionBrief").value.trim();
+      const customObjectives = $("cmdMissionObjectives").value.split("\n").map(s=>s.trim()).filter(Boolean).map(text=>({text,done:false}));
+      const mission = { ...generated, titulo: customTitle || generated.titulo, desc: customBrief || generated.desc, objetivos: customObjectives.length ? customObjectives : generated.objetivos, assignmentLabel: team ? `Entregue para ${team.nome} pelo APP` : `Entregue para ${nameOf(userByUsername(target))} pelo APP`, source: "app_comando_preset" };
       await saveState(d => ({ ...d, missoes: [...(d.missoes || []), mission], activityLog: [...(d.activityLog || []), activity("missao_app_criada", mission.id, `Entregou missão pelo APP: ${mission.titulo}`)] }), "Missão entregue");
       $("cmdMissionTitle").value = "";
       $("cmdMissionBrief").value = "";
@@ -834,6 +1267,203 @@
         .filter(r => Array.isArray(r.points) && r.points.length > 1)
         .map(r => ({ ...r, color:r.color || "#22d3ee", points:r.points.map(p => ({ x:Number(p.x), y:Number(p.y) })).filter(p => Number.isFinite(p.x)&&Number.isFinite(p.y)) }))
         .filter(r => r.points.length > 1);
+    }
+    function clampPercent(value) {
+      return Math.max(0, Math.min(100, Number(value) || 0));
+    }
+    function locationCalibration() {
+      return { ...DEFAULT_LOCATION_CALIBRATION, ...(parseJson(localStorage.getItem(LOCATION_CALIBRATION_KEY), {}) || {}) };
+    }
+    function nativeToMapLocation(position) {
+      if (!position?.ok) return null;
+      const calibration = locationCalibration();
+      const spanX = Number(calibration.maxX) - Number(calibration.minX);
+      const spanY = Number(calibration.maxY) - Number(calibration.minY);
+      if (!Number.isFinite(spanX) || !Number.isFinite(spanY) || !spanX || !spanY) return null;
+      const rawX = Number(position.x);
+      const rawY = Number(position.y);
+      const rawZ = Number(position.z);
+      const mapX = (rawX - Number(calibration.minX)) / spanX * 100;
+      const yPercent = (rawY - Number(calibration.minY)) / spanY * 100;
+      const mapY = calibration.invertY === false ? yPercent : 100 - yPercent;
+      return {
+        mapX: clampPercent(mapX),
+        mapY: clampPercent(mapY),
+        rawX,
+        rawY,
+        rawZ,
+        source: position.source || "native",
+        updatedAt: position.updatedAt || new Date().toISOString(),
+        ageMs: Number(position.ageMs || 0)
+      };
+    }
+    function isFreshLocation(location) {
+      if (!location) return false;
+      const ageMs = Number(location.ageMs);
+      const updated = new Date(location.updatedAt || 0).getTime();
+      const byStamp = Number.isFinite(updated) && Date.now() - updated < 15000;
+      return Number.isFinite(Number(location.mapX)) && Number.isFinite(Number(location.mapY)) && ((Number.isFinite(ageMs) && ageMs < 15000) || byStamp);
+    }
+    function onlineMemberLocations() {
+      const byUsername = new Map();
+      if (currentUser?.username && isFreshLocation(nativeLocation)) {
+        byUsername.set(currentUser.username, { ...currentUser, location: nativeLocation });
+      }
+      Array.from(onlineUsers.values()).forEach(user => {
+        if (user?.username && isFreshLocation(user.location)) byUsername.set(user.username, user);
+      });
+      return Array.from(byUsername.values());
+    }
+    function nativeLocationStatusText() {
+      if (isFreshLocation(nativeLocation)) {
+        return `Ao vivo · ${Math.round(nativeLocation.rawX)}, ${Math.round(nativeLocation.rawY)}`;
+      }
+      return nativeLocationTrackerRequested ? "Aguardando GTA/posicao" : "Rastreador desligado";
+    }
+    function pointDistancePercent(a, b) {
+      if (!a || !b) return Infinity;
+      const ax = Number(a.mapX ?? a.x);
+      const ay = Number(a.mapY ?? a.y);
+      const bx = Number(b.mapX ?? b.x);
+      const by = Number(b.mapY ?? b.y);
+      if (![ax, ay, bx, by].every(Number.isFinite)) return Infinity;
+      return Math.hypot(ax - bx, ay - by);
+    }
+    function meetingDistanceText(meeting, location = nativeLocation) {
+      if (!isFreshLocation(location) || !meeting) return "";
+      const meters = Math.max(1, Math.round(pointDistancePercent(location, meeting) * MAP_DISTANCE_PER_PERCENT));
+      return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km aprox.` : `${meters} m aprox.`;
+    }
+    function automaticMeetingStatus(meeting, location = nativeLocation) {
+      const distance = pointDistancePercent(location, meeting);
+      if (!Number.isFinite(distance)) return "";
+      if (distance <= 2.2) return "local";
+      if (distance <= 7.5) return "caminho";
+      return "";
+    }
+    async function updateMeetingArrivalFromLocation() {
+      if (!currentUser?.username || !isFreshLocation(nativeLocation)) return;
+      const meeting = meetings()[0];
+      const status = automaticMeetingStatus(meeting);
+      if (!meeting || !status) return;
+      const previous = meetingResponse(meeting);
+      const rank = { "":0, ciente:1, caminho:2, local:3, ausente:99 };
+      if ((rank[previous] ?? 0) >= (rank[status] ?? 0)) return;
+      const key = `${meeting.id}:${status}:${Math.floor(Date.now() / 15000)}`;
+      if (lastAutoMeetingResponseKey === key) return;
+      lastAutoMeetingResponseKey = key;
+      await saveMeetingResponse(meeting.id, status);
+    }
+    function recentTrailPoints() {
+      const cutoff = Date.now() - 45 * 60 * 1000;
+      return (currentData.fieldTrails || [])
+        .filter(point => Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)) && new Date(point.at || point.createdAt || 0).getTime() > cutoff)
+        .slice(-220);
+    }
+    function activeSosSignals() {
+      return visibleQuickSignals()
+        .filter(signal => signal.kind === "sos" && Number.isFinite(Number(signal.x)) && Number.isFinite(Number(signal.y)))
+        .slice(0, 8);
+    }
+    async function recordLocationTrail() {
+      if (!currentUser?.username || !isFreshLocation(nativeLocation) || Date.now() - lastTrailAt < 10000) return;
+      const nextPoint = {
+        id: "trail_" + uid(),
+        username: currentUser.username,
+        name: nameOf(currentUser),
+        x: Number(nativeLocation.mapX.toFixed(2)),
+        y: Number(nativeLocation.mapY.toFixed(2)),
+        rawX: nativeLocation.rawX,
+        rawY: nativeLocation.rawY,
+        rawZ: nativeLocation.rawZ,
+        at: new Date().toISOString()
+      };
+      if (lastTrailPoint && pointDistancePercent({ x:lastTrailPoint.x, y:lastTrailPoint.y }, nextPoint) < 0.35) return;
+      lastTrailAt = Date.now();
+      lastTrailPoint = nextPoint;
+      await saveState(d => {
+        const cutoff = Date.now() - 60 * 60 * 1000;
+        const trails = (d.fieldTrails || []).filter(point => new Date(point.at || 0).getTime() > cutoff);
+        return { ...d, fieldTrails: [...trails, nextPoint].slice(-500) };
+      }, "");
+    }
+    async function sendSosPing(source = "manual") {
+      if (!currentUser?.username) return;
+      await refreshNativeLocation();
+      if (!isFreshLocation(nativeLocation)) { toast("Ative a localizacao antes do SOS"); return; }
+      const signal = QUICK_ACTIONS.createSignal({
+        actionId: "apoio",
+        username: currentUser.username,
+        mode: fieldModeOf(),
+        missionId: myMissions()[0]?.id || "",
+        visibility: "compartilhado",
+        ttlMinutes: 8
+      });
+      Object.assign(signal, {
+        kind: "sos",
+        label: "SOS - Preciso de apoio",
+        x: Number(nativeLocation.mapX.toFixed(2)),
+        y: Number(nativeLocation.mapY.toFixed(2)),
+        rawX: nativeLocation.rawX,
+        rawY: nativeLocation.rawY,
+        rawZ: nativeLocation.rawZ,
+        source
+      });
+      await saveState(d => ({
+        ...d,
+        quickSignals: [signal, ...(d.quickSignals || []).filter(item => {
+          if (new Date(item.expiresAt || 0).getTime() <= Date.now()) return false;
+          return item.kind !== "sos" || item.username !== currentUser.username;
+        })].slice(0, 80),
+        fieldEvents: [...(d.fieldEvents || []), activity("sos_posicao", signal.id, `${nameOf(currentUser)} pediu apoio com posicao real`)],
+        activityLog: [...(d.activityLog || []), activity("app_sos_posicao", signal.id, `${nameOf(currentUser)} acionou SOS no mapa`)]
+      }), "SOS enviado");
+    }
+    async function saveCurrentLocationPoint() {
+      if (!canManageMap()) return;
+      await refreshNativeLocation();
+      if (!isFreshLocation(nativeLocation)) { toast("Ative a localizacao primeiro"); return; }
+      const name = $("appPointName")?.value.trim() || `Ponto ${new Date().toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}`;
+      const type = $("appPointType")?.value || "regiao";
+      const point = {
+        id: "point_" + uid(),
+        name,
+        type,
+        x: Number(nativeLocation.mapX.toFixed(2)),
+        y: Number(nativeLocation.mapY.toFixed(2)),
+        rawX: nativeLocation.rawX,
+        rawY: nativeLocation.rawY,
+        rawZ: nativeLocation.rawZ,
+        createdBy: currentUser?.username || "leader",
+        createdAt: new Date().toISOString(),
+        source: "app_current_location"
+      };
+      await saveState(d => {
+        const base = Array.isArray(d.mapaPontos) && d.mapaPontos.length ? d.mapaPontos : DEFAULT_MAP_POINTS;
+        return { ...d, mapaPontos: [...base, point], activityLog: [...(d.activityLog || []), activity("app_ponto_mapa", point.id, `Salvou ponto atual: ${point.name}`)] };
+      }, "Ponto salvo no mapa");
+      if ($("appPointName")) $("appPointName").value = "";
+    }
+    async function startNativeLocationTracker() {
+      if (!window.jikkaiDesktop?.startNativeOverlayHost) {
+        toast("Rastreador indisponivel");
+        return;
+      }
+      nativeLocationTrackerRequested = true;
+      const result = await window.jikkaiDesktop.startNativeOverlayHost({ mode: "position-inject" }).catch(error => ({ ok:false, error:String(error?.message || error) }));
+      toast(result?.ok ? "Rastreador injetado ativo" : "Nao foi possivel ativar o rastreador");
+      await refreshNativeLocation();
+      publishPresence("mapa");
+      renderMap();
+    }
+    async function refreshNativeLocation() {
+      if (!window.jikkaiDesktop?.getNativePlayerPosition) return null;
+      try {
+        nativeLocation = nativeToMapLocation(await window.jikkaiDesktop.getNativePlayerPosition());
+      } catch {
+        nativeLocation = null;
+      }
+      return nativeLocation;
     }
     function applyAppMapTransform() {
       const world = $("appMapWorld");
@@ -882,19 +1512,31 @@
     }
     async function createMeetingFromApp(pos) {
       if (!canManageMap()) return;
-      const title = prompt("Titulo da reuniao no mapa:", "Reuniao Jikkai");
-      if (title === null) { setAppMapMeetingMode(false); return; }
-      const rawMinutes = prompt("Duracao do sinal em minutos:", "10");
-      if (rawMinutes === null) { setAppMapMeetingMode(false); return; }
-      const minutes = Math.max(5, Math.min(120, Number(rawMinutes) || 10));
+      appMeetingDraft = { x: Number(pos.x.toFixed(2)), y: Number(pos.y.toFixed(2)) };
+      const composer = $("appMeetingComposer");
+      if (!composer) return;
+      composer.hidden = false;
+      $("appMeetingDuration").value = "15";
+      $("appMeetingTitle").value = "";
+      setTimeout(() => $("appMeetingTitle")?.focus(), 40);
+    }
+    function closeAppMeetingComposer() {
+      appMeetingDraft = null;
+      if ($("appMeetingComposer")) $("appMeetingComposer").hidden = true;
+      setAppMapMeetingMode(false);
+    }
+    async function saveAppMeeting() {
+      if (!appMeetingDraft || !canManageMap()) return;
+      const minutes = Math.max(5, Math.min(60, Number($("appMeetingDuration")?.value) || 15));
+      const title = $("appMeetingTitle")?.value.trim() || "Ponto de encontro Jikkai";
       const now = new Date();
       const meeting = {
         id: "meeting_" + uid(),
         kind: "meeting",
-        titulo: title.trim() || "Reuniao Jikkai",
+        titulo: title,
         descricao: "Sinal definido pelo aplicativo durante o roleplay.",
-        x: Number(pos.x.toFixed(2)),
-        y: Number(pos.y.toFixed(2)),
+        x: appMeetingDraft.x,
+        y: appMeetingDraft.y,
         startsAt: now.toISOString(),
         expiresAt: new Date(now.getTime() + minutes * 60000).toISOString(),
         createdAt: now.toISOString(),
@@ -905,15 +1547,16 @@
       };
       await saveState(d => ({
         ...d,
-        mapaReunioes: [...(d.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now()), meeting],
+        mapaReunioes: [...(d.mapaReunioes || []).filter(m => new Date(m.expiresAt).getTime() > Date.now() && m.id !== meeting.id), meeting],
         activityLog: [...(d.activityLog || []), activity("app_reuniao_mapa", meeting.id, `Marcou reuniao no mapa pelo APP: ${meeting.titulo}`)]
       }), "Reuniao marcada");
-      setAppMapMeetingMode(false);
+      window.jikkaiDesktop?.notifyOperationalAlert?.(meeting).catch?.(()=>{});
+      closeAppMeetingComposer();
     }
     function renderAppMap(activeMeetings) {
       const layer = $("appMapLayer");
       if (!layer) return;
-      const colorByType = { vila:"#f97316", base:"#a855f7", treino:"#22c55e", fuga:"#38bdf8", risco:"#ef4444", regiao:"#eab308" };
+      const colorByType = { vila:"#f97316", base:"#a855f7", casa:"#f59e0b", encontro:"#22d3ee", treino:"#22c55e", fuga:"#38bdf8", risco:"#ef4444", regiao:"#eab308" };
       const pointHtml = mapPoints().map(p => `
         <div class="map-marker" style="left:${p.x}%;top:${p.y}%">
           <span class="map-dot" style="background:${colorByType[p.type] || colorByType.regiao}"></span>
@@ -923,7 +1566,14 @@
       const meetingHtml = activeMeetings.map(m => `
         <div class="map-meeting" style="left:${Number(m.x)}%;top:${Number(m.y)}%">!<span class="map-meeting-label">${Math.max(1, Math.ceil((new Date(m.expiresAt)-Date.now())/60000))} min</span></div>
       `).join("");
-      layer.innerHTML = pointHtml + meetingHtml;
+      const locationHtml = onlineMemberLocations().map(user => `
+        <div class="map-member-location" title="${escapeHtml(nameOf(user))} · localização ao vivo" style="left:${Number(user.location.mapX)}%;top:${Number(user.location.mapY)}%">
+          <span class="map-member-dot"></span>
+          <span class="map-member-name">${escapeHtml(nameOf(user))}</span>
+        </div>
+      `).join("");
+      const sosHtml = activeSosSignals().map(signal => `<div class="map-sos" style="left:${Number(signal.x)}%;top:${Number(signal.y)}%">!<span class="map-sos-label">${escapeHtml(signalOwnerName(signal))}</span></div>`).join("");
+      layer.innerHTML = pointHtml + meetingHtml + locationHtml + sosHtml;
       renderAppRoutes();
       applyAppMapTransform();
     }
@@ -931,13 +1581,14 @@
       const left = Math.max(1, Math.ceil((new Date(meeting.expiresAt) - Date.now()) / 60000));
       const mine = meetingResponse(meeting);
       const responses = meeting.responses || {};
-      const responseRows = canCommandUser() ? members().map(user => {
+      const responseRows = members().map(user => {
         const status = responses[user.username]?.status || "";
         return `<div class="response-row"><span>${escapeHtml(nameOf(user))}</span><strong>${escapeHtml(responseName(status))}</strong></div>`;
-      }).join("") : "";
+      }).join("");
+      const distance = meetingDistanceText(meeting);
       return `<article class="item">
         <div class="item-row"><div><div class="item-title">${escapeHtml(meeting.titulo || "Reuniao marcada no mapa")}</div><div class="item-meta">${left} min restantes · ${escapeHtml(meeting.createdBy || "capitao")}</div></div><span class="pulse"></span></div>
-        <div class="item-desc">Sinal em ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%. ${escapeHtml(meeting.descricao || "")}</div>
+        <div class="item-desc">Sinal em ${Number(meeting.x).toFixed(1)}%, ${Number(meeting.y).toFixed(1)}%. ${distance ? `Distancia: ${escapeHtml(distance)}. ` : ""}${escapeHtml(meeting.descricao || "")}</div>
         <div class="meeting-actions">${Object.entries(MEETING_RESPONSE_LABELS).map(([key,label]) => `<button class="${mine===key?"active":""}" data-action="meeting-response" data-id="${escapeHtml(meeting.id)}" data-status="${key}">${escapeHtml(label)}</button>`).join("")}</div>
         ${responseRows ? `<div class="label" style="margin-top:10px">Confirmacoes</div><div class="response-grid">${responseRows}</div>` : ""}
       </article>`;
@@ -950,6 +1601,8 @@
       $("meetingsList").innerHTML = list.length ? list.map(meetingItemHtml).join("") : empty("Nenhuma reuniao ativa no mapa.");
       if ($("appMapMeeting")) $("appMapMeeting").hidden = !manage;
       if ($("appCreateMeetingBtn")) $("appCreateMeetingBtn").hidden = !manage;
+      if ($("appPointComposer")) $("appPointComposer").hidden = !manage;
+      if ($("nativeLocationStatus")) $("nativeLocationStatus").textContent = nativeLocationStatusText();
       if (!manage && appMapMeetingMode) setAppMapMeetingMode(false);
       renderAppMap(list);
     }
@@ -1041,19 +1694,24 @@
       const captain = division ? userByUsername(division.capitaoUsername) || findUserByIdentity(division.capitaoUsername) : null;
       const leader = team ? userByUsername(team.liderUsername) || findUserByIdentity(team.liderUsername) : null;
       const teamMembers = team ? (team.membros || []).map(m => userByUsername(m.username)).filter(Boolean) : [];
-      const usernames = new Set([currentUser?.username, captain?.username, leader?.username, ...teamMembers.map(u => u.username)].filter(Boolean));
+      const roster = [];
+      [currentUser, captain, leader, ...teamMembers].forEach(user => {
+        if (user?.username && !roster.some(item => item.username === user.username)) roster.push(user);
+      });
+      const usernames = new Set(roster.map(user => user.username));
+      const onlineCount = roster.filter(isOnline).length;
       const teamMissions = (currentData.missoes || []).filter(m => [...usernames].some(username => participates(m, username)) && !missionState(m).terminal).slice(0,4);
       const teamMeetings = meetings().filter(m => !m.equipeId || !team?.id || m.equipeId === team.id).slice(0,2);
       $("teamPanelTitle").textContent = team?.nome || division?.nome || "Minha celula";
-      $("teamPanelTag").textContent = `${[...usernames].length || 1} membro${[...usernames].length === 1 ? "" : "s"}`;
+      $("teamPanelTag").textContent = `${onlineCount} online · ${roster.length || 1} membro${roster.length === 1 ? "" : "s"}`;
       $("teamPanelBody").innerHTML = `
         <div class="command-grid">
           <div class="command-card"><div class="label">Capitao</div><div class="member-stack">${memberLine(captain, "Capitao responsavel")}</div></div>
           <div class="command-card"><div class="label">Lider de equipe</div><div class="member-stack">${memberLine(leader, "Lider direto")}</div></div>
           <div class="command-card"><div class="label">Minha disponibilidade</div><div class="title">${escapeHtml(statusOf(currentUser))}</div><div class="desc">Esse status aparece para a equipe e lideranca.</div></div>
         </div>
-        <div class="label" style="margin-top:13px">Integrantes</div>
-        <div class="team-grid">${teamMembers.length ? teamMembers.map(u => `<div class="team-card">${memberLine(u, statusOf(u))}</div>`).join("") : empty("Nenhuma equipe formal encontrada para sua sessao.")}</div>
+        <div class="label" style="margin-top:13px">Integrantes e presenca</div>
+        <div class="team-grid">${roster.length ? roster.map(u => `<div class="team-card">${memberLine(u, isOnline(u) ? statusOf(u) : `${statusOf(u)} · offline`)}</div>`).join("") : empty("Nenhuma equipe formal encontrada para sua sessao.")}</div>
         <div class="label" style="margin-top:13px">Missao em conjunto</div>
         <div class="list">${teamMissions.length ? teamMissions.map(missionCard).join("") : empty("Nenhuma missao conjunta ativa.")}</div>
         <div class="label" style="margin-top:13px">Reuniao da equipe</div>
@@ -1249,7 +1907,7 @@
     function publishPresence(section = "central") {
       if (!currentUser?.username || !window.jikkaiDesktop?.updatePresence) return;
       const role = effectiveRole(currentUser);
-      const payload = { username: currentUser.username, codinome: nameOf(currentUser), role: role?.nome || currentUser.role || "", section, availability: statusOf(currentUser) };
+      const payload = { username: currentUser.username, codinome: nameOf(currentUser), role: role?.nome || currentUser.role || "", section, availability: statusOf(currentUser), location: nativeLocation };
       const key = JSON.stringify(payload);
       if (key === lastPresenceKey && Date.now() - lastPresenceAt < 30000) return;
       lastPresenceKey = key;
@@ -1258,6 +1916,7 @@
     }
     function renderCurrent() {
       renderUser();
+      renderNow();
       renderHero();
       renderMissions();
       renderReports();
@@ -1296,6 +1955,37 @@
       }
       const action = e.target.closest("[data-action]")?.dataset.action;
       const id = e.target.closest("[data-id]")?.dataset.id;
+      if (action === "open-mission-section") { setSection("missoes"); return; }
+      if (action === "open-training-section") { setSection("treino"); return; }
+      if (action === "open-map-section") { setSection("mapa"); return; }
+      if (action === "open-overlay") { window.jikkaiDesktop?.showOverlayHud?.(); return; }
+      if (action === "open-search") { openUniversalSearch(); return; }
+      if (action === "open-full-portal") { window.jikkaiDesktop?.openFullPortal?.(); return; }
+      if (action === "more-section") { setSection(e.target.closest("[data-target]")?.dataset.target || "mais"); return; }
+      if (action === "start-location") { await startNativeLocationTracker(); return; }
+      if (action === "save-current-point") { await saveCurrentLocationPoint(); return; }
+      if (action === "shortcut-settings") { setSection("mais"); renderShortcutSettings(); return; }
+      if (action === "save-shortcut") { await saveShortcut(e.target.closest("[data-shortcut-group]")?.dataset.shortcutGroup || ""); return; }
+      if (action === "reset-shortcuts") { await resetShortcuts(); return; }
+      if (action === "toggle-combat") { localStorage.setItem(COMBAT_MODE_KEY, combatModeActive() ? "0" : "1"); applyCombatMode(); return; }
+      if (action === "field-mode") { await saveFieldMode(e.target.closest("[data-mode]")?.dataset.mode || "rp"); return; }
+      if (action === "quick-signal") { await saveQuickSignal(e.target.closest("[data-signal]")?.dataset.signal || ""); return; }
+      if (action === "undo-signal") { await undoQuickSignal(id); return; }
+      if (action === "start-timer") { await startFieldTimer(e.target.closest("[data-preset]")?.dataset.preset || "perseguicao"); return; }
+      if (action === "toggle-timer") { await toggleFieldTimer(id); return; }
+      if (action === "stop-timer") { await stopFieldTimer(id); return; }
+      if (action === "start-training") { await startTraining(); return; }
+      if (action === "training-point") { await trainingPoint(e.target.closest("[data-user]")?.dataset.user || ""); return; }
+      if (action === "training-pause") { await trainingPause(); return; }
+      if (action === "training-round") { await trainingRound(); return; }
+      if (action === "finish-training") { await finishTraining(); return; }
+      if (action === "training-rematch") { await rematchTraining(); return; }
+      if (action === "toggle-objective") { await saveMissionObjective(id, Number(e.target.closest("[data-index]")?.dataset.index)); return; }
+      if (action === "start-mission") { await startMission(id); return; }
+      if (action === "advance-phase") { await advanceMissionPhase(id); return; }
+      if (action === "finish-mission") { await finishMissionWithReport(id); return; }
+      if (action === "submit-report") { await submitAutoReport(id); return; }
+      if (action === "meeting-response-now") { await saveMeetingResponse(id, e.target.closest("[data-status]")?.dataset.status || "ciente"); return; }
       if (!action) {
         const memberButton = e.target.closest("[data-member]");
         if (memberButton) openMemberDrawer(memberButton.dataset.member);
@@ -1324,6 +2014,8 @@
     $("cmdCreateMission").onclick = createMissionFromCommand;
     $("cmdSendMessage").onclick = sendCommandMessage;
     $("appCreateMeetingBtn").onclick = () => { setSection("mapa"); setAppMapMeetingMode(true); };
+    $("appMeetingCancel").onclick = closeAppMeetingComposer;
+    $("appMeetingSave").onclick = saveAppMeeting;
     $("dossierSearch").addEventListener("input", renderDossiers);
     $("dossierFilter").addEventListener("change", renderDossiers);
     $("dossierSort").addEventListener("change", renderDossiers);
@@ -1378,9 +2070,10 @@
       if (e.key === "Escape" && $("universalSearch").classList.contains("show")) closeUniversalSearch();
     });
     window.addEventListener("storage", render);
+    window.jikkaiDesktop?.onDesktopPreferencesChanged?.(prefs => { desktopPreferences = prefs || {}; renderShortcutSettings(); });
     window.jikkaiDesktop?.onRealtimeState?.(payload => {
-      if (!payload?.data?.users) return;
-      currentData = payload.data;
+      if (!hasUsableUsers(payload?.data)) return;
+      currentData = FIELD.normalizeState(payload.data);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
       $("syncState").textContent = "Live";
       renderCurrent();
@@ -1388,17 +2081,41 @@
     window.jikkaiDesktop?.onPresenceChanged?.(payload => {
       setOnlineUsers(payload);
       renderMembers();
+      renderTeamPanel();
+      renderNow();
+      renderMap();
     });
     window.jikkaiDesktop?.getPresence?.()?.then(payload => {
       setOnlineUsers(payload);
       renderMembers();
+      renderTeamPanel();
+      renderNow();
+      renderMap();
     }).catch(()=>{});
+    window.jikkaiDesktop?.onRealtimeAlert?.(payload => {
+      if (payload?.type === "mission.assigned") toast(`Nova missao: ${payload.mission?.titulo || "operacao atribuida"}`);
+      if (payload?.type === "field.timer.critical") toast(`Cronometro terminando: ${payload.timer?.nome || "campo"}`);
+      if (payload?.type === "map.meeting") toast(`Reunião ativa: ${payload.meeting?.titulo || "ponto marcado no mapa"}`);
+      renderNow();
+    });
+    window.jikkaiDesktop?.onFieldSos?.(() => sendSosPing("atalho"));
     (async () => {
       const prefs = await window.jikkaiDesktop?.getDesktopPreferences?.().catch(()=>null);
-      setSection((location.hash || `#${prefs?.app?.lastSection || "missoes"}`).slice(1));
+      desktopPreferences = prefs || {};
+      renderShortcutSettings();
+      setSection((location.hash || `#${prefs?.app?.lastSection || "agora"}`).slice(1));
+      await refreshNativeLocation();
       render();
     })();
-    if (!window.jikkaiDesktop?.onRealtimeState) setInterval(render, 30000);
+    applyCombatMode();
+    setInterval(() => { if (currentData && Object.keys(currentData).length) renderNow(); }, 5000);
+    setInterval(async () => {
+      await refreshNativeLocation();
+      await updateMeetingArrivalFromLocation();
+      await recordLocationTrail();
+      publishPresence("mapa");
+      if (currentData && Object.keys(currentData).length) renderMap();
+    }, 2200);
   </script>
 </body>
 </html>

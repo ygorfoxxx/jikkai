@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JikkaiOverlay", "JikkaiOverlay.vcxproj", "{3B6F65B4-4D2D-46C8-B0DA-5C11C7D11747}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JikkaiNativeHost", "..\JikkaiNativeHost\JikkaiNativeHost.vcxproj", "{BC2367A3-4A7D-4E88-B6B2-14D2B0D98173}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B6F65B4-4D2D-46C8-B0DA-5C11C7D11747}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3B6F65B4-4D2D-46C8-B0DA-5C11C7D11747}.Debug|Win32.Build.0 = Debug|Win32
+		{3B6F65B4-4D2D-46C8-B0DA-5C11C7D11747}.Release|Win32.ActiveCfg = Release|Win32
+		{3B6F65B4-4D2D-46C8-B0DA-5C11C7D11747}.Release|Win32.Build.0 = Release|Win32
+		{BC2367A3-4A7D-4E88-B6B2-14D2B0D98173}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BC2367A3-4A7D-4E88-B6B2-14D2B0D98173}.Debug|Win32.Build.0 = Debug|Win32
+		{BC2367A3-4A7D-4E88-B6B2-14D2B0D98173}.Release|Win32.ActiveCfg = Release|Win32
+		{BC2367A3-4A7D-4E88-B6B2-14D2B0D98173}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+EndGlobal

@@ -5,19 +5,29 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
   shortcuts: {
     toggleOverlay: "Alt+J / Ctrl+Alt+J / Ctrl+Shift+J",
     toggleClickThrough: "Alt+K / Ctrl+Alt+K / Ctrl+Shift+K",
-    openPortal: "Alt+M / Ctrl+Alt+M / Ctrl+Shift+M"
+    openPortal: "Alt+M / Ctrl+Alt+M / Ctrl+Shift+M",
+    sos: "Alt+Backspace / Ctrl+Alt+Backspace"
   },
   hideOverlay: () => ipcRenderer.invoke("overlay:hide"),
   toggleOverlay: () => ipcRenderer.invoke("overlay:toggle"),
   showOverlayHud: () => ipcRenderer.invoke("overlay:show-hud"),
   showOverlayPanel: (section) => ipcRenderer.invoke("overlay:show-panel", section || "missao"),
   toggleClickThrough: () => ipcRenderer.invoke("overlay:toggle-click-through"),
+  getOverlayState: () => ipcRenderer.invoke("overlay:get-state"),
+  setOverlayInputMode: (enabled) => ipcRenderer.invoke("overlay:input-mode", Boolean(enabled)),
   openApp: (section) => ipcRenderer.invoke("main:open-app", section || ""),
   openPortal: () => ipcRenderer.invoke("main:open-portal"),
   openFullPortal: () => ipcRenderer.invoke("main:open-full-portal"),
   openMap: () => ipcRenderer.invoke("main:open-map"),
   reloadPortal: () => ipcRenderer.invoke("main:reload"),
   shortcutStatus: () => ipcRenderer.invoke("main:shortcuts"),
+  updateShortcut: (group, accelerator) => ipcRenderer.invoke("desktop:update-shortcut", { group, accelerator: accelerator || "" }),
+  resetShortcuts: () => ipcRenderer.invoke("desktop:reset-shortcuts"),
+  publishNativeOverlayState: (payload) => ipcRenderer.invoke("native-overlay:publish-state", payload || {}),
+  nativeOverlayPath: () => ipcRenderer.invoke("native-overlay:path"),
+  getNativePlayerPosition: () => ipcRenderer.invoke("native-overlay:player-position"),
+  nativePlayerPositionPath: () => ipcRenderer.invoke("native-overlay:position-path"),
+  startNativeOverlayHost: (options) => ipcRenderer.invoke("native-overlay:start-host", options || {}),
   getDesktopPreferences: () => ipcRenderer.invoke("desktop:get-preferences"),
   updateDesktopPreferences: (patch) => ipcRenderer.invoke("desktop:update-preferences", patch || {}),
   minimizePortal: () => ipcRenderer.invoke("main:minimize"),
@@ -46,6 +56,7 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
     ipcRenderer.on("realtime:alert", listener);
     return () => ipcRenderer.removeListener("realtime:alert", listener);
   },
+  notifyOperationalAlert: (meeting) => ipcRenderer.invoke("operational:notify", { type: "map.meeting", meeting: meeting || {} }),
   onClickThroughChanged: (callback) => {
     const listener = (_event, enabled) => callback(Boolean(enabled));
     ipcRenderer.on("overlay:click-through", listener);
@@ -65,6 +76,16 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
     const listener = () => callback();
     ipcRenderer.on("overlay:search", listener);
     return () => ipcRenderer.removeListener("overlay:search", listener);
+  },
+  onOverlayCombatToggle: (callback) => {
+    const listener = () => callback();
+    ipcRenderer.on("overlay:combat-toggle", listener);
+    return () => ipcRenderer.removeListener("overlay:combat-toggle", listener);
+  },
+  onFieldSos: (callback) => {
+    const listener = (_event, payload) => callback(payload || {});
+    ipcRenderer.on("field:sos", listener);
+    return () => ipcRenderer.removeListener("field:sos", listener);
   }
 });
 

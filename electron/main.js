@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, Notification, globalShortcut, ipcMain, protocol, net, screen, shell, Tray, nativeImage } = require("electron");
+const { execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -14,13 +15,18 @@ const SHORTCUT_GROUPS = {
   overlay: ["CommandOrControl+Shift+J", "Alt+J", "CommandOrControl+Alt+J"],
   clickThrough: ["CommandOrControl+Shift+K", "Alt+K", "CommandOrControl+Alt+K"],
   app: ["CommandOrControl+Shift+M", "Alt+M", "CommandOrControl+Alt+M"],
-  search: ["Alt+F", "CommandOrControl+Alt+F"]
+  search: ["Alt+F", "CommandOrControl+Alt+F"],
+  sos: ["Alt+Backspace", "CommandOrControl+Alt+Backspace"],
+  quickActions: ["Alt+Q", "CommandOrControl+Alt+Q"],
+  combat: ["Alt+R", "CommandOrControl+Alt+R"],
+  hide: ["Alt+H", "CommandOrControl+Alt+H"]
 };
+const SHORTCUT_MODIFIER = /^(Alt|Control|CommandOrControl|Ctrl|CommandOrControlOrAlt|CommandOrControl\+Alt)\+/i;
 const SMOKE_TEST = process.argv.includes("--smoke-test");
 const DEV_MODE = process.argv.includes("--dev");
 const START_MINIMIZED = !DEV_MODE && !SMOKE_TEST && !process.argv.includes("--show");
 const gotSingleInstanceLock = SMOKE_TEST || app.requestSingleInstanceLock();
-const HUD_SIZE = { width: 370, height: 188 };
+const HUD_SIZE = { width: 370, height: 222 };
 const PANEL_SIZE = { width: 500, height: 660 };
 const DEFAULT_DESKTOP_PREFS = {
   overlay: {
@@ -28,6 +34,9 @@ const DEFAULT_DESKTOP_PREFS = {
     panel: { bounds: null, opacity: 0.92, scale: 1, side: "right", locked: false, displayId: null },
     clickThrough: true,
     lastSection: "missao"
+  },
+  nativeOverlay: {
+    autoStart: false
   }
 };
 
@@ -42,6 +51,24 @@ let isQuitting = false;
 let shortcutStatus = {};
 let realtimeService = null;
 let lastNativeOperationalAlert = "";
+let cursorReleaseTimer = null;
+let lastCursorReleaseAt = 0;
+let nativeHostProcess = null;
+let lastNativeHostStartAt = 0;
+
+const RELEASE_CURSOR_SCRIPT = `
+$code = @'
+using System;
+using System.Runtime.InteropServices;
+public static class JikkaiCursor {
+  [DllImport("user32.dll")] public static extern bool ClipCursor(IntPtr rect);
+  [DllImport("user32.dll")] public static extern int ShowCursor(bool show);
+}
+'@
+Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue | Out-Null
+[JikkaiCursor]::ClipCursor([IntPtr]::Zero) | Out-Null
+for ($i = 0; $i -lt 12; $i++) { [JikkaiCursor]::ShowCursor($true) | Out-Null }
+`;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -65,32 +92,39 @@ function appUrl(page = "app.html") {
 }
 
 function broadcastToWindows(channel, payload) {
-  if (channel === "realtime:alert") showNativeOperationalAlert(payload);
+  if (channel === "realtime:alert") {
+    showNativeOperationalAlert(payload);
+    if (["map.meeting", "mission.assigned", "field.timer.critical"].includes(payload?.type)) {
+      const overlay = ensureOverlayWindow();
+      if (!overlay.isVisible()) showOverlayHud();
+    }
+  }
   BrowserWindow.getAllWindows().forEach(window => {
     if (!window.isDestroyed()) window.webContents.send(channel, payload);
   });
 }
 
 function showNativeOperationalAlert(payload = {}) {
-  const meeting = payload?.meeting;
-  if (!meeting || !Notification.isSupported()) return;
-  const alertId = String(meeting.id || payload.createdAt || "meeting");
+  const meeting = payload?.meeting || payload?.mission || payload?.timer;
+  const subject = meeting || payload?.mission || payload?.timer;
+  if (!subject || !Notification.isSupported()) return;
+  const alertId = String(payload.type || "operational") + ":" + String(subject.id || payload.createdAt || "alert");
   if (alertId === lastNativeOperationalAlert) return;
   lastNativeOperationalAlert = alertId;
-  const expiresAt = new Date(meeting.expiresAt).getTime();
+  const expiresAt = new Date(subject.expiresAt).getTime();
   const minutes = Number.isFinite(expiresAt)
     ? Math.max(1, Math.ceil((expiresAt - Date.now()) / 60000))
     : "";
   const details = [
-    meeting.descricao || "Ponto de encontro definido no mapa.",
+    payload.message || subject.descricao || subject.desc || "Operacao Jikkai",
     minutes ? `${minutes} min restantes` : "Reunião em andamento"
   ].join(" · ");
   const notification = new Notification({
     title: "JIKKAI · REUNIÃO ATIVA",
-    body: `${meeting.titulo || "Ponto de encontro"}\n${details}`,
+    body: `${subject.titulo || subject.nome || "Operacao de campo"}\n${details}`,
     silent: false
   });
-  notification.on("click", () => showOverlayPanel("mapa"));
+  notification.on("click", () => showOverlayPanel(payload.type === "map.meeting" ? "mapa" : "missao"));
   notification.show();
 }
 
@@ -129,6 +163,120 @@ function saveDesktopPrefs() {
   }
 }
 
+function nativeOverlayStatePath() {
+  const base = process.env.LOCALAPPDATA || app.getPath("userData");
+  return path.join(base, "JIKKAI", "native-overlay-state.txt");
+}
+
+function nativePlayerPositionPath() {
+  const base = process.env.LOCALAPPDATA || app.getPath("userData");
+  return path.join(base, "JIKKAI", "native-player-position.txt");
+}
+
+function parseKeyValueFile(raw = "") {
+  return Object.fromEntries(String(raw).split(/\r?\n/).map(line => {
+    const index = line.indexOf("=");
+    if (index < 0) return null;
+    return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
+  }).filter(Boolean));
+}
+
+function readNativePlayerPosition() {
+  const target = nativePlayerPositionPath();
+  try {
+    const stat = fs.statSync(target);
+    const lines = parseKeyValueFile(fs.readFileSync(target, "utf8"));
+    const x = Number(lines.x);
+    const y = Number(lines.y);
+    const z = Number(lines.z);
+    const ageMs = Math.max(0, Date.now() - stat.mtimeMs);
+    const ok = lines.ok === "1" && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && ageMs < 15000;
+    return {
+      ok,
+      x,
+      y,
+      z,
+      source: lines.source || "native",
+      pid: Number(lines.pid || 0) || null,
+      updatedAt: stat.mtime.toISOString(),
+      ageMs,
+      path: target
+    };
+  } catch {
+    return { ok: false, path: target, ageMs: null };
+  }
+}
+
+function nativeHostPath() {
+  const relative = path.join("native-overlay", "bin", "Release", "Win32", "JikkaiNativeHost.exe");
+  const candidates = [
+    path.join(APP_ROOT, relative),
+    path.join(process.resourcesPath || "", "app.asar.unpacked", relative),
+    path.join(path.dirname(process.execPath || ""), "resources", "app.asar.unpacked", relative)
+  ];
+  return candidates.find(candidate => candidate && fs.existsSync(candidate)) || candidates[0];
+}
+
+function startNativeOverlayHost({ launch = false, mode = "position" } = {}) {
+  if (process.platform !== "win32" || SMOKE_TEST) return { ok: false, reason: "unsupported" };
+  if (nativeHostProcess && !nativeHostProcess.killed && nativeHostProcess.exitCode == null) {
+    return { ok: true, running: true, path: nativeHostPath() };
+  }
+  if (Date.now() - lastNativeHostStartAt < 10000) {
+    return { ok: false, throttled: true, path: nativeHostPath() };
+  }
+  const target = nativeHostPath();
+  if (!fs.existsSync(target)) return { ok: false, reason: "missing", path: target };
+  lastNativeHostStartAt = Date.now();
+  const safePositionMode = mode !== "inject";
+  const args = mode === "position-inject"
+    ? ["--inject-position-only", "--no-launch"]
+    : (safePositionMode ? ["--position-only", "--no-launch"] : (launch ? [] : ["--no-launch"]));
+  nativeHostProcess = execFile(target, args, { windowsHide: true }, (error, stdout, stderr) => {
+    if (stdout) console.log("JIKKAI native host:", stdout.trim());
+    if (stderr) console.error("JIKKAI native host:", stderr.trim());
+    if (error && !isQuitting) console.error("JIKKAI native host failed", error.message);
+  });
+  nativeHostProcess.on("exit", () => {
+    nativeHostProcess = null;
+  });
+  return { ok: true, started: true, path: target, launch: safePositionMode ? false : launch, mode: mode === "position-inject" ? "position-inject" : (safePositionMode ? "position" : "inject") };
+}
+
+function maybeStartNativeOverlayHost() {
+  if (desktopPrefs.nativeOverlay?.autoStart !== true) {
+    return { ok: false, disabled: true, reason: "native overlay autostart disabled" };
+  }
+  return startNativeOverlayHost({ launch: false });
+}
+
+function cleanNativeValue(value, fallback = "") {
+  return String(value ?? fallback)
+    .replace(/[\r\n=]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+}
+
+function writeNativeOverlayState(payload = {}) {
+  const lines = [
+    ["user", cleanNativeValue(payload.user, "Leitura restrita")],
+    ["role", cleanNativeValue(payload.role, "Sessao nao identificada")],
+    ["mission_count", Number(payload.missionCount || 0)],
+    ["mission_title", cleanNativeValue(payload.missionTitle, "Sem missao ativa")],
+    ["mission_objective", cleanNativeValue(payload.missionObjective, "Aguardando app JIKKAI")],
+    ["meeting_title", cleanNativeValue(payload.meetingTitle, "")],
+    ["meeting_minutes", Number(payload.meetingMinutes || 0)],
+    ["sync", cleanNativeValue(payload.sync, "local")],
+    ["updated_at", new Date().toISOString()]
+  ].map(([key, value]) => `${key}=${value}`);
+
+  const target = nativeOverlayStatePath();
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, lines.join("\n"), "utf8");
+  return { ok: true, path: target };
+}
+
 function updateDesktopPrefs(patch = {}) {
   desktopPrefs = mergePrefs(desktopPrefs, patch);
   saveDesktopPrefs();
@@ -138,6 +286,15 @@ function updateDesktopPrefs(patch = {}) {
 
 function overlayPrefs(mode = overlayMode) {
   return desktopPrefs.overlay?.[mode] || DEFAULT_DESKTOP_PREFS.overlay[mode];
+}
+
+function currentOverlayState() {
+  return {
+    mode: overlayMode,
+    section: overlaySection,
+    clickThrough: overlayClickThrough,
+    preferences: desktopPrefs
+  };
 }
 
 function resolveAppFile(requestUrl) {
@@ -241,6 +398,7 @@ function createOverlayWindow() {
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.setOpacity(overlayPrefs("hud").opacity || 0.92);
+  overlayWindow.setFocusable(false);
   overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
   applyWindowNavigationRules(overlayWindow);
   overlayWindow.loadURL(appUrl("overlay.html"));
@@ -270,7 +428,7 @@ function overlayBounds(mode = overlayMode) {
     const display = screen.getDisplayMatching(prefs.bounds);
     const bounded = {
       width: Math.max(mode === "panel" ? 420 : 240, Math.round(prefs.bounds.width)),
-      height: Math.max(mode === "panel" ? 420 : 140, Math.round(prefs.bounds.height)),
+      height: Math.max(mode === "panel" ? 420 : HUD_SIZE.height, Math.round(prefs.bounds.height)),
       x: Math.round(prefs.bounds.x),
       y: Math.round(prefs.bounds.y)
     };
@@ -295,7 +453,7 @@ function overlayBounds(mode = overlayMode) {
 function sendOverlayState() {
   if (!overlayWindow) return;
   const send = () => {
-    overlayWindow.webContents.send("overlay:mode", { mode: overlayMode, section: overlaySection, clickThrough: overlayClickThrough, preferences: desktopPrefs });
+    overlayWindow.webContents.send("overlay:mode", currentOverlayState());
     overlayWindow.webContents.send("overlay:click-through", overlayClickThrough);
     overlayWindow.webContents.send("desktop:preferences", desktopPrefs);
   };
@@ -312,39 +470,123 @@ function applyOverlayMode(mode = "hud", section = overlaySection) {
   overlay.setMinimumSize(overlayMode === "panel" ? 420 : 300, overlayMode === "panel" ? 420 : 150);
   overlay.setBounds(overlayBounds(overlayMode), false);
   overlay.setOpacity(overlayPrefs(overlayMode).opacity || 0.92);
-  overlay.setFocusable(!overlayClickThrough);
+  overlay.setFocusable(false);
   overlay.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
   overlay.setAlwaysOnTop(true, "screen-saver");
   overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  if (overlayClickThrough) stopCursorReleasePulse();
+  else startCursorReleasePulse();
   sendOverlayState();
   return overlay;
+}
+
+function forceOverlayPanelMouse() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  overlayClickThrough = false;
+  overlayWindow.setFocusable(false);
+  overlayWindow.setIgnoreMouseEvents(false);
+  startCursorReleasePulse();
+  sendOverlayState();
+}
+
+function setOverlayInputMode(enabled) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return false;
+  overlayClickThrough = false;
+  overlayWindow.setIgnoreMouseEvents(false);
+  if (enabled) {
+    overlayWindow.setFocusable(true);
+    overlayWindow.focus();
+    startCursorReleasePulse();
+  } else {
+    overlayWindow.setFocusable(false);
+    if (overlayWindow.isVisible()) revealOverlayWithoutFocus(overlayWindow);
+    startCursorReleasePulse();
+  }
+  sendOverlayState();
+  return true;
 }
 
 function setOverlayClickThrough(enabled) {
   overlayClickThrough = Boolean(enabled);
   updateDesktopPrefs({ overlay: { clickThrough: overlayClickThrough } });
   if (!overlayWindow) return overlayClickThrough;
-  overlayWindow.setFocusable(!overlayClickThrough);
+  overlayWindow.setFocusable(false);
   overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
+  if (overlayClickThrough) stopCursorReleasePulse();
+  else startCursorReleasePulse();
   sendOverlayState();
-  if (!overlayClickThrough && overlayWindow.isVisible()) overlayWindow.focus();
+  if (!overlayClickThrough && overlayWindow.isVisible()) revealOverlayWithoutFocus(overlayWindow);
   return overlayClickThrough;
 }
 
-function showOverlayHud() {
-  const overlay = ensureOverlayWindow();
-  applyOverlayMode("hud");
+function releaseGameCursor() {
+  if (process.platform !== "win32" || SMOKE_TEST) return;
+  const now = Date.now();
+  if (now - lastCursorReleaseAt < 650) return;
+  lastCursorReleaseAt = now;
+  execFile("powershell.exe", [
+    "-NoProfile",
+    "-NonInteractive",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-WindowStyle",
+    "Hidden",
+    "-Command",
+    RELEASE_CURSOR_SCRIPT
+  ], { windowsHide: true, timeout: 2800 }, () => {});
+}
+
+function startCursorReleasePulse() {
+  releaseGameCursor();
+  if (cursorReleaseTimer || SMOKE_TEST) return;
+  cursorReleaseTimer = setInterval(() => {
+    if (!overlayWindow || overlayWindow.isDestroyed() || !overlayWindow.isVisible() || overlayClickThrough) {
+      stopCursorReleasePulse();
+      return;
+    }
+    releaseGameCursor();
+  }, 1600);
+  cursorReleaseTimer.unref?.();
+}
+
+function stopCursorReleasePulse() {
+  if (!cursorReleaseTimer) return;
+  clearInterval(cursorReleaseTimer);
+  cursorReleaseTimer = null;
+}
+
+function revealOverlayWithoutFocus(overlay) {
+  if (!overlay || overlay.isDestroyed()) return;
+  overlay.setAlwaysOnTop(true, "screen-saver");
+  overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlay.showInactive();
   overlay.moveTop();
+
+  // Windows can defer the first reveal while Alt is still being released.
+  setTimeout(() => {
+    if (!overlay || overlay.isDestroyed()) return;
+    if (!overlay.isVisible()) {
+      overlay.showInactive();
+    }
+    overlay.moveTop();
+  }, 80);
+}
+
+function showOverlayHud() {
+  maybeStartNativeOverlayHost();
+  const overlay = ensureOverlayWindow();
+  applyOverlayMode("hud");
+  revealOverlayWithoutFocus(overlay);
   return true;
 }
 
 function showOverlayPanel(section = "missao") {
+  maybeStartNativeOverlayHost();
   const overlay = ensureOverlayWindow();
   applyOverlayMode("panel", section);
-  overlay.show();
-  overlay.focus();
-  overlay.moveTop();
+  revealOverlayWithoutFocus(overlay);
+  forceOverlayPanelMouse();
+  setTimeout(forceOverlayPanelMouse, 120);
   return true;
 }
 
@@ -359,21 +601,10 @@ function toggleOverlay() {
 
 function toggleOverlayInteraction() {
   if (!overlayWindow || !overlayWindow.isVisible()) return showOverlayPanel(overlaySection || "missao");
-  if (overlayMode === "hud") {
-    const enabled = !overlayClickThrough;
-    setOverlayClickThrough(enabled);
-    if (enabled) {
-      overlayWindow.showInactive();
-    } else {
-      overlayWindow.show();
-      overlayWindow.focus();
-      overlayWindow.moveTop();
-    }
-    return enabled;
-  }
-  if (overlayClickThrough) return setOverlayClickThrough(false);
-  showOverlayHud();
-  return true;
+  const enabled = !overlayClickThrough;
+  setOverlayClickThrough(enabled);
+  revealOverlayWithoutFocus(overlayWindow);
+  return enabled;
 }
 
 function createMenu() {
@@ -417,15 +648,39 @@ function registerShortcutGroup(name, accelerators, handler) {
   shortcutStatus[name] = { registered, failed };
 }
 
+function configuredShortcutGroups() {
+  return Object.fromEntries(Object.entries(SHORTCUT_GROUPS).map(([name, defaults]) => {
+    const custom = desktopPrefs.shortcuts?.[name];
+    const list = custom && SHORTCUT_MODIFIER.test(String(custom).trim()) ? [String(custom).trim(), ...defaults] : defaults;
+    return [name, Array.from(new Set(list))];
+  }));
+}
+
 function registerShortcuts() {
   shortcutStatus = {};
-  registerShortcutGroup("overlay", SHORTCUT_GROUPS.overlay, () => toggleOverlay());
-  registerShortcutGroup("clickThrough", SHORTCUT_GROUPS.clickThrough, () => toggleOverlayInteraction());
-  registerShortcutGroup("app", SHORTCUT_GROUPS.app, () => showOverlayPanel(desktopPrefs.overlay?.lastSection || "missao"));
-  registerShortcutGroup("search", SHORTCUT_GROUPS.search, () => {
+  globalShortcut.unregisterAll();
+  const groups = configuredShortcutGroups();
+  registerShortcutGroup("overlay", groups.overlay, () => toggleOverlay());
+  registerShortcutGroup("clickThrough", groups.clickThrough, () => toggleOverlayInteraction());
+  registerShortcutGroup("app", groups.app, () => showOverlayPanel(desktopPrefs.overlay?.lastSection || "missao"));
+  registerShortcutGroup("search", groups.search, () => {
     showOverlayPanel("busca");
     if (overlayWindow) overlayWindow.webContents.send("overlay:search");
   });
+  registerShortcutGroup("sos", groups.sos, () => {
+    const overlay = ensureOverlayWindow();
+    if (!overlay.isVisible()) showOverlayHud();
+    const payload = { createdAt: new Date().toISOString(), source: "shortcut" };
+    const send = () => broadcastToWindows("field:sos", payload);
+    if (overlay.webContents.isLoading()) overlay.webContents.once("did-finish-load", send);
+    else setTimeout(send, 40);
+  });
+  registerShortcutGroup("quickActions", groups.quickActions, () => showOverlayPanel("missao"));
+  registerShortcutGroup("combat", groups.combat, () => {
+    if (!overlayWindow || !overlayWindow.isVisible()) showOverlayHud();
+    overlayWindow?.webContents.send("overlay:combat-toggle");
+  });
+  registerShortcutGroup("hide", groups.hide, () => overlayWindow?.hide());
   console.log("JIKKAI shortcuts", JSON.stringify(shortcutStatus));
 }
 
@@ -436,11 +691,39 @@ ipcMain.handle("overlay:hide", () => {
 ipcMain.handle("overlay:show-hud", () => showOverlayHud());
 ipcMain.handle("overlay:show-panel", (_event, section = "missao") => showOverlayPanel(section || "missao"));
 ipcMain.handle("overlay:toggle-click-through", () => toggleOverlayInteraction());
+ipcMain.handle("overlay:get-state", () => currentOverlayState());
+ipcMain.handle("overlay:input-mode", (_event, enabled = false) => setOverlayInputMode(Boolean(enabled)));
 ipcMain.handle("main:open-app", (_event, section = "") => showOverlayPanel(section || "agora"));
 ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
 ipcMain.handle("main:open-full-portal", () => ensureMainWindow("index.html"));
 ipcMain.handle("main:open-map", () => ensureMainWindow("mapa.html"));
 ipcMain.handle("main:shortcuts", () => shortcutStatus);
+ipcMain.handle("desktop:update-shortcut", (_event, payload = {}) => {
+  const group = String(payload.group || "");
+  const accelerator = String(payload.accelerator || "").trim();
+  if (!SHORTCUT_GROUPS[group]) return { ok: false, error: "Grupo de atalho invalido", status: shortcutStatus };
+  if (accelerator && !SHORTCUT_MODIFIER.test(accelerator)) return { ok: false, error: "Use um atalho com modificador", status: shortcutStatus };
+  updateDesktopPrefs({ shortcuts: { [group]: accelerator || null } });
+  registerShortcuts();
+  return { ok: true, status: shortcutStatus };
+});
+ipcMain.handle("desktop:reset-shortcuts", () => {
+  desktopPrefs.shortcuts = {};
+  saveDesktopPrefs();
+  broadcastToWindows("desktop:preferences", desktopPrefs);
+  registerShortcuts();
+  return shortcutStatus;
+});
+ipcMain.handle("native-overlay:publish-state", (_event, payload = {}) => writeNativeOverlayState(payload));
+ipcMain.handle("native-overlay:path", () => nativeOverlayStatePath());
+ipcMain.handle("native-overlay:player-position", () => readNativePlayerPosition());
+ipcMain.handle("native-overlay:position-path", () => nativePlayerPositionPath());
+ipcMain.handle("native-overlay:start-host", (_event, options = {}) => startNativeOverlayHost({ launch: Boolean(options.launch), mode: options.mode || "position" }));
+ipcMain.handle("operational:notify", (_event, payload = {}) => {
+  if (payload?.type !== "map.meeting" || !payload.meeting?.expiresAt) return false;
+  broadcastToWindows("realtime:alert", payload);
+  return true;
+});
 ipcMain.handle("desktop:get-preferences", () => desktopPrefs);
 ipcMain.handle("desktop:update-preferences", (_event, patch = {}) => updateDesktopPrefs(patch));
 ipcMain.handle("realtime:get-state", async () => {
@@ -472,6 +755,9 @@ ipcMain.handle("main:toggle-maximize", () => {
 
 app.on("before-quit", () => {
   isQuitting = true;
+  if (nativeHostProcess && nativeHostProcess.exitCode == null) {
+    try { nativeHostProcess.kill(); } catch {}
+  }
   realtimeService?.stop();
 });
 
@@ -491,6 +777,7 @@ app.whenReady().then(async () => {
   createMainWindow();
   createOverlayWindow();
   registerShortcuts();
+  maybeStartNativeOverlayHost();
 
   if (SMOKE_TEST) {
     setTimeout(() => {

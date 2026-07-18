@@ -55,6 +55,18 @@
     .text-3xl { line-height: 1.15 !important; }
     .fixed.inset-0 { overscroll-behavior: contain; }
   }
+
+  .discord-seal-card { position: relative; overflow: hidden; }
+  .discord-seal-card::before {
+    content:""; position:absolute; inset:-1px; pointer-events:none;
+    background: radial-gradient(circle at 20% 10%, rgba(88,101,242,.18), transparent 28%), radial-gradient(circle at 85% 80%, rgba(234,88,12,.12), transparent 32%);
+  }
+  .discord-rune {
+    width: 42px; height: 42px; border-radius: 14px;
+    display:grid; place-items:center; font-weight: 900;
+    color:#c7d2fe; background:rgba(49,46,129,.25); border:1px solid rgba(129,140,248,.55);
+    box-shadow:0 0 28px rgba(88,101,242,.20);
+  }
 </style>
 </head>
 <body>
@@ -164,10 +176,10 @@ function ordemEstruturaRole(role) {
 
 const DEFAULT_USERS = [
   {
-    username: "leader", password: "jikkai123", role: "leader",
-    displayName: "Líder Supremo", nomeRP: "Líder Supremo", codinome: "Alpha",
-    status: "Líder", level: 50, cla: "soke", elemento: "", linhagem: "",
-    vilaOrigem: "", patente: "Líder Supremo", especialidade: "Comando estratégico",
+    username: "leader", password: "p1rul1t0", role: "leader",
+    displayName: "Tenshigami Lamona", nomeRP: "Tenshigami Lamona", codinome: "Viper",
+    status: "Líder", level: 65, cla: "", elemento: "Raiton", linhagem: "Hyuuga",
+    vilaOrigem: "Kirigakure", patente: "Líder", especialidade: "Comando estratégico",
     bio: "", avatarUrl: "", avatarStoragePath: "", estruturaNivel: "lideranca",
     respondeA: "", nivelAcesso: 5, iniciacaoStatus: "concluida", perfilCompleto: false,
     criadoEm: new Date().toISOString(), criadoPor: "sistema",
@@ -190,6 +202,22 @@ const DEFAULT_MANDAMENTOS = [
 function getCodinome(u) {
   if (!u) return "?";
   return u.codinome || u.displayName || u.username || "Membro";
+}
+function discordInfo(u) {
+  const tag = String(u?.discordTag || u?.discordUsername || u?.discord || "").trim();
+  const id = String(u?.discordId || "").trim();
+  const globalName = String(u?.discordGlobalName || "").trim();
+  const verificado = Boolean(u?.discordVerificado && id);
+  const vinculado = Boolean(verificado || u?.discordVinculado || u?.discordLinked || tag || id);
+  return {
+    tag,
+    id,
+    globalName,
+    avatar: u?.discordAvatar || "",
+    verificado,
+    vinculado,
+    label: globalName || tag || (id ? `ID ${id}` : "Não vinculado"),
+  };
 }
 // Versão MASCARADA: nunca expõe displayName, usada quando viewer é contratante
 function getCodinomeMascarado(u) {
@@ -260,6 +288,9 @@ function normalizarMembro(u, existente = true) {
   const base = {
     avatarUrl: "", avatarStoragePath: "", nomeRP: "", elemento: "", linhagem: "",
     vilaOrigem: "", patente: "", especialidade: "", bio: "", estruturaNivel: "operador",
+    discordId: "", discordUsername: "", discordGlobalName: "", discordTag: "", discordAvatar: "",
+    discordVerificado: false, discordVerificadoEm: "", discordVinculado: false, discordLinkedAt: "",
+    discordDmMissoes: true, discordDmContratos: true, discordDmRelatorios: true,
     respondeA: "", nivelAcesso: 1, iniciacaoStatus: existente ? "concluida" : "pendente",
     criadoEm: "", criadoPor: "", perfilCompleto: false,
     iniciacaoConcluidaEm: "", iniciacaoVersao: 0, iniciacaoReabertaEm: "",
@@ -371,21 +402,12 @@ const DEFAULT_HISTORIA = [
 
 const DEFAULT_CLAS = [
   {
-    id: "soke",
-    nome: "Soke Lamona",
-    tipo: "Liderança",
+    id: "kuro-gane",
+    nome: "Kuro Gane",
+    tipo: "Divisão operacional",
     cor: "#D85A30",
-    icon: "crown",
-    descricao: "O coração estratégico. Guardiões da história e dos valores do clã, herdeiros da resiliência de Uzushio. Não governam por imposição, mas por inspiração. Vivem nos arredores de Konoha, em casas de madeira entalhada com a espiral do clã. Cultivam discrição — enquanto Uchiha e Hyuuga atraem holofotes, a Soke une o clã na sombra.",
-    figuras: [],
-  },
-  {
-    id: "bunke",
-    nome: "Bunke Lamona",
-    tipo: "Sombras",
-    cor: "#B91C1C",
-    icon: "skull",
-    descricao: "Disfarçados de artesãos e curandeiros, os verdadeiros mestres da sabotagem, espionagem e assassinatos seletivos. Inspirados em organizações como a Akatsuki, transformaram lealdade em revolução silenciosa. Usam fuinjutsu proibido, armas envenenadas e poções de controle mental. Servem ao maior pagador — mantendo a fachada de apoio à vila.",
+    icon: "shield",
+    descricao: "Equipe operacional restaurada para missões, reuniões e presença em campo.",
     figuras: [],
   },
 ];
@@ -401,28 +423,341 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const CLOUD_ENABLED = SUPABASE_URL && !SUPABASE_URL.startsWith("COLE_AQUI") && SUPABASE_KEY && !SUPABASE_KEY.startsWith("COLE_AQUI");
 const cloudClient = CLOUD_ENABLED && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+// ============ DISCORD SEAL + DM ============
+const DISCORD_CLIENT_ID = "1519450321947070474";
+const DISCORD_OAUTH_STORAGE_KEY = "jikkai-discord-oauth-pending";
+const DISCORD_BOT_TOKEN_STORAGE_KEY = "jikkai-discord-bot-token";
+const DISCORD_BOT_TOKEN = "COLE_AQUI_O_TOKEN_DO_BOT";
+
+const DEFAULT_DISCORD_DM_TEMPLATES = {
+  missao_atribuida: "SELO JIKKAI - MISSAO ATRIBUIDA\n\nUm pergaminho foi marcado em seu nome.\n\nMissao: {missao}\nSigilo: {sigilo}\nDesignacao: {designacao}\n\nEntre no portal para aceitar ou recusar a missao.\n{portal}",
+  missao_devolvida: "SELO JIKKAI - MISSAO DEVOLVIDA PARA AJUSTES\n\nO pergaminho retornou para correcao.\n\nMissao: {missao}\nMensagem da lideranca: {feedback}\n\nEntre no portal para ajustar o relatorio e reenviar.",
+  contrato_designado: "SELO JIKKAI - CONTRATO DESIGNADO\n\nUm contrato foi marcado para sua celula.\n\nContrato: {contrato}\nMissao: {missao}\nSigilo: {sigilo}\nDesignacao: {designacao}\nRecompensa: {recompensa}\n\nEntre no portal para confirmar participacao e acompanhar os objetivos.",
+  relatorio_aprovado: "SELO JIKKAI - RELATORIO APROVADO\n\nO pergaminho foi aceito pela lideranca.\n\nMissao: {missao}\nResultado: {resultado}\n\nHistorico atualizado. A sombra permanece em movimento.",
+  relatorio_recusado: "SELO JIKKAI - RELATORIO RECUSADO\n\nA lideranca recusou o pergaminho enviado.\n\nMissao: {missao}\nMotivo: {feedback}\n\nEntre no portal para corrigir ou aguardar nova orientacao.",
+  convocacao_lideranca: "SELO JIKKAI - CONVOCACAO DA LIDERANCA\n\nVoce foi chamado pela lideranca.\n\nAssunto: {assunto}\nMensagem: {mensagem}\n\nResponda assim que possivel e verifique o portal.\n{portal}",
+  promocao_cargo: "SELO JIKKAI - PROMOCAO REGISTRADA\n\nSeu selo hierarquico foi alterado pela lideranca.\n\nCargo anterior: {cargo_antigo}\nNovo cargo: {cargo_novo}\nRegistrado por: {promovido_por}\n\nEntre no portal para verificar seu dossie atualizado.\n{portal}",
+  cobranca_pendencia: "SELO JIKKAI - COBRANCA DA LIDERANCA\n\nUma pendencia foi marcada no seu nome.\n\nPendencia: {pendencia}\nMotivo: {motivo}\nResponsavel: {responsavel}\nRegistrado por: {lider}\n\nEntre no portal e resolva assim que possivel.\n{portal}",
+};
+
+const DISCORD_TEMPLATE_LABELS = {
+  missao_atribuida: "Missao atribuida",
+  missao_devolvida: "Missao devolvida para ajustes",
+  contrato_designado: "Contrato designado para equipe",
+  relatorio_aprovado: "Relatorio aprovado",
+  relatorio_recusado: "Relatorio recusado",
+  convocacao_lideranca: "Convocacao da lideranca",
+  promocao_cargo: "Promocao de cargo",
+  cobranca_pendencia: "Cobranca de pendencia",
+};
+
+function discordRedirectUri() {
+  try {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    url.search = "";
+    return url.origin + url.pathname;
+  } catch {
+    return window.location.href.split("#")[0].split("?")[0];
+  }
+}
+
+function discordAvatarUrl(user) {
+  if (!user?.id || !user?.avatar) return "";
+  const ext = String(user.avatar).startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=128`;
+}
+
+function iniciarVerificacaoDiscord(username) {
+  if (!username) return;
+  const state = uid();
+  const redirect = discordRedirectUri();
+  try {
+    localStorage.setItem(DISCORD_OAUTH_STORAGE_KEY, JSON.stringify({ state, username, redirect, createdAt: new Date().toISOString() }));
+  } catch {}
+  const params = new URLSearchParams({
+    response_type: "token",
+    client_id: DISCORD_CLIENT_ID,
+    scope: "identify",
+    state,
+    redirect_uri: redirect,
+    prompt: "consent",
+  });
+  window.location.href = "https://discord.com/oauth2/authorize?" + params.toString();
+}
+
+function discordNomeExibicao(info) {
+  if (!info) return "Discord nao verificado";
+  return info.discordGlobalName || info.discordUsername || info.discordTag || info.discordId || "Discord verificado";
+}
+
+function DiscordSealStatus({ usuario, compact = false, showButton = false }) {
+  const info = discordInfo(usuario);
+  const verificado = info.verificado;
+  const podeAbrir = typeof window !== "undefined" && window.location.protocol !== "file:";
+  return (
+    <div className={`discord-seal-card relative rounded-xl border ${verificado ? "border-indigo-700/60 bg-indigo-950/15" : "border-zinc-800 bg-black/45"} ${compact ? "p-3" : "p-4"}`}>
+      <div className="relative flex items-start gap-3">
+        <div className="discord-rune flex-shrink-0">符</div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[9px] uppercase tracking-[0.24em] text-indigo-300/80">Selo Discord</div>
+          <div className={`font-black mt-1 ${verificado ? "text-indigo-100" : "text-zinc-400"}`}>{verificado ? "Marca vinculada" : "Marca não vinculada"}</div>
+          {verificado ? (
+            <div className="text-zinc-500 text-xs mt-1 leading-relaxed break-words">
+              {discordNomeExibicao(usuario)} · ID {usuario.discordId}
+              {usuario.discordVerificadoEm && <span> · {new Date(usuario.discordVerificadoEm).toLocaleDateString("pt-BR")}</span>}
+            </div>
+          ) : (
+            <div className="text-zinc-600 text-xs mt-1 leading-relaxed">Necessário para selar o juramento e receber chamados importantes no Discord.</div>
+          )}
+          {showButton && !verificado && (
+            <>
+              <Btn onClick={() => iniciarVerificacaoDiscord(usuario?.username)} variant="default" disabled={!podeAbrir || !usuario?.username} className="mt-3 justify-center w-full sm:w-auto"><IShield className="w-3 h-3" /> Verificar Discord</Btn>
+              {!podeAbrir && <div className="text-[10px] text-yellow-500 mt-2 leading-relaxed">A verificação real funciona no domínio do portal, não abrindo o arquivo direto por file://.</div>}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function discordBotTokenAtual() {
+  try {
+    const salvo = localStorage.getItem(DISCORD_BOT_TOKEN_STORAGE_KEY);
+    if (salvo && salvo.trim()) return salvo.trim();
+  } catch {}
+  if (DISCORD_BOT_TOKEN && !DISCORD_BOT_TOKEN.includes("COLE_AQUI")) return DISCORD_BOT_TOKEN;
+  return "";
+}
+
+function salvarDiscordBotToken(token) {
+  try {
+    if (token && token.trim()) localStorage.setItem(DISCORD_BOT_TOKEN_STORAGE_KEY, token.trim());
+    else localStorage.removeItem(DISCORD_BOT_TOKEN_STORAGE_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function discordBotConfigurado() {
+  const token = discordBotTokenAtual();
+  return Boolean(token && !token.includes("COLE_AQUI") && token.length > 40);
+}
+
+function podeReceberDmDiscord(usuario, tipo) {
+  if (!usuario?.discordVerificado || !usuario?.discordId) return false;
+  if (tipo === "missao" && usuario.discordDmMissoes === false) return false;
+  if (tipo === "contrato" && usuario.discordDmContratos === false) return false;
+  if (tipo === "relatorio" && usuario.discordDmRelatorios === false) return false;
+  return true;
+}
+
+function portalUrlDiscord() {
+  try {
+    const url = new URL(window.location.href);
+    return url.origin && url.origin !== "null" ? url.origin + url.pathname : "https://jikkai.vercel.app/";
+  } catch {
+    return "https://jikkai.vercel.app/";
+  }
+}
+
+function discordDmTemplates(data) {
+  return { ...DEFAULT_DISCORD_DM_TEMPLATES, ...(data?.discordDmTemplates || {}) };
+}
+
+function renderDiscordTemplate(data, key, vars = {}) {
+  const templates = discordDmTemplates(data);
+  const base = templates[key] || DEFAULT_DISCORD_DM_TEMPLATES[key] || "{mensagem}";
+  const mapa = {
+    portal: portalUrlDiscord(),
+    missao: vars.missao || vars.titulo || "Missao nao informada",
+    contrato: vars.contrato || vars.missao || "Contrato nao informado",
+    sigilo: vars.sigilo || "Restrito",
+    designacao: vars.designacao || "Operadores selecionados",
+    recompensa: vars.recompensa || "Yens definidos no contrato",
+    feedback: vars.feedback || "Sem observacoes adicionais.",
+    resultado: vars.resultado || "Registrado",
+    assunto: vars.assunto || "Convocacao",
+    mensagem: vars.mensagem || "A lideranca solicitou sua presenca.",
+    lider: vars.lider || "Lideranca Jikkai",
+    promovido_por: vars.promovido_por || vars.lider || "Lideranca Jikkai",
+    cargo_antigo: vars.cargo_antigo || "Cargo anterior",
+    cargo_novo: vars.cargo_novo || "Novo cargo",
+    categoria: vars.categoria || "Contrato",
+    pendencia: vars.pendencia || vars.assunto || "Pendencia operacional",
+    motivo: vars.motivo || vars.mensagem || "A lideranca solicitou correcao desta pendencia.",
+    responsavel: vars.responsavel || "Membro convocado",
+  };
+  return String(base).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, chave) => mapa[chave] != null ? String(mapa[chave]) : "");
+}
+
+async function enviarDmDiscordParaUsuario(usuario, content) {
+  if (!discordBotConfigurado()) return { ok: false, skipped: true, reason: "Bot token nao configurado" };
+  if (!usuario?.discordId) return { ok: false, skipped: true, reason: "Usuario sem Discord ID" };
+  const resp = await fetch("/api/discord-dm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      discordId: String(usuario.discordId),
+      content: String(content || "").slice(0, 1900),
+      botToken: discordBotTokenAtual(),
+    }),
+  });
+  let payload = null;
+  try { payload = await resp.json(); } catch {}
+  if (!resp.ok || !payload?.ok) {
+    const detalhe = payload?.error || payload?.detail || resp.statusText || "Falha desconhecida";
+    throw new Error(`Falha ao enviar DM (${resp.status}) ${detalhe}`);
+  }
+  return { ok: true, user: usuario.username, discordId: usuario.discordId, channelId: payload.channelId };
+}
+
+async function notificarDiscordUsuarios(data, usernames = [], tipo = "missao", content = "") {
+  const nomes = Array.from(new Set((usernames || []).filter(Boolean)));
+  const resultados = [];
+  if (!nomes.length) return [{ ok: false, skipped: true, reason: "Nenhum destinatario informado" }];
+  for (const username of nomes) {
+    const alvo = (data?.users || []).find(u => u.username === username);
+    if (!alvo) { resultados.push({ ok: false, skipped: true, user: username, reason: "Usuario nao encontrado no portal" }); continue; }
+    if (!alvo.discordVerificado || !alvo.discordId) { resultados.push({ ok: false, skipped: true, user: username, reason: `${getCodinome(alvo)} nao tem Discord verificado no dossie` }); continue; }
+    if (!podeReceberDmDiscord(alvo, tipo)) { resultados.push({ ok: false, skipped: true, user: username, reason: `${getCodinome(alvo)} desativou este tipo de aviso` }); continue; }
+    try {
+      const enviado = await enviarDmDiscordParaUsuario(alvo, content);
+      resultados.push({ ...enviado, user: username, ok: true });
+    } catch (e) {
+      resultados.push({ ok: false, user: username, reason: e?.message || String(e) });
+    }
+  }
+  return resultados;
+}
+
+function mensagemDiscordMissao(data, missao, origem = "missao") {
+  const contrato = missao?.contratoId ? (data.contratos || []).find(c => c.id === missao.contratoId) : null;
+  return renderDiscordTemplate(data, origem === "contrato" ? "contrato_designado" : "missao_atribuida", {
+    missao: missao?.titulo || "Missao sem titulo",
+    contrato: contrato?.titulo || missao?.titulo || "Contrato designado",
+    sigilo: missao?.sigilo || "Restrito",
+    designacao: missao?.assignmentLabel || "Operadores selecionados",
+    recompensa: missao?.recompensa || contrato?.recompensa || contrato?.valorRecompensa || "Yens definidos no contrato",
+    categoria: contrato?.categoria || contrato?.tipo || "Contrato",
+  });
+}
+
+function mensagemDiscordRelatorio(data, missao, status, feedback = "") {
+  const relatorio = missao?.relatorioFinalId ? (data.relatorios || []).find(r => r.id === missao.relatorioFinalId) : null;
+  const key = status === "ajustes" ? "missao_devolvida" : status === "recusado" ? "relatorio_recusado" : "relatorio_aprovado";
+  return renderDiscordTemplate(data, key, {
+    missao: missao?.titulo || "Missao sem titulo",
+    sigilo: missao?.sigilo || "Restrito",
+    designacao: missao?.assignmentLabel || "Operadores selecionados",
+    feedback,
+    resultado: relatorio?.resultado || (status === "recusado" ? "Recusado" : "Aprovado"),
+  });
+}
+
+function mensagemDiscordConvocacao(data, assunto, mensagem, lider) {
+  return renderDiscordTemplate(data, "convocacao_lideranca", { assunto, mensagem, lider });
+}
+
+function mensagemDiscordPromocao(data, alvo, cargoAntigo, cargoNovo, promovidoPor) {
+  return renderDiscordTemplate(data, "promocao_cargo", {
+    cargo_antigo: cargoAntigo || "Nao definido",
+    cargo_novo: cargoNovo || "Novo cargo",
+    promovido_por: promovidoPor || "Lideranca Jikkai",
+    mensagem: `${getCodinome(alvo)} teve o selo hierarquico atualizado.`,
+  });
+}
+
+function mensagemDiscordCobrancaPendencia(data, pendencia, motivo, lider, responsavel) {
+  return renderDiscordTemplate(data, "cobranca_pendencia", { pendencia, motivo, lider, responsavel, assunto: pendencia, mensagem: motivo });
+}
+
+window.notificarDiscordUsuarios = notificarDiscordUsuarios;
+window.enviarDmDiscordParaUsuario = enviarDmDiscordParaUsuario;
+window.mensagemDiscordMissao = mensagemDiscordMissao;
+window.mensagemDiscordRelatorio = mensagemDiscordRelatorio;
+window.mensagemDiscordConvocacao = mensagemDiscordConvocacao;
+window.mensagemDiscordPromocao = mensagemDiscordPromocao;
+window.mensagemDiscordCobrancaPendencia = mensagemDiscordCobrancaPendencia;
+
 // ============ PERSISTENCE ============
 const STORAGE_KEY = "fox-portal-v3";
+const GOOD_STORAGE_KEY = "fox-portal-v3-good";
+
+function parseStateJson(value, fallback = null) {
+  try { return value ? JSON.parse(value) : fallback; } catch { return fallback; }
+}
+
+function hasUsableUsers(data) {
+  return Array.isArray(data?.users) && data.users.some(user => user?.username && user.role !== "contratante");
+}
+
+function rememberGoodState(data) {
+  if (!hasUsableUsers(data)) return;
+  try { localStorage.setItem(GOOD_STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function readGoodState() {
+  const saved = parseStateJson(localStorage.getItem(GOOD_STORAGE_KEY), null);
+  return hasUsableUsers(saved) ? saved : null;
+}
+
+function repairStateCandidate(candidate, localCandidate = null) {
+  const incoming = candidate && typeof candidate === "object" ? candidate : {};
+  if (hasUsableUsers(incoming)) {
+    rememberGoodState(incoming);
+    return incoming;
+  }
+
+  const donor = [localCandidate, readGoodState(), DEFAULT_DATA].find(hasUsableUsers);
+  if (!donor) return incoming;
+
+  const repaired = {
+    ...incoming,
+    users: Array.isArray(donor.users) ? donor.users : [],
+    roles: Array.isArray(incoming.roles) && incoming.roles.length ? incoming.roles : (donor.roles || DEFAULT_ROLES),
+    trios: Array.isArray(incoming.trios) && incoming.trios.length ? incoming.trios : (donor.trios || DEFAULT_TRIOS),
+    clas: Array.isArray(incoming.clas) && incoming.clas.length ? incoming.clas : (donor.clas || DEFAULT_CLAS),
+    juramentados: Array.isArray(incoming.juramentados) && incoming.juramentados.length ? incoming.juramentados : (donor.juramentados || []),
+  };
+  rememberGoodState(repaired);
+  return repaired;
+}
+
+function safeStateForPersistence(state) {
+  const local = parseStateJson(localStorage.getItem(STORAGE_KEY), null);
+  const repaired = repairStateCandidate(state, local);
+  return hasUsableUsers(repaired) ? repaired : null;
+}
 
 async function loadState() {
+  const local = parseStateJson(localStorage.getItem(STORAGE_KEY), null);
   // Tenta nuvem primeiro
   if (cloudClient) {
     try {
       const { data, error } = await cloudClient.from("fox_state").select("data").eq("id", 1).single();
       if (!error && data?.data && Object.keys(data.data).length > 0) {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data)); } catch {}
-        return data.data;
+        const repaired = repairStateCandidate(data.data, local);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(repaired)); } catch {}
+        return repaired;
       }
     } catch (e) { console.error("cloud load error", e); }
   }
   // Fallback: localStorage
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return repairStateCandidate(local, readGoodState());
   } catch (e) { console.error("local load error", e); return null; }
 }
 
 async function saveStateAsync(s) {
+  const safe = safeStateForPersistence(s);
+  if (!safe) {
+    console.error("blocked save: state has no usable users");
+    return { cloudOk: false, localOk: false, blocked: true };
+  }
+  s = safe;
   let cloudOk = null; // null = não configurado
   if (cloudClient) {
     try {
@@ -432,7 +767,7 @@ async function saveStateAsync(s) {
     } catch (e) { cloudOk = false; console.error(e); }
   }
   let localOk = false;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); localOk = true; }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); rememberGoodState(s); localOk = true; }
   catch (e) { console.error("local save error", e); }
   return { cloudOk, localOk };
 }
@@ -1513,8 +1848,11 @@ function DossieModal({ membro, data, onClose }) {
   const cla = data.clas.find(c => c.id === membro.cla);
   const trio = trioDoUsuario(data, membro.username);
   const superior = data.users.find(u => u.username === membro.respondeA);
+  const discord = discordInfo(membro);
   const campos = [
     ["Nome de RP", membro.nomeRP || membro.displayName],
+    ["Discord", discord.verificado ? `${discord.label} · ID ${discord.id}` : discord.label],
+    ["Vinculação Discord", discord.verificado ? "Marca vinculada" : (discord.vinculado ? "Informado, aguardando verificação" : "Marca não vinculada")],
     ["Ramo", cla?.nome || "Não definido"],
     ["Patente", membro.patente || role?.nome || "Não definida"],
     ["Elemento", membro.elemento || "Não definido"],
@@ -1557,6 +1895,9 @@ function DossieModal({ membro, data, onClose }) {
               <p className="text-zinc-500 text-xs leading-relaxed mt-2">{membro.lealdadeNota || lealdadeConfig(membro.lealdade).desc}</p>
             </div>
           </div>
+          <div className="mb-4">
+            <DiscordSealStatus usuario={membro} />
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {campos.map(([label, value]) => (
               <div key={label} className="p-3 rounded bg-black/50 border border-zinc-800">
@@ -1583,6 +1924,16 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
     elemento: membro.elemento || "",
     linhagem: membro.linhagem || "",
     vilaOrigem: membro.vilaOrigem || "",
+    discordTag: membro.discordTag || membro.discordUsername || membro.discord || "",
+    discordId: membro.discordId || "",
+    discordUsername: membro.discordUsername || "",
+    discordGlobalName: membro.discordGlobalName || "",
+    discordAvatar: membro.discordAvatar || "",
+    discordVerificado: Boolean(membro.discordVerificado && membro.discordId),
+    discordVerificadoEm: membro.discordVerificadoEm || "",
+    discordDmMissoes: membro.discordDmMissoes !== false,
+    discordDmContratos: membro.discordDmContratos !== false,
+    discordDmRelatorios: membro.discordDmRelatorios !== false,
     especialidade: membro.especialidade || "",
     bio: membro.bio || "",
   });
@@ -1669,8 +2020,25 @@ function MeuDossieModal({ membro, data, setData, onClose }) {
               <Btn onClick={() => inputRef.current?.click()} variant="default" disabled={salvando}><IUpload className="w-3 h-3" /> Escolher foto</Btn>
             </div>
           </div>
+          <DiscordSealStatus usuario={{ ...membro, ...form }} compact showButton />
+          {form.discordVerificado && (
+            <div className="grid sm:grid-cols-3 gap-2 p-3 rounded-lg border border-indigo-900/40 bg-indigo-950/10">
+              {[
+                ["discordDmMissoes", "Avisos de missão"],
+                ["discordDmContratos", "Avisos de contrato"],
+                ["discordDmRelatorios", "Avisos de relatório"],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 text-xs text-zinc-300 rounded border border-zinc-800 bg-black/35 px-3 py-2">
+                  <input type="checkbox" checked={form[key] !== false} onChange={e => setForm({ ...form, [key]: e.target.checked })} className="accent-indigo-600" />
+                  {label}
+                </label>
+              ))}
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-3">
             <div><label className="fox-label">Nome de RP</label><input value={form.nomeRP} onChange={e => setForm({ ...form, nomeRP: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Discord</label><input value={form.discordTag} onChange={e => setForm({ ...form, discordTag: e.target.value, discordUsername: e.target.value, discordVinculado: Boolean(e.target.value.trim() || form.discordId), discordLinkedAt: e.target.value.trim() ? new Date().toISOString() : form.discordLinkedAt })} className="fox-input" placeholder="usuario ou usuario#0000" /></div>
+            <div><label className="fox-label">ID Discord</label><input value={form.discordId} onChange={e => setForm({ ...form, discordId: e.target.value, discordVinculado: Boolean(form.discordTag || e.target.value.trim()), discordLinkedAt: e.target.value.trim() ? new Date().toISOString() : form.discordLinkedAt })} className="fox-input" placeholder="Opcional" /></div>
             <div><label className="fox-label">Elemento</label><input value={form.elemento} onChange={e => setForm({ ...form, elemento: e.target.value })} className="fox-input" placeholder="Ex: Raiton" /></div>
             <div><label className="fox-label">Linhagem</label><input value={form.linhagem} onChange={e => setForm({ ...form, linhagem: e.target.value })} className="fox-input" placeholder="Ex: Hyuuga" /></div>
             <div><label className="fox-label">Vila de origem</label><input value={form.vilaOrigem} onChange={e => setForm({ ...form, vilaOrigem: e.target.value })} className="fox-input" /></div>
@@ -2361,7 +2729,7 @@ const SIGILO_CFG = {
     nivel: 3, codigo: "NÍVEL III", label: "Confidencial",
     cor: "#B91C1C", border: "border-red-800", bg: "bg-red-950/30",
     badge: "bg-red-950 text-red-300 border-red-800",
-    desc: "Soke, Bunke, Conselho e operadores diretamente escalados."
+    desc: "Liderança, Conselho e operadores diretamente escalados."
   },
   "Olhos do Líder": {
     nivel: 4, codigo: "NÍVEL IV", label: "Olhos do Líder",
@@ -2393,7 +2761,7 @@ function nivelAcessoUsuario(data, usuario, roleInformado = null) {
   const role = roleInformado || data?.roles?.find(r => r.id === usuario.role);
   if (role?.hasLeaderPerms === true) return 4;
   if (usuario.role === "contratante") return 1;
-  if (usuario.role === "conselheiro" || ["soke", "bunke"].includes(usuario.cla)) return 3;
+  if (usuario.role === "conselheiro") return 3;
   if (usuarioTemJuramento(data, usuario)) return 2;
   return 1;
 }
@@ -3811,6 +4179,8 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
   const [aceitos, setAceitos] = useState(() => new Array(mandamentos.length).fill(false));
   const [form, setForm] = useState({
     nome: usuario?.nomeRP || usuario?.displayName || "",
+    discordTag: usuario?.discordTag || usuario?.discordUsername || usuario?.discord || "",
+    discordId: usuario?.discordId || "",
     linhagem: usuario?.linhagem || "",
     elemento: usuario?.elemento || "Katon",
     idade: "",
@@ -3858,6 +4228,7 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
   const todosAceitos = aceitos.every(Boolean);
   const formValido = form.nome.trim() && form.motivacao.trim();
   const fraseOk = fraseJuramentoAceita(fraseTypo);
+  const discordOk = Boolean(usuario?.discordVerificado && usuario?.discordId);
 
   const iniciarSelo = async () => {
     setSelando(true);
@@ -3868,6 +4239,13 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
       nome: form.nome.trim(),
       data: new Date().toISOString(),
       username: usuario.username,
+      discordId: usuario?.discordId || form.discordId || "",
+      discordUsername: usuario?.discordUsername || form.discordTag || "",
+      discordGlobalName: usuario?.discordGlobalName || "",
+      discordTag: usuario?.discordTag || form.discordTag || "",
+      discordAvatar: usuario?.discordAvatar || "",
+      discordVerificado: Boolean(usuario?.discordVerificado && usuario?.discordId),
+      discordVerificadoEm: usuario?.discordVerificadoEm || "",
       fotoUrl,
       versao: 2,
       origem: modoIniciacao ? "primeiro_acesso" : "portal",
@@ -3920,10 +4298,15 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
       )}
 
       {step === 2 && (
-        <div className="fadein space-y-4">
-          <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Identificação do Juramentado</h3><p className="text-zinc-500 text-sm">Declare quem você é, por que busca pertencer e, opcionalmente, anexe a imagem do RP.</p></div>
-          <div className="space-y-4 p-6 bg-zinc-950/50 border border-zinc-800 rounded">
+          <div className="fadein space-y-4">
+            <div className="p-4 bg-zinc-950/60 border border-orange-900/40 rounded"><h3 className="text-orange-50 font-bold mb-1">Identificação do Juramentado</h3><p className="text-zinc-500 text-sm">Declare quem você é, por que busca pertencer e, opcionalmente, anexe a imagem do RP.</p></div>
+            <DiscordSealStatus usuario={usuario} showButton />
+            <div className="space-y-4 p-6 bg-zinc-950/50 border border-zinc-800 rounded">
             <div><label className="fox-label">Nome no jogo *</label><input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} className="fox-input" /></div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><label className="fox-label">Discord</label><input value={form.discordTag} onChange={(e) => setForm({ ...form, discordTag: e.target.value })} className="fox-input" placeholder="usuario ou usuario#0000" /></div>
+              <div><label className="fox-label">ID Discord</label><input value={form.discordId} onChange={(e) => setForm({ ...form, discordId: e.target.value })} className="fox-input" placeholder="Opcional" /></div>
+            </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div><label className="fox-label">Linhagem</label><input value={form.linhagem} onChange={(e) => setForm({ ...form, linhagem: e.target.value })} className="fox-input" placeholder="Uchiha, Hyuuga..." /></div>
               <div><label className="fox-label">Idade RP</label><input value={form.idade} onChange={(e) => setForm({ ...form, idade: e.target.value })} className="fox-input" /></div>
@@ -3952,8 +4335,9 @@ function JuramentoPage({ usuario, juramentado, juramentar, data, modoIniciacao =
             <div className="bg-black/60 border border-orange-700 rounded py-4 px-6 mb-6 inline-block"><code className="text-orange-400 text-lg serif italic">“{FRASE_JURAMENTO}”</code></div>
             <input value={fraseTypo} onChange={(e) => setFraseTypo(e.target.value)} className="fox-input text-center text-lg" placeholder="Digite a frase..." autoFocus />
             {fraseTypo && !fraseOk && <div className="text-red-500 text-xs mt-2">A frase ainda está diferente demais do juramento.</div>}
+            {!discordOk && <div className="text-indigo-300 text-xs mt-4 uppercase tracking-wider font-bold">Vincule o Discord para liberar o selo final.</div>}
           </div>
-          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
+          <div className="flex gap-2 pt-2"><Btn onClick={() => setStep(2)} variant="ghost">Voltar</Btn><Btn onClick={iniciarSelo} variant="primary" disabled={!fraseOk || !discordOk} className="flex-1 justify-center" size="lg"><IDrop className="w-4 h-4" /> Selar o Pacto</Btn></div>
         </div>
       )}
     </div>
@@ -4364,8 +4748,9 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
   const podeCargos = isLider || hasPerm(role,"manage_roles");
   const podeRamos = isLider;
   const podeJuramentos = isLider;
+  const podeDiscord = isLider;
   const podeBackup = isLider;
-  const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":"backup";
+  const primeiraAba = podeUsuarios?"usuarios":podeMissoes?"missoes":podeCargos?"cargos":podeDiscord?"discord":"backup";
   const [aba, setAba] = useState(primeiraAba);
 
   return (
@@ -4379,6 +4764,7 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
           podeRamos && { id: "ramos", label: "Ramos", icon: IShield },
           podeJuramentos && { id: "juramentos", label: "Juramentos", icon: ISkull },
           podeMissoes && { id: "missoes", label: "Missões", icon: IClipboard },
+          podeDiscord && { id: "discord", label: "Discord", icon: IShield },
           podeBackup && { id: "backup", label: "Backup", icon: IDownload },
         ].filter(Boolean).map(t => {
           const I = t.icon;
@@ -4395,7 +4781,126 @@ function GerenciarPage({ data, setData, usuario, role, exportar, importar }) {
       {aba === "ramos" && <RamosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "juramentos" && <RegistroJuramentosManager data={data} setData={setData} usuario={usuario} />}
       {aba === "missoes" && <MissoesManager data={data} setData={setData} usuario={usuario} role={role} />}
+      {aba === "discord" && <DiscordManager data={data} setData={setData} usuario={usuario} />}
       {aba === "backup" && <BackupManager data={data} exportar={exportar} importar={importar} />}
+    </div>
+  );
+}
+
+function DiscordManager({ data, setData, usuario }) {
+  const [templates, setTemplates] = useState(() => discordDmTemplates(data));
+  const [modelo, setModelo] = useState("convocacao_lideranca");
+  const [token, setToken] = useState(() => discordBotTokenAtual());
+  const [assunto, setAssunto] = useState("Convocação da liderança");
+  const [mensagem, setMensagem] = useState("A liderança solicitou sua presença.");
+  const [selecionados, setSelecionados] = useState([]);
+  const [status, setStatus] = useState("");
+
+  useEffect(() => { setTemplates(discordDmTemplates(data)); }, [data.discordDmTemplates]);
+
+  const usuariosVerificados = (data.users || []).filter(u => u.role !== "contratante" && u.discordVerificado && u.discordId);
+  const salvarTemplates = () => {
+    setData(d => ({
+      ...d,
+      discordDmTemplates: { ...DEFAULT_DISCORD_DM_TEMPLATES, ...templates },
+      activityLog: [...(d.activityLog || []), atividade("discord_templates", usuario?.username, "discord", "Atualizou mensagens privadas do Discord")],
+    }));
+    setStatus("Modelos de mensagem salvos.");
+  };
+  const salvarToken = () => setStatus(salvarDiscordBotToken(token) ? "Token salvo neste computador." : "Não foi possível salvar o token.");
+  const restaurarModelo = key => setTemplates(t => ({ ...t, [key]: DEFAULT_DISCORD_DM_TEMPLATES[key] }));
+  const restaurarTodos = () => setTemplates(DEFAULT_DISCORD_DM_TEMPLATES);
+  const alternarSelecionado = username => setSelecionados(s => s.includes(username) ? s.filter(x => x !== username) : [...s, username]);
+  const enviarConvocacao = async () => {
+    setStatus("Enviando convocação pelo Discord...");
+    const content = mensagemDiscordConvocacao({ ...data, discordDmTemplates: templates }, assunto, mensagem, getCodinome(usuario));
+    const resultado = await notificarDiscordUsuarios(data, selecionados, "convocacao", content);
+    const ok = resultado.filter(r => r.ok).length;
+    const falhas = resultado.length - ok;
+    const detalhesFalha = resultado
+      .filter(r => !r.ok)
+      .map(r => `${r.user || "destino"}: ${r.reason || "falha sem detalhe"}`)
+      .join(" | ");
+    setStatus(`Convocação concluída: ${ok} enviada(s), ${falhas} falha(s).${detalhesFalha ? " " + detalhesFalha : ""}`);
+    setData(d => ({ ...d, activityLog: [...(d.activityLog || []), atividade("discord_convocacao", usuario?.username, selecionados.join(","), `Convocou ${ok} membro(s) pelo Discord${falhas ? ` · ${falhas} falha(s)` : ""}`)] }));
+  };
+  const preview = renderDiscordTemplate({ ...data, discordDmTemplates: templates }, modelo, {
+    missao: "Operação de campo",
+    contrato: "Contrato sigiloso",
+    sigilo: "Restrito",
+    designacao: "VIPER, SILVERFOX",
+    feedback: "Ajuste o relatório com mais detalhes.",
+    assunto,
+    mensagem,
+    lider: getCodinome(usuario),
+    cargo_antigo: "Executor",
+    cargo_novo: "Capitão",
+    pendencia: "Relatório pendente",
+    motivo: "A liderança precisa do registro antes do próximo RP.",
+    responsavel: "Operador convocado",
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="grid lg:grid-cols-[1fr_360px] gap-4">
+        <div className="p-5 rounded-xl border border-zinc-800 bg-zinc-950/60">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-orange-50 font-bold text-lg serif">Mensagens privadas do Discord</h3>
+              <p className="text-zinc-500 text-xs mt-1">Modelos usados para avisos de missão, contrato, relatório, promoção e convocação.</p>
+            </div>
+            <Btn onClick={salvarTemplates} variant="primary"><ISave className="w-3 h-3" /> Salvar</Btn>
+          </div>
+          <div className="grid sm:grid-cols-[220px_1fr] gap-3">
+            <div className="space-y-2">
+              {Object.keys(DEFAULT_DISCORD_DM_TEMPLATES).map(key => (
+                <button key={key} onClick={() => setModelo(key)} className={`w-full text-left px-3 py-2 rounded border text-xs font-bold ${modelo === key ? "border-indigo-500 bg-indigo-950/25 text-indigo-200" : "border-zinc-800 bg-black/40 text-zinc-500 hover:text-zinc-200"}`}>
+                  {DISCORD_TEMPLATE_LABELS[key] || key}
+                </button>
+              ))}
+              <Btn onClick={restaurarTodos} variant="ghost" className="w-full justify-center">Restaurar todos</Btn>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <label className="fox-label mb-0">{DISCORD_TEMPLATE_LABELS[modelo]}</label>
+                <button onClick={() => restaurarModelo(modelo)} className="text-[10px] uppercase tracking-wider text-zinc-500 hover:text-orange-300">Restaurar modelo</button>
+              </div>
+              <textarea value={templates[modelo] || ""} onChange={e => setTemplates({ ...templates, [modelo]: e.target.value })} rows="10" className="fox-input font-mono text-xs" />
+              <div className="p-3 rounded border border-zinc-800 bg-black/50">
+                <div className="fox-label">Prévia</div>
+                <pre className="whitespace-pre-wrap text-zinc-400 text-xs leading-relaxed">{preview}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+            <div className="text-[10px] uppercase tracking-wider text-indigo-300 mb-1">Bot Discord</div>
+            <div className="text-orange-50 font-bold">{discordBotConfigurado() ? "Token configurado" : "Token não configurado"}</div>
+            <p className="text-zinc-600 text-xs mt-2">Na Vercel, prefira Environment Variable `DISCORD_BOT_TOKEN`. Este campo salva token apenas neste computador.</p>
+            <input value={token} onChange={e => setToken(e.target.value)} className="fox-input mt-3" placeholder="Bot token opcional" />
+            <Btn onClick={salvarToken} variant="default" className="mt-3 w-full justify-center"><ISave className="w-3 h-3" /> Salvar token local</Btn>
+          </div>
+
+          <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60">
+            <div className="text-[10px] uppercase tracking-wider text-orange-600 mb-1">Convocação rápida</div>
+            <input value={assunto} onChange={e => setAssunto(e.target.value)} className="fox-input mb-2" placeholder="Assunto" />
+            <textarea value={mensagem} onChange={e => setMensagem(e.target.value)} rows="3" className="fox-input mb-3" placeholder="Mensagem" />
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {usuariosVerificados.map(u => (
+                <label key={u.username} className={`flex items-center gap-2 p-2 rounded border cursor-pointer ${selecionados.includes(u.username) ? "border-indigo-500 bg-indigo-950/20" : "border-zinc-800 bg-black/35"}`}>
+                  <input type="checkbox" checked={selecionados.includes(u.username)} onChange={() => alternarSelecionado(u.username)} className="accent-indigo-600" />
+                  <span className="min-w-0"><span className="block text-orange-50 text-xs font-bold truncate">{getCodinome(u)}</span><span className="block text-zinc-600 text-[10px] truncate">{discordNomeExibicao(u)}</span></span>
+                </label>
+              ))}
+              {!usuariosVerificados.length && <div className="col-span-2 p-4 rounded border border-zinc-800 bg-black/35 text-zinc-600 text-sm italic">Nenhum membro com Discord verificado ainda.</div>}
+            </div>
+            <Btn onClick={enviarConvocacao} variant="primary" disabled={!selecionados.length} className="w-full justify-center"><IShield className="w-3 h-3" /> Enviar convocação</Btn>
+          </div>
+        </div>
+      </div>
+      {status && <div className="p-3 rounded border border-indigo-900/50 bg-indigo-950/15 text-indigo-200 text-sm">{status}</div>}
     </div>
   );
 }
@@ -4406,6 +4911,9 @@ function UsuariosManager({ data, setData, usuario }) {
     status: "Novo", level: 0, cla: "", elemento: "", linhagem: "", vilaOrigem: "",
     patente: "", especialidade: "", bio: "", estruturaNivel: "operador", respondeA: "",
     nivelAcesso: 1, iniciacaoStatus: "pendente", avatarUrl: "", avatarStoragePath: "",
+    discordId: "", discordUsername: "", discordGlobalName: "", discordTag: "", discordAvatar: "",
+    discordVerificado: false, discordVerificadoEm: "", discordVinculado: false, discordLinkedAt: "",
+    discordDmMissoes: true, discordDmContratos: true, discordDmRelatorios: true,
     reputacao: "Desconhecido", lealdade: "Observado", reputacaoNota: "", lealdadeNota: "",
   });
   const [editando, setEditando] = useState(null);
@@ -4452,6 +4960,9 @@ function UsuariosManager({ data, setData, usuario }) {
             <div><label className="fox-label">Nome de exibição</label><input value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Nome de RP</label><input value={form.nomeRP || ""} onChange={e => setForm({ ...form, nomeRP: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Codinome oficial</label><input value={form.codinome || ""} onChange={e => setForm({ ...form, codinome: e.target.value })} className="fox-input" /></div>
+            <div><label className="fox-label">Discord</label><input value={form.discordTag || form.discordUsername || form.discord || ""} onChange={e => setForm({ ...form, discordTag: e.target.value, discordUsername: e.target.value, discordVinculado: Boolean(e.target.value.trim() || form.discordId), discordLinkedAt: e.target.value.trim() ? new Date().toISOString() : form.discordLinkedAt })} className="fox-input" placeholder="usuario ou usuario#0000" /></div>
+            <div><label className="fox-label">ID Discord</label><input value={form.discordId || ""} onChange={e => setForm({ ...form, discordId: e.target.value, discordVinculado: Boolean((form.discordTag || form.discordUsername || form.discord || "").trim() || e.target.value.trim()), discordLinkedAt: e.target.value.trim() ? new Date().toISOString() : form.discordLinkedAt })} className="fox-input" placeholder="Opcional" /></div>
+            <div className="sm:col-span-2"><DiscordSealStatus usuario={form} compact showButton /></div>
             <div><label className="fox-label">Senha {editando !== "__novo__" && "(vazio mantém)"}</label><input type="text" value={form.password || ""} onChange={e => setForm({ ...form, password: e.target.value })} className="fox-input" /></div>
             <div><label className="fox-label">Cargo</label><select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="fox-input">{data.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}</select></div>
             <div><label className="fox-label">Patente</label><input value={form.patente || ""} onChange={e => setForm({ ...form, patente: e.target.value })} className="fox-input" placeholder="Ex: Executor, Capitão..." /></div>
@@ -4528,7 +5039,7 @@ function RamosManager({ data, setData, usuario }) {
   };
 
   const remover = ramo => {
-    if (["soke", "bunke"].includes(ramo.id) || ramo.protected) { alert("Soke e Bunke são ramos protegidos."); return; }
+    if (ramo.protected) { alert("Este ramo é protegido."); return; }
     const quantidade = (data.users || []).filter(u => u.cla === ramo.id).length;
     if (quantidade) { alert("Transfira os membros deste ramo antes de removê-lo."); return; }
     if (!confirm("Remover o ramo " + ramo.nome + "?")) return;
@@ -4558,7 +5069,7 @@ function RamosManager({ data, setData, usuario }) {
           const integrantes = (data.users || []).filter(u => u.cla === ramo.id && u.role !== "contratante");
           const capitaes = integrantes.filter(u => estruturaPosicaoRole(roleOf(u)) === "capitao_ramo");
           const capitao = capitaes[0];
-          const protegido = ["soke", "bunke"].includes(ramo.id) || ramo.protected;
+          const protegido = ramo.protected;
           return <div key={ramo.id} className="p-4 rounded-lg border bg-zinc-950/60" style={{borderColor:(ramo.cor || "#7C2D12")+"80"}}>
             <div className="flex justify-between gap-3"><div className="flex-1"><div className="text-[9px] uppercase tracking-wider text-zinc-600">{ramo.tipo || "Divisão"} · {integrantes.length} membros</div><div className="font-black text-lg serif" style={{color:ramo.cor}}>{ramo.nome}</div><p className="text-zinc-500 text-xs mt-2">{ramo.descricao || "Sem descrição."}</p></div>
             {!protegido && <button onClick={() => remover(ramo)} className="text-red-500"><ITrash className="w-4 h-4" /></button>}</div>
@@ -5066,6 +5577,7 @@ const DEFAULT_DATA = {
   contratos: [],
   galeria: [],
   activityLog: [],
+  discordDmTemplates: DEFAULT_DISCORD_DM_TEMPLATES,
   visaoGeralContratantes: {
     titulo: "F.O.X. — Mercenários das Sombras",
     subtitulo: "Discrição. Letalidade. Resultado.",
@@ -5075,14 +5587,15 @@ const DEFAULT_DATA = {
 
 // Migra dados antigos garantindo que novos campos existam
 function migrate(raw) {
+  raw = repairStateCandidate(raw, readGoodState());
   if (!raw || !raw.users) raw = DEFAULT_DATA;
   const migrated = { ...DEFAULT_DATA, ...raw };
+  const ramoRemovido = id => ["soke", "bunke"].includes(String(id || "").trim().toLowerCase());
   if (!raw.clas) {
-    migrated.clas = [
-      { ...DEFAULT_CLAS[0], figuras: raw.sokeFiguras || [] },
-      { ...DEFAULT_CLAS[1], figuras: raw.bunkeFiguras || [] },
-    ];
+    migrated.clas = DEFAULT_CLAS.map(ramo => ({ ...ramo, figuras: [] }));
   }
+  migrated.clas = (migrated.clas || DEFAULT_CLAS).filter(ramo => !ramoRemovido(ramo.id));
+  if (!migrated.clas.length) migrated.clas = DEFAULT_CLAS;
   if (!raw.historia) migrated.historia = DEFAULT_HISTORIA;
   if (!raw.mandamentos || !Array.isArray(raw.mandamentos) || raw.mandamentos.length === 0) {
     migrated.mandamentos = DEFAULT_MANDAMENTOS;
@@ -5095,6 +5608,7 @@ function migrate(raw) {
   if (!raw.contratos) migrated.contratos = [];
   if (!raw.galeria) migrated.galeria = [];
   if (!raw.activityLog) migrated.activityLog = [];
+  migrated.discordDmTemplates = { ...DEFAULT_DISCORD_DM_TEMPLATES, ...(raw.discordDmTemplates || {}) };
   if (!raw.missoes) migrated.missoes = [];
   migrated.missoes = (raw.missoes || []).map(m => {
     const participants = Array.from(new Set([...(Array.isArray(m.participants) ? m.participants : []), m.assignedTo].filter(Boolean)));
@@ -5115,7 +5629,7 @@ function migrate(raw) {
   migrated.users = (raw.users || DEFAULT_USERS).map(u => normalizarMembro({
     ...u,
     codinome: u.codinome != null ? u.codinome : "",
-    cla: u.cla != null ? u.cla : "",
+    cla: ramoRemovido(u.cla) ? "" : (u.cla != null ? u.cla : ""),
   }, true));
   // Preserva juramentos antigos, normaliza os registros e reconhece quem já realizou o pacto.
   migrated.juramentados = (Array.isArray(raw.juramentados) ? raw.juramentados : []).map((j, index) => ({
@@ -5124,6 +5638,12 @@ function migrate(raw) {
     fotoUrl: j.fotoUrl || "",
     versao: Number(j.versao) || 1,
     origem: j.origem || "legado",
+    discordId: j.discordId || "",
+    discordUsername: j.discordUsername || "",
+    discordGlobalName: j.discordGlobalName || "",
+    discordTag: j.discordTag || "",
+    discordVerificado: Boolean(j.discordVerificado && j.discordId),
+    discordVerificadoEm: j.discordVerificadoEm || "",
   }));
   migrated.users = migrated.users.map(u => {
     const juramentoExistente = juramentoDoUsuario(migrated.juramentados, u);
@@ -5137,6 +5657,14 @@ function migrate(raw) {
       iniciacaoVersao: Number(u.iniciacaoVersao) || 1,
       lealdade: nivelAtual < nivelJuramentado ? "Juramentado" : u.lealdade,
       lealdadeNota: u.lealdadeNota || "Juramento anterior reconhecido e preservado pelo Protocolo de Iniciação.",
+      discordId: u.discordId || juramentoExistente.discordId || "",
+      discordUsername: u.discordUsername || juramentoExistente.discordUsername || juramentoExistente.discordTag || "",
+      discordGlobalName: u.discordGlobalName || juramentoExistente.discordGlobalName || "",
+      discordTag: u.discordTag || juramentoExistente.discordTag || juramentoExistente.discordUsername || "",
+      discordVerificado: Boolean((u.discordVerificado && u.discordId) || (juramentoExistente.discordVerificado && juramentoExistente.discordId)),
+      discordVerificadoEm: u.discordVerificadoEm || juramentoExistente.discordVerificadoEm || "",
+      discordVinculado: Boolean(u.discordVinculado || u.discordId || juramentoExistente.discordId),
+      discordLinkedAt: u.discordLinkedAt || juramentoExistente.discordVerificadoEm || "",
     };
   });
   // Liga integrantes antigos dos trios a usernames reais e cria IDs estáveis.
@@ -5174,6 +5702,7 @@ function migrate(raw) {
 migrated.armas = (raw.armas || DEFAULT_ARMAS).map((a, i) => a.id ? a : { ...a, id: `arma_${i}_${Date.now().toString(36)}` });
   migrated.fases = (migrated.fases || DEFAULT_FASES).map((fase, index) => normalizarFaseEstrategica(fase, index));
   migrated.sinaisEstrategicos = Array.isArray(migrated.sinaisEstrategicos) ? migrated.sinaisEstrategicos : [];
+  rememberGoodState(migrated);
   return migrated;
 }
 
@@ -5356,6 +5885,7 @@ function App() {
   const [saveStatus, setSaveStatus] = useState({ cloudOk: null, localOk: true, time: null, syncing: false });
   const isRemoteUpdate = useRef(false);
   const saveTimeoutRef = useRef(null);
+  const discordOAuthHandledRef = useRef(false);
 
   // Initial load + realtime subscription
   useEffect(() => {
@@ -5372,7 +5902,9 @@ function App() {
             const newData = payload.new?.data;
             if (newData && Object.keys(newData).length > 0) {
               setData((current) => {
-                const migrated = migrate(newData);
+                const repaired = repairStateCandidate(newData, current);
+                if (!hasUsableUsers(repaired)) return current;
+                const migrated = migrate(repaired);
                 if (JSON.stringify(current) === JSON.stringify(migrated)) return current;
                 isRemoteUpdate.current = true;
                 return migrated;
@@ -5395,6 +5927,54 @@ function App() {
       const res = await saveStateAsync(data);
       setSaveStatus({ ...res, time: new Date(), syncing: false });
     }, 500);
+  }, [data, loading]);
+
+  useEffect(() => {
+    if (discordOAuthHandledRef.current || !data || loading) return;
+    const hashParams = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+    const searchParams = new URLSearchParams(String(window.location.search || "").replace(/^\?/, ""));
+    const token = hashParams.get("access_token") || searchParams.get("access_token");
+    const state = hashParams.get("state") || searchParams.get("state");
+    const erroDiscord = hashParams.get("error") || searchParams.get("error");
+    if (!token && !state && !erroDiscord) return;
+    discordOAuthHandledRef.current = true;
+
+    let pending = {};
+    try { pending = JSON.parse(localStorage.getItem(DISCORD_OAUTH_STORAGE_KEY) || "{}"); } catch {}
+    try { localStorage.removeItem(DISCORD_OAUTH_STORAGE_KEY); } catch {}
+    try { window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&](access_token|token_type|expires_in|state|error|error_description)=[^&]*/g, "")); } catch {}
+
+    if (erroDiscord || !token || !pending?.username || pending.state !== state) {
+      alert(erroDiscord ? "Selo Discord recusado. Vinculo nao gravado." : "Selo Discord invalido. Tente verificar novamente.");
+      return;
+    }
+
+    fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error("Falha na leitura do selo Discord"); return r.json(); })
+      .then(info => {
+        const alvoUsername = pending.username;
+        setData(d => ({
+          ...d,
+          users: (d.users || []).map(u => u.username === alvoUsername ? {
+            ...u,
+            discordId: info.id || "",
+            discordUsername: info.username || "",
+            discordGlobalName: info.global_name || "",
+            discordTag: info.discriminator && info.discriminator !== "0" ? `${info.username}#${info.discriminator}` : (info.username || ""),
+            discordAvatar: discordAvatarUrl(info),
+            discordVerificado: Boolean(info.id),
+            discordVerificadoEm: new Date().toISOString(),
+            discordVinculado: Boolean(info.id),
+            discordLinkedAt: new Date().toISOString(),
+            discordDmMissoes: u.discordDmMissoes !== false,
+            discordDmContratos: u.discordDmContratos !== false,
+            discordDmRelatorios: u.discordDmRelatorios !== false,
+          } : u),
+          activityLog: [...(d.activityLog || []), atividade("discord_verificado", alvoUsername, alvoUsername, "Vinculou a marca Discord ao dossiê")],
+        }));
+        alert("Marca Discord reconhecida. Dossiê atualizado.");
+      })
+      .catch(() => alert("Fuuinjutsu Discord falhou. Tente novamente."));
   }, [data, loading]);
 
   const usuarioAtual = usuario && data ? data.users.find(u => u.username === usuario.username) || usuario : null;
@@ -5487,6 +6067,18 @@ function App() {
           nomeRP: u.nomeRP || dados.nome || u.displayName,
           linhagem: u.linhagem || dados.linhagem || "",
           elemento: u.elemento || dados.elemento || "",
+          discordTag: dados.discordTag || u.discordTag || u.discordUsername || u.discord || "",
+          discordUsername: dados.discordUsername || dados.discordTag || u.discordUsername || u.discordTag || u.discord || "",
+          discordGlobalName: dados.discordGlobalName || u.discordGlobalName || "",
+          discordId: dados.discordId || u.discordId || "",
+          discordAvatar: dados.discordAvatar || u.discordAvatar || "",
+          discordVerificado: Boolean((dados.discordVerificado && dados.discordId) || (u.discordVerificado && u.discordId)),
+          discordVerificadoEm: dados.discordVerificadoEm || u.discordVerificadoEm || "",
+          discordVinculado: Boolean(dados.discordVerificado || dados.discordTag || dados.discordId || u.discordTag || u.discordId || u.discordUsername || u.discord),
+          discordLinkedAt: (dados.discordVerificadoEm || dados.discordId || dados.discordTag) ? (dados.discordVerificadoEm || new Date().toISOString()) : (u.discordLinkedAt || ""),
+          discordDmMissoes: u.discordDmMissoes !== false,
+          discordDmContratos: u.discordDmContratos !== false,
+          discordDmRelatorios: u.discordDmRelatorios !== false,
           lealdade: atual < juramentado ? "Juramentado" : u.lealdade,
           lealdadeAtualizadaEm: new Date().toISOString(),
           lealdadeNota: u.lealdadeNota || "Juramento formal registrado pelo portal.",
