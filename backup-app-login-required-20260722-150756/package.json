@@ -1,0 +1,58 @@
+{
+  "name": "jikkai-portal-desktop",
+  "version": "1.0.12",
+  "description": "Aplicativo desktop do portal JIKKAI com overlay tatico para jogo.",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "desktop": "electron .",
+    "desktop:open": "electron . --show",
+    "desktop:dev": "electron . --dev",
+    "desktop:smoke": "electron . --smoke-test",
+    "dist": "electron-builder --win portable nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "br.jikkai.portal",
+    "productName": "JIKKAI",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app.html",
+      "index.html",
+      "mapa.html",
+      "overlay.html",
+      "themesong.mp3",
+      "api/**/*",
+      "assets/**/*",
+      "electron/**/*",
+      "native-overlay/**/*"
+    ],
+    "asarUnpack": [
+      "native-overlay/**/*"
+    ],
+    "win": {
+      "requestedExecutionLevel": "highestAvailable",
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "JIKKAI"
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.6"
+  }
+}

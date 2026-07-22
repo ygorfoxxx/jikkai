@@ -258,8 +258,6 @@
     .nav button:hover:before,.nav button.active:before{color:#67e8f9;text-shadow:0 0 16px rgba(34,211,238,.28)}
     .auth-locked #nav button:not([data-section="login"]){opacity:.28;filter:grayscale(.9);pointer-events:none}
     .auth-locked #nav button[data-section="login"]{border-color:rgba(34,211,238,.55);box-shadow:0 0 18px rgba(34,211,238,.12)}
-    .login-active .topbar{display:none}
-    .login-active .app{padding-left:0}
     .layout{max-width:none;margin:0;padding:22px 24px 24px 18px}
     .hero,.split,.map-layout,.command-layout,.field-grid{max-width:1280px;margin-left:auto;margin-right:auto}
     .login-active .hero{display:none}
@@ -298,7 +296,7 @@
     @media(max-width:900px){.app{padding-left:0}.topbar{position:sticky;left:auto;bottom:auto;width:auto;border-radius:0;border-left:0;border-right:0;border-top:0;padding:16px 76px 12px 18px;display:block;overflow:visible}.topbar:after{display:none}.top-row{display:flex;place-items:initial;justify-content:space-between;max-width:1260px;margin:0 auto}.brand{flex-direction:row;text-align:left}.brand .sigil{width:42px;height:42px}.brand .kicker{max-width:none;font-size:9px;letter-spacing:.25em}.brand h1{font-size:25px;letter-spacing:0}.session{position:static;min-width:170px;text-align:left;border-top:0;padding-top:0}.who{font-size:14px}.role{font-size:10px;letter-spacing:.12em}.nav{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:1260px;margin:14px auto 0;padding:6px;border:1px solid rgba(255,255,255,.055);border-radius:14px;background:rgba(255,255,255,.025)}.nav button{height:auto;display:block;padding:10px;font-size:10px;letter-spacing:.14em}.nav button:before{display:none}.layout{padding:18px}}
   </style>
 </head>
-<body class="auth-locked login-active">
+<body>
   <div class="app">
     <header class="topbar">
       <div class="top-row">
@@ -315,12 +313,12 @@
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button data-section="agora" data-icon="&#9673;">Campo</button>
+        <button data-section="agora" data-icon="&#9673;" class="active">Campo</button>
         <button data-section="missoes" data-icon="&#9672;">Missão</button>
         <button data-section="equipe" data-icon="&#9783;">Equipe</button>
         <button data-section="mapa" data-icon="&#8982;">Mapa</button>
         <button data-section="mais" data-icon="&#9881;">Mais</button>
-        <button data-section="login" data-icon="&#9671;" class="active">Login</button>
+        <button data-section="login" data-icon="&#9671;">Login</button>
         <button data-section="comando" data-icon="&#10022;" id="commandNav" hidden>Comando</button>
 </nav>
     </header>
@@ -349,7 +347,7 @@
         </aside>
       </section>
 
-      <section id="login" class="section active">
+      <section id="login" class="section">
         <div class="login-shell">
           <aside class="login-panel">
             <div class="login-brand">
@@ -387,7 +385,7 @@
         </div>
       </section>
 
-      <section id="agora" class="section">
+      <section id="agora" class="section active">
         <div class="field-now">
           <div class="field-hero" id="nowHero"></div>
           <div class="field-grid">
@@ -612,7 +610,6 @@
   <script>
     const STORAGE_KEY = "fox-portal-v3";
     const SESSION_KEY = "fox-portal-session-v2";
-    const APP_AUTH_VERSION = "jikkai-desktop-auth-v2";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
@@ -693,7 +690,7 @@
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
     function trustedAppSession() {
       const s = session();
-      return s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION ? s : null;
+      return s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt ? s : null;
     }
     function isAppAuthenticated() {
       return !!trustedAppSession()?.username;
@@ -748,7 +745,6 @@
         displayName: user.displayName || nameOf(user),
         role: user.role || role?.id || "",
         appLoginAt: new Date().toISOString(),
-        authVersion: APP_AUTH_VERSION,
         source: "jikkai-desktop"
       };
     }
@@ -801,8 +797,6 @@
       renderCurrent();
       setSection("agora");
       toast(`Bem-vindo, ${nameOf(user)}`);
-      window.jikkaiDesktop?.hideOverlay?.();
-      window.jikkaiDesktop?.hidePortal?.();
     }
     function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
     function slug(v){return normalizeText(v).replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")}
@@ -2285,9 +2279,8 @@
       const authenticated = isAppAuthenticated() && !!currentUser?.username;
       document.body.classList.toggle("auth-locked", !authenticated);
       $("viewerName").textContent = authenticated ? nameOf(currentUser) : "Login necessario";
+      $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
       $("viewerRole").textContent = authenticated ? (role?.nome || currentUser?.role || "Sessao autenticada") : "Selo nao autenticado";
-      const loginNav = document.querySelector('#nav button[data-section="login"]');
-      if (loginNav) loginNav.hidden = authenticated;
       $("commandNav").hidden = !authenticated || !canCommandUser();
       if (authenticated) publishPresence("central");
     }
@@ -2324,7 +2317,6 @@
       const authenticated = isAppAuthenticated();
       if (!document.getElementById(id)) id = authenticated ? "agora" : "login";
       if (!authenticated && id !== "login") id = "login";
-      if (authenticated && id === "login") id = "agora";
       document.body.classList.toggle("auth-locked", !authenticated);
       document.body.classList.toggle("login-active", id === "login");
       document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));

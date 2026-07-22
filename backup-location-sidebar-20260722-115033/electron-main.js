@@ -58,7 +58,6 @@ let lastNativeOperationalAlert = "";
 let cursorReleaseTimer = null;
 let lastCursorReleaseAt = 0;
 let nativeHostProcess = null;
-let nativeHostMode = "";
 let lastNativeHostStartAt = 0;
 let gameGuardTimer = null;
 let lastGtaMissingNoticeAt = 0;
@@ -277,65 +276,34 @@ function nativeHostPath() {
   return candidates.find(candidate => candidate && fs.existsSync(candidate)) || candidates[0];
 }
 
-function killNativeOverlayHostProcesses() {
-  if (process.platform !== "win32") return;
-  try {
-    execFileSync("taskkill.exe", ["/IM", "JikkaiNativeHost.exe", "/F", "/T"], {
-      stdio: "ignore",
-      windowsHide: true,
-      timeout: 1500
-    });
-  } catch {}
-  nativeHostProcess = null;
-  nativeHostMode = "";
-}
-
-function normalizeNativeHostMode(mode = "position") {
-  if (mode === "position-inject") return "position-inject";
-  if (mode === "inject") return "inject";
-  return "position";
-}
-
-function startNativeOverlayHost({ launch = false, mode = "position", force = false } = {}) {
+function startNativeOverlayHost({ launch = false, mode = "position" } = {}) {
   if (process.platform !== "win32" || SMOKE_TEST) return { ok: false, reason: "unsupported" };
-  const requestedMode = normalizeNativeHostMode(mode);
-  if (force) killNativeOverlayHostProcesses();
   if (nativeHostProcess && !nativeHostProcess.killed && nativeHostProcess.exitCode == null) {
-    if (!force && nativeHostMode === requestedMode) {
-      return { ok: true, running: true, path: nativeHostPath(), mode: nativeHostMode, position: readNativePlayerPosition() };
-    }
-    try { nativeHostProcess.kill(); } catch {}
-    nativeHostProcess = null;
-    nativeHostMode = "";
+    return { ok: true, running: true, path: nativeHostPath() };
   }
-  if (!force && Date.now() - lastNativeHostStartAt < 1500) {
-    return { ok: true, pending: true, throttled: true, path: nativeHostPath(), mode: requestedMode, position: readNativePlayerPosition() };
+  if (Date.now() - lastNativeHostStartAt < 10000) {
+    return { ok: true, pending: true, throttled: true, path: nativeHostPath() };
   }
   const target = nativeHostPath();
   if (!fs.existsSync(target)) return { ok: false, reason: "missing", path: target };
   lastNativeHostStartAt = Date.now();
-  const safePositionMode = requestedMode !== "inject";
-  const args = requestedMode === "position-inject"
+  const safePositionMode = mode !== "inject";
+  const args = mode === "position-inject"
     ? ["--inject-position-only", "--no-launch"]
     : (safePositionMode ? ["--position-only", "--no-launch"] : (launch ? [] : ["--no-launch"]));
-  const spawned = execFile(target, args, { windowsHide: true }, (error, stdout, stderr) => {
+  nativeHostProcess = execFile(target, args, { windowsHide: true }, (error, stdout, stderr) => {
     if (stdout) console.log("JIKKAI native host:", stdout.trim());
     if (stderr) console.error("JIKKAI native host:", stderr.trim());
     if (error && !isQuitting) console.error("JIKKAI native host failed", error.message);
   });
-  nativeHostProcess = spawned;
-  nativeHostMode = requestedMode;
-  spawned.on("exit", () => {
-    if (nativeHostProcess === spawned) {
-      nativeHostProcess = null;
-      nativeHostMode = "";
-    }
+  nativeHostProcess.on("exit", () => {
+    nativeHostProcess = null;
   });
-  return { ok: true, started: true, path: target, launch: safePositionMode ? false : launch, mode: requestedMode, position: readNativePlayerPosition() };
+  return { ok: true, started: true, path: target, launch: safePositionMode ? false : launch, mode: mode === "position-inject" ? "position-inject" : (safePositionMode ? "position" : "inject") };
 }
 
 function maybeStartNativeOverlayHost() {
-  return startNativeOverlayHost({ launch: false, mode: "position-inject" });
+  return startNativeOverlayHost({ launch: false });
 }
 
 function cleanNativeValue(value, fallback = "") {
@@ -903,7 +871,7 @@ ipcMain.handle("native-overlay:publish-state", (_event, payload = {}) => writeNa
 ipcMain.handle("native-overlay:path", () => nativeOverlayStatePath());
 ipcMain.handle("native-overlay:player-position", () => readNativePlayerPosition());
 ipcMain.handle("native-overlay:position-path", () => nativePlayerPositionPath());
-ipcMain.handle("native-overlay:start-host", (_event, options = {}) => startNativeOverlayHost({ launch: Boolean(options.launch), mode: options.mode || "position", force: Boolean(options.force) }));
+ipcMain.handle("native-overlay:start-host", (_event, options = {}) => startNativeOverlayHost({ launch: Boolean(options.launch), mode: options.mode || "position" }));
 ipcMain.handle("operational:notify", (_event, payload = {}) => {
   if (payload?.type !== "map.meeting" || !payload.meeting?.expiresAt) return false;
   broadcastToWindows("realtime:alert", payload);
@@ -943,7 +911,6 @@ app.on("before-quit", () => {
   if (gameGuardTimer) clearInterval(gameGuardTimer);
   if (nativeHostProcess && nativeHostProcess.exitCode == null) {
     try { nativeHostProcess.kill(); } catch {}
-    nativeHostMode = "";
   }
   realtimeService?.stop();
 });

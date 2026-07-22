@@ -256,49 +256,13 @@
     .nav button{width:100%;height:48px;display:grid;grid-template-rows:20px auto;place-items:center;border:1px solid rgba(255,255,255,.075);border-radius:14px;background:rgba(255,255,255,.035);padding:5px 3px;font-size:6.5px;line-height:1.05;letter-spacing:.08em}
     .nav button:before{content:attr(data-icon);display:block;font-size:16px;line-height:1;color:#f8d47a;text-shadow:0 0 14px rgba(214,153,35,.18)}
     .nav button:hover:before,.nav button.active:before{color:#67e8f9;text-shadow:0 0 16px rgba(34,211,238,.28)}
-    .auth-locked #nav button:not([data-section="login"]){opacity:.28;filter:grayscale(.9);pointer-events:none}
-    .auth-locked #nav button[data-section="login"]{border-color:rgba(34,211,238,.55);box-shadow:0 0 18px rgba(34,211,238,.12)}
-    .login-active .topbar{display:none}
-    .login-active .app{padding-left:0}
     .layout{max-width:none;margin:0;padding:22px 24px 24px 18px}
     .hero,.split,.map-layout,.command-layout,.field-grid{max-width:1280px;margin-left:auto;margin-right:auto}
-    .login-active .hero{display:none}
-    .login-active .layout{padding:0 0 0 0}
-    .login-shell{min-height:100vh;display:grid;grid-template-columns:minmax(320px,430px) minmax(0,1fr);background:radial-gradient(circle at 62% 6%,rgba(34,211,238,.08),transparent 24%),linear-gradient(90deg,rgba(0,0,0,.98),rgba(3,4,4,.98) 38%,rgba(0,0,0,.9));overflow:hidden}
-    .login-panel{position:relative;z-index:2;padding:54px 40px;display:flex;flex-direction:column;justify-content:center;gap:22px;border-right:1px solid rgba(214,153,35,.16);background:linear-gradient(180deg,rgba(5,5,5,.94),rgba(0,0,0,.98));box-shadow:20px 0 70px rgba(0,0,0,.38)}
-    .login-mark{display:grid;place-items:center;width:60px;height:60px;margin:0 auto 18px;border:1px solid rgba(214,153,35,.48);border-radius:18px;color:#fde68a;background:radial-gradient(circle at 50% 25%,rgba(214,153,35,.32),rgba(0,0,0,.82));box-shadow:0 0 36px rgba(214,153,35,.18);font-size:28px;font-weight:1000}
-    .login-brand{text-align:center}
-    .login-brand .label{letter-spacing:.28em}
-    .login-brand h2{margin:10px 0 0;font:950 24px/1.1 Georgia,serif;color:#fff7ed}
-    .login-brand p{margin:12px auto 0;max-width:310px;color:#8b94a3;font-size:13px;line-height:1.45}
-    .login-divider{width:72px;height:1px;margin:18px auto 0;background:linear-gradient(90deg,transparent,rgba(214,153,35,.7),transparent)}
-    .login-form{display:grid;gap:11px}
-    .login-field{position:relative}
-    .login-field input{width:100%;height:44px;border:1px solid rgba(255,255,255,.105);border-radius:6px;background:rgba(0,0,0,.42);color:#f8fafc;padding:0 12px 0 38px;font-size:13px;outline:none;box-shadow:inset 0 1px rgba(255,255,255,.025)}
-    .login-field input:focus{border-color:rgba(214,153,35,.72);box-shadow:0 0 0 2px rgba(214,153,35,.1),inset 0 1px rgba(255,255,255,.035)}
-    .login-field span{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;color:#d69923}
-    .login-options{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
-    .login-options label{display:flex;align-items:center;gap:7px}
-    .login-options input{accent-color:#d69923}
-    .login-submit{height:46px;border:1px solid rgba(214,153,35,.72);border-radius:6px;background:linear-gradient(90deg,#d69923,#f59e0b);color:#120a02;font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:1000;cursor:pointer;box-shadow:0 18px 40px rgba(214,153,35,.17)}
-    .login-submit:hover{filter:brightness(1.08)}
-    .login-status{min-height:18px;color:#67e8f9;font-size:10px;text-transform:uppercase;letter-spacing:.1em;text-align:center;font-weight:1000}
-    .login-session-card{border:1px solid rgba(34,211,238,.2);border-radius:12px;background:rgba(8,145,178,.075);padding:12px;color:#cbd5e1;font-size:12px}
-    .login-session-card strong{display:block;color:#fff7ed;font-size:15px;margin-bottom:3px}
-    .login-session-card .actions{margin-top:10px}
-    .login-art{position:relative;overflow:hidden;min-height:100vh;background:radial-gradient(circle at 78% 10%,rgba(255,255,255,.2) 0 42px,rgba(255,255,255,.06) 44px,transparent 70px),radial-gradient(circle at 68% 62%,rgba(214,153,35,.22),transparent 28%),linear-gradient(180deg,#08111a 0%,#090909 58%,#030303 100%)}
-    .login-art:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.76)),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 90px),repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 72px)}
-    .login-art:after{content:"";position:absolute;left:8%;right:0;bottom:0;height:46%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.9)),linear-gradient(135deg,transparent 0 16%,rgba(214,153,35,.08) 16% 17%,transparent 17% 28%,rgba(34,211,238,.07) 28% 29%,transparent 29%);clip-path:polygon(0 80%,8% 64%,14% 72%,24% 44%,31% 66%,39% 38%,48% 72%,58% 30%,68% 62%,75% 46%,84% 70%,100% 36%,100% 100%,0 100%)}
-    .login-art-content{position:absolute;right:54px;bottom:50px;width:min(390px,40vw);z-index:1;text-align:right}
-    .login-art-content h3{margin:0;font:950 42px/1 Georgia,serif;letter-spacing:.13em;color:rgba(255,247,237,.88)}
-    .login-art-content p{margin:12px 0 0;color:#d69923;font-size:13px;line-height:1.55;letter-spacing:.08em;text-transform:uppercase;font-weight:900}
-    .login-silhouette{position:absolute;right:16%;bottom:0;width:132px;height:320px;z-index:1;background:linear-gradient(180deg,#111827,#020202);clip-path:polygon(45% 0,58% 2%,63% 13%,72% 22%,66% 100%,33% 100%,28% 22%,37% 13%);box-shadow:0 0 40px rgba(0,0,0,.72)}
-    @media(max-width:980px){.login-shell{grid-template-columns:1fr}.login-panel{min-height:100vh;border-right:0}.login-art{display:none}}
     @media(max-width:900px){.hero,.split,.map-layout,.file-layout{grid-template-columns:1fr}.command-grid,.dossier-toolbar{grid-template-columns:1fr}.nav{grid-template-columns:repeat(2,1fr)}.top-row{align-items:flex-start}.session{text-align:left}.grid{grid-template-columns:1fr 1fr}.topbar{padding-right:70px}.file-grid{grid-template-columns:1fr}}
     @media(max-width:900px){.app{padding-left:0}.topbar{position:sticky;left:auto;bottom:auto;width:auto;border-radius:0;border-left:0;border-right:0;border-top:0;padding:16px 76px 12px 18px;display:block;overflow:visible}.topbar:after{display:none}.top-row{display:flex;place-items:initial;justify-content:space-between;max-width:1260px;margin:0 auto}.brand{flex-direction:row;text-align:left}.brand .sigil{width:42px;height:42px}.brand .kicker{max-width:none;font-size:9px;letter-spacing:.25em}.brand h1{font-size:25px;letter-spacing:0}.session{position:static;min-width:170px;text-align:left;border-top:0;padding-top:0}.who{font-size:14px}.role{font-size:10px;letter-spacing:.12em}.nav{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:1260px;margin:14px auto 0;padding:6px;border:1px solid rgba(255,255,255,.055);border-radius:14px;background:rgba(255,255,255,.025)}.nav button{height:auto;display:block;padding:10px;font-size:10px;letter-spacing:.14em}.nav button:before{display:none}.layout{padding:18px}}
   </style>
 </head>
-<body class="auth-locked login-active">
+<body>
   <div class="app">
     <header class="topbar">
       <div class="top-row">
@@ -315,12 +279,11 @@
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button data-section="agora" data-icon="&#9673;">Campo</button>
+        <button data-section="agora" data-icon="&#9673;" class="active">Campo</button>
         <button data-section="missoes" data-icon="&#9672;">Missão</button>
         <button data-section="equipe" data-icon="&#9783;">Equipe</button>
         <button data-section="mapa" data-icon="&#8982;">Mapa</button>
         <button data-section="mais" data-icon="&#9881;">Mais</button>
-        <button data-section="login" data-icon="&#9671;" class="active">Login</button>
         <button data-section="comando" data-icon="&#10022;" id="commandNav" hidden>Comando</button>
 </nav>
     </header>
@@ -349,45 +312,7 @@
         </aside>
       </section>
 
-      <section id="login" class="section active">
-        <div class="login-shell">
-          <aside class="login-panel">
-            <div class="login-brand">
-              <div class="login-mark">十</div>
-              <div class="label">Explore. Observe. Domine.</div>
-              <h2>Acesso Jikkai</h2>
-              <p>Identifique sua conta para que missoes, reunioes, mapa e presenca sejam exibidos com o seu perfil.</p>
-              <div class="login-divider"></div>
-            </div>
-            <form id="appLoginForm" class="login-form">
-              <label class="login-field">
-                <span>@</span>
-                <input id="appLoginUser" autocomplete="username" placeholder="Usuario">
-              </label>
-              <label class="login-field">
-                <span>*</span>
-                <input id="appLoginPass" type="password" autocomplete="current-password" placeholder="Senha">
-              </label>
-              <div class="login-options">
-                <label><input id="appLoginRemember" type="checkbox" checked> Lembrar de mim</label>
-                <span>Portal Jikkai</span>
-              </div>
-              <button class="login-submit" type="submit">Entrar</button>
-              <div class="login-status" id="appLoginStatus"></div>
-            </form>
-            <div class="login-session-card" id="appLoginSession"></div>
-          </aside>
-          <div class="login-art" aria-hidden="true">
-            <div class="login-silhouette"></div>
-            <div class="login-art-content">
-              <h3>JIKKAI</h3>
-              <p>Rede operacional sob sigilo. Seus sinais de campo dependem da identidade correta.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="agora" class="section">
+      <section id="agora" class="section active">
         <div class="field-now">
           <div class="field-hero" id="nowHero"></div>
           <div class="field-grid">
@@ -612,7 +537,6 @@
   <script>
     const STORAGE_KEY = "fox-portal-v3";
     const SESSION_KEY = "fox-portal-session-v2";
-    const APP_AUTH_VERSION = "jikkai-desktop-auth-v2";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
@@ -691,13 +615,6 @@
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
-    function trustedAppSession() {
-      const s = session();
-      return s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION ? s : null;
-    }
-    function isAppAuthenticated() {
-      return !!trustedAppSession()?.username;
-    }
     function normalizeText(v) { return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
     function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
     function hasUsableUsers(data) {
@@ -725,84 +642,11 @@
       return isRootUser(user) ? rootRole(role) : role;
     }
     function resolveSessionUser() {
-      const s = trustedAppSession();
-      if (!s) return null;
+      const s = session();
       const found = (currentData.users || []).find(u => u.username === s?.username);
       if (found) return found;
       if (isRootUser(s)) return { ...s, username:"leader", role:s?.role || "leader", codinome:s?.codinome || "Viper", displayName:s?.displayName || "Viper" };
-      return null;
-    }
-    function appLoginPassword(user) {
-      return String(user?.password ?? user?.senha ?? user?.pass ?? user?.pin ?? "");
-    }
-    function appLoginUser(value) {
-      const target = normalizeText(value);
-      if (!target) return null;
-      return (currentData.users || []).find(user => user?.status !== "Oculto" && [user.username, user.codinome, user.displayName, user.nomeRP, user.nome].some(v => normalizeText(v) === target)) || null;
-    }
-    function appSessionPayload(user) {
-      const role = effectiveRole(user);
-      return {
-        username: user.username,
-        codinome: nameOf(user),
-        displayName: user.displayName || nameOf(user),
-        role: user.role || role?.id || "",
-        appLoginAt: new Date().toISOString(),
-        authVersion: APP_AUTH_VERSION,
-        source: "jikkai-desktop"
-      };
-    }
-    function saveAppSession(user, remember = true) {
-      const payload = appSessionPayload(user);
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-      if (remember) localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-      else localStorage.removeItem(SESSION_KEY);
-      localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
-      return payload;
-    }
-    function clearAppSession() {
-      sessionStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(MAP_RETURN_KEY);
-    }
-    function renderLoginSection() {
-      const card = $("appLoginSession");
-      if (!card) return;
-      if (!currentUser?.username) {
-        card.innerHTML = `<strong>Nenhuma sessao ativa</strong><span>Entre com usuario e senha do portal para carregar seu dossie operacional neste computador.</span>`;
-        return;
-      }
-      const role = effectiveRole(currentUser);
-      card.innerHTML = `<strong>${escapeHtml(nameOf(currentUser))}</strong><span>${escapeHtml(role?.nome || currentUser.role || "Operador")} conectado neste computador.</span><div class="actions"><button class="btn secondary" type="button" data-action="app-logout">Sair desta sessao</button></div>`;
-    }
-    async function handleAppLogin(event) {
-      event?.preventDefault?.();
-      const status = $("appLoginStatus");
-      const username = $("appLoginUser")?.value || "";
-      const password = $("appLoginPass")?.value || "";
-      if (status) status.textContent = "Verificando...";
-      if (!Object.keys(currentData || {}).length || !(currentData.users || []).length) {
-        currentData = await loadState();
-      }
-      const user = appLoginUser(username);
-      if (!user) {
-        if (status) status.textContent = "Usuario nao encontrado.";
-        return;
-      }
-      const expected = appLoginPassword(user);
-      if (expected && password !== expected) {
-        if (status) status.textContent = "Senha incorreta.";
-        return;
-      }
-      saveAppSession(user, $("appLoginRemember")?.checked !== false);
-      if ($("appLoginPass")) $("appLoginPass").value = "";
-      if (status) status.textContent = "Selo reconhecido.";
-      currentUser = user;
-      renderCurrent();
-      setSection("agora");
-      toast(`Bem-vindo, ${nameOf(user)}`);
-      window.jikkaiDesktop?.hideOverlay?.();
-      window.jikkaiDesktop?.hidePortal?.();
+      return s || null;
     }
     function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
     function slug(v){return normalizeText(v).replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")}
@@ -2282,14 +2126,10 @@
     function renderUser() {
       currentUser = resolveSessionUser();
       const role = effectiveRole(currentUser);
-      const authenticated = isAppAuthenticated() && !!currentUser?.username;
-      document.body.classList.toggle("auth-locked", !authenticated);
-      $("viewerName").textContent = authenticated ? nameOf(currentUser) : "Login necessario";
-      $("viewerRole").textContent = authenticated ? (role?.nome || currentUser?.role || "Sessao autenticada") : "Selo nao autenticado";
-      const loginNav = document.querySelector('#nav button[data-section="login"]');
-      if (loginNav) loginNav.hidden = authenticated;
-      $("commandNav").hidden = !authenticated || !canCommandUser();
-      if (authenticated) publishPresence("central");
+      $("viewerName").textContent = nameOf(currentUser);
+      $("viewerRole").textContent = role?.nome || currentUser?.role || "Sessão não identificada";
+      $("commandNav").hidden = !canCommandUser();
+      publishPresence("central");
     }
     function publishPresence(section = "central") {
       if (!currentUser?.username || !window.jikkaiDesktop?.updatePresence) return;
@@ -2303,7 +2143,6 @@
     }
     function renderCurrent() {
       renderUser();
-      renderLoginSection();
       renderNow();
       renderHero();
       renderMissions();
@@ -2321,12 +2160,6 @@
       renderCurrent();
     }
     function setSection(id) {
-      const authenticated = isAppAuthenticated();
-      if (!document.getElementById(id)) id = authenticated ? "agora" : "login";
-      if (!authenticated && id !== "login") id = "login";
-      if (authenticated && id === "login") id = "agora";
-      document.body.classList.toggle("auth-locked", !authenticated);
-      document.body.classList.toggle("login-active", id === "login");
       document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));
       document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.section === id));
       if (location.hash !== `#${id}`) history.replaceState(null, "", `#${id}`);
@@ -2349,7 +2182,6 @@
       }
       const action = e.target.closest("[data-action]")?.dataset.action;
       const id = e.target.closest("[data-id]")?.dataset.id;
-      if (!isAppAuthenticated() && action && action !== "app-logout") { setSection("login"); return; }
       if (action === "open-mission-section") { setSection("missoes"); return; }
       if (action === "open-training-section") { setSection("treino"); return; }
       if (action === "open-map-section") { setSection("mapa"); return; }
@@ -2357,7 +2189,6 @@
       if (action === "open-search") { openUniversalSearch(); return; }
       if (action === "open-full-portal") { window.jikkaiDesktop?.openFullPortal?.(); return; }
       if (action === "more-section") { setSection(e.target.closest("[data-target]")?.dataset.target || "mais"); return; }
-      if (action === "app-logout") { clearAppSession(); currentUser = null; renderCurrent(); setSection("login"); toast("Sessao encerrada"); return; }
       if (action === "start-location") { await startNativeLocationTracker(); return; }
       if (action === "save-current-point") { await saveCurrentLocationPoint(); return; }
       if (action === "shortcut-settings") { setSection("mais"); renderShortcutSettings(); return; }
@@ -2412,7 +2243,6 @@
     $("cmdMissionPreset")?.addEventListener("change", () => applyCommandPresetDefaults(true));
     $("cmdMissionRank")?.addEventListener("change", e => { e.currentTarget.dataset.touched = "1"; });
     $("cmdMissionCategory")?.addEventListener("change", e => { e.currentTarget.dataset.touched = "1"; });
-    $("appLoginForm")?.addEventListener("submit", handleAppLogin);
     $("appCreateMeetingBtn").onclick = () => { setSection("mapa"); setAppMapMeetingMode(true); };
     $("appMeetingCancel").onclick = closeAppMeetingComposer;
     $("appMeetingSave").onclick = saveAppMeeting;
@@ -2493,7 +2323,6 @@
       renderMap();
     }).catch(()=>{});
     window.jikkaiDesktop?.onRealtimeAlert?.(payload => {
-      if (!isAppAuthenticated()) return;
       if (payload?.type === "mission.assigned") toast(`Nova missao: ${payload.mission?.titulo || "operacao atribuida"}`);
       if (payload?.type === "field.timer.critical") toast(`Cronometro terminando: ${payload.timer?.nome || "campo"}`);
       if (payload?.type === "map.meeting") toast(`Reunião ativa: ${payload.meeting?.titulo || "ponto marcado no mapa"}`);
@@ -2504,8 +2333,7 @@
       const prefs = await window.jikkaiDesktop?.getDesktopPreferences?.().catch(()=>null);
       desktopPreferences = prefs || {};
       renderShortcutSettings();
-      const rememberedSection = prefs?.app?.lastSection || "agora";
-      setSection((location.hash || `#${isAppAuthenticated() ? rememberedSection : "login"}`).slice(1));
+      setSection((location.hash || `#${prefs?.app?.lastSection || "agora"}`).slice(1));
       nativeLocationTrackerRequested = true;
       await refreshNativeLocation();
       await recoverNativeLocationTracker();
