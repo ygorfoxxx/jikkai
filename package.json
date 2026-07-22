@@ -30,7 +30,11 @@
       "themesong.mp3",
       "api/**/*",
       "assets/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "native-overlay/**/*"
+    ],
+    "asarUnpack": [
+      "native-overlay/**/*"
     ],
     "win": {
       "requestedExecutionLevel": "highestAvailable",
