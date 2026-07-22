@@ -358,103 +358,6 @@
     body.minimap-only .panel-view.panel-only{position:static;inset:auto;pointer-events:auto}
     body.minimap-only .panel-tab{position:static;transform:none;width:auto;max-height:none;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none}
     body.minimap-only .overlay-status,body.minimap-only .return-game,body.minimap-only .panel-home{display:none!important}
-    .mode-panel .shell{background:rgba(0,0,0,var(--overlay-dim-opacity,.68))}
-    .mode-panel .panel-tab{transform:translateX(-50%) scale(var(--panel-scale,1));transform-origin:top center;border-color:rgba(214,153,35,.58);background:linear-gradient(145deg,rgba(9,9,9,.95),rgba(3,5,5,.88) 54%,rgba(19,10,2,.83));box-shadow:0 30px 100px rgba(0,0,0,.64),inset 0 1px rgba(255,255,255,.055),inset 0 0 80px rgba(214,153,35,.035)}
-    .mode-panel .panel-tab:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at 12% 0,rgba(214,153,35,.13),transparent 30%),linear-gradient(90deg,rgba(214,153,35,.055),transparent 22%,transparent 76%,rgba(34,211,238,.035)),repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 24px);opacity:.72}
-    .mode-panel .panel-tab>*{position:relative;z-index:1}
-    .mode-panel .panel-tab[data-panel="missao"]{width:min(1120px,calc(100vw - 176px));top:18px}
-    .mode-panel .panel-tab[data-panel="dossies"]{width:min(1120px,calc(100vw - 176px));top:18px}
-    .mode-panel .panel-tab[data-panel="mais"]{width:min(880px,calc(100vw - 176px));top:30px}
-    .mode-panel .tactical-dock.panel-only{background:linear-gradient(180deg,rgba(9,9,9,var(--dock-opacity,.92)),rgba(0,0,0,var(--dock-opacity,.78)))}
-    .dock-btn[hidden],.dock-btn.dock-config-hidden{display:none!important}
-    .dock-btn:after{content:attr(title);position:absolute;left:50%;bottom:39px;transform:translate(-50%,4px);opacity:0;pointer-events:none;border:1px solid rgba(214,153,35,.32);border-radius:8px;background:rgba(0,0,0,.82);color:#fef3c7;padding:5px 7px;font-size:8px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;transition:opacity .14s ease,transform .14s ease}
-    .dock-btn:hover:after{opacity:1;transform:translate(-50%,0)}
-    .mission-board{border-radius:16px;padding:0;background:linear-gradient(145deg,rgba(10,10,10,.9),rgba(5,11,12,.8) 52%,rgba(34,16,3,.68));overflow:hidden}
-    .mission-board:after{content:"";position:absolute;right:18px;top:14px;width:160px;height:160px;border:1px solid rgba(214,153,35,.13);border-radius:50%;background:radial-gradient(circle,rgba(214,153,35,.06),transparent 66%);pointer-events:none}
-    .mission-board-head{padding:18px 18px 12px;border-bottom:1px solid rgba(214,153,35,.18);background:linear-gradient(90deg,rgba(214,153,35,.12),transparent 52%)}
-    .mission-board-title{font-size:28px}
-    .mission-board-sub{font-size:10px;color:#b6c2d2}
-    .mission-tools{grid-template-columns:minmax(260px,1fr) auto;margin:14px 18px 0}
-    .mission-search{min-height:42px;border-color:rgba(214,153,35,.18);background:rgba(0,0,0,.36)}
-    .mission-search span{font-size:9px;font-weight:1000;letter-spacing:.12em;color:#f8d47a}
-    .rank-filter{height:38px;min-width:41px}
-    .mission-mode-row{margin:12px 18px 0;padding-bottom:12px;border-bottom-color:rgba(214,153,35,.22)}
-    .mission-mode{min-width:104px;padding:9px 12px;text-align:left}
-    .mission-stat-grid{margin:12px 18px 0}
-    .mission-stat{min-height:56px;border-color:rgba(214,153,35,.13);background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(0,0,0,.33))}
-    .mission-section-title{margin:16px 18px 8px}
-    .mission-board #missionList{padding:0 18px 18px}
-    .mission-item-card{grid-template-columns:94px minmax(0,1fr) 82px;border-radius:14px;padding:12px;border-color:rgba(255,255,255,.095);background:linear-gradient(145deg,rgba(255,255,255,.052),rgba(0,0,0,.42));box-shadow:0 10px 28px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.035)}
-    .mission-item-card .item-title{font-size:14px}
-    .mission-rank-badge{height:48px;border-radius:12px;font-size:12px}
-    .mission-card-side{align-self:stretch;align-content:space-between;border-left:1px solid rgba(255,255,255,.08);padding-left:10px}
-    .mission-points{font-size:13px}
-    .priority-alerts{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-bottom:12px}
-    .priority-card{border-radius:16px;min-height:96px;padding:14px 16px;background:linear-gradient(145deg,rgba(61,27,5,.78),rgba(0,0,0,.66));box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04)}
-    .priority-card .alert-title{font-size:18px}
-    .priority-card .alert-desc{font-size:11px;color:#dbe4ef}
-    #ovFieldTools{border-radius:16px;background:linear-gradient(145deg,rgba(5,12,13,.8),rgba(0,0,0,.7));border-color:rgba(34,211,238,.18)}
-    #ovFieldTools .name{font-family:Georgia,serif;font-size:20px}
-    .overlay-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-    .overlay-quick-grid .btn{min-height:40px}
-    .dossier-shell{gap:12px}
-    .dossier-archive-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end;border:1px solid rgba(214,153,35,.55);border-radius:16px;background:linear-gradient(145deg,rgba(36,19,4,.74),rgba(0,0,0,.78));padding:16px;overflow:hidden;box-shadow:0 20px 54px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.045)}
-    .dossier-archive-title{font:950 30px/1 Georgia,serif;color:#fff7ed;text-shadow:0 2px 18px rgba(0,0,0,.5)}
-    .dossier-archive-sub{margin-top:5px;color:#aeb8c7;font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:900}
-    .dossier-toolbar{grid-template-columns:230px 1fr auto;border:1px solid rgba(255,255,255,.085);border-radius:13px;background:rgba(0,0,0,.3);padding:8px}
-    .dossier-toolbar .mission-search{min-height:35px}
-    .dossier-filter-row{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
-    .dossier-filter-row .chip{cursor:pointer}
-    .dossier-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .dossier-card{min-height:360px;border-radius:13px;padding:12px;border-color:rgba(214,153,35,.46);background:linear-gradient(145deg,rgba(20,15,8,.97),rgba(3,8,9,.96) 58%,rgba(1,4,5,.98));box-shadow:0 18px 44px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.045),inset 0 0 34px rgba(214,153,35,.04)}
-    .dossier-card:before{inset:8px;border-color:rgba(214,153,35,.22);border-radius:9px}
-    .dossier-card-title{font-size:13px;color:#fef3c7}
-    .dossier-serial{top:10px;right:12px;font-size:8px}
-    .dossier-id-row{grid-template-columns:94px minmax(0,1fr);gap:10px}
-    .dossier-photo{width:94px;height:116px;border-radius:9px;border-color:rgba(214,153,35,.5)}
-    .dossier-form-field strong{font-size:8px;padding:5px 6px;border-radius:6px}
-    .dossier-mission-total{padding:8px 0;font-size:8px}
-    .dossier-mission-total strong{font-size:24px}
-    .dossier-rank-line{grid-template-columns:48px 1fr 31px;font-size:8px}
-    .dossier-rank-line strong{font-size:9px;padding:3px 4px}
-    .dossier-footer{font-size:7px}
-    .dossier-file{border-radius:16px;padding:16px;background:linear-gradient(145deg,rgba(16,12,7,.95),rgba(3,8,9,.92));border-color:rgba(214,153,35,.44)}
-    .dossier-file-head{grid-template-columns:170px minmax(0,1fr);gap:16px}
-    .dossier-portrait{max-height:250px;border-radius:12px}
-    .dossier-code{font-size:32px}
-    .dossier-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-    .settings-shell{display:grid;grid-template-columns:178px minmax(0,1fr);min-height:500px;border:1px solid rgba(214,153,35,.48);border-radius:16px;overflow:hidden;background:linear-gradient(145deg,rgba(8,8,8,.95),rgba(0,0,0,.86));box-shadow:0 28px 80px rgba(0,0,0,.54),inset 0 1px rgba(255,255,255,.045)}
-    .settings-side{padding:14px;border-right:1px solid rgba(214,153,35,.17);background:linear-gradient(180deg,rgba(214,153,35,.07),rgba(0,0,0,.18))}
-    .settings-brand{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-    .settings-brand .sigil{width:25px;height:25px}
-    .settings-title{font-size:9px;text-transform:uppercase;letter-spacing:.18em;color:#f8d47a;font-weight:1000}
-    .settings-nav{width:100%;display:flex;align-items:center;gap:9px;border:1px solid transparent;border-radius:10px;background:transparent;color:#cbd5e1;text-align:left;padding:11px 10px;margin-bottom:6px;font-size:11px;font-weight:900;cursor:pointer}
-    .settings-nav:hover{border-color:rgba(214,153,35,.26);background:rgba(214,153,35,.065);color:#fef3c7}
-    .settings-nav.active{border-color:rgba(214,153,35,.55);background:linear-gradient(90deg,rgba(214,153,35,.2),rgba(0,0,0,.12));color:#fef3c7}
-    .settings-main{position:relative;min-height:0;padding:18px 20px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(214,153,35,.45) rgba(0,0,0,.16)}
-    .settings-view{display:none}
-    .settings-view.active{display:grid;gap:12px}
-    .settings-section-title{font-size:12px;color:#f8d47a;font-weight:1000;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
-    .settings-card{border:1px solid rgba(255,255,255,.085);border-radius:13px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(0,0,0,.32));padding:13px}
-    .settings-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.065)}
-    .settings-row:has(.j-slider){grid-template-columns:minmax(0,1fr) 180px 52px}
-    .settings-row:first-child{padding-top:0}
-    .settings-row:last-child{border-bottom:0;padding-bottom:0}
-    .settings-row strong{display:block;color:#fff7ed;font-size:12px}
-    .settings-row span{display:block;color:#94a3b8;font-size:10px;line-height:1.35;margin-top:3px}
-    .j-toggle{position:relative;width:42px;height:23px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.09);appearance:none;cursor:pointer;outline:none;transition:background .16s ease,border-color .16s ease}
-    .j-toggle:before{content:"";position:absolute;width:17px;height:17px;left:2px;top:2px;border-radius:50%;background:#cbd5e1;transition:transform .16s ease,background .16s ease;box-shadow:0 2px 7px rgba(0,0,0,.35)}
-    .j-toggle:checked{border-color:rgba(214,153,35,.66);background:rgba(214,153,35,.34)}
-    .j-toggle:checked:before{transform:translateX(18px);background:#fef3c7}
-    .j-slider{width:180px;accent-color:#d69923}
-    .settings-select{border:1px solid rgba(255,255,255,.11);border-radius:9px;background:rgba(0,0,0,.34);color:#f8fafc;padding:8px 10px;font-size:10px;font-weight:900;outline:none}
-    .shortcut-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .shortcut-key{border:1px solid rgba(214,153,35,.2);border-radius:11px;background:rgba(0,0,0,.28);padding:10px}
-    .shortcut-key strong{display:block;color:#fef3c7;font-size:11px}.shortcut-key span{display:block;margin-top:4px;color:#94a3b8;font-size:9px}
-    .dock-config-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(255,255,255,.075);border-radius:10px;background:rgba(255,255,255,.03);margin-bottom:7px}
-    .dock-config-row .dock-mini-icon{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(214,153,35,.24);color:#f8d47a}
-    .dock-config-row strong{font-size:11px}
-    @media(max-width:980px){.dossier-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.dossier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.overlay-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:380px){.dossier-gallery{grid-template-columns:1fr}.dossier-file-head{grid-template-columns:92px minmax(0,1fr)}.dossier-grid{grid-template-columns:1fr}.dossier-code{font-size:19px}}
   </style>
 </head>
@@ -558,7 +461,6 @@
             <div class="list" id="missionList"></div>
           </div>
           <div class="card" id="ovFieldTools"></div>
-          </div>
         </section>
 
         <section class="panel-tab" data-panel="treino">
@@ -657,74 +559,8 @@
         </section>
 
         <section class="panel-tab" data-panel="mais">
-          <div class="settings-shell">
-            <aside class="settings-side">
-              <div class="settings-brand"><div class="sigil">+</div><div><div class="settings-title">Jikkai</div><div class="item-meta">Configuracoes</div></div></div>
-              <button class="settings-nav active" type="button" data-settings-view="geral">Geral</button>
-              <button class="settings-nav" type="button" data-settings-view="barra">Barra</button>
-              <button class="settings-nav" type="button" data-settings-view="atalhos">Atalhos</button>
-              <button class="settings-nav" type="button" data-settings-view="avisos">Avisos</button>
-              <button class="settings-nav" type="button" data-settings-view="sobre">Sobre</button>
-            </aside>
-            <div class="settings-main">
-              <section class="settings-view active" data-settings-panel="geral">
-                <div><div class="settings-section-title">Exibicao</div><div class="item-meta">Ajustes salvos localmente neste computador.</div></div>
-                <div class="settings-card">
-                  <div class="settings-row"><div><strong>Modo jogo</strong><span>Reforca a sobreposicao fullscreen quando o GTA_SA.exe estiver aberto.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="gameMode" checked></div>
-                  <div class="settings-row"><div><strong>Aviso in-game</strong><span>Mostra alertas de missao, reuniao e SOS no overlay.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="inGameAlerts" checked></div>
-                  <div class="settings-row"><div><strong>Escurecimento do fundo</strong><span>Controla o quanto o jogo fica escurecido quando o painel abre.</span></div><input class="j-slider" type="range" min="35" max="82" value="68" data-setting-range="overlayDim"><span class="tag" data-setting-value="overlayDim">68%</span></div>
-                  <div class="settings-row"><div><strong>Escala dos paineis</strong><span>Ajusta o tamanho geral das janelas abertas pela barra inferior.</span></div><input class="j-slider" type="range" min="88" max="108" value="100" data-setting-range="panelScale"><span class="tag" data-setting-value="panelScale">100%</span></div>
-                </div>
-                <div class="actions"><button class="btn primary" data-tab-jump="treino">Abrir treino</button><button class="btn secondary" data-action="overlay-combat">Modo combate</button><button class="btn secondary" data-action="open-full-portal">Portal completo</button></div>
-              </section>
-              <section class="settings-view" data-settings-panel="barra">
-                <div><div class="settings-section-title">Barra inferior</div><div class="item-meta">Escolha quais atalhos aparecem no dock do overlay.</div></div>
-                <div class="settings-card" id="dockSettingsList">
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#9672;</span><div><strong>Missoes</strong><span class="muted">Quadro operacional</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="missao" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#8982;</span><div><strong>Mapa</strong><span class="muted">Mapa e reunioes</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="mapa" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#9711;</span><div><strong>Minimapa</strong><span class="muted">Janela compacta</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="minimap" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#9783;</span><div><strong>Equipe</strong><span class="muted">Estrutura e online</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="membros" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#9906;</span><div><strong>Busca</strong><span class="muted">Busca universal</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="busca" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#9638;</span><div><strong>Dossies</strong><span class="muted">Arquivo visual</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="dossies" checked></div>
-                  <div class="dock-config-row"><span class="dock-mini-icon">&#10022;</span><div><strong>Comando</strong><span class="muted">Ferramentas de lideranca</span></div><input class="j-toggle" type="checkbox" data-dock-toggle="comando" checked></div>
-                  <div class="settings-row"><div><strong>Opacidade da barra</strong><span>Deixa o dock mais discreto durante a gameplay.</span></div><input class="j-slider" type="range" min="55" max="100" value="92" data-setting-range="dockOpacity"><span class="tag" data-setting-value="dockOpacity">92%</span></div>
-                </div>
-              </section>
-              <section class="settings-view" data-settings-panel="atalhos">
-                <div><div class="settings-section-title">Atalhos</div><div class="item-meta">Referencia rapida para operar sem sair do jogo.</div></div>
-                <div class="shortcut-grid">
-                  <div class="shortcut-key"><strong>ALT + M</strong><span>Painel tatico fullscreen</span></div>
-                  <div class="shortcut-key"><strong>ALT + J</strong><span>HUD compacta</span></div>
-                  <div class="shortcut-key"><strong>ALT + K</strong><span>Mouse do overlay</span></div>
-                  <div class="shortcut-key"><strong>ALT + F</strong><span>Busca universal</span></div>
-                  <div class="shortcut-key"><strong>ALT + BACKSPACE</strong><span>SOS com posicao real</span></div>
-                  <div class="shortcut-key"><strong>ESC</strong><span>Voltar ao jogo</span></div>
-                </div>
-              </section>
-              <section class="settings-view" data-settings-panel="avisos">
-                <div><div class="settings-section-title">Notificacoes</div><div class="item-meta">Controle o que deve chamar atencao durante o roleplay.</div></div>
-                <div class="settings-card">
-                  <div class="settings-row"><div><strong>Nova missao</strong><span>Alerta quando uma missao for entregue ao membro.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="missionAlerts" checked></div>
-                  <div class="settings-row"><div><strong>Reuniao ativa</strong><span>Destaca reunioes no mapa, HUD e painel.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="meetingAlerts" checked></div>
-                  <div class="settings-row"><div><strong>SOS e apoio</strong><span>Mostra pedidos de apoio enviados por membros.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="supportAlerts" checked></div>
-                  <div class="settings-row"><div><strong>Som de aviso</strong><span>Prepara o app para avisos sonoros locais.</span></div><input class="j-toggle" type="checkbox" data-setting-toggle="soundAlerts" checked></div>
-                </div>
-              </section>
-              <section class="settings-view" data-settings-panel="sobre">
-                <div><div class="settings-section-title">Sobre</div><div class="item-meta">Aplicativo operacional Jikkai para Shinobi Legends RP.</div></div>
-                <div class="settings-card">
-                  <div class="settings-row"><div><strong>Versao</strong><span>JIKKAI 1.0.32 - overlay fullscreen</span></div><span class="tag">APP</span></div>
-                  <div class="settings-row"><div><strong>Sincronizacao</strong><span>Dados operacionais via Supabase Realtime e presenca local.</span></div><span class="tag" id="settingsSyncLabel">Local</span></div>
-                  <div class="settings-row"><div><strong>Localizacao real</strong><span>Rastreador nativo sem modificar a pasta do jogo.</span></div><button class="btn primary" type="button" data-action="start-location">Ativar</button></div>
-                  <div class="actions"><button class="btn secondary" data-action="toggle-minimap-only">Abrir minimapa</button><button class="btn secondary" data-action="hide-overlay">Ocultar overlay</button></div>
-                </div>
-              </section>
-            </div>
-          </div>
-          <div hidden>
           <div class="card hot"><div class="head"><div><div class="label">Barra tatica</div><div class="name">Mais</div></div><span class="tag">Ferramentas</span></div><div class="more-grid"><button class="btn secondary" data-tab-jump="mapa">Mapa</button><button class="btn secondary" data-action="toggle-minimap-only">So minimapa</button><button class="btn secondary" data-tab-jump="membros">Equipe</button><button class="btn secondary" data-tab-jump="busca">Busca</button><button class="btn secondary" data-tab-jump="dossies">Dossiês</button><button class="btn secondary" data-action="overlay-combat">Modo Combate</button><button class="btn secondary" data-action="open-full-portal">Portal completo</button></div></div>
           <div class="card"><div class="head"><div><div class="label">Treino</div><div class="item-title">Sessao de combate</div></div><span class="tag">PvP</span></div><div class="actions"><button class="btn primary" data-tab-jump="treino">Abrir treino</button></div></div>
-          </div>
         </section>
 
         <section class="panel-tab" data-panel="membros">
@@ -739,13 +575,13 @@
         </section>
       </section>
       <nav class="tactical-dock panel-only" aria-label="Barra tatica">
-        <button class="dock-btn active" type="button" data-tab-jump="missao" data-dock-key="missao" data-icon="&#9672;" title="Missoes">MIS</button>
-        <button class="dock-btn" type="button" data-tab-jump="mapa" data-dock-key="mapa" data-icon="&#8982;" title="Mapa">MAP</button>
-        <button class="dock-btn" type="button" data-action="toggle-minimap-only" data-dock-key="minimap" data-icon="&#9711;" title="Minimapa">MINI</button>
-        <button class="dock-btn" type="button" data-tab-jump="membros" data-dock-key="membros" data-icon="&#9783;" title="Equipe">EQP</button>
-        <button class="dock-btn" type="button" data-tab-jump="busca" data-dock-key="busca" data-icon="&#9906;" title="Busca">BUS</button>
-        <button class="dock-btn" type="button" data-tab-jump="dossies" data-dock-key="dossies" data-icon="&#9638;" title="Dossies">DOS</button>
-        <button class="dock-btn" type="button" data-tab-jump="comando" data-dock-key="comando" data-icon="&#10022;" id="commandDock" title="Comando" hidden>CMD</button>
+        <button class="dock-btn active" type="button" data-tab-jump="missao" data-icon="&#9672;" title="Missoes">MIS</button>
+        <button class="dock-btn" type="button" data-tab-jump="mapa" data-icon="&#8982;" title="Mapa">MAP</button>
+        <button class="dock-btn" type="button" data-action="toggle-minimap-only" data-icon="&#9711;" title="Minimapa">MINI</button>
+        <button class="dock-btn" type="button" data-tab-jump="membros" data-icon="&#9783;" title="Equipe">EQP</button>
+        <button class="dock-btn" type="button" data-tab-jump="busca" data-icon="&#9906;" title="Busca">BUS</button>
+        <button class="dock-btn" type="button" data-tab-jump="dossies" data-icon="&#9638;" title="Dossies">DOS</button>
+        <button class="dock-btn" type="button" data-tab-jump="comando" data-icon="&#10022;" id="commandDock" title="Comando" hidden>CMD</button>
         <span class="dock-sep"></span>
         <button class="dock-btn" type="button" data-tab-jump="mais" data-icon="&#9881;" title="Mais">CFG</button>
         <button class="dock-btn danger" type="button" data-action="hide-overlay" data-icon="&#9211;" title="Ocultar">OFF</button>
@@ -778,19 +614,6 @@
     const MAP_VIEW_KEY = "jikkai-overlay-map-view-v1";
     const LIVE_ROUTE_KEY = "jikkai-last-live-route-v1";
     const LOCATION_CALIBRATION_KEY = "jikkai-location-calibration-v1";
-    const OVERLAY_UX_KEY = "jikkai-overlay-ux-settings-v1";
-    const DEFAULT_OVERLAY_UX = {
-      gameMode:true,
-      inGameAlerts:true,
-      missionAlerts:true,
-      meetingAlerts:true,
-      supportAlerts:true,
-      soundAlerts:false,
-      overlayDim:68,
-      panelScale:100,
-      dockOpacity:92,
-      dock:{ missao:true, mapa:true, minimap:true, membros:true, busca:true, dossies:true, comando:true }
-    };
     const DEFAULT_LOCATION_CALIBRATION = { minX:-6000, maxX:6000, minY:-6000, maxY:6000, invertY:true };
     const MAP_DISTANCE_PER_PERCENT = 85;
     const MEETING_SIGNAL_STATUS = { ciente:"ciente", caminho:"caminho", local:"local" };
@@ -844,52 +667,12 @@
     let overlayMissionRankFilter = localStorage.getItem("jikkai-overlay-mission-rank") || "todos";
     let overlayMissionMode = localStorage.getItem("jikkai-overlay-mission-mode") || "diarias";
     let overlayMissionSearch = "";
-    let overlayDossierSearch = "";
     let overlayMapView = { zoom:1, panX:0, panY:0, ...(parseJson(localStorage.getItem(MAP_VIEW_KEY), {}) || {}) };
     let overlayMapPanDrag = null;
     let minimapResizeDrag = null;
     let minimapMoveDrag = null;
 
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
-    function overlayUxSettings() {
-      const stored = parseJson(localStorage.getItem(OVERLAY_UX_KEY), {}) || {};
-      return { ...DEFAULT_OVERLAY_UX, ...stored, dock:{ ...DEFAULT_OVERLAY_UX.dock, ...(stored.dock || {}) } };
-    }
-    function saveOverlayUxSettings(patch = {}) {
-      const current = overlayUxSettings();
-      const next = { ...current, ...patch, dock:{ ...current.dock, ...(patch.dock || {}) } };
-      localStorage.setItem(OVERLAY_UX_KEY, JSON.stringify(next));
-      applyOverlayUxSettings(next);
-      return next;
-    }
-    function applyOverlayUxSettings(settings = overlayUxSettings()) {
-      const dim = Math.max(35, Math.min(82, Number(settings.overlayDim) || DEFAULT_OVERLAY_UX.overlayDim));
-      const scale = Math.max(88, Math.min(108, Number(settings.panelScale) || DEFAULT_OVERLAY_UX.panelScale));
-      const dockOpacity = Math.max(55, Math.min(100, Number(settings.dockOpacity) || DEFAULT_OVERLAY_UX.dockOpacity));
-      document.documentElement.style.setProperty("--overlay-dim-opacity", (dim / 100).toFixed(2));
-      document.documentElement.style.setProperty("--panel-scale", (scale / 100).toFixed(3));
-      document.documentElement.style.setProperty("--dock-opacity", (dockOpacity / 100).toFixed(2));
-      document.querySelectorAll("[data-dock-key]").forEach(btn => btn.classList.toggle("dock-config-hidden", settings.dock?.[btn.dataset.dockKey] === false));
-      document.querySelectorAll("[data-dock-toggle]").forEach(input => { input.checked = settings.dock?.[input.dataset.dockToggle] !== false; });
-      document.querySelectorAll("[data-setting-toggle]").forEach(input => { input.checked = settings[input.dataset.settingToggle] !== false; });
-      document.querySelectorAll("[data-setting-range]").forEach(input => {
-        const key = input.dataset.settingRange;
-        if (Object.prototype.hasOwnProperty.call(settings, key)) input.value = settings[key];
-      });
-      document.querySelectorAll("[data-setting-value]").forEach(node => {
-        const key = node.dataset.settingValue;
-        node.textContent = `${Math.round(Number(settings[key] ?? DEFAULT_OVERLAY_UX[key]) || 0)}%`;
-      });
-      if ($("settingsSyncLabel")) $("settingsSyncLabel").textContent = $("syncState")?.textContent || "Local";
-    }
-    function setSettingsPanel(name = "geral") {
-      document.querySelectorAll("[data-settings-view]").forEach(btn => btn.classList.toggle("active", btn.dataset.settingsView === name));
-      document.querySelectorAll("[data-settings-panel]").forEach(panel => panel.classList.toggle("active", panel.dataset.settingsPanel === name));
-    }
-    function overlaySettingEnabled(key) {
-      const settings = overlayUxSettings();
-      return settings.inGameAlerts !== false && settings[key] !== false;
-    }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
     function normalizeText(v) { return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); }
     function escapeHtml(v){return String(v ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -2027,7 +1810,7 @@
       const statusText = online ? "Online" : (mission ? "Em missão" : "Arquivo");
       return `<button type="button" class="dossier-card" data-dossier-member="${escapeHtml(user.username)}">
         <div class="dossier-serial">#${String(index + 1).padStart(2, "0")}</div>
-        <div class="dossier-card-title"><span>JIKKAI</span> Dossie</div>
+        <div class="dossier-card-title"><span>JIKKAI</span> Carteirinha</div>
         <div class="dossier-id-row">
         ${dossierPhoto(user)}
           <div class="dossier-identity">
@@ -2042,14 +1825,11 @@
       </button>`;
     }
     function renderDossierGallery(data, members) {
-      const q = normalizeText(overlayDossierSearch);
-      const visibleMembers = q ? members.filter(user => normalizeText([userName(user), user.username, user.patente, user.titulo, user.vilaOrigem, user.vila, teamName(data, user), divisionName(data, user)].join(" ")).includes(q)) : members;
-      return `<div class="dossier-archive-head">
-        <div><div class="label">Arquivo Jikkai</div><div class="dossier-archive-title">Dossies</div><div class="dossier-archive-sub">Fichas internas com vila, status e historico de missoes por rank.</div></div>
-        <span class="tag">${visibleMembers.length} / ${members.length} registros</span>
+      return `<div class="card hot">
+        <div class="head"><div><div class="label">Arquivo Jikkai</div><div class="name">Mural de carteirinhas</div></div><span class="tag">${members.length}</span></div>
+        <div class="dossier-toolbar"><div class="item-meta">Carteirinhas internas · missões, vila e status</div><button class="btn secondary" data-tab-jump="membros">Estrutura</button></div>
       </div>
-      <div class="dossier-toolbar"><label class="mission-search"><span>BUS</span><input id="ovDossierSearch" autocomplete="off" value="${escapeHtml(overlayDossierSearch)}" placeholder="Buscar membro..."></label><div class="dossier-filter-row"><span class="chip hot">Missoes</span><span class="chip">Vila</span><span class="chip">Online</span></div><button class="btn secondary" data-tab-jump="membros">Estrutura</button></div>
-      <div class="dossier-gallery">${visibleMembers.length ? visibleMembers.map((user, index) => dossierGalleryCard(data, user, index)).join("") : `<div class="empty">Nenhum membro visivel neste filtro.</div>`}</div>`;
+      <div class="dossier-gallery">${members.length ? members.map((user, index) => dossierGalleryCard(data, user, index)).join("") : `<div class="empty">Nenhum membro visivel.</div>`}</div>`;
     }
     function renderExpandedDossier(data, viewer, subject) {
       const role = effectiveRole(data, subject);
@@ -2105,7 +1885,6 @@
         const online = members.filter(member => onlineUsers.has(member.username)).length;
         $("overlayTotalLine").innerHTML = `${escapeHtml(userName(user)).toUpperCase()} &nbsp; ONLINE: <b>${online}</b> / ${members.length}`;
       }
-      if ($("settingsSyncLabel")) $("settingsSyncLabel").textContent = $("syncState")?.textContent || "Local";
     }
     function defaultPanel() {
       if (latestMission || activeMissions(latestData, latestUser?.username).length) return "missao";
@@ -2255,7 +2034,6 @@
       renderCommandPanel(viewData, user);
       if ($("ovSavePoint")) $("ovSavePoint").hidden = !canCommand(user, viewData);
       if ($("commandDock")) $("commandDock").hidden = !canCommand(user, viewData);
-      applyOverlayUxSettings();
       renderOverlaySearch();
       if (overlayMeetingMode) setOverlayMeetingMode(true);
       applyCombatMode();
@@ -2263,9 +2041,7 @@
 
       $("memberCount").textContent = `${members.length}`;
       $("memberList").innerHTML = members.length ? members.slice(0,5).map(u => memberLine(u, data)).join("") : `<div class="empty">Nenhum membro visível.</div>`;
-      const keepDossierSearchFocus = document.activeElement?.id === "ovDossierSearch";
       renderDossierPanel(viewData, user, members);
-      if (keepDossierSearchFocus) setTimeout(() => activateOverlayInput($("ovDossierSearch")), 0);
 
     }
     async function createOverlayMission() {
@@ -2677,12 +2453,6 @@
         else zoomMapTo((overlayMapView.zoom || 1) + (action === "in" ? 0.25 : -0.25));
         return;
       }
-      const settingsViewButton = e.target.closest("[data-settings-view]");
-      if (settingsViewButton) {
-        consumeOverlayClick(e);
-        setSettingsPanel(settingsViewButton.dataset.settingsView || "geral");
-        return;
-      }
       const simpleActionNode = e.target.closest("[data-action]");
       const simpleAction = simpleActionNode?.dataset.action;
       if (simpleAction === "overlay-combat") {
@@ -2787,28 +2557,13 @@
         overlayMissionSearch = e.target.value || "";
         renderMissionBoard(activeMissions(latestData, latestUser?.username), latestData);
       }
-      if (e.target?.id === "ovDossierSearch") {
-        overlayDossierSearch = e.target.value || "";
-        renderDossierPanel(latestData, latestUser, membersOf(latestData));
-        setTimeout(() => activateOverlayInput($("ovDossierSearch")), 0);
-      }
-      if (e.target?.matches?.("[data-setting-range]")) {
-        saveOverlayUxSettings({ [e.target.dataset.settingRange]: Number(e.target.value) });
-      }
-    });
-    document.body.addEventListener("change", e => {
-      if (e.target?.matches?.("[data-setting-toggle]")) {
-        saveOverlayUxSettings({ [e.target.dataset.settingToggle]: Boolean(e.target.checked) });
-      }
-      if (e.target?.matches?.("[data-dock-toggle]")) {
-        saveOverlayUxSettings({ dock:{ [e.target.dataset.dockToggle]: Boolean(e.target.checked) } });
-      }
     });
     window.addEventListener("keydown", e => {
       if (e.key === "Escape") window.jikkaiDesktop?.showOverlayHud();
     });
     window.jikkaiDesktop?.onClickThroughChanged(enabled => {
       document.body.classList.toggle("mode-interactive", !enabled);
+      overlayToast(enabled ? "Mouse devolvido ao jogo" : "Mouse do overlay ativo");
       applyCombatMode();
     });
     window.jikkaiDesktop?.onOverlayModeChanged(payload => {
@@ -2855,9 +2610,9 @@
       renderData(data);
     });
     window.jikkaiDesktop?.onRealtimeAlert?.(payload => {
-      if (payload?.type === "map.meeting" && overlaySettingEnabled("meetingAlerts")) overlayToast(`Reuniao ativa: ${payload.meeting?.titulo || "ponto de encontro Jikkai"}`);
-      if (payload?.type === "mission.assigned" && overlaySettingEnabled("missionAlerts")) overlayToast(`Nova missao: ${payload.mission?.titulo || "operacao atribuida"}`);
-      if (payload?.type === "field.timer.critical" && overlaySettingEnabled("supportAlerts")) overlayToast(`Cronometro terminando: ${payload.timer?.nome || "campo"}`);
+      if (payload?.type === "map.meeting") overlayToast(`Reuniao ativa: ${payload.meeting?.titulo || "ponto de encontro Jikkai"}`);
+      if (payload?.type === "mission.assigned") overlayToast(`Nova missao: ${payload.mission?.titulo || "operacao atribuida"}`);
+      if (payload?.type === "field.timer.critical") overlayToast(`Cronometro terminando: ${payload.timer?.nome || "campo"}`);
       if (latestData) renderData(latestData);
     });
     window.jikkaiDesktop?.onPresenceChanged?.(payload => {
@@ -2872,7 +2627,6 @@
       setMode({ mode:"hud", clickThrough:true });
     }
     applyCombatMode();
-    applyOverlayUxSettings();
     refreshNativeLocation().finally(render);
     setInterval(() => {
       if (latestData) renderData(latestData);
