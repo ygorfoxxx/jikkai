@@ -2,9 +2,6 @@
 !include LogicLib.nsh
 !include WinMessages.nsh
 
-!define PBM_SETBARCOLOR 0x0409
-!define PBM_SETBKCOLOR 0x2001
-
 Var JikkaiWelcomeDialog
 Var JikkaiWelcomeBg
 Var JikkaiHero
