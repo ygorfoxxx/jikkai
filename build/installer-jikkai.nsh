@@ -2,6 +2,7 @@
 !include LogicLib.nsh
 !include WinMessages.nsh
 
+!ifndef BUILD_UNINSTALLER
 Var JikkaiWelcomeDialog
 Var JikkaiWelcomeBg
 Var JikkaiHero
@@ -19,6 +20,7 @@ Var JikkaiFooter
 Var JikkaiTitleFont
 Var JikkaiHeadingFont
 Var JikkaiBodyFont
+!endif
 
 !macro customHeader
   BrandingText "JIKKAI · INSTALADOR OPERACIONAL"
