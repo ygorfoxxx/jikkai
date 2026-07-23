@@ -41,12 +41,25 @@ jobs:
           node --check electron/session-permission-guard.js
 
       - name: Build NSIS installer
-        run: npm run dist:installer
+        shell: powershell
+        run: |
+          npm run dist:installer 2>&1 | Tee-Object -FilePath build-installer.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload installer
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: JIKKAI-Windows-Installer
           path: dist/*.exe
           if-no-files-found: error
           retention-days: 14
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIKKAI-Installer-Build-Log
+          path: build-installer.log
+          if-no-files-found: warn
+          retention-days: 7
