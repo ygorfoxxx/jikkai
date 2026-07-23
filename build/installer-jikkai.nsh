@@ -27,41 +27,50 @@ Var JikkaiBodyFont
   ShowInstDetails nevershow
   InstallColors 0xF8FAFC 0x050505
 
-  !ifndef MUI_ABORTWARNING
-    !define MUI_ABORTWARNING
+  !ifndef BUILD_UNINSTALLER
+    !ifndef MUI_ABORTWARNING
+      !define MUI_ABORTWARNING
+    !endif
+    !ifdef MUI_PAGE_CUSTOMFUNCTION_SHOW
+      !undef MUI_PAGE_CUSTOMFUNCTION_SHOW
+    !endif
+    !define MUI_PAGE_CUSTOMFUNCTION_SHOW JikkaiInstFilesShow
+    !ifdef MUI_FINISHPAGE_TITLE
+      !undef MUI_FINISHPAGE_TITLE
+    !endif
+    !define MUI_FINISHPAGE_TITLE "JIKKAI PRONTO PARA OPERAR"
+    !ifdef MUI_FINISHPAGE_TEXT
+      !undef MUI_FINISHPAGE_TEXT
+    !endif
+    !define MUI_FINISHPAGE_TEXT "A instalação foi concluída. O aplicativo e o overlay tático já podem ser iniciados pelo atalho da área de trabalho."
+    !ifdef MUI_FINISHPAGE_RUN_TEXT
+      !undef MUI_FINISHPAGE_RUN_TEXT
+    !endif
+    !define MUI_FINISHPAGE_RUN_TEXT "INICIAR JIKKAI"
   !endif
-  !ifdef MUI_PAGE_CUSTOMFUNCTION_SHOW
-    !undef MUI_PAGE_CUSTOMFUNCTION_SHOW
-  !endif
-  !define MUI_PAGE_CUSTOMFUNCTION_SHOW JikkaiInstFilesShow
-  !ifdef MUI_FINISHPAGE_TITLE
-    !undef MUI_FINISHPAGE_TITLE
-  !endif
-  !define MUI_FINISHPAGE_TITLE "JIKKAI PRONTO PARA OPERAR"
-  !ifdef MUI_FINISHPAGE_TEXT
-    !undef MUI_FINISHPAGE_TEXT
-  !endif
-  !define MUI_FINISHPAGE_TEXT "A instalação foi concluída. O aplicativo e o overlay tático já podem ser iniciados pelo atalho da área de trabalho."
-  !ifdef MUI_FINISHPAGE_RUN_TEXT
-    !undef MUI_FINISHPAGE_RUN_TEXT
-  !endif
-  !define MUI_FINISHPAGE_RUN_TEXT "INICIAR JIKKAI"
 !macroend
 
 !macro customInit
-  InitPluginsDir
-  File /oname=$PLUGINSDIR\jikkai-installer-art.bmp "${PROJECT_DIR}\assets\installer-sidebar.bmp"
-  StrCpy $INSTDIR "$PROGRAMFILES64\JIKKAI"
+  !ifndef BUILD_UNINSTALLER
+    InitPluginsDir
+    File /oname=$PLUGINSDIR\jikkai-installer-art.bmp "${PROJECT_DIR}\assets\installer-sidebar.bmp"
+    StrCpy $INSTDIR "$PROGRAMFILES64\JIKKAI"
+  !endif
 !macroend
 
 !macro customInstallMode
-  StrCpy $isForceMachineInstall 1
+  !ifndef BUILD_UNINSTALLER
+    StrCpy $isForceMachineInstall 1
+  !endif
 !macroend
 
 !macro customWelcomePage
-  Page custom JikkaiWelcomePageCreate JikkaiWelcomePageLeave
+  !ifndef BUILD_UNINSTALLER
+    Page custom JikkaiWelcomePageCreate JikkaiWelcomePageLeave
+  !endif
 !macroend
 
+!ifndef BUILD_UNINSTALLER
 Function JikkaiStyleParentButtons
   GetDlgItem $0 $HWNDPARENT 1
   SendMessage $0 ${WM_SETTEXT} 0 "STR:INSTALAR AGORA"
@@ -185,3 +194,4 @@ Function JikkaiInstFilesShow
   GetDlgItem $3 $HWNDPARENT 2
   SendMessage $3 ${WM_SETTEXT} 0 "STR:CANCELAR"
 FunctionEnd
+!endif
