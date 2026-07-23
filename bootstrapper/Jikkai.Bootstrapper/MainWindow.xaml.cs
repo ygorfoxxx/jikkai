@@ -3,9 +3,12 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using Jikkai.Bootstrapper.Services;
 using Forms = System.Windows.Forms;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Color = System.Windows.Media.Color;
+using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 
 namespace Jikkai.Bootstrapper;
 
@@ -86,7 +89,13 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
         {
-            InstallPathTextBox.Text = Path.Combine(dialog.SelectedPath, "JIKKAI");
+            var selected = Path.GetFullPath(dialog.SelectedPath);
+            InstallPathTextBox.Text = string.Equals(
+                Path.GetFileName(selected.TrimEnd(Path.DirectorySeparatorChar)),
+                "JIKKAI",
+                StringComparison.OrdinalIgnoreCase)
+                ? selected
+                : Path.Combine(selected, "JIKKAI");
             RefreshInstallMode();
         }
     }
