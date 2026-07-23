@@ -59,7 +59,9 @@ jobs:
       - name: Build modern bootstrapper
         shell: powershell
         run: |
-          dotnet restore bootstrapper/Jikkai.Bootstrapper/Jikkai.Bootstrapper.csproj
+          dotnet restore bootstrapper/Jikkai.Bootstrapper/Jikkai.Bootstrapper.csproj 2>&1 | Tee-Object -FilePath bootstrapper-dotnet-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
           dotnet publish bootstrapper/Jikkai.Bootstrapper/Jikkai.Bootstrapper.csproj `
             --configuration Release `
             --runtime win-x64 `
@@ -67,7 +69,8 @@ jobs:
             -p:PublishSingleFile=true `
             -p:IncludeAllContentForSelfExtract=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:EnableCompressionInSingleFile=true
+            -p:EnableCompressionInSingleFile=true 2>&1 | Tee-Object -FilePath bootstrapper-dotnet-build.log -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
           $version = (Get-Content package.json | ConvertFrom-Json).version
           $publishDirectory = "bootstrapper/Jikkai.Bootstrapper/bin/Release/net8.0-windows/win-x64/publish"
@@ -97,6 +100,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: JIKKAI-Modern-Bootstrapper-Logs
-          path: bootstrapper-payload-build.log
+          path: |
+            bootstrapper-payload-build.log
+            bootstrapper-dotnet-build.log
           if-no-files-found: warn
           retention-days: 7
