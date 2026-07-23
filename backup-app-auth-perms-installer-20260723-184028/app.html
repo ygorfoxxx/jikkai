@@ -690,7 +690,7 @@
   <script>
     const STORAGE_KEY = "fox-portal-v3";
     const SESSION_KEY = "fox-portal-session-v2";
-    const APP_AUTH_VERSION = "jikkai-desktop-auth-v5";
+    const APP_AUTH_VERSION = "jikkai-desktop-auth-v4";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
@@ -771,16 +771,9 @@
     function parseJson(value, fallback = null) { try { return value ? JSON.parse(value) : fallback; } catch { return fallback; } }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
     function appAuthSession() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)); }
-    function desktopRunId() { return String(window.jikkaiDesktop?.runId || "browser"); }
-    function validAuthSession(s) {
-      if (!(s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION)) return false;
-      return s.remember === true || String(s.desktopRunId || "") === desktopRunId();
-    }
     function trustedAppSession() {
       const s = appAuthSession();
-      if (validAuthSession(s)) return s;
-      if (s?.source === "jikkai-desktop" && s?.remember === false) localStorage.removeItem(SESSION_KEY);
-      return null;
+      return s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION ? s : null;
     }
     function isAppAuthenticated() {
       return !!trustedAppSession()?.username;
@@ -827,7 +820,7 @@
       if (!target) return null;
       return (currentData.users || []).find(user => user?.status !== "Oculto" && [user.username, user.codinome, user.displayName, user.nomeRP, user.nome].some(v => normalizeText(v) === target)) || null;
     }
-    function appSessionPayload(user, remember = false) {
+    function appSessionPayload(user) {
       const role = effectiveRole(user);
       return {
         username: user.username,
@@ -836,18 +829,17 @@
         role: user.role || role?.id || "",
         appLoginAt: new Date().toISOString(),
         authVersion: APP_AUTH_VERSION,
-        remember: remember === true,
-        desktopRunId: desktopRunId(),
         source: "jikkai-desktop"
       };
     }
     function saveAppSession(user, remember = true) {
-      const payload = appSessionPayload(user, remember);
+      const payload = appSessionPayload(user);
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
-      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
       if (remember) {
-        localStorage.removeItem(MAP_RETURN_KEY);
+        localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+        localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
       } else {
+        localStorage.removeItem(SESSION_KEY);
         localStorage.removeItem(MAP_RETURN_KEY);
       }
       return payload;
@@ -987,7 +979,7 @@
     function canCommandUser(user = currentUser) {
       const role = effectiveRole(user);
       const pos = rolePosition(role);
-      return !!user?.username && (isRootUser(user) || role?.hasLeaderPerms || ["lider","conselheiro","capitao_ramo"].includes(pos));
+      return !!user?.username && (role?.hasLeaderPerms || ["lider","braco_direito","conselheiro","capitao_ramo"].includes(pos) || hasPerm(role,"manage_missions") || hasPerm(role,"manage_users"));
     }
     function canManageMap(user = currentUser) {
       const role = effectiveRole(user);
@@ -1301,9 +1293,11 @@
       return (session?.participants || []).map(username => nameOf(userByUsername(username) || { username }));
     }
     function saveRoute(tab, subTab = "", action = "") {
-      const username = currentUser?.username || trustedAppSession()?.username || session()?.username;
+      const username = currentUser?.username || session()?.username;
       if (!username) return;
       const payload = { username, tab, subTab, action, updatedAt: new Date().toISOString(), updatedAtMs: Date.now() };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
       localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
     }
     function openFull(tab, subTab = "", action = "") {
@@ -2672,7 +2666,6 @@
       if (!document.getElementById(id)) id = authenticated ? "agora" : "login";
       if (!authenticated && id !== "login") id = "login";
       if (authenticated && id === "login") id = "agora";
-      if (authenticated && id === "comando" && !canCommandUser()) id = "membros";
       document.body.classList.toggle("auth-locked", !authenticated);
       document.body.classList.toggle("login-active", id === "login");
       document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === id));
@@ -2749,11 +2742,11 @@
       if (action === "hero-missions") setSection("missoes");
       if (action === "new-report") openFull("jikkai", "relatorios", "novo-relatorio-avulso");
       if (action === "focus-members") setSection("membros");
-      if (action === "cmd-target" && id) { if (!canCommandUser()) return; $("cmdMissionTarget").value = id; setSection("comando"); $("cmdMissionTitle").focus(); }
-      if (action === "cmd-merit" && id) { if (!canCommandUser()) return; openMemberDrawer(id); setTimeout(()=>$("drawerMerit")?.click(),80); }
+      if (action === "cmd-target" && id) { $("cmdMissionTarget").value = id; setSection("comando"); $("cmdMissionTitle").focus(); }
+      if (action === "cmd-merit" && id) { openMemberDrawer(id); setTimeout(()=>$("drawerMerit")?.click(),80); }
       if (action === "meeting-response" && id) await saveMeetingResponse(id, e.target.closest("[data-status]")?.dataset.status || "");
       if (action === "availability") await saveAvailability(e.target.closest("[data-status]")?.dataset.status || "");
-      if (action === "focus-map-meeting") { if (!canManageMap()) return; closeMemberDrawer(); setSection("mapa"); setAppMapMeetingMode(true); }
+      if (action === "focus-map-meeting") { closeMemberDrawer(); setSection("mapa"); setAppMapMeetingMode(true); }
     });
     $("toggleOverlayBtn").onclick = () => window.jikkaiDesktop?.toggleOverlay();
     $("fullPortalBtn").onclick = () => window.jikkaiDesktop?.openFullPortal();

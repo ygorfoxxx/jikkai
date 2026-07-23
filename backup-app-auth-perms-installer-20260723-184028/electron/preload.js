@@ -2,7 +2,6 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("jikkaiDesktop", {
   isDesktop: true,
-  runId: process.env.JIKKAI_DESKTOP_RUN_ID || "",
   shortcuts: {
     toggleOverlay: "Alt+J / Ctrl+Alt+J / Ctrl+Shift+J",
     toggleClickThrough: "Alt+K / Ctrl+Alt+K / Ctrl+Shift+K",

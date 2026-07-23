@@ -50,14 +50,9 @@
       "oneClick": false,
       "perMachine": true,
       "allowElevation": true,
-      "allowToChangeInstallationDirectory": false,
-      "include": "build/installer-jikkai.nsh",
-      "installerSidebar": "assets/installer-sidebar.bmp",
-      "uninstallerSidebar": "assets/installer-sidebar.bmp",
-      "installerHeader": "assets/installer-header.bmp",
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "runAfterFinish": true,
       "shortcutName": "JIKKAI"
     }
   },

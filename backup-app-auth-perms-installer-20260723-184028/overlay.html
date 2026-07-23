@@ -939,7 +939,7 @@
   <script>
     const STORAGE_KEY = "fox-portal-v3";
     const SESSION_KEY = "fox-portal-session-v2";
-    const APP_AUTH_VERSION = "jikkai-desktop-auth-v5";
+    const APP_AUTH_VERSION = "jikkai-desktop-auth-v2";
     const MAP_RETURN_KEY = "fox-map-return-v2";
     const SUPABASE_URL = "https://mhbbqtjsxruuuiqixlvc.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oYmJxdGpzeHJ1dXVpcWl4bHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NzA4NzMsImV4cCI6MjA5MTI0Njg3M30.LPSE8QZcNXfpcDlgu1vPcwW_gelG1UGb-hkLrCoXvXk";
@@ -1074,17 +1074,9 @@
       return settings.inGameAlerts !== false && settings[key] !== false;
     }
     function session() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(MAP_RETURN_KEY)); }
-    function appAuthSession() { return parseJson(sessionStorage.getItem(SESSION_KEY)) || parseJson(localStorage.getItem(SESSION_KEY)); }
-    function desktopRunId() { return String(window.jikkaiDesktop?.runId || "browser"); }
-    function validAuthSession(s) {
-      if (!(s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION)) return false;
-      return s.remember === true || String(s.desktopRunId || "") === desktopRunId();
-    }
     function trustedAppSession() {
-      const s = appAuthSession();
-      if (validAuthSession(s)) return s;
-      if (s?.source === "jikkai-desktop" && s?.remember === false) localStorage.removeItem(SESSION_KEY);
-      return null;
+      const s = session();
+      return s?.username && s?.source === "jikkai-desktop" && s?.appLoginAt && s?.authVersion === APP_AUTH_VERSION ? s : null;
     }
     function overlayAuthenticated() {
       return !!trustedAppSession()?.username;
@@ -1136,7 +1128,7 @@
     function canCommand(user = latestUser, data = latestData) {
       const role = effectiveRole(data, user);
       const pos = rolePosition(role);
-      return !!user?.username && (isRootUser(user) || role?.hasLeaderPerms || ["lider","conselheiro","capitao_ramo"].includes(pos));
+      return !!user?.username && (role?.hasLeaderPerms || ["lider","braco_direito","conselheiro","capitao_ramo"].includes(pos) || hasPerm(role, "manage_missions") || hasPerm(role, "manage_users"));
     }
     function resolveUser(data, current) {
       current = trustedAppSession();
@@ -1744,10 +1736,12 @@
       return Math.max(0, Math.min(100, ((end - Date.now()) / (end - start)) * 100));
     }
     function saveRoute(tab = "home", subTab = "", action = "") {
-      const current = trustedAppSession() || session();
+      const current = session();
       const username = latestUser?.username || current?.username;
       if (!username) return;
       const payload = { username, tab, subTab, action, updatedAt: new Date().toISOString(), updatedAtMs: Date.now() };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
       localStorage.setItem(MAP_RETURN_KEY, JSON.stringify(payload));
     }
     function openFullRoute(tab, subTab = "", action = "") {
@@ -2547,8 +2541,7 @@
       return overlayCurrentPanelId ?? document.querySelector(".panel-tab.active")?.dataset.panel ?? "";
     }
     function setTab(tab, options = {}) {
-      let id = !overlayAuthenticated() ? "auth" : panelTabId(tab);
-      if (id === "comando" && !canCommand()) id = "membros";
+      const id = !overlayAuthenticated() ? "auth" : panelTabId(tab);
       overlayCurrentPanelId = id;
       if (!options.keepMinimap && id !== "mapa" && minimapOnlyActive()) setMinimapOnly(false);
       document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === id));
@@ -3300,7 +3293,6 @@
       const commandTarget = e.target.closest("[data-command-target]")?.dataset.commandTarget;
       if (commandTarget) {
         consumeOverlayClick(e);
-        if (!canCommand()) return;
         setTab("comando");
         if ($("ovMissionTarget")) $("ovMissionTarget").value = commandTarget;
         activateOverlayInput($("ovMissionTitle"));
