@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer } = require("electron");
+const { installSessionPermissionGuard } = require("./session-permission-guard");
 
 contextBridge.exposeInMainWorld("jikkaiDesktop", {
   isDesktop: true,
@@ -80,6 +81,7 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
+  installSessionPermissionGuard({ runId: process.env.JIKKAI_DESKTOP_RUN_ID || "" });
   if (location.pathname.endsWith("/overlay.html")) return;
   const style = document.createElement("style");
   style.textContent = `
