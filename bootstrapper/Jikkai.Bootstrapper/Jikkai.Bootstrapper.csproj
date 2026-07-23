@@ -21,6 +21,10 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+
   <ItemGroup Condition="Exists('Payload/JIKKAI-Payload.exe')">
     <Content Include="Payload/JIKKAI-Payload.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
