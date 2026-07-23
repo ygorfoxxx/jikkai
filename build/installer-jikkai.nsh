@@ -33,10 +33,6 @@ Var JikkaiBodyFont
     !ifndef MUI_ABORTWARNING
       !define MUI_ABORTWARNING
     !endif
-    !ifdef MUI_PAGE_CUSTOMFUNCTION_SHOW
-      !undef MUI_PAGE_CUSTOMFUNCTION_SHOW
-    !endif
-    !define MUI_PAGE_CUSTOMFUNCTION_SHOW JikkaiInstFilesShow
     !ifdef MUI_FINISHPAGE_TITLE
       !undef MUI_FINISHPAGE_TITLE
     !endif
@@ -178,22 +174,5 @@ Function JikkaiWelcomePageLeave
   ${EndIf}
   StrCpy $INSTDIR "$0"
   ${NSD_FreeImage} $JikkaiHeroHandle
-FunctionEnd
-
-Function JikkaiInstFilesShow
-  SetCtlColors $HWNDPARENT 0xF8FAFC 0x050505
-
-  GetDlgItem $0 $HWNDPARENT 1004
-  SetCtlColors $0 0xAEB8C7 0x050505
-
-  GetDlgItem $1 $HWNDPARENT 1006
-  SendMessage $1 ${PBM_SETBKCOLOR} 0 0x00111111
-  SendMessage $1 ${PBM_SETBARCOLOR} 0 0x002399D6
-
-  GetDlgItem $2 $HWNDPARENT 1
-  SendMessage $2 ${WM_SETTEXT} 0 "STR:INSTALANDO..."
-
-  GetDlgItem $3 $HWNDPARENT 2
-  SendMessage $3 ${WM_SETTEXT} 0 "STR:CANCELAR"
 FunctionEnd
 !endif
