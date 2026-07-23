@@ -218,14 +218,6 @@
     .profile-photo-placeholder span{font-size:8px;color:#67e8f9}
     .profile-photo-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
     .profile-photo-help{margin-top:8px;color:#94a3b8;font-size:11px;line-height:1.45;max-width:560px}
-    .profile-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(214,153,35,.16)}
-    .profile-toggle{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(0,0,0,.22);padding:10px;color:#dbe4ef;font-size:11px;font-weight:900}.profile-toggle input{accent-color:#d69923}
-    .saved-point-list{display:grid;gap:8px;margin-top:8px}
-    .saved-point-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(0,0,0,.22)}
-    .saved-point-row strong{display:block;color:#fff7ed;font-size:12px}
-    .saved-point-row span{display:block;color:#94a3b8;font-size:10px;margin-top:2px}
-    .saved-point-row button{height:30px;border-radius:7px;border:1px solid rgba(239,68,68,.45);background:rgba(127,29,29,.2);color:#fecaca;font-size:9px;text-transform:uppercase;letter-spacing:.1em;font-weight:1000;cursor:pointer}
-    .saved-point-row button:hover{border-color:rgba(248,113,113,.85);background:rgba(127,29,29,.42)}
     .dossier-grid{grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
     .dossier-card{min-height:350px;border-radius:15px;border-color:rgba(214,153,35,.42);padding:15px;background:radial-gradient(circle at 15% 0,rgba(214,153,35,.14),transparent 34%),linear-gradient(145deg,rgba(26,18,9,.98),rgba(3,7,10,.97) 58%,rgba(4,18,22,.96));box-shadow:inset 0 0 0 1px rgba(255,247,237,.055),inset 0 0 42px rgba(214,153,35,.035),0 22px 56px rgba(0,0,0,.42)}
     .dossier-card:before{inset:9px;border-color:rgba(214,153,35,.18);border-style:solid}
@@ -241,7 +233,7 @@
     .dossier-form-field strong{border-radius:7px;border-color:rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(255,247,237,.055),rgba(0,0,0,.32));color:#fff7ed}
     .dossier-mission-total strong{color:#67e8f9;text-shadow:0 0 16px rgba(34,211,238,.18)}
     .dossier-toolbar{border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(0,0,0,.24);padding:10px}
-    @media(max-width:700px){.profile-photo-card,.profile-settings-grid{grid-template-columns:1fr}.profile-photo-preview{width:112px}.dossier-grid{grid-template-columns:1fr}.dossier-id-row{grid-template-columns:90px minmax(0,1fr)}.dossier-photo{width:90px;height:112px}}
+    @media(max-width:700px){.profile-photo-card{grid-template-columns:1fr}.profile-photo-preview{width:112px}.dossier-grid{grid-template-columns:1fr}.dossier-id-row{grid-template-columns:90px minmax(0,1fr)}.dossier-photo{width:90px;height:112px}}
     .combat-mode .app{filter:saturate(.72)}.combat-mode .panel,.combat-mode .field-hero{backdrop-filter:none;box-shadow:none}.combat-mode .field-hero:after{display:none}.combat-mode *{animation:none!important;transition:none!important}
     .shortcut{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#9ca3af}
     .shortcut kbd{border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(255,255,255,.04);padding:3px 7px;color:#e5e7eb;font:inherit}
@@ -317,18 +309,11 @@
     .login-options input{accent-color:#d69923}
     .login-submit{height:46px;border:1px solid rgba(214,153,35,.72);border-radius:6px;background:linear-gradient(90deg,#d69923,#f59e0b);color:#120a02;font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:1000;cursor:pointer;box-shadow:0 18px 40px rgba(214,153,35,.17)}
     .login-submit:hover{filter:brightness(1.08)}
-    .login-provider-row{display:grid;grid-template-columns:1fr;gap:9px;margin-top:4px}
-    .login-discord-btn{height:42px;border:1px solid rgba(88,101,242,.5);border-radius:6px;background:linear-gradient(135deg,rgba(88,101,242,.18),rgba(0,0,0,.52));color:#eef2ff;font-size:10px;text-transform:uppercase;letter-spacing:.13em;font-weight:1000;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px}
-    .login-discord-btn:hover{border-color:rgba(129,140,248,.9);background:linear-gradient(135deg,rgba(88,101,242,.34),rgba(0,0,0,.52))}
-    .login-discord-btn span{width:18px;height:18px;border-radius:999px;background:#5865f2;display:grid;place-items:center;color:white;font-size:11px}
     .login-status{min-height:18px;color:#67e8f9;font-size:10px;text-transform:uppercase;letter-spacing:.1em;text-align:center;font-weight:1000}
     .login-session-card{border:1px solid rgba(34,211,238,.2);border-radius:12px;background:rgba(8,145,178,.075);padding:12px;color:#cbd5e1;font-size:12px}
     .login-session-card strong{display:block;color:#fff7ed;font-size:15px;margin-bottom:3px}
     .login-session-card .actions{margin-top:10px}
     .login-art{position:relative;overflow:hidden;min-height:100vh;background:radial-gradient(circle at 78% 10%,rgba(255,255,255,.2) 0 42px,rgba(255,255,255,.06) 44px,transparent 70px),radial-gradient(circle at 68% 62%,rgba(214,153,35,.22),transparent 28%),linear-gradient(180deg,#08111a 0%,#090909 58%,#030303 100%)}
-    .login-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.82;filter:saturate(.82) contrast(1.08) brightness(.78);display:none}
-    .login-art.has-image .login-art-image{display:block}
-    .login-art.has-image .login-silhouette{display:none}
     .login-art:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.76)),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 90px),repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 72px)}
     .login-art:after{content:"";position:absolute;left:8%;right:0;bottom:0;height:46%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.9)),linear-gradient(135deg,transparent 0 16%,rgba(214,153,35,.08) 16% 17%,transparent 17% 28%,rgba(34,211,238,.07) 28% 29%,transparent 29%);clip-path:polygon(0 80%,8% 64%,14% 72%,24% 44%,31% 66%,39% 38%,48% 72%,58% 30%,68% 62%,75% 46%,84% 70%,100% 36%,100% 100%,0 100%)}
     .login-art-content{position:absolute;right:54px;bottom:50px;width:min(390px,40vw);z-index:1;text-align:right}
@@ -415,15 +400,11 @@
                 <span>Portal Jikkai</span>
               </div>
               <button class="login-submit" type="submit">Entrar</button>
-              <div class="login-provider-row">
-                <button class="login-discord-btn" type="button" data-action="login-discord"><span>D</span> Entrar com Discord vinculado</button>
-              </div>
               <div class="login-status" id="appLoginStatus"></div>
             </form>
             <div class="login-session-card" id="appLoginSession"></div>
           </aside>
-          <div class="login-art" id="loginArt" aria-hidden="true">
-            <img class="login-art-image" id="loginArtImage" alt="">
+          <div class="login-art" aria-hidden="true">
             <div class="login-silhouette"></div>
             <div class="login-art-content">
               <h3>JIKKAI</h3>
@@ -552,10 +533,6 @@
               <div class="field" style="margin-top:8px" id="appPointRouteNameField" hidden><label>Nome da rota</label><input class="fox-input" id="appPointRouteName" placeholder="Rota de patrulha, mineração..."></div>
               <div class="actions"><button class="btn cyan" data-action="save-current-point">Salvar aqui</button></div>
             </div>
-            <div class="field-composer" id="appSavedPointsPanel" hidden>
-              <div class="panel-head"><div><div class="label">Pontos salvos</div><div class="item-title">Locais criados pela lideranca</div></div><span class="tag" id="appSavedPointsCount">0</span></div>
-              <div class="saved-point-list" id="appSavedPointsList"></div>
-            </div>
           </aside>
         </div>
       </section>
@@ -632,19 +609,6 @@
               <input id="appProfilePhotoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
             </div>
           </div>
-          <div class="profile-settings-grid">
-            <div class="field"><label>Codinome</label><input class="fox-input" id="appProfileCodename" maxlength="40" placeholder="Como voce aparece no APP"></div>
-            <div class="field"><label>Nome RP</label><input class="fox-input" id="appProfileRpName" maxlength="70" placeholder="Nome do personagem"></div>
-            <div class="field"><label>Vila / origem</label><input class="fox-input" id="appProfileVillage" maxlength="50" placeholder="Kirigakure, Konoha..."></div>
-            <div class="field"><label>Especialidade</label><input class="fox-input" id="appProfileSpecialty" maxlength="80" placeholder="Rastreamento, espionagem, combate..."></div>
-            <div class="field"><label>Disponibilidade padrao</label><select class="fox-input" id="appProfileAvailability"></select></div>
-            <div class="field"><label>Discord vinculado</label><input class="fox-input" id="appProfileDiscord" disabled></div>
-            <div class="field" style="grid-column:1/-1"><label>Resumo do dossie</label><textarea class="fox-input" id="appProfileBio" maxlength="260" placeholder="Breve descriçao operacional para seu perfil."></textarea></div>
-            <label class="profile-toggle"><input type="checkbox" id="appProfileDmMissions"> Receber missoes pelo Discord</label>
-            <label class="profile-toggle"><input type="checkbox" id="appProfileDmReports"> Receber avisos de relatorio pelo Discord</label>
-            <label class="profile-toggle"><input type="checkbox" id="appProfileDmContracts"> Receber contratos pelo Discord</label>
-          </div>
-          <div class="actions"><button class="btn cyan" type="button" data-action="save-profile-details">Salvar perfil</button></div>
         </div>
         <div class="panel" style="margin-bottom:12px"><div class="panel-head"><div><div class="label">Configuracoes locais</div><div class="title">Atalhos do JIKKAI</div></div><button class="btn secondary" data-action="reset-shortcuts">Restaurar padroes</button></div><div class="desc">Use combinacoes com Alt, Ctrl ou Shift. Os fallbacks antigos continuam disponiveis.</div><div class="shortcut-settings" id="shortcutSettings"></div></div>
         <div class="panel hot"><div class="panel-head"><div><div class="label">Arquivo e ferramentas</div><div class="title">Mais</div></div><span class="tag">Acesso rápido</span></div><div class="more-grid">
@@ -719,7 +683,6 @@
       { id:"morte", name:"Floresta da Morte", type:"regiao", x:59.7, y:45.5 },
       { id:"base", name:"Esconderijo", type:"base", x:44.5, y:70.5 }
     ];
-    const DEFAULT_MAP_POINT_IDS = new Set(DEFAULT_MAP_POINTS.map(point => String(point.id)));
     const DEFAULT_DIVISOES = [
       { id:"divisao_central", nome:"Divisão Central", desc:"Primeira divisão operacional da Jikkai.", cor:"#D85A30", status:"ativa", capitaoUsername:"" }
     ];
@@ -883,72 +846,6 @@
       window.jikkaiDesktop?.hideOverlay?.();
       window.jikkaiDesktop?.hidePortal?.();
     }
-    function discordProfileLabel(profile = {}) {
-      const tag = profile.discriminator && profile.discriminator !== "0" ? `${profile.username}#${profile.discriminator}` : (profile.username || "");
-      return profile.global_name || profile.globalName || tag || profile.id || "Discord";
-    }
-    function userDiscordValues(user = {}) {
-      const discord = user.discord && typeof user.discord === "object" ? user.discord : {};
-      return [
-        user.discordId, user.discordUserId, user.discord_id, user.discordID,
-        user.discordUsername, user.discordTag, user.discordGlobalName,
-        user.discordName, user.discordHandle, user.discord,
-        discord.id, discord.userId, discord.username, discord.tag, discord.global_name, discord.globalName
-      ].filter(value => typeof value === "string" || typeof value === "number").map(value => String(value).trim()).filter(Boolean);
-    }
-    function discordLinked(user = {}) {
-      return Boolean(user.discordLinked || user.discordVinculado || user.discordVerificado || user.discordId || user.discordUserId || user.discordUsername || user.discordTag || user.discord?.id);
-    }
-    function findUserByDiscordProfile(profile = {}) {
-      const id = String(profile.id || "").trim();
-      const username = String(profile.username || "").trim();
-      const globalName = String(profile.global_name || profile.globalName || "").trim();
-      const tag = profile.discriminator && profile.discriminator !== "0" ? `${username}#${profile.discriminator}` : username;
-      const candidates = [id, username, globalName, tag].map(normalizeText).filter(Boolean);
-      return (currentData.users || []).find(user => {
-        if (!discordLinked(user)) return false;
-        const values = userDiscordValues(user).map(normalizeText);
-        if (id && values.includes(normalizeText(id))) return true;
-        return candidates.some(candidate => candidate && values.includes(candidate));
-      }) || null;
-    }
-    async function handleDiscordLogin() {
-      const status = $("appLoginStatus");
-      if (status) status.textContent = "Abrindo Discord...";
-      if (!Object.keys(currentData || {}).length || !(currentData.users || []).length) currentData = await loadState();
-      const result = await window.jikkaiDesktop?.loginWithDiscord?.().catch(error => ({ ok:false, error:String(error?.message || error) }));
-      if (!result?.ok || !result.user) {
-        if (status) status.textContent = result?.error || "Login Discord cancelado.";
-        return;
-      }
-      const user = findUserByDiscordProfile(result.user);
-      if (!user) {
-        if (status) status.textContent = `Discord reconhecido (${discordProfileLabel(result.user)}), mas nao vinculado a nenhum dossie.`;
-        return;
-      }
-      saveAppSession(user, true);
-      currentUser = user;
-      if (status) status.textContent = "Discord vinculado reconhecido.";
-      renderCurrent();
-      setSection("agora");
-      toast(`Bem-vindo, ${nameOf(user)}`);
-      window.jikkaiDesktop?.hideOverlay?.();
-      window.jikkaiDesktop?.hidePortal?.();
-    }
-    function setupLoginArtImage() {
-      const art = $("loginArt");
-      const image = $("loginArtImage");
-      if (!art || !image) return;
-      const candidates = ["assets/login-art.webp", "assets/login-art.jpg", "assets/login-art.png"];
-      let index = 0;
-      image.onload = () => art.classList.add("has-image");
-      image.onerror = () => {
-        index += 1;
-        if (index < candidates.length) image.src = candidates[index];
-        else art.classList.remove("has-image");
-      };
-      image.src = candidates[index];
-    }
     function initials(user){return nameOf(user).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase() || "?"}
     function slug(v){return normalizeText(v).replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")}
     function rolePosition(role) {
@@ -1087,22 +984,6 @@
       const photo = profilePhotoUrl(currentUser);
       preview.innerHTML = photo ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(nameOf(currentUser))}">` : `<div class="profile-photo-placeholder"><strong>${escapeHtml(initials(currentUser || {}))}</strong><span>Sem foto</span></div>`;
       if ($("appProfilePhotoName")) $("appProfilePhotoName").textContent = currentUser?.username ? nameOf(currentUser) : "Sessao nao iniciada";
-      const setValue = (id, value = "") => { const node = $(id); if (node) node.value = value || ""; };
-      setValue("appProfileCodename", currentUser?.codinome || currentUser?.displayName || "");
-      setValue("appProfileRpName", currentUser?.nomeRP || currentUser?.nome || "");
-      setValue("appProfileVillage", currentUser?.vilaOrigem || currentUser?.vila || "");
-      setValue("appProfileSpecialty", currentUser?.especialidade || currentUser?.classe || currentUser?.funcao || "");
-      setValue("appProfileBio", currentUser?.bio || currentUser?.descricao || "");
-      const availability = $("appProfileAvailability");
-      if (availability) {
-        availability.innerHTML = DISPONIBILIDADE_NIVEIS.map(status => `<option ${statusOf(currentUser) === status ? "selected" : ""}>${escapeHtml(status)}</option>`).join("");
-      }
-      const discord = $("appProfileDiscord");
-      if (discord) discord.value = discordLinked(currentUser || {}) ? (currentUser.discordTag || currentUser.discordUsername || currentUser.discordGlobalName || currentUser.discordId || "Vinculado") : "Nao vinculado";
-      const setChecked = (id, value) => { const node = $(id); if (node) node.checked = value !== false; };
-      setChecked("appProfileDmMissions", currentUser?.discordDmMissoes);
-      setChecked("appProfileDmReports", currentUser?.discordDmRelatorios);
-      setChecked("appProfileDmContracts", currentUser?.discordDmContratos);
     }
     async function saveAppProfilePhoto(dataUrl) {
       if (!currentUser?.username) {
@@ -1122,35 +1003,6 @@
         return { ...d, users, activityLog: [...(d.activityLog || []), activity(dataUrl ? "foto_perfil_atualizada" : "foto_perfil_removida", username, dataUrl ? "Atualizou a foto de perfil no APP" : "Removeu a foto de perfil no APP")] };
       }, dataUrl ? "Foto atualizada" : "Foto removida");
       currentUser = { ...currentUser, avatarUrl: dataUrl || "", profilePhotoUpdatedAt: now };
-      renderAppProfileSettings();
-    }
-    async function saveAppProfileDetails() {
-      if (!currentUser?.username) {
-        toast("Entre no app antes de alterar o perfil");
-        return;
-      }
-      const username = currentUser.username;
-      const patch = {
-        codinome: $("appProfileCodename")?.value.trim() || currentUser.codinome || "",
-        displayName: $("appProfileCodename")?.value.trim() || currentUser.displayName || "",
-        nomeRP: $("appProfileRpName")?.value.trim() || "",
-        vilaOrigem: $("appProfileVillage")?.value.trim() || "",
-        vila: $("appProfileVillage")?.value.trim() || currentUser.vila || "",
-        especialidade: $("appProfileSpecialty")?.value.trim() || "",
-        bio: $("appProfileBio")?.value.trim() || "",
-        descricao: $("appProfileBio")?.value.trim() || currentUser.descricao || "",
-        appDisponibilidade: $("appProfileAvailability")?.value || statusOf(currentUser),
-        discordDmMissoes: $("appProfileDmMissions")?.checked !== false,
-        discordDmRelatorios: $("appProfileDmReports")?.checked !== false,
-        discordDmContratos: $("appProfileDmContracts")?.checked !== false,
-        profileUpdatedAt: new Date().toISOString()
-      };
-      await saveState(d => ({
-        ...d,
-        users: (d.users || []).map(user => user.username === username ? { ...user, ...patch } : user),
-        activityLog: [...(d.activityLog || []), activity("perfil_app_atualizado", username, "Atualizou o perfil pelo APP")]
-      }), "Perfil atualizado");
-      currentUser = { ...currentUser, ...patch };
       renderAppProfileSettings();
     }
     function memberAvatar(user){const photo=profilePhotoUrl(user);return `<div class="avatar">${photo ? `<img src="${escapeHtml(photo)}" alt="">` : escapeHtml(initials(user))}</div>`}
@@ -1823,42 +1675,10 @@
         id:p.id || p.name || p.nome,
         name:p.name || p.nome || "Ponto",
         type:p.type || p.tipo || "regiao",
-        note:p.note || p.nota || "",
-        createdBy:p.createdBy || p.criadoPor || "",
-        createdAt:p.createdAt || p.criadoEm || "",
         source:p.source || "",
         x:Number(p.x),
         y:Number(p.y)
       }));
-    }
-    function isSavedMapPoint(point) {
-      return !!point?.id && !DEFAULT_MAP_POINT_IDS.has(String(point.id));
-    }
-    function savedMapPoints() {
-      return mapPoints().filter(isSavedMapPoint);
-    }
-    function renderSavedMapPoints() {
-      const panel = $("appSavedPointsPanel");
-      const list = $("appSavedPointsList");
-      if (!panel || !list) return;
-      const canEdit = canManageMap();
-      panel.hidden = !canEdit;
-      if (!canEdit) return;
-      const points = savedMapPoints();
-      if ($("appSavedPointsCount")) $("appSavedPointsCount").textContent = String(points.length);
-      list.innerHTML = points.length ? points.map(point => `<div class="saved-point-row"><div><strong>${escapeHtml(point.name)}</strong><span>${escapeHtml(point.type || "ponto")} · X ${Number(point.x).toFixed(1)} / Y ${Number(point.y).toFixed(1)}${point.createdBy ? ` · ${escapeHtml(point.createdBy)}` : ""}</span></div><button type="button" data-action="delete-map-point" data-id="${escapeHtml(point.id)}">Remover</button></div>`).join("") : empty("Nenhum ponto salvo pela lideranca.");
-    }
-    async function deleteMapPoint(pointId) {
-      if (!canManageMap() || !pointId || DEFAULT_MAP_POINT_IDS.has(String(pointId))) return;
-      const point = mapPoints().find(item => String(item.id) === String(pointId));
-      const ok = confirm(`Remover o ponto salvo "${point?.name || pointId}" do mapa?`);
-      if (!ok) return;
-      await saveState(d => ({
-        ...d,
-        mapaPontos: (Array.isArray(d.mapaPontos) ? d.mapaPontos : DEFAULT_MAP_POINTS).filter(point => String(point.id || point.name || point.nome) !== String(pointId)),
-        mapaRotas: (Array.isArray(d.mapaRotas) ? d.mapaRotas : []).map(route => ({ ...route, points: (Array.isArray(route.points) ? route.points : []).filter(point => String(point.pointId || point.id || "") !== String(pointId)) })),
-        activityLog: [...(d.activityLog || []), activity("app_ponto_mapa_removido", pointId, `Removeu ponto salvo no mapa: ${point?.name || pointId}`)]
-      }), "Ponto removido");
     }
     function mapRoutes() {
       return (Array.isArray(currentData.mapaRotas) ? currentData.mapaRotas : [])
@@ -2293,7 +2113,6 @@
       updateAppPointRouteMode();
       if ($("nativeLocationStatus")) $("nativeLocationStatus").textContent = nativeLocationStatusText();
       if (!manage && appMapMeetingMode) setAppMapMeetingMode(false);
-      renderSavedMapPoints();
       renderAppMap(list);
     }
     async function saveMeetingResponse(meetingId, status) {
@@ -2685,7 +2504,7 @@
       }
       const action = e.target.closest("[data-action]")?.dataset.action;
       const id = e.target.closest("[data-id]")?.dataset.id;
-      if (!isAppAuthenticated() && action && !["app-logout","login-discord"].includes(action)) { setSection("login"); return; }
+      if (!isAppAuthenticated() && action && action !== "app-logout") { setSection("login"); return; }
       if (action === "open-mission-section") { setSection("missoes"); return; }
       if (action === "open-training-section") { setSection("treino"); return; }
       if (action === "open-map-section") { setSection("mapa"); return; }
@@ -2693,14 +2512,11 @@
       if (action === "open-search") { openUniversalSearch(); return; }
       if (action === "open-full-portal") { window.jikkaiDesktop?.openFullPortal?.(); return; }
       if (action === "more-section") { setSection(e.target.closest("[data-target]")?.dataset.target || "mais"); return; }
-      if (action === "login-discord") { await handleDiscordLogin(); return; }
       if (action === "app-logout") { clearAppSession(); currentUser = null; renderCurrent(); setSection("login"); toast("Sessao encerrada"); return; }
       if (action === "choose-profile-photo") { $("appProfilePhotoInput")?.click(); return; }
       if (action === "remove-profile-photo") { await saveAppProfilePhoto(""); renderCurrent(); return; }
-      if (action === "save-profile-details") { await saveAppProfileDetails(); renderCurrent(); return; }
       if (action === "start-location") { await startNativeLocationTracker(); return; }
       if (action === "save-current-point") { await saveCurrentLocationPoint(); return; }
-      if (action === "delete-map-point") { await deleteMapPoint(id); return; }
       if (action === "shortcut-settings") { setSection("mais"); renderShortcutSettings(); return; }
       if (action === "save-shortcut") { await saveShortcut(e.target.closest("[data-shortcut-group]")?.dataset.shortcutGroup || ""); return; }
       if (action === "reset-shortcuts") { await resetShortcuts(); return; }
@@ -2858,7 +2674,6 @@
     (async () => {
       const prefs = await window.jikkaiDesktop?.getDesktopPreferences?.().catch(()=>null);
       desktopPreferences = prefs || {};
-      setupLoginArtImage();
       renderShortcutSettings();
       const rememberedSection = prefs?.app?.lastSection || "agora";
       setSection((location.hash || `#${isAppAuthenticated() ? rememberedSection : "login"}`).slice(1));

@@ -24,10 +24,7 @@ const SHORTCUT_GROUPS = {
 const SHORTCUT_MODIFIER = /^(Alt|Control|CommandOrControl|Ctrl|CommandOrControlOrAlt|CommandOrControl\+Alt)\+/i;
 const SMOKE_TEST = process.argv.includes("--smoke-test");
 const DEV_MODE = process.argv.includes("--dev");
-const NATIVE_POSITION_FRESH_MS = 8000;
-const DISCORD_CLIENT_ID = process.env.JIKKAI_DISCORD_CLIENT_ID || "1519450321947070474";
-const DISCORD_REDIRECT_URI = process.env.JIKKAI_DISCORD_REDIRECT_URI || `${APP_SCHEME}://${APP_HOST}/discord-auth`;
-let nativePidCache = { pid: null, checkedAt: 0, alive: false };
+const NATIVE_POSITION_FRESH_MS = 60000;
 const START_PANEL = process.argv.some(arg => ["--panel", "--painel", "--tatico", "--tactical-panel"].includes(String(arg).toLowerCase()));
 const START_MINIMIZED = !DEV_MODE && !SMOKE_TEST && !process.argv.includes("--show") && !START_PANEL;
 const gotSingleInstanceLock = SMOKE_TEST || app.requestSingleInstanceLock();
@@ -100,82 +97,6 @@ if (!gotSingleInstanceLock) {
 
 function appUrl(page = "app.html") {
   return `${APP_SCHEME}://${APP_HOST}/${page.replace(/^\/+/, "")}`;
-}
-
-function parseDiscordOAuthRedirect(rawUrl = "") {
-  try {
-    if (!String(rawUrl).startsWith(DISCORD_REDIRECT_URI)) return null;
-    const parsed = new URL(rawUrl);
-    const params = new URLSearchParams(parsed.hash ? parsed.hash.slice(1) : parsed.search.slice(1));
-    if (params.get("error")) return { error: params.get("error_description") || params.get("error") };
-    const accessToken = params.get("access_token");
-    return accessToken ? { accessToken } : null;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchDiscordUser(accessToken) {
-  const response = await net.fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Discord ${response.status}`);
-  return response.json();
-}
-
-function startDiscordLogin() {
-  if (!DISCORD_CLIENT_ID) return Promise.resolve({ ok: false, error: "Discord client_id nao configurado." });
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = async (payload) => {
-      if (settled) return;
-      settled = true;
-      try {
-        authWindow?.close();
-      } catch {}
-      if (payload?.error) return resolve({ ok: false, error: payload.error });
-      if (!payload?.accessToken) return resolve({ ok: false, error: "Login Discord cancelado." });
-      try {
-        const user = await fetchDiscordUser(payload.accessToken);
-        resolve({ ok: true, user });
-      } catch (error) {
-        resolve({ ok: false, error: error?.message || "Nao consegui consultar o Discord." });
-      }
-    };
-    const authWindow = new BrowserWindow({
-      width: 500,
-      height: 720,
-      show: true,
-      title: "JIKKAI - Discord",
-      autoHideMenuBar: true,
-      backgroundColor: "#050505",
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true
-      }
-    });
-    const authUrl = new URL("https://discord.com/oauth2/authorize");
-    authUrl.searchParams.set("client_id", DISCORD_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", DISCORD_REDIRECT_URI);
-    authUrl.searchParams.set("response_type", "token");
-    authUrl.searchParams.set("scope", "identify");
-    authUrl.searchParams.set("prompt", "consent");
-    const maybeFinish = (event, url) => {
-      const payload = parseDiscordOAuthRedirect(url);
-      if (!payload) return;
-      event?.preventDefault?.();
-      finish(payload);
-    };
-    authWindow.webContents.on("will-redirect", maybeFinish);
-    authWindow.webContents.on("will-navigate", maybeFinish);
-    authWindow.webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
-      return { action: "deny" };
-    });
-    authWindow.on("closed", () => finish({ error: "Login Discord cancelado." }));
-    authWindow.loadURL(authUrl.toString()).catch(error => finish({ error: error?.message || "Nao consegui abrir o Discord." }));
-  });
 }
 
 function isGtaProcessRunning() {
@@ -318,27 +239,6 @@ function parseKeyValueFile(raw = "") {
   }).filter(Boolean));
 }
 
-function isNativePositionPidAlive(pid) {
-  const numericPid = Number(pid || 0);
-  if (!Number.isFinite(numericPid) || numericPid <= 0) return false;
-  const now = Date.now();
-  if (nativePidCache.pid === numericPid && now - nativePidCache.checkedAt < 1500) return nativePidCache.alive;
-  let alive = false;
-  try {
-    const output = execFileSync("tasklist.exe", ["/FI", `PID eq ${numericPid}`, "/FO", "CSV", "/NH"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      windowsHide: true,
-      timeout: 900
-    });
-    alive = /"gta_sa\.exe"/i.test(output);
-  } catch {
-    alive = false;
-  }
-  nativePidCache = { pid: numericPid, checkedAt: now, alive };
-  return alive;
-}
-
 function readNativePlayerPosition() {
   const target = nativePlayerPositionPath();
   try {
@@ -348,15 +248,14 @@ function readNativePlayerPosition() {
     const y = Number(lines.y);
     const z = Number(lines.z);
     const ageMs = Math.max(0, Date.now() - stat.mtimeMs);
-    const pid = Number(lines.pid || 0) || null;
-    const ok = lines.ok === "1" && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && ageMs < NATIVE_POSITION_FRESH_MS && isNativePositionPidAlive(pid);
+    const ok = lines.ok === "1" && Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z) && ageMs < NATIVE_POSITION_FRESH_MS;
     return {
       ok,
       x,
       y,
       z,
       source: lines.source || "native",
-      pid,
+      pid: Number(lines.pid || 0) || null,
       updatedAt: stat.mtime.toISOString(),
       ageMs,
       path: target
@@ -403,9 +302,8 @@ function startNativeOverlayHost({ launch = false, mode = "position", force = fal
   const requestedMode = normalizeNativeHostMode(mode);
   if (force) killNativeOverlayHostProcesses();
   if (nativeHostProcess && !nativeHostProcess.killed && nativeHostProcess.exitCode == null) {
-    const position = readNativePlayerPosition();
     if (!force && nativeHostMode === requestedMode) {
-      if (position.ok || (position.ageMs != null && position.ageMs < 2500)) return { ok: true, running: true, path: nativeHostPath(), mode: nativeHostMode, position };
+      return { ok: true, running: true, path: nativeHostPath(), mode: nativeHostMode, position: readNativePlayerPosition() };
     }
     try { nativeHostProcess.kill(); } catch {}
     nativeHostProcess = null;
@@ -499,10 +397,6 @@ function currentOverlayState() {
     clickThrough: overlayClickThrough,
     preferences: desktopPrefs
   };
-}
-
-function overlayPanelNeedsMouse() {
-  return overlayMode === "panel" || overlayLayoutMode === "minimap";
 }
 
 function resolveAppFile(requestUrl) {
@@ -701,13 +595,6 @@ function sendOverlayState() {
   else send();
 }
 
-function sendOverlayClickThrough() {
-  if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  const send = () => overlayWindow.webContents.send("overlay:click-through", overlayClickThrough);
-  if (overlayWindow.webContents.isLoading()) overlayWindow.webContents.once("did-finish-load", send);
-  else send();
-}
-
 function applyOverlayMode(mode = "hud", section = overlaySection) {
   const overlay = ensureOverlayWindow();
   overlayMode = mode === "panel" ? "panel" : "hud";
@@ -775,23 +662,10 @@ function setOverlayBoundsFromRenderer(bounds = {}) {
 function forceOverlayPanelMouse() {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
   overlayClickThrough = false;
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.setFocusable(false);
   overlayWindow.setIgnoreMouseEvents(false);
-  if (overlayWindow.isVisible()) {
-    overlayWindow.showInactive();
-    overlayWindow.moveTop();
-  }
   startCursorReleasePulse();
-  sendOverlayClickThrough();
-}
-
-function pulseOverlayPanelMouse() {
-  forceOverlayPanelMouse();
-  [60, 140, 260, 420, 650, 900].forEach((delay) => {
-    setTimeout(forceOverlayPanelMouse, delay);
-  });
+  sendOverlayState();
 }
 
 function setOverlayInputMode(enabled) {
@@ -807,13 +681,13 @@ function setOverlayInputMode(enabled) {
     if (overlayWindow.isVisible()) revealOverlayWithoutFocus(overlayWindow);
     startCursorReleasePulse();
   }
-  sendOverlayClickThrough();
+  sendOverlayState();
   return true;
 }
 
 function setOverlayClickThrough(enabled) {
-  overlayClickThrough = overlayPanelNeedsMouse() ? false : Boolean(enabled);
-  if (!overlayPanelNeedsMouse()) updateDesktopPrefs({ overlay: { clickThrough: overlayClickThrough } });
+  overlayClickThrough = Boolean(enabled);
+  updateDesktopPrefs({ overlay: { clickThrough: overlayClickThrough } });
   if (!overlayWindow) return overlayClickThrough;
   overlayWindow.setFocusable(false);
   overlayWindow.setIgnoreMouseEvents(overlayClickThrough, { forward: true });
@@ -892,18 +766,9 @@ function showOverlayPanel(section = "") {
   const overlay = ensureOverlayWindow();
   applyOverlayMode("panel", section);
   revealOverlayWithoutFocus(overlay);
-  pulseOverlayPanelMouse();
+  forceOverlayPanelMouse();
+  setTimeout(forceOverlayPanelMouse, 120);
   return true;
-}
-
-function toggleOverlayPanel(section = "") {
-  if (!guardGameOverlay(true)) return false;
-  const overlay = ensureOverlayWindow();
-  if (overlay.isVisible() && overlayMode === "panel" && overlayLayoutMode !== "minimap") {
-    overlay.hide();
-    return false;
-  }
-  return showOverlayPanel(section);
 }
 
 function toggleOverlay() {
@@ -919,11 +784,6 @@ function toggleOverlay() {
 function toggleOverlayInteraction() {
   if (!guardGameOverlay(true)) return false;
   if (!overlayWindow || !overlayWindow.isVisible()) return showOverlayPanel("");
-  if (overlayPanelNeedsMouse()) {
-    pulseOverlayPanelMouse();
-    revealOverlayWithoutFocus(overlayWindow);
-    return false;
-  }
   const enabled = !overlayClickThrough;
   setOverlayClickThrough(enabled);
   revealOverlayWithoutFocus(overlayWindow);
@@ -985,7 +845,7 @@ function registerShortcuts() {
   const groups = configuredShortcutGroups();
   registerShortcutGroup("overlay", groups.overlay, () => toggleOverlay());
   registerShortcutGroup("clickThrough", groups.clickThrough, () => toggleOverlayInteraction());
-  registerShortcutGroup("app", groups.app, () => toggleOverlayPanel(""));
+  registerShortcutGroup("app", groups.app, () => showOverlayPanel(""));
   registerShortcutGroup("search", groups.search, () => {
     showOverlayPanel("busca");
     if (overlayWindow) overlayWindow.webContents.send("overlay:search");
@@ -1026,7 +886,6 @@ ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
 ipcMain.handle("main:open-full-portal", () => ensureMainWindow("index.html"));
 ipcMain.handle("main:open-map", () => ensureMainWindow("mapa.html"));
 ipcMain.handle("main:shortcuts", () => shortcutStatus);
-ipcMain.handle("auth:discord-login", () => startDiscordLogin());
 ipcMain.handle("desktop:update-shortcut", (_event, payload = {}) => {
   const group = String(payload.group || "");
   const accelerator = String(payload.accelerator || "").trim();

@@ -20,7 +20,6 @@ contextBridge.exposeInMainWorld("jikkaiDesktop", {
   openPortal: () => ipcRenderer.invoke("main:open-portal"),
   openFullPortal: () => ipcRenderer.invoke("main:open-full-portal"),
   openMap: () => ipcRenderer.invoke("main:open-map"),
-  loginWithDiscord: () => ipcRenderer.invoke("auth:discord-login"),
   reloadPortal: () => ipcRenderer.invoke("main:reload"),
   shortcutStatus: () => ipcRenderer.invoke("main:shortcuts"),
   publishNativeOverlayState: (payload) => ipcRenderer.invoke("native-overlay:publish-state", payload || {}),

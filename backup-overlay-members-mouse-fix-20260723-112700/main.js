@@ -25,8 +25,6 @@ const SHORTCUT_MODIFIER = /^(Alt|Control|CommandOrControl|Ctrl|CommandOrControlO
 const SMOKE_TEST = process.argv.includes("--smoke-test");
 const DEV_MODE = process.argv.includes("--dev");
 const NATIVE_POSITION_FRESH_MS = 8000;
-const DISCORD_CLIENT_ID = process.env.JIKKAI_DISCORD_CLIENT_ID || "1519450321947070474";
-const DISCORD_REDIRECT_URI = process.env.JIKKAI_DISCORD_REDIRECT_URI || `${APP_SCHEME}://${APP_HOST}/discord-auth`;
 let nativePidCache = { pid: null, checkedAt: 0, alive: false };
 const START_PANEL = process.argv.some(arg => ["--panel", "--painel", "--tatico", "--tactical-panel"].includes(String(arg).toLowerCase()));
 const START_MINIMIZED = !DEV_MODE && !SMOKE_TEST && !process.argv.includes("--show") && !START_PANEL;
@@ -100,82 +98,6 @@ if (!gotSingleInstanceLock) {
 
 function appUrl(page = "app.html") {
   return `${APP_SCHEME}://${APP_HOST}/${page.replace(/^\/+/, "")}`;
-}
-
-function parseDiscordOAuthRedirect(rawUrl = "") {
-  try {
-    if (!String(rawUrl).startsWith(DISCORD_REDIRECT_URI)) return null;
-    const parsed = new URL(rawUrl);
-    const params = new URLSearchParams(parsed.hash ? parsed.hash.slice(1) : parsed.search.slice(1));
-    if (params.get("error")) return { error: params.get("error_description") || params.get("error") };
-    const accessToken = params.get("access_token");
-    return accessToken ? { accessToken } : null;
-  } catch {
-    return null;
-  }
-}
-
-async function fetchDiscordUser(accessToken) {
-  const response = await net.fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-  if (!response.ok) throw new Error(`Discord ${response.status}`);
-  return response.json();
-}
-
-function startDiscordLogin() {
-  if (!DISCORD_CLIENT_ID) return Promise.resolve({ ok: false, error: "Discord client_id nao configurado." });
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = async (payload) => {
-      if (settled) return;
-      settled = true;
-      try {
-        authWindow?.close();
-      } catch {}
-      if (payload?.error) return resolve({ ok: false, error: payload.error });
-      if (!payload?.accessToken) return resolve({ ok: false, error: "Login Discord cancelado." });
-      try {
-        const user = await fetchDiscordUser(payload.accessToken);
-        resolve({ ok: true, user });
-      } catch (error) {
-        resolve({ ok: false, error: error?.message || "Nao consegui consultar o Discord." });
-      }
-    };
-    const authWindow = new BrowserWindow({
-      width: 500,
-      height: 720,
-      show: true,
-      title: "JIKKAI - Discord",
-      autoHideMenuBar: true,
-      backgroundColor: "#050505",
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true
-      }
-    });
-    const authUrl = new URL("https://discord.com/oauth2/authorize");
-    authUrl.searchParams.set("client_id", DISCORD_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", DISCORD_REDIRECT_URI);
-    authUrl.searchParams.set("response_type", "token");
-    authUrl.searchParams.set("scope", "identify");
-    authUrl.searchParams.set("prompt", "consent");
-    const maybeFinish = (event, url) => {
-      const payload = parseDiscordOAuthRedirect(url);
-      if (!payload) return;
-      event?.preventDefault?.();
-      finish(payload);
-    };
-    authWindow.webContents.on("will-redirect", maybeFinish);
-    authWindow.webContents.on("will-navigate", maybeFinish);
-    authWindow.webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
-      return { action: "deny" };
-    });
-    authWindow.on("closed", () => finish({ error: "Login Discord cancelado." }));
-    authWindow.loadURL(authUrl.toString()).catch(error => finish({ error: error?.message || "Nao consegui abrir o Discord." }));
-  });
 }
 
 function isGtaProcessRunning() {
@@ -775,23 +697,10 @@ function setOverlayBoundsFromRenderer(bounds = {}) {
 function forceOverlayPanelMouse() {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
   overlayClickThrough = false;
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.setFocusable(false);
   overlayWindow.setIgnoreMouseEvents(false);
-  if (overlayWindow.isVisible()) {
-    overlayWindow.showInactive();
-    overlayWindow.moveTop();
-  }
   startCursorReleasePulse();
   sendOverlayClickThrough();
-}
-
-function pulseOverlayPanelMouse() {
-  forceOverlayPanelMouse();
-  [60, 140, 260, 420, 650, 900].forEach((delay) => {
-    setTimeout(forceOverlayPanelMouse, delay);
-  });
 }
 
 function setOverlayInputMode(enabled) {
@@ -892,7 +801,8 @@ function showOverlayPanel(section = "") {
   const overlay = ensureOverlayWindow();
   applyOverlayMode("panel", section);
   revealOverlayWithoutFocus(overlay);
-  pulseOverlayPanelMouse();
+  forceOverlayPanelMouse();
+  setTimeout(forceOverlayPanelMouse, 120);
   return true;
 }
 
@@ -920,7 +830,7 @@ function toggleOverlayInteraction() {
   if (!guardGameOverlay(true)) return false;
   if (!overlayWindow || !overlayWindow.isVisible()) return showOverlayPanel("");
   if (overlayPanelNeedsMouse()) {
-    pulseOverlayPanelMouse();
+    forceOverlayPanelMouse();
     revealOverlayWithoutFocus(overlayWindow);
     return false;
   }
@@ -1026,7 +936,6 @@ ipcMain.handle("main:open-portal", () => ensureMainWindow("app.html"));
 ipcMain.handle("main:open-full-portal", () => ensureMainWindow("index.html"));
 ipcMain.handle("main:open-map", () => ensureMainWindow("mapa.html"));
 ipcMain.handle("main:shortcuts", () => shortcutStatus);
-ipcMain.handle("auth:discord-login", () => startDiscordLogin());
 ipcMain.handle("desktop:update-shortcut", (_event, payload = {}) => {
   const group = String(payload.group || "");
   const accelerator = String(payload.accelerator || "").trim();
