@@ -1,18 +1,16 @@
-using System.Windows;
-
 namespace Jikkai.Bootstrapper;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         DispatcherUnhandledException += (_, args) =>
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 args.Exception.Message,
                 "JIKKAI · Falha no instalador",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
             args.Handled = true;
         };
 
