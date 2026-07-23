@@ -145,8 +145,41 @@ function redirectRestrictedCommandView() {
   }
 }
 
+function installMainWorldPermissionOverride() {
+  const script = document.createElement("script");
+  script.textContent = `
+    (() => {
+      const strictPositions = new Set(["lider", "conselheiro", "capitao_ramo"]);
+      try {
+        if (typeof canCommandUser === "function") {
+          canCommandUser = function(user = currentUser) {
+            const position = rolePosition(effectiveRole(user));
+            return Boolean(user?.username) && (isRootUser(user) || strictPositions.has(position));
+          };
+        }
+        if (typeof canManageMap === "function") {
+          canManageMap = function(user = currentUser) {
+            return canCommandUser(user);
+          };
+        }
+        if (typeof canCommand === "function") {
+          canCommand = function(user = latestUser, data = latestData) {
+            const position = rolePosition(effectiveRole(data, user));
+            return Boolean(user?.username) && (isRootUser(user) || strictPositions.has(position));
+          };
+        }
+      } catch (error) {
+        console.error("JIKKAI permission override", error);
+      }
+    })();
+  `;
+  document.documentElement.appendChild(script);
+  script.remove();
+}
+
 function installSessionPermissionGuard({ runId = "" } = {}) {
   let permissionGuardFrame = 0;
+  installMainWorldPermissionOverride();
 
   function applyPermissionGuard() {
     permissionGuardFrame = 0;
