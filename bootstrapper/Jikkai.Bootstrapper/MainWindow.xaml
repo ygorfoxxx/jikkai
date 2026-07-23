@@ -106,18 +106,16 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="44" Height="44" CornerRadius="13" BorderBrush="#7AD6A63B" BorderThickness="1" Background="#36000000">
-                                    <Grid>
-                                        <Ellipse Margin="7" Stroke="#44F4D173" StrokeThickness="1"/>
-                                        <TextBlock Text="十" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Yu Gothic UI, Segoe UI" FontWeight="Bold" FontSize="21" Foreground="{StaticResource GoldBrightBrush}"/>
-                                    </Grid>
-                                </Border>
-                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="JIKKAI" FontSize="17" FontWeight="Black" LetterSpacing="2"/>
-                                    <TextBlock Text="CLIENTE OPERACIONAL" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" LetterSpacing="2" Margin="0,3,0,0"/>
-                                </StackPanel>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="44" Height="44" CornerRadius="13" BorderBrush="#7AD6A63B" BorderThickness="1" Background="#36000000">
+                                <Grid>
+                                    <Ellipse Margin="7" Stroke="#44F4D173" StrokeThickness="1"/>
+                                    <TextBlock Text="十" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Yu Gothic UI, Segoe UI" FontWeight="Bold" FontSize="21" Foreground="{StaticResource GoldBrightBrush}"/>
+                                </Grid>
+                            </Border>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="J I K K A I" FontSize="17" FontWeight="Black"/>
+                                <TextBlock Text="CLIENTE OPERACIONAL" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" Margin="0,3,0,0"/>
                             </StackPanel>
                         </StackPanel>
 
@@ -154,8 +152,8 @@
                         <StackPanel Grid.Row="2">
                             <Border Height="1" Background="#22FFFFFF" Margin="0,0,0,15"/>
                             <Grid>
-                                <TextBlock Text="WINDOWS 10/11 · 64 BITS" Foreground="#748090" FontSize="8" FontWeight="Bold" LetterSpacing="1.4"/>
-                                <TextBlock Text="BOOTSTRAPPER" HorizontalAlignment="Right" Foreground="#8D7650" FontSize="8" FontWeight="Bold" LetterSpacing="1.4"/>
+                                <TextBlock Text="WINDOWS 10/11 · 64 BITS" Foreground="#748090" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="BOOTSTRAPPER" HorizontalAlignment="Right" Foreground="#8D7650" FontSize="8" FontWeight="Bold"/>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -170,7 +168,7 @@
 
                 <Border Grid.Row="0" Background="#090C10" BorderBrush="#1C222A" BorderThickness="0,0,0,1" MouseLeftButtonDown="Header_MouseLeftButtonDown">
                     <Grid Margin="28,0,14,0">
-                        <TextBlock Text="INSTALAÇÃO JIKKAI" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="#87919F" LetterSpacing="1.7"/>
+                        <TextBlock Text="INSTALAÇÃO JIKKAI" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="#87919F"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <Button Style="{StaticResource WindowControlButton}" Content="—" Click="Minimize_Click" ToolTip="Minimizar"/>
                             <Button x:Name="CloseButton" Style="{StaticResource WindowControlButton}" Content="✕" Click="Close_Click" ToolTip="Fechar"/>
@@ -193,12 +191,12 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock x:Name="PageKicker" Text="PRONTO PARA INSTALAR" Foreground="{StaticResource GoldBrush}" FontWeight="Bold" FontSize="9" LetterSpacing="1.8"/>
+                            <TextBlock x:Name="PageKicker" Text="PRONTO PARA INSTALAR" Foreground="{StaticResource GoldBrush}" FontWeight="Bold" FontSize="9"/>
                             <TextBlock x:Name="PageTitle" Text="Instale o cliente Jikkai" FontFamily="Segoe UI Variable Display, Segoe UI" FontWeight="Black" FontSize="30" Margin="0,7,0,0"/>
                             <TextBlock x:Name="PageDescription" Text="Escolha o local de instalação. O restante será preparado automaticamente." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,8,0,0"/>
                         </StackPanel>
                         <Border Grid.Column="1" Padding="10,6" CornerRadius="999" BorderBrush="#3A4653" BorderThickness="1" Background="#11161C" VerticalAlignment="Top">
-                            <TextBlock x:Name="ModeBadge" Text="NOVA INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" LetterSpacing="1.2"/>
+                            <TextBlock x:Name="ModeBadge" Text="NOVA INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}"/>
                         </Border>
                     </Grid>
 
@@ -208,7 +206,7 @@
                             <ColumnDefinition Width="92"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="LOCAL DE INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="#AEB6C2" LetterSpacing="1.4" Margin="0,0,0,8"/>
+                            <TextBlock Text="LOCAL DE INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="#AEB6C2" Margin="0,0,0,8"/>
                             <TextBox x:Name="InstallPathTextBox" Style="{StaticResource PathTextBoxStyle}"/>
                         </StackPanel>
                         <Button x:Name="BrowseButton" Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="ALTERAR" Margin="10,22,0,0" Click="Browse_Click"/>
@@ -267,7 +265,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="AO CONTINUAR, O WINDOWS PODERÁ SOLICITAR PERMISSÃO DE ADMINISTRADOR." Foreground="#626D7B" FontSize="7.5" FontWeight="Bold" LetterSpacing="0.8"/>
+                            <TextBlock Text="O WINDOWS PODERÁ SOLICITAR PERMISSÃO DE ADMINISTRADOR." Foreground="#626D7B" FontSize="8" FontWeight="Bold"/>
                             <TextBlock x:Name="VersionText" Text="JIKKAI · pacote atual" Foreground="#414A56" FontSize="8" Margin="0,5,0,0"/>
                         </StackPanel>
                         <Button x:Name="PrimaryActionButton" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="INSTALAR JIKKAI" MinWidth="210" Click="Install_Click"/>
