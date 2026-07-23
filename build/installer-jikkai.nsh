@@ -27,11 +27,24 @@ Var JikkaiBodyFont
   ShowInstDetails nevershow
   InstallColors 0xF8FAFC 0x050505
 
-  !define MUI_ABORTWARNING
-  !define MUI_INSTFILESPAGE_PROGRESSBAR colored
+  !ifndef MUI_ABORTWARNING
+    !define MUI_ABORTWARNING
+  !endif
+  !ifdef MUI_PAGE_CUSTOMFUNCTION_SHOW
+    !undef MUI_PAGE_CUSTOMFUNCTION_SHOW
+  !endif
   !define MUI_PAGE_CUSTOMFUNCTION_SHOW JikkaiInstFilesShow
+  !ifdef MUI_FINISHPAGE_TITLE
+    !undef MUI_FINISHPAGE_TITLE
+  !endif
   !define MUI_FINISHPAGE_TITLE "JIKKAI PRONTO PARA OPERAR"
+  !ifdef MUI_FINISHPAGE_TEXT
+    !undef MUI_FINISHPAGE_TEXT
+  !endif
   !define MUI_FINISHPAGE_TEXT "A instalação foi concluída. O aplicativo e o overlay tático já podem ser iniciados pelo atalho da área de trabalho."
+  !ifdef MUI_FINISHPAGE_RUN_TEXT
+    !undef MUI_FINISHPAGE_RUN_TEXT
+  !endif
   !define MUI_FINISHPAGE_RUN_TEXT "INICIAR JIKKAI"
 !macroend
 
