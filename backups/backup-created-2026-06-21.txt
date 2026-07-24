@@ -1,5 +1,0 @@
-Ponto de backup criado antes da alteração visual da Central do Membro.
-
-Este marcador existe para facilitar a localização no histórico do GitHub.
-
-Depois da alteração, se o resultado não agradar, reverta o commit seguinte que alterar index.html.
