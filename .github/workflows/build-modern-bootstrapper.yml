@@ -1,0 +1,107 @@
+name: Build Modern JIKKAI Bootstrapper
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "bootstrapper/**"
+      - "electron/**"
+      - "build/**"
+      - "assets/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build-modern-bootstrapper.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-bootstrapper:
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Build internal JIKKAI payload
+        shell: powershell
+        run: |
+          npm run dist:installer 2>&1 | Tee-Object -FilePath bootstrapper-payload-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $payload = Get-ChildItem -Path dist -Filter "*.exe" |
+            Sort-Object Length -Descending |
+            Select-Object -First 1
+
+          if (-not $payload) {
+            throw "O instalador interno do JIKKAI não foi gerado."
+          }
+
+          New-Item -ItemType Directory -Force -Path "bootstrapper/Jikkai.Bootstrapper/Payload" | Out-Null
+          Copy-Item $payload.FullName "bootstrapper/Jikkai.Bootstrapper/Payload/JIKKAI-Payload.exe" -Force
+          Write-Host "Payload incorporado: $($payload.Name)"
+
+      - name: Build modern bootstrapper
+        shell: powershell
+        run: |
+          dotnet restore bootstrapper/Jikkai.Bootstrapper/Jikkai.Bootstrapper.csproj 2>&1 | Tee-Object -FilePath bootstrapper-dotnet-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet publish bootstrapper/Jikkai.Bootstrapper/Jikkai.Bootstrapper.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeAllContentForSelfExtract=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true 2>&1 | Tee-Object -FilePath bootstrapper-dotnet-build.log -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $publishDirectory = "bootstrapper/Jikkai.Bootstrapper/bin/Release/net8.0-windows/win-x64/publish"
+          $bootstrapper = Join-Path $publishDirectory "JIKKAI-Installer.exe"
+
+          if (-not (Test-Path $bootstrapper)) {
+            throw "O executável do bootstrapper não foi gerado."
+          }
+
+          New-Item -ItemType Directory -Force -Path "modern-installer" | Out-Null
+          Copy-Item $bootstrapper "modern-installer/JIKKAI-Setup-$version-x64.exe" -Force
+
+          Get-FileHash "modern-installer/JIKKAI-Setup-$version-x64.exe" -Algorithm SHA256 |
+            ForEach-Object { "SHA256 $($_.Hash)  JIKKAI-Setup-$version-x64.exe" } |
+            Set-Content "modern-installer/JIKKAI-Setup-$version-x64.sha256.txt"
+
+      - name: Upload modern installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIKKAI-Modern-Bootstrapper
+          path: modern-installer/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JIKKAI-Modern-Bootstrapper-Logs
+          path: |
+            bootstrapper-payload-build.log
+            bootstrapper-dotnet-build.log
+          if-no-files-found: warn
+          retention-days: 7

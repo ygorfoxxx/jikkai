@@ -1,0 +1,277 @@
+<Window x:Class="Jikkai.Bootstrapper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="JIKKAI Installer"
+        Width="1040"
+        Height="620"
+        MinWidth="1040"
+        MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        UseLayoutRounding="True">
+    <Window.Resources>
+        <Style x:Key="InstallerProgressStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="Background" Value="#191E25"/>
+            <Setter Property="Foreground" Value="{StaticResource GoldBrightBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid ClipToBounds="True">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4"/>
+                            <Border x:Name="PART_Track" Background="Transparent" CornerRadius="4"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#D6A63B" BlurRadius="11" ShadowDepth="0" Opacity="0.42"/>
+                                </Border.Effect>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PathTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="13,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="#0A0D11"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource GoldBrightBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="24"
+            Background="{StaticResource BackgroundBrush}"
+            BorderBrush="#3A2D17"
+            BorderThickness="1"
+            SnapsToDevicePixels="True">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="12" Opacity="0.72"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="390"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" CornerRadius="23,0,0,23" ClipToBounds="True">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#251704" Offset="0"/>
+                        <GradientStop Color="#0C1014" Offset="0.48"/>
+                        <GradientStop Color="#06171B" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <Grid>
+                    <Canvas IsHitTestVisible="False">
+                        <Ellipse Width="360" Height="360" Canvas.Left="-140" Canvas.Top="-160" Stroke="#34D6A63B" StrokeThickness="1"/>
+                        <Ellipse Width="260" Height="260" Canvas.Left="-90" Canvas.Top="-110" Stroke="#22F4D173" StrokeThickness="1"/>
+                        <Ellipse Width="460" Height="460" Canvas.Left="160" Canvas.Top="300" Stroke="#252DD4E7" StrokeThickness="1"/>
+                        <Line X1="40" Y1="455" X2="330" Y2="165" Stroke="#12F4D173" StrokeThickness="1"/>
+                        <Line X1="75" Y1="540" X2="365" Y2="250" Stroke="#102DD4E7" StrokeThickness="1"/>
+                    </Canvas>
+
+                    <Grid Margin="42,36,40,36">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="44" Height="44" CornerRadius="13" BorderBrush="#7AD6A63B" BorderThickness="1" Background="#36000000">
+                                <Grid>
+                                    <Ellipse Margin="7" Stroke="#44F4D173" StrokeThickness="1"/>
+                                    <TextBlock Text="十" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Yu Gothic UI, Segoe UI" FontWeight="Bold" FontSize="21" Foreground="{StaticResource GoldBrightBrush}"/>
+                                </Grid>
+                            </Border>
+                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="J I K K A I" FontSize="17" FontWeight="Black"/>
+                                <TextBlock Text="CLIENTE OPERACIONAL" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                            <TextBlock Text="ENTRE NO" FontFamily="Segoe UI Variable Display, Segoe UI" FontWeight="Black" FontSize="43" LineHeight="44"/>
+                            <TextBlock Text="CAMPO." FontFamily="Segoe UI Variable Display, Segoe UI" FontWeight="Black" FontSize="43" LineHeight="44" Foreground="{StaticResource GoldBrightBrush}"/>
+                            <TextBlock Text="O portal, o overlay e as operações da Jikkai reunidos em um único cliente para Windows." TextWrapping="Wrap" Foreground="#B9C1CD" FontSize="12" LineHeight="19" Margin="0,18,12,0"/>
+
+                            <StackPanel Margin="0,30,0,0">
+                                <Grid Margin="0,0,0,13">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Border Width="20" Height="20" CornerRadius="6" Background="#24D6A63B" BorderBrush="#65D6A63B" BorderThickness="1">
+                                        <TextBlock Text="01" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" FontWeight="Bold" Foreground="{StaticResource GoldBrightBrush}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Overlay tático durante o jogo" VerticalAlignment="Center" Foreground="#DDE2E9" FontSize="11" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,13">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Border Width="20" Height="20" CornerRadius="6" Background="#1F2DD4E7" BorderBrush="#552DD4E7" BorderThickness="1">
+                                        <TextBlock Text="02" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Mapa, missões e dossiês sincronizados" VerticalAlignment="Center" Foreground="#DDE2E9" FontSize="11" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Border Width="20" Height="20" CornerRadius="6" Background="#1EFFFFFF" BorderBrush="#2EFFFFFF" BorderThickness="1">
+                                        <TextBlock Text="03" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" FontWeight="Bold" Foreground="#E8ECF2"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Atualização segura e instalação silenciosa" VerticalAlignment="Center" Foreground="#DDE2E9" FontSize="11" FontWeight="SemiBold"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2">
+                            <Border Height="1" Background="#22FFFFFF" Margin="0,0,0,15"/>
+                            <Grid>
+                                <TextBlock Text="WINDOWS 10/11 · 64 BITS" Foreground="#748090" FontSize="8" FontWeight="Bold"/>
+                                <TextBlock Text="BOOTSTRAPPER" HorizontalAlignment="Right" Foreground="#8D7650" FontSize="8" FontWeight="Bold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1" Background="{StaticResource PanelBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="58"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="#090C10" BorderBrush="#1C222A" BorderThickness="0,0,0,1" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                    <Grid Margin="28,0,14,0">
+                        <TextBlock Text="INSTALAÇÃO JIKKAI" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="#87919F"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource WindowControlButton}" Content="—" Click="Minimize_Click" ToolTip="Minimizar"/>
+                            <Button x:Name="CloseButton" Style="{StaticResource WindowControlButton}" Content="✕" Click="Close_Click" ToolTip="Fechar"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1" Margin="48,36,48,34">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="PageKicker" Text="PRONTO PARA INSTALAR" Foreground="{StaticResource GoldBrush}" FontWeight="Bold" FontSize="9"/>
+                            <TextBlock x:Name="PageTitle" Text="Instale o cliente Jikkai" FontFamily="Segoe UI Variable Display, Segoe UI" FontWeight="Black" FontSize="30" Margin="0,7,0,0"/>
+                            <TextBlock x:Name="PageDescription" Text="Escolha o local de instalação. O restante será preparado automaticamente." Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,8,0,0"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Padding="10,6" CornerRadius="999" BorderBrush="#3A4653" BorderThickness="1" Background="#11161C" VerticalAlignment="Top">
+                            <TextBlock x:Name="ModeBadge" Text="NOVA INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource CyanBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,30,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="92"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="LOCAL DE INSTALAÇÃO" FontSize="8" FontWeight="Bold" Foreground="#AEB6C2" Margin="0,0,0,8"/>
+                            <TextBox x:Name="InstallPathTextBox" Style="{StaticResource PathTextBoxStyle}"/>
+                        </StackPanel>
+                        <Button x:Name="BrowseButton" Grid.Column="1" Style="{StaticResource SecondaryButton}" Content="ALTERAR" Margin="10,22,0,0" Click="Browse_Click"/>
+                    </Grid>
+
+                    <Border Grid.Row="2" Margin="0,24,0,0" Padding="18" CornerRadius="14" Background="#090C10" BorderBrush="#20262E" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="StatusDot" Width="9" Height="9" CornerRadius="5" Background="{StaticResource GoldBrightBrush}" Margin="0,2,10,0">
+                                        <Border.Effect><DropShadowEffect Color="#D6A63B" BlurRadius="8" ShadowDepth="0" Opacity="0.65"/></Border.Effect>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock x:Name="StatusTitle" Text="Pacote pronto" FontWeight="Bold" FontSize="12"/>
+                                        <TextBlock x:Name="StatusDescription" Text="A instalação não altera arquivos de perfil ou dados do aplicativo." Foreground="{StaticResource MutedBrush}" FontSize="10" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock x:Name="ProgressPercent" Text="0%" HorizontalAlignment="Right" VerticalAlignment="Top" FontSize="11" FontWeight="Bold" Foreground="{StaticResource GoldBrightBrush}"/>
+                            </Grid>
+                            <ProgressBar x:Name="InstallProgress" Grid.Row="1" Style="{StaticResource InstallerProgressStyle}" Minimum="0" Maximum="100" Value="0" Margin="0,17,0,0"/>
+                            <Grid Grid.Row="2" Margin="0,15,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <Border x:Name="StepPrepareDot" Width="18" Height="18" CornerRadius="9" Background="#27303A"><TextBlock Text="1" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <TextBlock x:Name="StepPrepareText" Text="Preparar" Foreground="#84909E" FontSize="9" Margin="7,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Border x:Name="StepInstallDot" Width="18" Height="18" CornerRadius="9" Background="#27303A"><TextBlock Text="2" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <TextBlock x:Name="StepInstallText" Text="Instalar" Foreground="#84909E" FontSize="9" Margin="7,2,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Border x:Name="StepFinishDot" Width="18" Height="18" CornerRadius="9" Background="#27303A"><TextBlock Text="3" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                                    <TextBlock x:Name="StepFinishText" Text="Concluir" Foreground="#84909E" FontSize="9" Margin="7,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Row="3" VerticalAlignment="Bottom" Margin="0,20,0,0">
+                        <CheckBox x:Name="OpenAfterInstallCheckBox" IsChecked="True" Content="Abrir o Jikkai quando a instalação terminar"/>
+                        <TextBlock x:Name="DiskSpaceText" Text="Requer aproximadamente 500 MB livres." Foreground="#65717F" FontSize="9" Margin="0,8,0,0"/>
+                    </StackPanel>
+
+                    <Grid Grid.Row="4" Margin="0,22,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="O WINDOWS PODERÁ SOLICITAR PERMISSÃO DE ADMINISTRADOR." Foreground="#626D7B" FontSize="8" FontWeight="Bold"/>
+                            <TextBlock x:Name="VersionText" Text="JIKKAI · pacote atual" Foreground="#414A56" FontSize="8" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <Button x:Name="PrimaryActionButton" Grid.Column="1" Style="{StaticResource PrimaryButton}" Content="INSTALAR JIKKAI" MinWidth="210" Click="Install_Click"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
