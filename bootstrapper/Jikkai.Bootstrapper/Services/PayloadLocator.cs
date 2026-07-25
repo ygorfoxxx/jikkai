@@ -3,6 +3,7 @@ namespace Jikkai.Bootstrapper.Services;
 internal static class PayloadLocator
 {
     private const string PayloadFileName = "JIKKAI-Payload.exe";
+    private static readonly string[] InstalledExecutableNames = ["JIKKAI.exe", "Jikkai.exe"];
 
     public static string Locate()
     {
@@ -32,6 +33,11 @@ internal static class PayloadLocator
 
     public static string? FindInstalledExecutable(string installDirectory)
     {
+        if (string.IsNullOrWhiteSpace(installDirectory) || !Directory.Exists(installDirectory))
+        {
+            return null;
+        }
+
         var candidates = new[]
         {
             Path.Combine(installDirectory, "JIKKAI.exe"),
@@ -40,6 +46,47 @@ internal static class PayloadLocator
             Path.Combine(installDirectory, "app", "Jikkai.exe")
         };
 
-        return candidates.FirstOrDefault(File.Exists);
+        var directMatch = candidates.FirstOrDefault(IsUsableInstalledExecutable);
+        if (directMatch is not null)
+        {
+            return directMatch;
+        }
+
+        try
+        {
+            return Directory
+                .EnumerateFiles(installDirectory, "*.exe", SearchOption.AllDirectories)
+                .Where(path => InstalledExecutableNames.Contains(
+                    Path.GetFileName(path),
+                    StringComparer.OrdinalIgnoreCase))
+                .OrderBy(path => path.Count(character => character == Path.DirectorySeparatorChar))
+                .FirstOrDefault(IsUsableInstalledExecutable);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    public static bool IsUsableInstalledExecutable(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            var file = new FileInfo(path);
+            return file.Exists && file.Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
