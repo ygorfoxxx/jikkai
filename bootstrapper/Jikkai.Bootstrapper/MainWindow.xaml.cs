@@ -15,6 +15,7 @@ namespace Jikkai.Bootstrapper;
 public partial class MainWindow : Window
 {
     private const long RequiredFreeBytes = 500L * 1024L * 1024L;
+    private static readonly TimeSpan InstallerTimeout = TimeSpan.FromMinutes(12);
     private readonly string _defaultInstallDirectory;
     private bool _isBusy;
     private bool _installationCompleted;
@@ -38,8 +39,8 @@ public partial class MainWindow : Window
         {
             e.Cancel = true;
             SetStatus(
-                "Instalação em andamento",
-                "Aguarde a finalização para evitar arquivos incompletos.",
+                "Operação em andamento",
+                "Aguarde a conclusão para evitar arquivos incompletos.",
                 StatusTone.Warning);
         }
 
@@ -64,8 +65,8 @@ public partial class MainWindow : Window
         if (_isBusy)
         {
             SetStatus(
-                "Instalação em andamento",
-                "Aguarde a finalização para fechar o instalador.",
+                "Operação em andamento",
+                "Aguarde a conclusão para fechar o instalador.",
                 StatusTone.Warning);
             return;
         }
@@ -115,9 +116,9 @@ public partial class MainWindow : Window
         {
             installDirectory = ValidateInstallDirectory(InstallPathTextBox.Text);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            SetStatus("Local inválido", ex.Message, StatusTone.Error);
+            SetStatus("Local inválido", exception.Message, StatusTone.Error);
             return;
         }
 
@@ -126,44 +127,84 @@ public partial class MainWindow : Window
 
         try
         {
-            PageKicker.Text = "PREPARANDO O CLIENTE";
+            PageKicker.Text = "ROMPENDO O SELO";
             PageTitle.Text = "Instalando o Jikkai";
-            PageDescription.Text = "Mantenha esta janela aberta enquanto os arquivos são preparados.";
+            PageDescription.Text = "Mantenha esta janela aberta enquanto a operação é concluída.";
             PrimaryActionButton.Content = "INSTALANDO...";
 
             SetStage(1);
-            SetStatus("Localizando pacote", "Preparando os arquivos necessários para a instalação.", StatusTone.Active);
+            SetStatus("Localizando o selo", "Preparando os arquivos necessários para a instalação.", StatusTone.Active);
             SetProgress(4);
 
             var payloadPath = PayloadLocator.Locate();
             VersionText.Text = $"PACOTE · {Path.GetFileName(payloadPath)}";
+            BootstrapperLog.Write(
+                $"Operação iniciada. Payload=\"{payloadPath}\"; destino=\"{installDirectory}\".");
 
             EnsureFreeSpace(installDirectory);
 
-            SetStatus("Verificando integridade", "Validando o pacote oficial antes de instalar.", StatusTone.Active);
-            var progress = new Progress<double>(value => SetProgress(6 + value * 0.16));
+            SetStatus("Validando o fuuinjutsu", "Verificando a integridade do pacote oficial.", StatusTone.Active);
+            var progress = new Progress<double>(value => SetProgress(6 + value * 0.17));
             var hash = await Task.Run(() => ComputeSha256(payloadPath, progress));
             VersionText.Text = $"PACOTE VERIFICADO · SHA-256 {hash[..12].ToUpperInvariant()}";
-            SetProgress(23);
+            BootstrapperLog.Write($"SHA-256 do payload: {hash}.");
+            SetProgress(24);
 
             SetStage(2);
-            SetStatus("Instalando componentes", "Configurando o cliente, o overlay e os atalhos do Windows.", StatusTone.Active);
+            SetStatus("Aplicando o selo", "Configurando o cliente, o overlay e os atalhos do Windows.", StatusTone.Active);
 
-            var installTask = InstallerRunner.RunAsync(payloadPath, installDirectory, CancellationToken.None);
-            await AnimateInstallationProgressAsync(installTask, 24, 92);
-            var exitCode = await installTask;
+            var installTask = InstallerRunner.RunAsync(
+                payloadPath,
+                installDirectory,
+                InstallerTimeout,
+                CancellationToken.None);
 
-            if (exitCode != 0)
+            await AnimateInstallationProgressAsync(installTask, 25, 90);
+            var result = await installTask;
+
+            if (result.TimedOut)
             {
-                throw new InvalidOperationException($"O instalador interno terminou com o código {exitCode}.");
+                throw new TimeoutException(
+                    "A instalação interna demorou mais que o esperado e não pôde ser confirmada.");
             }
 
-            SetProgress(96);
-            SetStage(3);
-            SetStatus("Finalizando instalação", "Confirmando os arquivos instalados e preparando a inicialização.", StatusTone.Active);
-            await Task.Delay(450);
+            if (!result.Succeeded)
+            {
+                if (result.ExitCode is not null && result.ExitCode != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"O instalador interno terminou com o código {result.ExitCode}.");
+                }
 
-            _installedExecutable = PayloadLocator.FindInstalledExecutable(installDirectory);
+                throw new InvalidOperationException(
+                    "O instalador interno foi encerrado, mas os arquivos do JIKKAI não puderam ser confirmados.");
+            }
+
+            SetProgress(93);
+            SetStage(3);
+            SetStatus(
+                "Confirmando instalação",
+                "O selo foi aplicado. Confirmando os arquivos do cliente.",
+                StatusTone.Active);
+
+            _installedExecutable =
+                result.InstalledExecutable ??
+                PayloadLocator.FindInstalledExecutable(installDirectory);
+
+            if (!PayloadLocator.IsUsableInstalledExecutable(_installedExecutable))
+            {
+                throw new FileNotFoundException(
+                    "A instalação terminou, mas o executável principal do JIKKAI não foi encontrado.");
+            }
+
+            await Task.Delay(650);
+            SetProgress(98);
+            SetStatus(
+                "Concluindo a operação",
+                "Preparando o cliente para a primeira inicialização.",
+                StatusTone.Active);
+            await Task.Delay(350);
+
             SetProgress(100);
             CompleteInstallation();
 
@@ -173,9 +214,10 @@ public partial class MainWindow : Window
                 LaunchInstalledApplication(closeAfterLaunch: true);
             }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            ShowInstallationError(ex);
+            BootstrapperLog.Write("Falha na operação do bootstrapper.", exception);
+            ShowInstallationError(exception);
         }
         finally
         {
@@ -255,26 +297,26 @@ public partial class MainWindow : Window
     private void CompleteInstallation()
     {
         _installationCompleted = true;
-        PageKicker.Text = "INSTALAÇÃO CONCLUÍDA";
+        PageKicker.Text = "OPERAÇÃO CONCLUÍDA";
         PageTitle.Text = "Jikkai pronto para operar";
         PageDescription.Text = "O cliente foi instalado com sucesso e já pode ser iniciado.";
         ModeBadge.Text = "PRONTO";
         PrimaryActionButton.Content = "ABRIR JIKKAI";
         SetStatus(
-            "Instalação concluída",
-            _installedExecutable is null
-                ? "O cliente foi instalado. Use o atalho criado na área de trabalho para abrir."
-                : "Todos os componentes foram instalados corretamente.",
+            "Selo concluído",
+            "Todos os componentes foram instalados corretamente.",
             StatusTone.Success);
         SetStage(3, completed: true);
+        BootstrapperLog.Write(
+            $"Operação concluída. Executável=\"{_installedExecutable}\".");
     }
 
     private void ShowInstallationError(Exception exception)
     {
         _installationCompleted = false;
-        PageKicker.Text = "NÃO FOI POSSÍVEL CONCLUIR";
-        PageTitle.Text = "A instalação foi interrompida";
-        PageDescription.Text = "Nenhum dado de perfil foi alterado. Revise o erro e tente novamente.";
+        PageKicker.Text = "OPERAÇÃO INTERROMPIDA";
+        PageTitle.Text = "Não foi possível concluir";
+        PageDescription.Text = $"Consulte o registro em {BootstrapperLog.FilePath}.";
         PrimaryActionButton.Content = "TENTAR NOVAMENTE";
         SetStatus("Falha na instalação", exception.Message, StatusTone.Error);
         ProgressPercent.Text = "ERRO";
@@ -310,9 +352,12 @@ public partial class MainWindow : Window
                 Close();
             }
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            SetStatus("Não consegui abrir o Jikkai", ex.Message, StatusTone.Error);
+            BootstrapperLog.Write(
+                $"Não foi possível abrir o JIKKAI em \"{_installedExecutable}\".",
+                exception);
+            SetStatus("Não consegui abrir o Jikkai", exception.Message, StatusTone.Error);
         }
     }
 
@@ -369,20 +414,20 @@ public partial class MainWindow : Window
     {
         if (allCompleted || stage > step)
         {
-            dot.Background = FindBrush("GoldBrush", Brushes.Goldenrod);
-            text.Foreground = FindBrush("GoldBrightBrush", Brushes.Khaki);
+            dot.Background = FindBrush("OrangeBrush", Brushes.DarkOrange);
+            text.Foreground = FindBrush("OrangeBrightBrush", Brushes.OrangeRed);
             return;
         }
 
         if (stage == step)
         {
-            dot.Background = FindBrush("CyanBrush", Brushes.Cyan);
+            dot.Background = FindBrush("OrangeBrightBrush", Brushes.OrangeRed);
             text.Foreground = FindBrush("TextBrush", Brushes.White);
             return;
         }
 
-        dot.Background = new SolidColorBrush(Color.FromRgb(39, 48, 58));
-        text.Foreground = new SolidColorBrush(Color.FromRgb(132, 144, 158));
+        dot.Background = new SolidColorBrush(Color.FromRgb(43, 32, 27));
+        text.Foreground = new SolidColorBrush(Color.FromRgb(145, 131, 122));
     }
 
     private void SetStatus(string title, string description, StatusTone tone)
@@ -391,10 +436,10 @@ public partial class MainWindow : Window
         StatusDescription.Text = description;
         StatusDot.Background = tone switch
         {
-            StatusTone.Success => FindBrush("CyanBrush", Brushes.Cyan),
+            StatusTone.Success => FindBrush("OrangeBrush", Brushes.DarkOrange),
             StatusTone.Error => FindBrush("DangerBrush", Brushes.IndianRed),
-            StatusTone.Warning => FindBrush("GoldBrush", Brushes.Goldenrod),
-            _ => FindBrush("GoldBrightBrush", Brushes.Khaki)
+            StatusTone.Warning => FindBrush("BurntRedBrush", Brushes.OrangeRed),
+            _ => FindBrush("OrangeBrightBrush", Brushes.OrangeRed)
         };
     }
 

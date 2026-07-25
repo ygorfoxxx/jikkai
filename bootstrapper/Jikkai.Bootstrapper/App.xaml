@@ -4,23 +4,23 @@
              StartupUri="MainWindow.xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
-        <Color x:Key="BackgroundColor">#07090C</Color>
-        <Color x:Key="PanelColor">#0D1015</Color>
-        <Color x:Key="PanelRaisedColor">#12161C</Color>
-        <Color x:Key="GoldColor">#D6A63B</Color>
-        <Color x:Key="GoldBrightColor">#F4D173</Color>
-        <Color x:Key="CyanColor">#2DD4E7</Color>
-        <Color x:Key="TextColor">#F7F3EA</Color>
-        <Color x:Key="MutedColor">#8D96A5</Color>
-        <Color x:Key="LineColor">#252A32</Color>
-        <Color x:Key="DangerColor">#EF625F</Color>
+        <Color x:Key="BackgroundColor">#070707</Color>
+        <Color x:Key="PanelColor">#0D0B0A</Color>
+        <Color x:Key="PanelRaisedColor">#15100D</Color>
+        <Color x:Key="OrangeColor">#C44A00</Color>
+        <Color x:Key="OrangeBrightColor">#F06400</Color>
+        <Color x:Key="BurntRedColor">#751D0B</Color>
+        <Color x:Key="TextColor">#F1E8E1</Color>
+        <Color x:Key="MutedColor">#A99A90</Color>
+        <Color x:Key="LineColor">#3B2115</Color>
+        <Color x:Key="DangerColor">#D84A32</Color>
 
         <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
         <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}"/>
         <SolidColorBrush x:Key="PanelRaisedBrush" Color="{StaticResource PanelRaisedColor}"/>
-        <SolidColorBrush x:Key="GoldBrush" Color="{StaticResource GoldColor}"/>
-        <SolidColorBrush x:Key="GoldBrightBrush" Color="{StaticResource GoldBrightColor}"/>
-        <SolidColorBrush x:Key="CyanBrush" Color="{StaticResource CyanColor}"/>
+        <SolidColorBrush x:Key="OrangeBrush" Color="{StaticResource OrangeColor}"/>
+        <SolidColorBrush x:Key="OrangeBrightBrush" Color="{StaticResource OrangeBrightColor}"/>
+        <SolidColorBrush x:Key="BurntRedBrush" Color="{StaticResource BurntRedColor}"/>
         <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
         <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource MutedColor}"/>
         <SolidColorBrush x:Key="LineBrush" Color="{StaticResource LineColor}"/>
@@ -48,7 +48,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#171C23"/>
+                                <Setter TargetName="Root" Property="Background" Value="#21120D"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -63,8 +63,8 @@
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Height" Value="52"/>
             <Setter Property="Padding" Value="24,0"/>
-            <Setter Property="Foreground" Value="#0A0C0F"/>
-            <Setter Property="Background" Value="{StaticResource GoldBrightBrush}"/>
+            <Setter Property="Foreground" Value="#FFF8F2"/>
+            <Setter Property="Background" Value="{StaticResource OrangeBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI"/>
@@ -78,13 +78,13 @@
                                 CornerRadius="12"
                                 SnapsToDevicePixels="True">
                             <Grid>
-                                <Border Margin="1" CornerRadius="11" BorderBrush="#55FFFFFF" BorderThickness="1"/>
+                                <Border Margin="1" CornerRadius="11" BorderBrush="#55FFB080" BorderThickness="1"/>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#FFE59B"/>
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource OrangeBrightBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Root" Property="RenderTransform">
@@ -92,8 +92,8 @@
                                 </Setter>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Background" Value="#353942"/>
-                                <Setter Property="Foreground" Value="#777E89"/>
+                                <Setter TargetName="Root" Property="Background" Value="#3A2922"/>
+                                <Setter Property="Foreground" Value="#81736B"/>
                                 <Setter Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -106,7 +106,7 @@
             <Setter Property="Height" Value="42"/>
             <Setter Property="Padding" Value="16,0"/>
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="Background" Value="#11151B"/>
+            <Setter Property="Background" Value="#160E0A"/>
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -120,8 +120,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#181E26"/>
-                                <Setter TargetName="Root" Property="BorderBrush" Value="#4B5563"/>
+                                <Setter TargetName="Root" Property="Background" Value="#25130C"/>
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource OrangeBrush}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
