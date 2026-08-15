@@ -739,7 +739,7 @@
     const LOCATION_CALIBRATION_KEY = "jikkai-location-calibration-v3";
     const DEFAULT_LOCATION_CALIBRATION = { minX:-6000, maxX:6000, minY:-6000, maxY:6000, invertY:true };
     const MAP_DISTANCE_PER_PERCENT = 85;
-    const NATIVE_LOCATION_FRESH_MS = 20000;
+    const NATIVE_LOCATION_FRESH_MS = 8000;
     const MEETING_SIGNAL_STATUS = { ciente:"ciente", caminho:"caminho", local:"local" };
     const SHARED_SIGNAL_ACTIONS = new Set(["ciente","caminho","local","aguardando","area_limpa","apoio","ferido","recuar","silencio","objetivo"]);
     const SHORTCUT_OPTIONS = { overlay:["", "Alt+J", "CommandOrControl+Shift+J", "CommandOrControl+Alt+J"], clickThrough:["", "Alt+K", "CommandOrControl+Shift+K", "CommandOrControl+Alt+K"], app:["", "Alt+M", "CommandOrControl+Shift+M", "CommandOrControl+Alt+M"], search:["", "Alt+F", "CommandOrControl+Alt+F"], sos:["", "Alt+Backspace", "CommandOrControl+Alt+Backspace"], quickActions:["", "Alt+Q", "CommandOrControl+Alt+Q"], combat:["", "Alt+R", "CommandOrControl+Alt+R"], hide:["", "Alt+H", "CommandOrControl+Alt+H"] };
@@ -1434,27 +1434,7 @@
     }
     function setOnlineUsers(payload = {}) {
       const users = Array.isArray(payload) ? payload : (Array.isArray(payload.users) ? payload.users : []);
-      const next = new Map(onlineUsers);
-      const seen = new Set();
-      users.filter(u => u?.username).forEach(user => {
-        const key = onlineKey(user.username);
-        const previous = next.get(key) || {};
-        const merged = {
-          ...previous,
-          ...user,
-          location: isFreshLocation(user.location) ? user.location : (isFreshLocation(previous.location) ? previous.location : null),
-          lastSeen: user.lastSeen || previous.lastSeen || new Date().toISOString(),
-          updatedAt: user.updatedAt || previous.updatedAt || user.lastSeen || previous.lastSeen || new Date().toISOString()
-        };
-        next.set(key, merged);
-        seen.add(key);
-      });
-      const cutoff = Date.now() - 60000;
-      Array.from(next.entries()).forEach(([key, user]) => {
-        const lastSeen = new Date(user.lastSeen || user.updatedAt || 0).getTime();
-        if (Number.isFinite(lastSeen) && lastSeen < cutoff) next.delete(key);
-      });
-      onlineUsers = next;
+      onlineUsers = new Map(users.filter(u => u?.username).map(u => [onlineKey(u.username), u]));
     }
     function empty(text){return `<div class="empty">${escapeHtml(text)}</div>`}
     function item(title, meta, desc, actions = "") {

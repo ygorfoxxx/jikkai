@@ -972,7 +972,7 @@
     };
     const DEFAULT_LOCATION_CALIBRATION = { minX:-6000, maxX:6000, minY:-6000, maxY:6000, invertY:true };
     const MAP_DISTANCE_PER_PERCENT = 85;
-    const NATIVE_LOCATION_FRESH_MS = 20000;
+    const NATIVE_LOCATION_FRESH_MS = 8000;
     const MEETING_SIGNAL_STATUS = { ciente:"ciente", caminho:"caminho", local:"local" };
     const PROFILE_AVAILABILITY_LEVELS = ["Disponivel", "Em RP", "A caminho", "Ausente", "Ocupado"];
     const SHARED_SIGNAL_ACTIONS = new Set(["ciente","caminho","local","aguardando","area_limpa","apoio","ferido","recuar","silencio","objetivo"]);
@@ -1919,24 +1919,7 @@
     function avatar(user){return `<div class="avatar">${user?.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="">` : escapeHtml(initials(user))}</div>`}
     function setOnlineUsers(payload = {}) {
       const users = Array.isArray(payload) ? payload : (Array.isArray(payload.users) ? payload.users : []);
-      const next = new Map(onlineUsers);
-      users.filter(u => u?.username).forEach(user => {
-        const key = onlineKey(user.username);
-        const previous = next.get(key) || {};
-        next.set(key, {
-          ...previous,
-          ...user,
-          location: isFreshLocation(user.location) ? user.location : (isFreshLocation(previous.location) ? previous.location : null),
-          lastSeen: user.lastSeen || previous.lastSeen || new Date().toISOString(),
-          updatedAt: user.updatedAt || previous.updatedAt || user.lastSeen || previous.lastSeen || new Date().toISOString()
-        });
-      });
-      const cutoff = Date.now() - 60000;
-      Array.from(next.entries()).forEach(([key, user]) => {
-        const lastSeen = new Date(user.lastSeen || user.updatedAt || 0).getTime();
-        if (Number.isFinite(lastSeen) && lastSeen < cutoff) next.delete(key);
-      });
-      onlineUsers = next;
+      onlineUsers = new Map(users.filter(u => u?.username).map(u => [onlineKey(u.username), u]));
     }
     function onlineKey(username){return String(username || "").trim().toLowerCase()}
     function isOnline(user){const key=onlineKey(user?.username);return !!key&&onlineUsers.has(key)}

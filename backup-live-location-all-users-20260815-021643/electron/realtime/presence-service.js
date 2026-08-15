@@ -33,17 +33,13 @@ class PresenceService {
   async update(profile = {}) {
     const now = new Date().toISOString();
     const previous = this.profile || {};
-    const normalizedIncomingLocation = Object.prototype.hasOwnProperty.call(profile, "location")
-      ? this.normalizeLocation(profile.location)
-      : null;
-    const incomingLocation = this.isFreshLocation(normalizedIncomingLocation) ? normalizedIncomingLocation : null;
     this.profile = {
       username: String(profile.username || "").trim(),
       codinome: profile.codinome || profile.displayName || profile.nomeRP || previous.codinome || "",
       role: profile.role || previous.role || "",
       section: profile.section || previous.section || "central",
       availability: profile.availability || previous.availability || "",
-      location: incomingLocation || (this.isFreshLocation(previous.location) ? previous.location : null),
+      location: Object.prototype.hasOwnProperty.call(profile, "location") ? this.normalizeLocation(profile.location) : previous.location || null,
       status: "online",
       appOpen: true,
       clientId: this.clientId,
@@ -96,7 +92,7 @@ class PresenceService {
         role: item.role || "",
         section: item.section || "",
         availability: item.availability || "",
-        location: this.freshLocationOrNull(item.location),
+        location: this.normalizeLocation(item.location),
         status: item.status || "online",
         appOpen: item.appOpen !== false,
         clientId: item.clientId || "",
@@ -139,21 +135,6 @@ class PresenceService {
       updatedAt: location.updatedAt || new Date().toISOString(),
       ageMs: Number.isFinite(ageMs) ? Math.max(0, ageMs) : 0
     };
-  }
-
-  freshLocationOrNull(location = null) {
-    const normalized = this.normalizeLocation(location);
-    return this.isFreshLocation(normalized) ? normalized : null;
-  }
-
-  isFreshLocation(location = null) {
-    const normalized = this.normalizeLocation(location);
-    if (!normalized) return false;
-    const updated = new Date(normalized.updatedAt || 0).getTime();
-    const ageMs = Number(normalized.ageMs);
-    const byStamp = Number.isFinite(updated) && Date.now() - updated < 20000;
-    const byAge = !normalized.updatedAt && Number.isFinite(ageMs) && ageMs < 20000;
-    return byStamp || byAge;
   }
 
   async stop() {
