@@ -1,0 +1,58 @@
+name: Aplicar Fase 8 - Mapa Estratégico
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.phase8/apply.py.gz.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Aplicar código da cartografia JIKKAI
+        shell: bash
+        run: |
+          base64 --decode .phase8/apply.py.gz.b64 | gzip --decompress > /tmp/apply_phase8.py
+          python3 -m py_compile /tmp/apply_phase8.py
+          python3 /tmp/apply_phase8.py
+
+      - name: Validar estrutura e sintaxe JSX
+        shell: bash
+        run: |
+          grep -q 'function MapaEstrategicoPage' index.html
+          grep -q 'function MapaPontoModal' index.html
+          grep -q 'function MapaRotaModal' index.html
+          grep -q 'https://slpforge.xyz/images/map/map_base_low.webp' index.html
+          grep -q 'id: "edit_map"' index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('index.html').read_text(encoding='utf-8')
+          start = text.index('<script type="text/babel" data-presets="env,react">')
+          start = text.index('>', start) + 1
+          end = text.rindex('</script>')
+          Path('/tmp/portal.jsx').write_text(text[start:end], encoding='utf-8')
+          PY
+          npx --yes esbuild@0.21.5 /tmp/portal.jsx --loader:.jsx=jsx --outfile=/tmp/portal.js
+
+      - name: Publicar e limpar arquivos temporários
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm -r .phase8
+          git rm -f phase8-validation.txt || true
+          git rm .github/workflows/apply-phase8-map.yml
+          git commit -m "Fase 8: adicionar mapa estratégico interativo"
+          git push origin main
