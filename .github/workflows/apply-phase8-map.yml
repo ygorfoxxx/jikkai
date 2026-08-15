@@ -1,0 +1,13 @@
+name: Preparação da Fase 8
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "A validação da Fase 8 é executada pelo fluxo isolado da branch principal."
